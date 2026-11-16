@@ -37,13 +37,27 @@ function Steps({ face }: { face: Face }) {
   );
 }
 
-function Result({ face, id = "ergebnis" }: { face: Face; id?: string }) {
+function Result({ face }: { face: Face }) {
   return (
-    <Section aria-labelledby={id} className={faceClass[face]}>
+    <Section aria-labelledby="ergebnis" className={faceClass[face]}>
       <Container>
         <PageHeader>
-          <PageHeaderTitle id={id}>Die Seite lädt jetzt in 0,9 Sekunden.</PageHeaderTitle>
+          <PageHeaderTitle id="ergebnis">Die Seite lädt jetzt in 0,9 Sekunden.</PageHeaderTitle>
           <PageHeaderLead>Vorher waren es 4,1.</PageHeaderLead>
+        </PageHeader>
+      </Container>
+    </Section>
+  );
+}
+
+/** A third part with a name of its own: two sections of one page may not share a title. */
+function Invoice({ face }: { face: Face }) {
+  return (
+    <Section aria-labelledby="rechnung" className={faceClass[face]}>
+      <Container>
+        <PageHeader>
+          <PageHeaderTitle id="rechnung">Die Rechnung kommt nach der Abnahme.</PageHeaderTitle>
+          <PageHeaderLead>Vorher zahlst du nichts.</PageHeaderLead>
         </PageHeader>
       </Container>
     </Section>
@@ -81,7 +95,7 @@ export const Page: Story = {
       <Seam above="ground" below="well" />
       <Result face="well" />
       <Seam direction="up" above="well" below="ground" />
-      <Result face="ground" id="danach" />
+      <Invoice face="ground" />
     </>
   ),
 };
