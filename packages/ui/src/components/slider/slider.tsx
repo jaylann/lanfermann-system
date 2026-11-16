@@ -346,7 +346,7 @@ export type SliderThumbProps = Omit<SliderPrimitive.Thumb.Props, "render" | "chi
  *
  * Two elements: Base UI's thumb is the invisible box that is pressed and holds the input; what
  * is seen is the face beside it, placed from the same value and moved by transforms only. The
- * face stands in a seat at the start of its lane (slider.css), and the seat carries the focus
+ * face stands in a seat at the end of its lane (slider.css), and the seat carries the focus
  * ring.
  */
 export function SliderThumb({ className, index = 0, ...props }: SliderThumbProps) {

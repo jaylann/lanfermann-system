@@ -35,16 +35,20 @@
 
 /*
  * A lane: as wide as the way a thumb's centre can go, which is the control less one thumb (it
- * stops inside the trough, 2px from its wall). Set `--p` on it. What rides in it stands at its
- * start. The trough is wider than the control by its two walls: a lane inside it takes them off
- * again (`--slider-walls`).
+ * stops inside the trough, 2px from its wall). Set `--p` on it. The trough is wider than the
+ * control by its two walls: a lane inside it takes them off again (`--slider-walls`).
+ *
+ * A lane ENDS where the way has got to, and what rides in it stands at its end. At the lowest
+ * value the whole lane lies before the control, at the highest it lies in it. It is an empty
+ * box, but a box that reached past the control's end would make a page scroll sideways to it;
+ * before the start of a line there is nowhere to scroll to.
  */
 @utility slider-lane {
   position: absolute;
   inset-block: 0;
   inset-inline-start: 0;
   width: calc(100% - var(--slider-thumb) - var(--slider-walls, 0px));
-  translate: calc(var(--slider-dir) * var(--p, 0) * 100%);
+  translate: calc(var(--slider-dir) * (var(--p, 0) - 1) * 100%);
 }
 
 /* A lane for a part that rides with a thumb, centred on the trough's line. Give it a height. */
@@ -53,14 +57,14 @@
   top: 50%;
   inset-inline-start: 0;
   width: calc(100% - var(--slider-thumb) - var(--slider-walls, 0px));
-  translate: calc(var(--slider-dir) * var(--p, 0) * 100%) -50%;
+  translate: calc(var(--slider-dir) * (var(--p, 0) - 1) * 100%) -50%;
 }
 
-/* The place of the part in its lane: a box of the part's own size at the lane's start. */
+/* The place of the part in its lane: a box of the part's own size, from the lane's end on. */
 @utility slider-seat {
   position: absolute;
   inset-block: 0;
-  inset-inline-start: 0;
+  inset-inline-start: 100%;
   aspect-ratio: 1;
 }
 
@@ -120,25 +124,25 @@
 
 /*
  * The fill is a bar as long as the trough that hangs from a lane, so its end is where the lane
- * has gone and its beginning lies outside the trough, which cuts it round. `--fill-lead` is how
- * far past the lane's start it ends: half a cap, the middle of the thumb it runs up to.
+ * ends and its beginning lies outside the trough, which cuts it round. `--fill-lead` is how far
+ * past the lane's end it reaches: half a cap, the middle of the thumb it runs up to.
  *
  * In a range the bar must begin at the first thumb. A lane takes a window there (`--p` of the
  * first thumb), which cuts everything before its edge, and the bar's lane inside it goes on by
  * the way between the two thumbs. Both lanes ease alike, so the end stands where the second
- * thumb is at every moment.
+ * thumb is at every moment. The window reaches past the trough's end, where the trough cuts it.
  */
 @utility slider-fill-bar {
   position: absolute;
   inset-block: 0;
-  inset-inline-end: calc(100% - var(--fill-lead, 0px));
+  inset-inline-end: calc(var(--fill-lead, 0px) * -1);
   /* The lane, a thumb and the two walls: the trough. */
   width: calc(100% + var(--slider-thumb) + var(--slider-walls, 0px));
 }
 @utility slider-fill-window {
   position: absolute;
   inset-block: 0;
-  inset-inline-start: calc(var(--switch-h) / 2);
+  inset-inline-start: calc(100% + var(--switch-h) / 2);
   width: calc(100% + var(--slider-thumb) + var(--slider-walls, 0px));
   overflow: hidden;
 }
