@@ -219,6 +219,9 @@ function useThumbInertia(anchor: RefObject<HTMLElement | null>, places: number[]
  * The fill and the caps that hold the thumbs. The fill is the bar; each thumb stands in a round
  * cap of the fill's colour, as wide as the trough is tall, which keeps the gap to the thumb
  * that the trough's wall keeps too. The cap deforms with its thumb.
+ *
+ * Every part rides in a lane that is moved by a share of its own width (slider.css): the bar
+ * ends in the middle of the last thumb, and in a range a window cuts it off at the first.
  */
 function SliderFill({ state }: { state: SliderState }) {
   const anchor = useRef<HTMLSpanElement>(null);
@@ -226,9 +229,8 @@ function SliderFill({ state }: { state: SliderState }) {
   useThumbInertia(anchor, places);
 
   const range = places.length > 1;
+  const first = places[0] ?? 0;
   const last = places[places.length - 1] ?? 0;
-  // A thumb's centre, from the start of the trough.
-  const centre = (at: number) => `calc(var(--switch-h) / 2 + ${at} * var(--slider-travel))`;
   const colour = state.disabled ? "bg-on-disabled" : "bg-accent forced-colors:bg-[Highlight]";
 
   return (
@@ -243,30 +245,42 @@ function SliderFill({ state }: { state: SliderState }) {
         !range && last <= 0 && "opacity-0",
       )}
     >
-      <span
-        className={cn("slider-fill-window", travels)}
-        style={vars({
-          "--fill-start": range ? centre(places[0] ?? 0) : "0px",
-          "--fill-end": centre(last),
-        })}
-      >
-        <span className={cn("slider-fill-bar", colour, travels)} />
-      </span>
+      {range ? (
+        // The window is carried to the first thumb and cuts the bar off there; the bar's own
+        // lane inside it goes on by the way between the two thumbs.
+        <span className={cn("slider-lane", travels)} style={vars({ "--p": first })}>
+          <span className="slider-fill-window">
+            <span className={cn("slider-lane", travels)} style={vars({ "--p": last - first })}>
+              <span data-slot="slider-fill" className={cn("slider-fill-bar", colour)} />
+            </span>
+          </span>
+        </span>
+      ) : (
+        <span className={cn("slider-lane", travels)} style={vars({ "--p": last })}>
+          <span
+            data-slot="slider-fill"
+            // It ends in the middle of the cap that holds the thumb.
+            className={cn("slider-fill-bar [--fill-lead:calc(var(--switch-h)/2)]", colour)}
+          />
+        </span>
+      )}
       {places.map((at, index) => (
         <span
           key={index}
-          className={cn("slider-at size-(--switch-h)", travels)}
+          className={cn("slider-at h-(--switch-h)", travels)}
           style={vars({ "--p": at })}
         >
-          <span
-            data-slot="slider-cap"
-            className={cn(
-              "slider-body block h-full w-[calc(100%+var(--held,0px))] rounded-full [--squash:0]",
-              colour,
-              state.dragging && state.activeThumbIndex === index && "[--held:3px]",
-            )}
-            style={body(index, "var(--switch-h)")}
-          />
+          <span className="slider-seat">
+            <span
+              data-slot="slider-cap"
+              className={cn(
+                "slider-body block h-full w-[calc(100%+var(--held,0px))] rounded-full [--squash:0]",
+                colour,
+                state.dragging && state.activeThumbIndex === index && "[--held:3px]",
+              )}
+              style={body(index, "var(--switch-h)")}
+            />
+          </span>
         </span>
       ))}
     </span>
@@ -292,7 +306,7 @@ export function SliderControl({ className, children, ref, ...props }: SliderCont
       data-slot="slider-control"
       className={mergeClassName(
         // 2px narrower than the trough on each side: that is the gap the thumb keeps to the wall.
-        "slider-geometry touch-target relative col-span-2 mx-0.5 flex h-(--control-md) touch-none items-center select-none data-disabled:pointer-events-none",
+        "touch-target relative col-span-2 mx-0.5 flex h-(--control-md) touch-none items-center slider-geometry select-none data-disabled:pointer-events-none",
         className,
       )}
       {...props}
@@ -301,7 +315,8 @@ export function SliderControl({ className, children, ref, ...props }: SliderCont
         <span
           data-slot="slider-trough"
           className={cn(
-            "absolute -inset-x-0.5 top-0 h-(--switch-h)",
+            // `--slider-walls`: its two walls, which the lanes inside it take off again.
+            "absolute -inset-x-0.5 top-0 h-(--switch-h) [--slider-walls:4px]",
             troughTrack,
             "group-data-disabled/slider:bg-disabled group-data-disabled/slider:after:depth-flat",
           )}
@@ -330,7 +345,9 @@ export type SliderThumbProps = Omit<SliderPrimitive.Thumb.Props, "render" | "chi
  * counterpart while it is held by the fill, the plain thumb colour in the empty trough.
  *
  * Two elements: Base UI's thumb is the invisible box that is pressed and holds the input; what
- * is seen is the face beside it, placed from the same value and moved by transforms only.
+ * is seen is the face beside it, placed from the same value and moved by transforms only. The
+ * face stands in a seat at the start of its lane (slider.css), and the seat carries the focus
+ * ring.
  */
 export function SliderThumb({ className, index = 0, ...props }: SliderThumbProps) {
   return (
@@ -348,28 +365,32 @@ export function SliderThumb({ className, index = 0, ...props }: SliderThumbProps
             <span
               aria-hidden
               data-slot="slider-thumb-rider"
-              className={cn(
-                "pointer-events-none slider-at size-(--slider-thumb) rounded-full",
-                travels,
-                // The thumb right before it (`+`): in a range a `peer` would also match the
-                // first thumb from the second face.
-                "[[data-slot=slider-thumb]:has(:focus-visible)+&]:outline-2 [[data-slot=slider-thumb]:has(:focus-visible)+&]:outline-offset-2 [[data-slot=slider-thumb]:has(:focus-visible)+&]:outline-accent",
-                "[[data-slot=slider-thumb]:hover+&]:*:depth-raised-hover",
-              )}
+              className={cn("pointer-events-none slider-at h-(--slider-thumb)", travels)}
               style={vars({
                 "--p": place(state, index),
                 "--thumb-face": onFill ? "var(--color-on-accent)" : "var(--color-thumb)",
               })}
             >
               <span
-                data-slot="slider-thumb-face"
+                data-slot="slider-thumb-seat"
                 className={cn(
-                  "slider-body block h-full w-[calc(100%+var(--held,0px))] rounded-full bg-(--thumb-face) depth-raised depth-tone-thumb",
-                  held && "depth-raised-hover [--held:3px]",
-                  state.disabled && "bg-raised depth-flat",
+                  "slider-seat rounded-full",
+                  // The thumb right before the rider (`+`): in a range a `peer` would also
+                  // match the first thumb from the second face.
+                  "[[data-slot=slider-thumb]:has(:focus-visible)+*>&]:outline-2 [[data-slot=slider-thumb]:has(:focus-visible)+*>&]:outline-offset-2 [[data-slot=slider-thumb]:has(:focus-visible)+*>&]:outline-accent",
                 )}
-                style={body(index, "var(--slider-thumb)")}
-              />
+              >
+                <span
+                  data-slot="slider-thumb-face"
+                  className={cn(
+                    "slider-body block h-full w-[calc(100%+var(--held,0px))] rounded-full bg-(--thumb-face) depth-raised depth-tone-thumb",
+                    "[[data-slot=slider-thumb]:hover+*_&]:depth-raised-hover",
+                    held && "depth-raised-hover [--held:3px]",
+                    state.disabled && "bg-raised depth-flat",
+                  )}
+                  style={body(index, "var(--slider-thumb)")}
+                />
+              </span>
             </span>
           </>
         );

@@ -63,23 +63,52 @@ export const Range: Story = {
   ),
 };
 
+const ends = () => (
+  <div className="flex w-[340px] flex-col gap-2">
+    <Slider defaultValue={0}>
+      <SliderControl>
+        <SliderThumb aria-label="Deckkraft, leer" />
+      </SliderControl>
+    </Slider>
+    <Slider defaultValue={100}>
+      <SliderControl>
+        <SliderThumb aria-label="Deckkraft, voll" />
+      </SliderControl>
+    </Slider>
+  </div>
+);
+
 /** At both ends the thumb stops inside the trough, with the same gap it keeps above and below. */
 export const Ends: Story = {
   parameters: { visual: { viewport: { width: 440, height: 170 } } },
-  render: () => (
-    <div className="flex w-[340px] flex-col gap-2">
-      <Slider defaultValue={0}>
-        <SliderControl>
-          <SliderThumb aria-label="Deckkraft, leer" />
-        </SliderControl>
-      </Slider>
-      <Slider defaultValue={100}>
-        <SliderControl>
-          <SliderThumb aria-label="Deckkraft, voll" />
-        </SliderControl>
-      </Slider>
-    </div>
-  ),
+  render: ends,
+};
+
+/**
+ * Load does not animate, as a test: when the sliders appear, every part already stands in its
+ * place inside the trough and nothing is on its way there. (In Firefox the thumb of a full
+ * slider once glided in from a window's width away: its place was a length worked out from the
+ * container's width, which that engine corrects after its first style pass. Run this one with
+ * `VISUAL_BROWSER=firefox` when the placing changes.)
+ */
+export const AtRest: Story = {
+  render: ends,
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.getAnimations({ subtree: true })).toHaveLength(0);
+    const troughs = canvasElement.querySelectorAll('[data-slot="slider-trough"]');
+    await expect(troughs).toHaveLength(2);
+    for (const trough of troughs) {
+      const wall = trough.getBoundingClientRect();
+      const parts = trough.parentElement!.querySelectorAll(
+        '[data-slot="slider-thumb-face"], [data-slot="slider-cap"]',
+      );
+      for (const part of parts) {
+        const box = part.getBoundingClientRect();
+        await expect(box.left).toBeGreaterThanOrEqual(wall.left);
+        await expect(box.right).toBeLessThanOrEqual(wall.right);
+      }
+    }
+  },
 };
 
 /** Without a visible label, the thumb carries the name. */

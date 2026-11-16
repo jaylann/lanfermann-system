@@ -6,8 +6,16 @@
  * phone), where anything that needs layout is redone on the main thread, at half that or less.
  *
  * Places are worked out in CSS from one number per thumb, `--p` (0 at the lowest value, 1 at the
- * highest), and the width of the control (`100cqw`: the control is a size container). Nothing is
- * measured in JavaScript, so the first frame is already right.
+ * highest). A part rides in a lane: a box as wide as the way a thumb can go, moved by `--p`
+ * times its own width. That is a percentage, and a percentage stays a percentage in the
+ * computed style: it changes when the value changes and at no other time. So nothing is
+ * measured in JavaScript, the first frame is already right, and a slider that changes its
+ * width does not glide to its new place.
+ *
+ * (The places were lengths first, from the width of the control as `100cqw`. Firefox works such
+ * a length out against the window before it knows the container, then corrects it, and the
+ * correction is a change of the computed style like any other: on load, the thumb of a full
+ * slider glided in from a window's width away. Justin's Firefox, 2026-11-16.)
  *
  * What follows a finger eases on `--slider-chase`: the `snap` spring written as a plain bezier
  * (within 0.02 of it; a test compares the two). Safari's compositor takes a bezier whose values
@@ -17,10 +25,7 @@
 
 /* On the control: the lengths the parts below share. */
 @utility slider-geometry {
-  container-type: inline-size;
   --slider-thumb: calc(var(--switch-h) - 4px);
-  /* How far a thumb's centre can go: it stops inside the trough, 2px from its wall. */
-  --slider-travel: calc(100cqw - var(--slider-thumb));
   --slider-chase: cubic-bezier(0.3, 0.95, 0.25, 1);
   --slider-dir: 1;
   &:dir(rtl) {
@@ -28,12 +33,35 @@
   }
 }
 
-/* A part that rides with a thumb. Set `--p` on it; its box starts where the travel starts. */
+/*
+ * A lane: as wide as the way a thumb's centre can go, which is the control less one thumb (it
+ * stops inside the trough, 2px from its wall). Set `--p` on it. What rides in it stands at its
+ * start. The trough is wider than the control by its two walls: a lane inside it takes them off
+ * again (`--slider-walls`).
+ */
+@utility slider-lane {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: calc(100% - var(--slider-thumb) - var(--slider-walls, 0px));
+  translate: calc(var(--slider-dir) * var(--p, 0) * 100%);
+}
+
+/* A lane for a part that rides with a thumb, centred on the trough's line. Give it a height. */
 @utility slider-at {
   position: absolute;
   top: 50%;
   inset-inline-start: 0;
-  translate: calc(var(--slider-dir) * var(--p, 0) * var(--slider-travel)) -50%;
+  width: calc(100% - var(--slider-thumb) - var(--slider-walls, 0px));
+  translate: calc(var(--slider-dir) * var(--p, 0) * 100%) -50%;
+}
+
+/* The place of the part in its lane: a box of the part's own size at the lane's start. */
+@utility slider-seat {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  aspect-ratio: 1;
 }
 
 /*
@@ -54,7 +82,7 @@
 
 /*
  * The part that deforms: the thumb's face, and the cap of the fill that holds it. It is centred
- * in its rider. Set `--size` (its length at rest), `--s` (how stretched: 1 at rest) and `--d`
+ * in its seat. Set `--size` (its length at rest), `--s` (how stretched: 1 at rest) and `--d`
  * (the way it travels on screen: 1 to the right, -1 to the left).
  *
  * Stretched, it is longer and a little thinner, and it moves back by half of what it gained:
@@ -91,20 +119,26 @@
 }
 
 /*
- * The fill is a bar as long as the trough that is pushed out of it at the start, so only its end
- * shows: `--fill-end` is where it ends, from the start of the trough. In a range a window with
- * the same trick cuts its beginning: `--fill-start`.
+ * The fill is a bar as long as the trough that hangs from a lane, so its end is where the lane
+ * has gone and its beginning lies outside the trough, which cuts it round. `--fill-lead` is how
+ * far past the lane's start it ends: half a cap, the middle of the thumb it runs up to.
+ *
+ * In a range the bar must begin at the first thumb. A lane takes a window there (`--p` of the
+ * first thumb), which cuts everything before its edge, and the bar's lane inside it goes on by
+ * the way between the two thumbs. Both lanes ease alike, so the end stands where the second
+ * thumb is at every moment.
  */
+@utility slider-fill-bar {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: calc(100% - var(--fill-lead, 0px));
+  /* The lane, a thumb and the two walls: the trough. */
+  width: calc(100% + var(--slider-thumb) + var(--slider-walls, 0px));
+}
 @utility slider-fill-window {
   position: absolute;
   inset-block: 0;
-  inset-inline-start: 0;
-  width: 100%;
+  inset-inline-start: calc(var(--switch-h) / 2);
+  width: calc(100% + var(--slider-thumb) + var(--slider-walls, 0px));
   overflow: hidden;
-  translate: calc(var(--slider-dir) * var(--fill-start, 0px));
-}
-@utility slider-fill-bar {
-  position: absolute;
-  inset: 0;
-  translate: calc(var(--slider-dir) * (var(--fill-end, 0px) - var(--fill-start, 0px) - 100%));
 }
