@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 
 import { containerVariants } from "@/components/container/container";
+import { ScrollFade } from "@/internal/scroll-fade";
 import { cn } from "@/lib/cn";
 
 /**
@@ -9,8 +10,10 @@ import { cn } from "@/lib/cn";
  * in the middle, the page's sections on the right.
  *
  * The side columns stay in view while the text scrolls, below a sticky bar of the height in
- * `--docs-top` (4rem: the `SiteHeader`'s bar, 8px off the top and 56px tall). The pages column shows from `lg`, the sections column
- * from `xl`; below that, the pages go into the site's menu and the sections fold above the text.
+ * `--docs-top` (4rem: the `SiteHeader`'s bar, 8px off the top and 56px tall). A side column
+ * longer than the window scrolls inside itself, and fades at the end that has more. The pages
+ * column shows from `lg`, the sections column from `xl`; below that, the pages go into the
+ * site's menu and the sections fold above the text.
  */
 export function DocsLayout({ className, ...props }: ComponentProps<"div">) {
   return (
@@ -26,13 +29,16 @@ export function DocsLayout({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
+// `scroll-py-10`: a link that takes the keyboard focus is scrolled clear of the fade
+// (scroll-fade.css), and so is the section the `TableOfContents` brings into view.
 const sticky =
-  "sticky top-(--docs-top) max-h-[calc(100dvh-var(--docs-top))] self-start overflow-y-auto overscroll-contain [scrollbar-width:thin]";
+  "sticky top-(--docs-top) max-h-[calc(100dvh-var(--docs-top))] scroll-py-10 self-start overflow-y-auto overscroll-contain [scrollbar-width:thin]";
 
 /** The pages of the set: a `SideNav`. Hidden below `lg`. */
 export function DocsLayoutNav({ className, ...props }: ComponentProps<"div">) {
   return (
-    <div
+    <ScrollFade
+      axis="y"
       data-slot="docs-layout-nav"
       // The padding on the right keeps the focus outline of a link inside the scrolling box.
       // `pt-10` like the main column, so the first group's name stands on the line of the
@@ -57,7 +63,8 @@ export function DocsLayoutMain({ className, ...props }: ComponentProps<"main">) 
 /** The sections of the page: a `TableOfContents`. Hidden below `xl`. */
 export function DocsLayoutAside({ className, ...props }: ComponentProps<"div">) {
   return (
-    <div
+    <ScrollFade
+      axis="y"
       data-slot="docs-layout-aside"
       className={cn(sticky, "hidden pt-10 pb-10 pl-1 xl:block", className)}
       {...props}

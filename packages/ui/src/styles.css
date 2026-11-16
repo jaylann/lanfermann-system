@@ -15,6 +15,7 @@
 @import "./styles/grounds.css";
 @import "./styles/status.css";
 @import "./styles/code.css";
+@import "./styles/copy.css";
 @import "./styles/type.css";
 @import "./styles/radius.css";
 @import "./styles/density.css";
@@ -27,6 +28,7 @@
 @import "./styles/slider.css";
 @import "./styles/segmented.css";
 @import "./styles/tabs.css";
+@import "./styles/scroll-fade.css";
 @import "./styles/calendar.css";
 @import "./styles/prose.css";
 @import "./styles/base.css";

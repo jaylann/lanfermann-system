@@ -1,5 +1,6 @@
 import { type ComponentProps, Fragment, type ReactNode } from "react";
 
+import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
 
 /**
@@ -12,11 +13,7 @@ import { cn } from "@/lib/cn";
  */
 export function ParameterList({ className, ...props }: ComponentProps<"dl">) {
   return (
-    <dl
-      data-slot="parameter-list"
-      className={cn("flex flex-col border-t-2 border-rule", className)}
-      {...props}
-    />
+    <dl data-slot="parameter-list" className={cn("flex flex-col", ruleTop, className)} {...props} />
   );
 }
 

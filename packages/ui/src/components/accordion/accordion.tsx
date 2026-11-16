@@ -4,6 +4,7 @@ import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
 
 import { disclosureChevron, disclosurePanel } from "@/internal/disclosure";
 import { ChevronDownGlyph } from "@/internal/glyphs";
+import { ruleTop } from "@/internal/rule";
 import { cn, mergeClassName } from "@/lib/cn";
 
 export type AccordionProps = AccordionPrimitive.Root.Props;
@@ -21,7 +22,7 @@ export function Accordion({ className, ...props }: AccordionProps) {
     <AccordionPrimitive.Root
       data-slot="accordion"
       // Structure by line, like a table: a rule opens the block, hairlines divide the rows.
-      className={mergeClassName("flex w-full flex-col border-t-2 border-rule", className)}
+      className={mergeClassName(["flex w-full flex-col", ruleTop], className)}
       {...props}
     />
   );
