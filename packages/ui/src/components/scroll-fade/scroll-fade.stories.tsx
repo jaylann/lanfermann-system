@@ -84,8 +84,10 @@ function ScrolledToMiddle({ children }: { children: ReactNode }) {
     const box = ref.current?.querySelector<HTMLElement>('[data-slot="scroll-fade"]');
     if (!box) return;
     const observer = new ResizeObserver(() => {
-      box.scrollTop = (box.scrollHeight - box.clientHeight) / 2;
-      box.scrollLeft = (box.scrollWidth - box.clientWidth) / 2;
+      // To a whole pixel: half of an odd way is drawn a pixel up in one run and down in the
+      // next, and the pictures of this story are compared.
+      box.scrollTop = Math.floor((box.scrollHeight - box.clientHeight) / 2);
+      box.scrollLeft = Math.floor((box.scrollWidth - box.clientWidth) / 2);
     });
     observer.observe(box);
     return () => observer.disconnect();
