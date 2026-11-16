@@ -33,6 +33,7 @@ export {
 } from "./components/breadcrumbs/breadcrumbs";
 export { Button, type ButtonProps } from "./components/button/button";
 export { type ButtonVariants, buttonVariants } from "./components/button/button-variants";
+export { ButtonGroup, type ButtonGroupProps } from "./components/button-group/button-group";
 export { Calendar, type CalendarProps, type DateRange } from "./components/calendar/calendar";
 export { Callout, type CalloutProps, type CalloutTone } from "./components/callout/callout";
 export {
