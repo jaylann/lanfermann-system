@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/jaylann/lanfermann-system/compare/v0.2.0...v0.3.0) (2026-11-16)
+
+
+### Features
+
+* **ui:** add CopyPage, a docs page handed on as Markdown ([9d83e5f](https://github.com/jaylann/lanfermann-system/commit/9d83e5ff14bfdc26755ef72acf8207de9bdf49a8))
+* **ui:** add CopyPage, a docs page handed on as Markdown ([dc33ab3](https://github.com/jaylann/lanfermann-system/commit/dc33ab3538d26578dd2b3272db9dfc2666573b8b))
+* **ui:** add CopyPage, a docs page handed on as Markdown ([245cbf2](https://github.com/jaylann/lanfermann-system/commit/245cbf2c45c469aed90a864329f24a757bac276f))
+* **ui:** fade scrolled edges and round the ends of every 2px rule ([732f6f6](https://github.com/jaylann/lanfermann-system/commit/732f6f6006b00ef8c9a533e5c7d4898e536c8501))
+* **ui:** fade scrolled edges and round the ends of every 2px rule ([e3cc6bd](https://github.com/jaylann/lanfermann-system/commit/e3cc6bde6c79c9220590757288b39778cb9ed926))
+
 ## [0.2.0](https://github.com/jaylann/lanfermann-system/compare/v0.1.1...v0.2.0) (2026-11-16)
 
 
