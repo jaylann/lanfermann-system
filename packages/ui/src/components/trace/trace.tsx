@@ -28,13 +28,23 @@ const defaultStatusLabels: Record<TraceStatus, string> = {
   error: "Fehlgeschlagen",
 };
 
-type TraceContextValue = { labels: Record<TraceStatus, string>; rail: boolean };
+/** What stands in front of a finished step: the system's disc, or the step's own symbol. */
+export type TraceMarks = "dots" | "symbols";
 
-const TraceContext = createContext<TraceContextValue>({ labels: defaultStatusLabels, rail: true });
+type TraceContextValue = { labels: Record<TraceStatus, string>; marks: TraceMarks };
+
+const TraceContext = createContext<TraceContextValue>({
+  labels: defaultStatusLabels,
+  marks: "dots",
+});
 
 export type TraceProps = ComponentProps<"ol"> & {
-  /** A hairline joins the marks of the steps, so they read as one way. On by default. */
-  rail?: boolean;
+  /**
+   * `dots` keeps to the system's marks: ring, arc and disc. It is the quieter list. `symbols`
+   * shows a finished step's `icon` in place of its disc, so the kind of step can be read down
+   * the rail: a search, a file, a mail. A step without an `icon` keeps its disc.
+   */
+  marks?: TraceMarks;
   /** What each state is called for assistive tech, where the mark alone would say it. */
   statusLabels?: Partial<Record<TraceStatus, string>>;
 };
@@ -42,15 +52,15 @@ export type TraceProps = ComponentProps<"ol"> & {
 /**
  * What an assistant is doing, step by step: the searches, the files, the tools, in the order
  * they happen. It is read, not operated, so it is flat: a list of lines, each with the system's
- * mark in front. An open ring waits, the spinner's arc works (it is the ring before it has
- * closed), and the disc is done; a step that failed carries the danger symbol and says so in
- * words.
+ * mark in front, joined by a hairline. An open ring waits, the spinner's arc works (it is the
+ * ring before it has closed), and the disc is done; a step that failed carries the danger
+ * symbol and says so in words.
  *
  * Put `TraceStep`s inside. A step that joins a list already on screen fades in, and its title
  * is announced; the steps that are there when the list first shows do not move. For one line
  * that stands for the whole of it and opens the steps, wrap the list in a `TraceSummary`.
  */
-export function Trace({ rail = true, statusLabels, className, ...props }: TraceProps) {
+export function Trace({ marks = "dots", statusLabels, className, ...props }: TraceProps) {
   // Page load does not animate: only a step that mounts after the list stands fades in.
   const [live, setLive] = useState(false);
   useEffect(() => {
@@ -58,8 +68,8 @@ export function Trace({ rail = true, statusLabels, className, ...props }: TraceP
     return () => cancelAnimationFrame(frame);
   }, []);
   const context = useMemo(
-    () => ({ labels: { ...defaultStatusLabels, ...statusLabels }, rail }),
-    [statusLabels, rail],
+    () => ({ labels: { ...defaultStatusLabels, ...statusLabels }, marks }),
+    [statusLabels, marks],
   );
   return (
     <TraceContext value={context}>
@@ -86,7 +96,10 @@ type RowProps = {
   title: ReactNode;
   /** A second, quieter fact after the title: how long it took, how much was found. */
   meta?: ReactNode;
-  /** A symbol for the kind of step, in place of the disc once it is done. All steps or none. */
+  /**
+   * A symbol for the kind of step. A list with `marks="symbols"` shows it in place of the disc
+   * once the step is done. Give every step one or none.
+   */
   icon?: IconSvgElement;
   /** Whether the detail shows (controlled). */
   open?: boolean;
@@ -108,7 +121,13 @@ function TraceMark({ status, icon }: { status: TraceStatus; icon?: IconSvgElemen
       ) : status === "error" ? (
         <Icon icon={Alert02Icon} size={14} className="text-danger" />
       ) : icon && status === "done" ? (
-        <Icon icon={icon} size={14} className="text-fg-muted" />
+        // A step that has just finished: its symbol comes in where the arc was, as the disc
+        // closes in the other form.
+        <Icon
+          icon={icon}
+          size={14}
+          className="text-fg-muted transition-opacity spring-settle in-data-live:starting:opacity-0"
+        />
       ) : (
         // A step that has just finished closes from the ring into the disc (marks.css).
         <span className={cn("mark", status === "done" && "mark-on in-data-live:mark-closes")} />
@@ -134,10 +153,10 @@ function TraceLine({
   opens,
 }: Required<Pick<RowProps, "status" | "title">> &
   Pick<RowProps, "meta" | "icon"> & { opens: boolean }) {
-  const { labels } = useContext(TraceContext);
+  const { labels, marks } = useContext(TraceContext);
   return (
     <>
-      <TraceMark status={status} icon={icon} />
+      <TraceMark status={status} icon={marks === "symbols" ? icon : undefined} />
       <span data-slot="trace-title" className={cn("min-w-0 truncate", titleTone[status])}>
         <span className="sr-only">{labels[status]}: </span>
         {title}
@@ -204,7 +223,6 @@ export function TraceStep({
   children,
   ...props
 }: TraceStepProps) {
-  const { rail } = useContext(TraceContext);
   const opens = children !== undefined && children !== null && children !== false;
   const content = <TraceLine status={status} title={title} meta={meta} icon={icon} opens={opens} />;
   return (
@@ -216,8 +234,7 @@ export function TraceStep({
         // A step that joins later rises into place; under reduced motion it only fades.
         "transition-[opacity,translate] spring-settle in-data-live:starting:translate-y-(--motion-enter-offset) in-data-live:starting:opacity-0",
         // The rail: a hairline from under this mark to above the next, 5px clear of a disc.
-        rail &&
-          "before:absolute before:top-[1.4375rem] before:-bottom-[0.3125rem] before:left-[0.46875rem] before:w-px before:bg-hairline last:before:hidden forced-colors:before:bg-[CanvasText]",
+        "before:absolute before:top-[1.4375rem] before:-bottom-[0.3125rem] before:left-[0.46875rem] before:w-px before:bg-hairline last:before:hidden forced-colors:before:bg-[CanvasText]",
         className,
       )}
       {...props}

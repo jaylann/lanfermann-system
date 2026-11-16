@@ -1,17 +1,18 @@
 import {
-  File01Icon,
   Invoice01Icon,
   Mail01Icon,
   PencilEdit02Icon,
   Search01Icon,
 } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useEffect, useState } from "react";
 import { expect, waitFor } from "storybook/test";
 
 import { Badge } from "@/components/badge/badge";
+import { Button } from "@/components/button/button";
 import { Code } from "@/components/code/code";
 
-import { Trace, type TraceProps, TraceStep, TraceSummary } from "./trace";
+import { Trace, type TraceProps, type TraceStatus, TraceStep, TraceSummary } from "./trace";
 
 const meta = {
   title: "Components/Trace",
@@ -44,42 +45,40 @@ function Payments() {
   );
 }
 
-function Reminders({ icons = false, ...props }: TraceProps & { icons?: boolean }) {
+/** Every step knows its kind; whether the symbol shows is the list's (`marks`). */
+function Reminders(props: TraceProps) {
   return (
     <Trace aria-label="Offene Rechnungen prüfen" className="w-[26rem] max-w-full" {...props}>
-      <TraceStep
-        title="Offene Rechnungen gesucht"
-        meta="12 gefunden"
-        icon={icons ? Search01Icon : undefined}
-      />
-      <TraceStep
-        title="Zahlungseingänge abgeglichen"
-        meta="9 bezahlt"
-        icon={icons ? Invoice01Icon : undefined}
-      >
+      <TraceStep title="Offene Rechnungen gesucht" meta="12 gefunden" icon={Search01Icon} />
+      <TraceStep title="Zahlungseingänge abgeglichen" meta="9 bezahlt" icon={Invoice01Icon}>
         <Payments />
       </TraceStep>
       <TraceStep
         status="running"
         title="Mahnungen werden entworfen"
         meta="2 von 3"
-        icon={icons ? PencilEdit02Icon : undefined}
+        icon={PencilEdit02Icon}
       />
-      <TraceStep
-        status="pending"
-        title="Zur Freigabe vorlegen"
-        icon={icons ? Mail01Icon : undefined}
-      />
+      <TraceStep status="pending" title="Zur Freigabe vorlegen" icon={Mail01Icon} />
     </Trace>
   );
 }
 
 /**
  * Four steps of one piece of work: two done, one being worked on, one still to come. The disc
- * is done, the arc is working, the ring waits.
+ * is done, the arc is working, the ring waits, and a hairline joins them.
  */
 export const Default: Story = {
-  render: () => <Reminders />,
+  render: (args) => <Reminders {...args} />,
+};
+
+/**
+ * The same steps with `marks="symbols"`: a finished step carries the symbol of its kind in
+ * place of the disc. What is being worked on and what waits keep the arc and the ring.
+ */
+export const Symbols: Story = {
+  args: { marks: "symbols" },
+  render: (args) => <Reminders {...args} />,
 };
 
 /** A step that has more to say opens under its line. */
@@ -113,22 +112,12 @@ export const Failed: Story = {
   ),
 };
 
-/** With a symbol per kind of step, in place of the disc once the step is done. */
-export const WithIcons: Story = {
-  render: () => <Reminders icons />,
-};
-
-/** Without the rail the marks stand alone. */
-export const WithoutRail: Story = {
-  render: () => <Reminders rail={false} />,
-};
-
 /** A helper's own steps, inside the step that started it. */
 export const Nested: Story = {
   parameters: { visual: { viewport: { width: 520, height: 300 } } },
   render: () => (
     <Trace aria-label="Angebot vorbereiten" className="w-[26rem] max-w-full">
-      <TraceStep title="Anfrage der Schreinerei Huber gelesen" icon={File01Icon} />
+      <TraceStep title="Anfrage der Schreinerei Huber gelesen" />
       <TraceStep status="running" title="Preise werden ermittelt" meta="2 Schritte" defaultOpen>
         <Trace aria-label="Preise ermitteln">
           <TraceStep title="Frühere Angebote verglichen" meta="3 gefunden" />
@@ -166,6 +155,99 @@ export const SummaryDone: Story = {
       </Trace>
     </TraceSummary>
   ),
+};
+
+const script = [
+  {
+    running: "Offene Rechnungen werden gesucht",
+    done: "Offene Rechnungen gesucht",
+    meta: "12 gefunden",
+    icon: Search01Icon,
+  },
+  {
+    running: "Zahlungseingänge werden abgeglichen",
+    done: "Zahlungseingänge abgeglichen",
+    meta: "9 bezahlt",
+    icon: Invoice01Icon,
+  },
+  {
+    running: "Mahnungen werden entworfen",
+    done: "Drei Mahnungen entworfen",
+    meta: "4 s",
+    icon: PencilEdit02Icon,
+  },
+  {
+    running: "Wird zur Freigabe vorgelegt",
+    done: "Zur Freigabe vorgelegt",
+    meta: undefined,
+    icon: Mail01Icon,
+  },
+];
+
+/** The work as a chat shows it: a step every 1.6 seconds, then the summary puts them away. */
+function Working(props: TraceProps) {
+  // How many steps are finished; the next one is running.
+  const [finished, setFinished] = useState(0);
+  const [run, setRun] = useState(0);
+  const over = finished >= script.length;
+
+  useEffect(() => {
+    if (over) return;
+    const timer = setTimeout(() => setFinished((count) => count + 1), 1600);
+    return () => clearTimeout(timer);
+  }, [finished, over, run]);
+
+  return (
+    <div className="flex min-h-56 w-[26rem] max-w-full flex-col items-start justify-between gap-6">
+      <TraceSummary
+        key={run}
+        status={over ? "done" : "running"}
+        title={over ? "In 6 Sekunden erledigt" : "Arbeitet"}
+        meta={`${Math.min(finished + 1, script.length)} ${finished === 0 ? "Schritt" : "Schritte"}`}
+      >
+        <Trace aria-label="Offene Rechnungen prüfen" {...props}>
+          {script.slice(0, finished + 1).map((step, index) => {
+            const status: TraceStatus = index < finished ? "done" : "running";
+            return (
+              <TraceStep
+                key={step.done}
+                status={status}
+                title={status === "done" ? step.done : step.running}
+                meta={status === "done" ? step.meta : undefined}
+                icon={step.icon}
+              />
+            );
+          })}
+        </Trace>
+      </TraceSummary>
+      <Button
+        size="sm"
+        onClick={() => {
+          setFinished(0);
+          setRun((count) => count + 1);
+        }}
+      >
+        Noch einmal abspielen
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * The trace at work, on a clock: steps join, the running line shimmers, a finished step's mark
+ * closes from the ring into the disc, and the summary puts the steps away when the work is
+ * done. It moves by itself, so it is left out of the stills.
+ */
+export const AtWork: Story = {
+  tags: ["visual-skip"],
+  render: (args) => <Working {...args} />,
+};
+
+/** The same work with `marks="symbols"`: a finished step's symbol comes in where the arc was. */
+export const AtWorkSymbols: Story = {
+  tags: ["visual-skip"],
+  args: { marks: "symbols" },
+  render: (args) => <Working {...args} />,
 };
 
 /**

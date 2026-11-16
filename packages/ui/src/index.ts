@@ -388,6 +388,7 @@ export {
 } from "./components/tooltip/tooltip";
 export {
   Trace,
+  type TraceMarks,
   type TraceProps,
   type TraceStatus,
   TraceStep,
