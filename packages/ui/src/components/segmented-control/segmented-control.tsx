@@ -45,9 +45,14 @@ const seatDepth: Record<Shape, string> = {
 };
 
 /** What a segment has to know of its control. `lens` marks the copy the thumb shows. */
-type Track = { shape: Shape; value: string | undefined; lens: boolean };
+type Track = { shape: Shape; value: string | undefined; lens: boolean; marks: boolean };
 
-const TrackContext = createContext<Track>({ shape: "square", value: undefined, lens: false });
+const TrackContext = createContext<Track>({
+  shape: "square",
+  value: undefined,
+  lens: false,
+  marks: true,
+});
 
 /** How far a press on the thumb must travel before it is a drag and not a click, in px. */
 const DRAG_SLOP = 4;
@@ -91,6 +96,12 @@ export type SegmentedControlProps = Omit<
    */
   shape?: Shape;
   /**
+   * The round shape draws the system's mark before every label: a ring, and the disc where the
+   * thumb is. `false` leaves it out, for segments that are a symbol each: the symbol is the
+   * mark then. The square shape has no marks.
+   */
+  marks?: boolean;
+  /**
    * The thumb has weight: it can be pulled to another segment, it stretches along its way and
    * squashes as it lands, and it reaches for a mouse that rests over another segment. `false`
    * leaves a thumb that only glides.
@@ -116,6 +127,7 @@ export function SegmentedControl({
   defaultValue,
   onValueChange,
   shape = "square",
+  marks = true,
   inertia = true,
   className,
   children,
@@ -459,8 +471,8 @@ export function SegmentedControl({
   }
 
   const round = shape === "round";
-  const track = useMemo<Track>(() => ({ shape, value, lens: false }), [shape, value]);
-  const lens = useMemo<Track>(() => ({ shape, value, lens: true }), [shape, value]);
+  const track = useMemo<Track>(() => ({ shape, value, lens: false, marks }), [shape, value, marks]);
+  const lens = useMemo<Track>(() => ({ shape, value, lens: true, marks }), [shape, value, marks]);
   return (
     <ToggleGroupPrimitive
       ref={trackRef}
@@ -550,6 +562,7 @@ const segmentText =
 export function Segment({ value, className, children, ...props }: SegmentProps) {
   const track = useContext(TrackContext);
   const round = track.shape === "round";
+  const marked = round && track.marks;
 
   if (track.lens) {
     // What the thumb shows of this segment: the same box, the colour of the choice. On the
@@ -568,9 +581,9 @@ export function Segment({ value, className, children, ...props }: SegmentProps) 
       >
         <span
           data-slot="segment-label"
-          className={cn("inline-flex items-center", round && "gap-1.5")}
+          className={cn("inline-flex items-center", marked && "gap-1.5")}
         >
-          {round && (
+          {marked && (
             <span
               data-slot="segment-mark"
               className="mark group-data-pressed:mark-on group-data-pressed:delay-(--segment-seat)"
@@ -612,9 +625,9 @@ export function Segment({ value, className, children, ...props }: SegmentProps) 
       {/* Under the thumb (`-z-1`), so the lens covers it; the focus ring stays on top. */}
       <span
         data-slot="segment-label"
-        className={cn("relative -z-1 inline-flex items-center", round && "gap-1.5")}
+        className={cn("relative -z-1 inline-flex items-center", marked && "gap-1.5")}
       >
-        {round && (
+        {marked && (
           <span
             data-slot="segment-mark"
             aria-hidden
