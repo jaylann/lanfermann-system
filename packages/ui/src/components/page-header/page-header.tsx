@@ -5,7 +5,10 @@ import { Text, type TextProps } from "@/components/text/text";
 import { cn } from "@/lib/cn";
 
 export type PageHeaderProps = ComponentProps<"div"> & {
-  /** Opens the block with the 2px rule. Every section of a page has one; its opening has none. */
+  /**
+   * Opens the block with the 2px rule. Every section of a page has one; its opening has none, and
+   * neither has a section that a `Seam` opens.
+   */
   rule?: boolean;
 };
 

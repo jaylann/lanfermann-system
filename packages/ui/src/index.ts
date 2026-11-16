@@ -247,6 +247,7 @@ export {
   ReferenceEntryName,
   ReferenceEntryTitle,
 } from "./components/reference-entry/reference-entry";
+export { Seam, type SeamProps } from "./components/seam/seam";
 export { Section, type SectionProps } from "./components/section/section";
 export {
   Segment,
