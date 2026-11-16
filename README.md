@@ -137,6 +137,9 @@ What the app provides, and what it gets:
 ## Conventions
 
 - **Branches:** `stage` is the working branch; `main` is release/tag-only.
+- **Releases:** a push to `main` makes release-please open a release PR with the next version and
+  the changelog, read from the commit messages. Merging it publishes `@lanfermann/ui` to npm from
+  CI, with provenance (`.github/workflows/release.yml`). Then merge `main` back into `stage`.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/), enforced by the
   `commit-msg` hook and the `pr-title` CI check.
 - **Linting/format:** staged files are fixed on commit; CI runs lint, typecheck, test, build, the
