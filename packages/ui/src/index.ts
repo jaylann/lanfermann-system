@@ -89,6 +89,7 @@ export {
   type ContainerProps,
   containerVariants,
 } from "./components/container/container";
+export { CopyPage, type CopyPageProps } from "./components/copy-page/copy-page";
 export { CopyPill, CopyPillMark, type CopyPillProps } from "./components/copy-pill/copy-pill";
 export {
   Cta,
