@@ -1,0 +1,252 @@
+/*
+ * Code: the colours of a code block, per ground. Shiki writes them into the highlighted spans as
+ * `var(--lf-code-<role>)` (src/components/code-block/highlight.ts), so a block takes the ground it
+ * stands on like every other part, and a nested ground recolours the code inside it.
+ *
+ * Ten roles, fewer than a code editor's theme on purpose: code here is read, not edited. The
+ * plain text is the body colour, punctuation and comments are muted, and the keyword is the
+ * accent. Strings, numbers, functions, types and tags take five hues beside it ("Farbig",
+ * picked by Justin on 2026-11-15 over a calmer palette, then made more saturated so the hues
+ * tell apart at a glance). Contrast of every role on the block's faces (well, surface, ground) and on the three
+ * line washes (marked, added, removed) is asserted in src/styles/tokens.test.ts.
+ *
+ * The washes are code-specific because a line wash must keep every syntax colour readable: on
+ * Indigo the status washes are one colour, so the washes here step darker instead.
+ */
+
+:root,
+[data-theme="paper"] {
+  --lf-code-text: #302f39;
+  --lf-code-punct: #686775;
+  --lf-code-comment: #686775;
+  --lf-code-keyword: #5f50d0;
+  --lf-code-string: #0a7520;
+  --lf-code-number: #a14f09;
+  --lf-code-function: #125fb3;
+  --lf-code-type: #007273;
+  --lf-code-tag: #b11f47;
+  --lf-code-attribute: #125fb3;
+
+  /* The face: a white sheet, its header on the well. */
+  --lf-code-face: #ffffff;
+  --lf-code-head: #f6f6fa;
+
+  --lf-code-mark: #edeafc;
+  --lf-code-added: #dff8e6;
+  --lf-code-removed: #ffebea;
+}
+
+[data-theme="tint"] {
+  --lf-code-text: #302f39;
+  --lf-code-punct: #5f5e6e;
+  --lf-code-comment: #5f5e6e;
+  --lf-code-keyword: #5f50d0;
+  --lf-code-string: #0a7520;
+  --lf-code-number: #a14f09;
+  --lf-code-function: #125fb3;
+  --lf-code-type: #007273;
+  --lf-code-tag: #b11f47;
+  --lf-code-attribute: #125fb3;
+
+  --lf-code-face: #ffffff;
+  --lf-code-head: #f6f5fd;
+
+  --lf-code-mark: #edeafc;
+  --lf-code-added: #dff8e6;
+  --lf-code-removed: #ffebea;
+}
+
+.dark,
+[data-theme="ink"] {
+  --lf-code-text: #d8d8df;
+  --lf-code-punct: #aaa9ba;
+  --lf-code-comment: #aaa9ba;
+  --lf-code-keyword: #a6a1fd;
+  --lf-code-string: #8de29a;
+  --lf-code-number: #fcbc7c;
+  --lf-code-function: #85ccff;
+  --lf-code-type: #76e2e2;
+  --lf-code-tag: #fca0a7;
+  --lf-code-attribute: #85ccff;
+
+  /* In the dark the sheet is the black slab, its header lifted. */
+  --lf-code-face: #13121c;
+  --lf-code-head: #1d1c28;
+
+  --lf-code-mark: #2b2654;
+  --lf-code-added: #143320;
+  --lf-code-removed: #4b1d20;
+}
+
+[data-theme="indigo"] {
+  --lf-code-text: #ffffff;
+  --lf-code-punct: #e6e3fb;
+  --lf-code-comment: #e6e3fb;
+  --lf-code-keyword: #ffffff;
+  --lf-code-string: #bcf6c3;
+  --lf-code-number: #ffe0bb;
+  --lf-code-function: #c6ecff;
+  --lf-code-type: #b0f7f6;
+  --lf-code-tag: #ffdbdd;
+  --lf-code-attribute: #c6ecff;
+
+  --lf-code-face: #5244c2;
+  --lf-code-head: #4b3eb8;
+
+  --lf-code-mark: #3f32a6;
+  --lf-code-added: #3a3aa8;
+  --lf-code-removed: #4a2f9e;
+}
+
+@theme inline {
+  --color-code-face: var(--lf-code-face);
+  --color-code-head: var(--lf-code-head);
+  --color-code-text: var(--lf-code-text);
+  --color-code-punct: var(--lf-code-punct);
+  --color-code-mark: var(--lf-code-mark);
+  --color-code-added: var(--lf-code-added);
+  --color-code-removed: var(--lf-code-removed);
+}
+
+/*
+ * The edges of a block that scrolls sideways fade where more code waits. The two lengths are
+ * registered so the mask can move between them on a spring; the scroller sets them from
+ * `data-overflow` (code-block-frame.tsx).
+ */
+@property --code-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --code-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+/*
+ * The parts of a block that Tailwind classes cannot say well: counters, generated signs and the
+ * mask. Measures come from the block (code-block-frame.tsx):
+ *   --code-pad-x     the inset of the code from the block's edge
+ *   --code-gutter    the room before the code: line numbers and the sign of a change
+ *   --code-digits    the width of the widest line number
+ *   --code-sign-at   where the sign of a change stands, from the inset
+ */
+@layer components {
+  /* As wide as the longest line or the block, whichever is wider: a wash runs the full width. */
+  [data-slot="code-block-code"] {
+    display: grid;
+    width: max-content;
+    min-width: 100%;
+    counter-reset: line;
+    font-variant-ligatures: none;
+    tab-size: 2;
+  }
+  [data-slot="code-block-code"][data-wrap] {
+    width: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  [data-slot="code-block-line"] {
+    position: relative;
+    min-height: 1lh;
+    padding-inline: var(--code-pad-x) var(--code-pad-x);
+    padding-left: calc(var(--code-pad-x) + var(--code-gutter, 0px));
+    counter-increment: line;
+  }
+
+  /* Numbers are read past, not read out, and never copied with the code. */
+  [data-line-numbers] > [data-slot="code-block-line"]::before {
+    content: counter(line) / "";
+    position: absolute;
+    left: var(--code-pad-x);
+    width: var(--code-digits);
+    text-align: right;
+    color: var(--lf-text-muted);
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+  }
+
+  /* A marked line: the tint, and the accent along its edge (a gradient, not a shadow). */
+  [data-slot="code-block-line"][data-kind="marked"] {
+    background: linear-gradient(to right, var(--lf-accent) 2px, var(--lf-code-mark) 2px);
+  }
+
+  /* A change carries its sign, so colour is never the only way to tell. The sign is read out
+     with its word (`data-label`) but never copied. */
+  [data-slot="code-block-line"][data-kind="added"] {
+    background-color: var(--lf-code-added);
+  }
+  [data-slot="code-block-line"][data-kind="removed"] {
+    background-color: var(--lf-code-removed);
+  }
+  [data-slot="code-block-line"]:is([data-kind="added"], [data-kind="removed"])::after {
+    position: absolute;
+    left: calc(var(--code-pad-x) + var(--code-sign-at, 0px));
+    user-select: none;
+  }
+  [data-slot="code-block-line"][data-kind="added"]::after {
+    content: "+" / attr(data-label);
+    color: var(--lf-success);
+  }
+  [data-slot="code-block-line"][data-kind="removed"]::after {
+    content: "−" / attr(data-label);
+    color: var(--lf-danger);
+  }
+
+  /* The edges fade where more code waits to the side; the mask moves on `settle`. The focus
+     outline is drawn by the block around it, since a mask would cut it off. */
+  [data-slot="code-block-scroll"] {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--code-fade-start),
+      #000 calc(100% - var(--code-fade-end)),
+      transparent
+    );
+    transition:
+      --code-fade-start var(--transition-duration-spring-settle) var(--ease-spring-settle),
+      --code-fade-end var(--transition-duration-spring-settle) var(--ease-spring-settle);
+    scrollbar-width: thin;
+    scrollbar-color: var(--lf-line) transparent;
+  }
+  [data-slot="code-block-scroll"][data-overflow~="start"] {
+    --code-fade-start: 2.5rem;
+  }
+  [data-slot="code-block-scroll"][data-overflow~="end"] {
+    --code-fade-end: 2.5rem;
+  }
+
+  /*
+   * Copy: the copy symbol shrinks away and a tick is drawn in its place, short leg first, as in
+   * a checkbox. When the moment has passed the tick fades where it is (it is not undrawn) and the
+   * copy symbol seats back with a little bounce.
+   */
+  [data-slot="code-copy-symbol"] {
+    transition-property: scale, opacity;
+    transition-duration: var(--transition-duration-spring-seat);
+    transition-timing-function: var(--ease-spring-seat);
+  }
+  [data-copied] > [data-slot="code-copy-symbol"] {
+    scale: 0.5;
+    opacity: 0;
+    transition-duration: var(--transition-duration-spring-leave);
+    transition-timing-function: var(--ease-spring-leave);
+  }
+  [data-slot="code-copy-tick"] {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
+    transition:
+      opacity var(--transition-duration-spring-leave) var(--ease-spring-leave),
+      stroke-dashoffset 0s var(--transition-duration-spring-leave);
+  }
+  [data-copied] > [data-slot="code-copy-tick"] {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transition:
+      opacity 60ms linear 60ms,
+      stroke-dashoffset 220ms cubic-bezier(0.3, 0, 0.2, 1) 60ms;
+  }
+}

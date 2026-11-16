@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [stage, main]
+
+# Cancel superseded runs on a branch/PR, but never cancel main.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: ESLint
+        run: bun run lint
+      - name: Prettier
+        run: bun run format:check
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: tsc --noEmit (all workspaces)
+        run: bun run typecheck
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Vitest
+        run: bun run test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build library + docs
+        run: bun run build
+
+  # The workshop must keep building: every story compiles against the library's source.
+  storybook:
+    name: Storybook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build the workshop
+        run: bun run build-storybook
+
+  # Every story in a real browser: it renders, has no accessibility violation, and its `play`
+  # function (the keyboard path) passes. On Paper and on Ink, where contrast differs.
+  stories:
+    name: Stories (${{ matrix.ground }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ground: [paper, ink]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Playwright version
+        id: playwright
+        working-directory: packages/ui
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache the browser
+        id: browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium
+        if: steps.browser.outputs.cache-hit != 'true'
+        working-directory: packages/ui
+        run: bunx playwright install chromium
+      - name: Install Chromium's system libraries
+        working-directory: packages/ui
+        run: bunx playwright install-deps chromium
+      - name: Story tests
+        working-directory: packages/ui
+        run: bun run test:stories
+        env:
+          SB_GROUND: ${{ matrix.ground }}
+
+  # Every story's picture against the committed baseline. The pictures are drawn inside the
+  # pinned Playwright image (scripts/visual/image.ts), the same one a laptop uses, on an arm64
+  # runner like the machines the baseline is made on: only the same browser build on the same
+  # architecture draws the same pixels.
+  visual:
+    name: Visual regression
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build the workshop
+        run: bun run build-storybook
+      - name: Compare with the baseline
+        working-directory: packages/ui
+        run: bun run visual:check
+      - name: Say what moved
+        if: failure()
+        working-directory: packages/ui
+        run: |
+          if [ -f .visual/diff/summary.md ]; then cat .visual/diff/summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Keep the strips
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diff
+          path: packages/ui/.visual/diff
+          if-no-files-found: ignore
+
+  typos:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check spelling
+        uses: crate-ci/typos@master

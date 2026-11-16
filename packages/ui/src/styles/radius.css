@@ -1,0 +1,20 @@
+/*
+ * Radius. One knob. The look is industrial through the edge, not the corner: like a milled part,
+ * corners are filleted and the edge is chamfered (see depth.css).
+ *
+ * Concentric rule: a part nested inside another takes  inner = outer − the padding between them,
+ * e.g. an item inside a sheet with 4px padding: rounded-[calc(var(--radius-xl)-4px)].
+ */
+
+:root {
+  --radius-base: 0.5rem;
+}
+
+@theme inline {
+  --radius-xs: calc(var(--radius-base) - 3px); /* 5: checkbox, kbd */
+  --radius-sm: calc(var(--radius-base) - 2px); /* 6: small controls, badges */
+  --radius-md: var(--radius-base); /* 8: controls */
+  --radius-lg: calc(var(--radius-base) + 2px); /* 10: large controls */
+  --radius-xl: calc(var(--radius-base) * 1.5); /* 12: sheets, cards */
+  --radius-2xl: calc(var(--radius-base) * 2); /* 16: dialogs */
+}

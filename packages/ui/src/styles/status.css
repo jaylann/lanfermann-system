@@ -1,0 +1,108 @@
+/*
+ * Status colours: a UI-only extension. The kit has none ("severity is said in words"), so a status
+ * here always arrives WITH words and an icon; colour alone never carries it.
+ *
+ * Each hue is the accent's lightness and chroma on that ground, turned to its hue angle, so the
+ * four sit beside Indigo and Ink instead of fighting them. Info reuses the Indigo/Tint family.
+ *
+ * Per status: `<s>` text, icon and edge (4.5:1 on ground, surface and its own soft fill),
+ * `<s>-soft` wash, `<s>-solid` fill, `on-<s>` text on the solid fill. Contrast is asserted in
+ * src/styles/tokens.test.ts.
+ */
+
+:root,
+[data-theme="paper"],
+[data-theme="tint"] {
+  --lf-danger: #bd1f3d;
+  --lf-danger-soft: #ffebea;
+  --lf-danger-solid: #bd1f3d;
+  --lf-on-danger: #ffffff;
+
+  --lf-warning: #8a5600;
+  --lf-warning-soft: #feefcf;
+  --lf-warning-solid: #f4b93c;
+  --lf-on-warning: #13121c;
+
+  --lf-success: #07703f;
+  --lf-success-soft: #dff8e6;
+  --lf-success-solid: #07703f;
+  --lf-on-success: #ffffff;
+
+  --lf-info: #5f50d0;
+  --lf-info-soft: #edeafc;
+  --lf-info-solid: #5f50d0;
+  --lf-on-info: #ffffff;
+}
+
+/* On Tint the info wash would vanish into the ground, so it steps to white. */
+[data-theme="tint"] {
+  --lf-info-soft: #ffffff;
+}
+
+.dark,
+[data-theme="ink"] {
+  --lf-danger: #f1878c;
+  --lf-danger-soft: #4b1d20;
+  --lf-danger-solid: #f1878c;
+  --lf-on-danger: #13121c;
+
+  --lf-warning: #eebb58;
+  --lf-warning-soft: #3b2b0d;
+  --lf-warning-solid: #eebb58;
+  --lf-on-warning: #13121c;
+
+  --lf-success: #6cd092;
+  --lf-success-soft: #143320;
+  --lf-success-solid: #6cd092;
+  --lf-on-success: #13121c;
+
+  --lf-info: #a6a1fd;
+  --lf-info-soft: #2b2654;
+  --lf-info-solid: #a6a1fd;
+  --lf-on-info: #13121c;
+}
+
+/* Indigo is the ask: nothing competes with it. Statuses there are white, in words. */
+[data-theme="indigo"] {
+  --lf-danger: #ffffff;
+  --lf-danger-soft: #5244c2;
+  --lf-danger-solid: #ffffff;
+  --lf-on-danger: #bd1f3d;
+
+  --lf-warning: #ffffff;
+  --lf-warning-soft: #5244c2;
+  --lf-warning-solid: #ffffff;
+  --lf-on-warning: #8a5600;
+
+  --lf-success: #ffffff;
+  --lf-success-soft: #5244c2;
+  --lf-success-solid: #ffffff;
+  --lf-on-success: #07703f;
+
+  --lf-info: #ffffff;
+  --lf-info-soft: #5244c2;
+  --lf-info-solid: #ffffff;
+  --lf-on-info: #5f50d0;
+}
+
+@theme inline {
+  --color-danger: var(--lf-danger);
+  --color-danger-soft: var(--lf-danger-soft);
+  --color-danger-solid: var(--lf-danger-solid);
+  --color-on-danger: var(--lf-on-danger);
+
+  --color-warning: var(--lf-warning);
+  --color-warning-soft: var(--lf-warning-soft);
+  --color-warning-solid: var(--lf-warning-solid);
+  --color-on-warning: var(--lf-on-warning);
+
+  --color-success: var(--lf-success);
+  --color-success-soft: var(--lf-success-soft);
+  --color-success-solid: var(--lf-success-solid);
+  --color-on-success: var(--lf-on-success);
+
+  --color-info: var(--lf-info);
+  --color-info-soft: var(--lf-info-soft);
+  --color-info-solid: var(--lf-info-solid);
+  --color-on-info: var(--lf-on-info);
+}

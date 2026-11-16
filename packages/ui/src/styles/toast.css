@@ -1,0 +1,106 @@
+/*
+ * Toasts: the geometry of the stack. Colours, depth and type come from utilities on the
+ * component; this file only says where a toast sits and how it gets there.
+ *
+ * Ported from Base UI's reference styles. Base UI sets the variables on each toast:
+ *   --toast-index             0 for the newest, counting up behind it
+ *   --toast-height            its natural height
+ *   --toast-frontmost-height  the newest toast's height (on the viewport)
+ *   --toast-offset-y          its distance from the bottom when the stack is expanded
+ *   --toast-swipe-movement-x/y  how far it is being dragged
+ *
+ * Collapsed, older toasts peek out above the newest one, scaled down. Hovering or focusing the
+ * stack expands it into a list. A toast enters by rising from below (`sheet`), leaves by fading
+ * where it is, and one that was swiped away keeps going in the direction it was thrown.
+ */
+
+@utility toast-stack {
+  --gap: 0.625rem;
+  --peek: 0.625rem;
+  --scale: calc(max(0, 1 - (var(--toast-index) * 0.06)));
+  --shrink: calc(1 - var(--scale));
+  --height: var(--toast-frontmost-height, var(--toast-height));
+  --offset-y: calc(
+    var(--toast-offset-y) * -1 + (var(--toast-index) * var(--gap) * -1) +
+      var(--toast-swipe-movement-y)
+  );
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  z-index: calc(1000 - var(--toast-index));
+  width: 100%;
+  height: var(--height);
+  transform-origin: bottom center;
+  user-select: none;
+  transform: translateX(var(--toast-swipe-movement-x))
+    translateY(
+      calc(
+        var(--toast-swipe-movement-y) - (var(--toast-index) * var(--peek)) -
+          (var(--shrink) * var(--height))
+      )
+    )
+    scale(var(--scale));
+  transition:
+    transform var(--transition-duration-spring-sheet) var(--ease-spring-sheet),
+    opacity var(--transition-duration-spring-sheet) var(--ease-spring-sheet),
+    height 150ms ease-out;
+
+  &[data-expanded] {
+    height: var(--toast-height);
+    transform: translateX(var(--toast-swipe-movement-x)) translateY(var(--offset-y));
+  }
+
+  &[data-starting-style] {
+    transform: translateY(150%);
+  }
+
+  /* Over the limit: kept mounted, out of sight. */
+  &[data-limited] {
+    opacity: 0;
+  }
+
+  /* While a finger drags it, the toast follows at once. */
+  &[data-swiping] {
+    transition-duration: 0s, 0s, 150ms;
+  }
+
+  &[data-ending-style] {
+    opacity: 0;
+    transition-duration: var(--transition-duration-spring-leave);
+    transition-timing-function: var(--ease-spring-leave);
+
+    &[data-swipe-direction="up"] {
+      transform: translateY(calc(var(--toast-swipe-movement-y) - 150%));
+    }
+    &[data-swipe-direction="down"] {
+      transform: translateY(calc(var(--toast-swipe-movement-y) + 150%));
+    }
+    &[data-swipe-direction="left"] {
+      transform: translateX(calc(var(--toast-swipe-movement-x) - 150%)) translateY(var(--offset-y));
+    }
+    &[data-swipe-direction="right"] {
+      transform: translateX(calc(var(--toast-swipe-movement-x) + 150%)) translateY(var(--offset-y));
+    }
+  }
+
+  /* Fills the gap to the toast below, so the pointer does not leave the stack between toasts. */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: calc(var(--gap) + 1px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-property: opacity, height;
+
+    &[data-starting-style] {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}

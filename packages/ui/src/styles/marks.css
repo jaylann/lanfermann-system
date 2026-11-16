@@ -1,0 +1,50 @@
+/*
+ * The mark: ring to disc, the system's signature. An open ring is a possibility, the filled disc
+ * is the choice. It marks the current tab, the chosen option in a list, a step that is done.
+ *
+ * The ring is an inset shadow that grows until the hole is closed, so one element carries both
+ * states and the change can be reversed mid-flight. It seats with a little bounce and leaves
+ * without one.
+ */
+
+@utility mark {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: calc(infinity* 1px);
+  /* `--mark-ring` lets a part darken the ring under the pointer. */
+  box-shadow: inset 0 0 0 1.5px var(--mark-ring, var(--lf-line));
+  transition: box-shadow var(--transition-duration-spring-leave) var(--ease-spring-leave);
+}
+
+/* In a list of options only the chosen row shows its mark: the ring is there, but invisible. */
+@utility mark-quiet {
+  box-shadow: inset 0 0 0 1.5px transparent;
+}
+
+@utility mark-on {
+  box-shadow: inset 0 0 0 0.25rem var(--lf-accent);
+  transition-duration: var(--transition-duration-spring-seat);
+  transition-timing-function: var(--ease-spring-seat);
+}
+
+/* Forced colours drop box-shadows: draw the ring as an outline and the disc as a fill. */
+@media (forced-colors: active) {
+  .mark {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+  .mark-quiet {
+    outline-color: transparent;
+  }
+  .mark-on,
+  [class*=":mark-on"]:is(
+    [data-active] > .mark,
+    [data-selected] > .mark,
+    [data-checked] .mark,
+    [data-pressed] .mark
+  ) {
+    outline-color: CanvasText;
+    background-color: CanvasText;
+  }
+}

@@ -1,0 +1,54 @@
+/*
+ * Type. One family, Sofia Sans, in the kit's four weights (400 body, 500 display and control
+ * labels, 600 heads and the highlighted datum, 700 the wordmark and <b>). JetBrains Mono only for
+ * strings a machine reads.
+ *
+ * Sofia Sans is small on its em (x-height 488/1000): 16px of it reads like 14.3px of Inter. So the
+ * kit's document scale IS the UI scale: 16px body, 13.5px for secondary text. The one size off the
+ * scale is `text-control` (density.css): control and field labels, 15px in compact density.
+ *
+ * The fonts are not shipped here. Apps provide them and expose two variables on <html>:
+ *   --font-sofia-sans, --font-jetbrains-mono   (next/font does this)
+ * or load the Fontsource variable packages, whose family names are the fallbacks below.
+ */
+
+@theme inline {
+  --font-sans: var(--font-sofia-sans, "Sofia Sans Variable", "Sofia Sans"), Arial, sans-serif;
+  --font-mono:
+    var(--font-jetbrains-mono, "JetBrains Mono Variable", "JetBrains Mono"), "Courier New",
+    monospace;
+}
+
+/*
+ * The scale sits on Tailwind's t-shirt keys so tailwind-merge resolves conflicts without extra
+ * config. Role names (title, lead, label …) live in the Text and Heading components.
+ * Kit rule: display sizes are tracked negatively, body sizes not at all, nothing positively.
+ */
+@theme {
+  --text-xs: 0.75rem; /* 12: the floor. Legal lines only, never a control. */
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.84375rem; /* 13.5: helper, error, group label, small controls */
+  --text-sm--line-height: 1.45;
+  --text-base: 1rem; /* 16: body; control labels in comfortable density */
+  --text-base--line-height: 1.5;
+  --text-lg: 1.25rem; /* 20: lead, dialog title */
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.5rem; /* 24: section heading under a rule */
+  --text-xl--line-height: 1.2;
+  --text-xl--letter-spacing: -0.008em;
+  --text-2xl: 2.25rem; /* 36: page title */
+  --text-2xl--line-height: 1.12;
+  --text-2xl--letter-spacing: -0.017em;
+  --text-3xl: 3.375rem; /* 54: display */
+  --text-3xl--line-height: 1.04;
+  --text-3xl--letter-spacing: -0.022em;
+  --text-4xl: 4.5rem; /* 72 */
+  --text-4xl--line-height: 1.06;
+  --text-4xl--letter-spacing: -0.017em;
+  --text-5xl: 6.75rem; /* 108 */
+  --text-5xl--line-height: 1.04;
+  --text-5xl--letter-spacing: -0.022em;
+  --text-6xl: 10.125rem; /* 162 */
+  --text-6xl--line-height: 0.98;
+  --text-6xl--letter-spacing: -0.025em;
+}

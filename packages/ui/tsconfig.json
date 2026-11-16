@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    // scripts/ runs under Node's type stripping, which needs explicit `.ts` import specifiers.
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src",
+    "stories",
+    "scripts",
+    ".storybook/*.ts",
+    ".storybook/*.tsx",
+    "tsdown.config.ts",
+    "vitest.config.ts"
+  ]
+}

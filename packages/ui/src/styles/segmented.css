@@ -1,0 +1,208 @@
+/*
+ * The thumb of a SegmentedControl. It is placed from the pressed segment's measured box
+ * (`--thumb-left`, `--thumb-width`, written by segmented-control.tsx) and moved by `translate`.
+ * Everything that moves here is a transform, so nothing is laid out while it travels; only a
+ * change of width between two segments is, on the thumb alone.
+ *
+ * Three parts, the first two as in a slider (slider.css):
+ *
+ *   rider  `segment-thumb`: the place. It travels to the chosen segment on `--segment-pace`
+ *          and follows a pointer (a lean, a pull) on the chase curve.
+ *   face   `segment-thumb-face`: the shape, and what is seen. `--thumb-s` stretches it (1 at
+ *          rest) and `--thumb-hold` says which edge holds still while the other gives (1 its
+ *          right edge, -1 its left): the leading edge on a trip, so the tail lags; the far
+ *          edge in a lean, so it reaches. It gets a little thinner as it gets longer. Because
+ *          the holding edge is a `translate` and not a `transform-origin`, turning round is a
+ *          transition and never a jump.
+ *   lens   `segment-lens`: the labels once more, in the colour of the choice, cut to the
+ *          face. The lens takes the face's stretch back and `segment-lens-labels` takes back
+ *          what the rider moved, so the labels stand still and keep their shape while the
+ *          thumb passes over them: a letter half under the thumb is half dark.
+ *
+ * The face's shape and the lens's undoing of it are worked out from the same numbers in the
+ * same frame, so they cancel exactly. Those numbers (`--thumb-s`, `--thumb-hold`,
+ * `--thumb-press`, `--thumb-width`) are registered, and it is they that ease, on the track;
+ * the face and the lens have no transition of their own on their shape. Eased apart, a scale
+ * and its inverse do not cancel on the way: the copied labels drifted up to 4px from the
+ * labels under them and wiggled as the thumb passed. The rider and the lens's labels ease
+ * apart, on the same curve from the same frame, and cancel exactly: a translate is undone by
+ * its negative at every point of the way.
+ *
+ * The track carries the state: `data-placed` once the first placement stood (load does not
+ * animate), `data-following` while the rider follows a pointer, `data-moving` while the stretch
+ * is driven (let go, the face comes back on `rebound`, whose swing past rest is the squash),
+ * `data-travelling` while a trip's stretch grows, `data-grabbed` while the thumb is held,
+ * `data-dragging` while it is pulled, `data-settling` while a layout change is taken over.
+ */
+
+@property --thumb-s {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --thumb-hold {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --thumb-press {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --thumb-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@layer components {
+  [data-slot="segmented-control"] {
+    /* The slider's chase (slider.css): the `snap` spring as a bezier, which Safari runs off its
+       main thread. A test keeps the two equal. */
+    --segment-chase: cubic-bezier(0.3, 0.95, 0.25, 1);
+    /* How the thumb travels to a choice: a duration and a curve. Without weight it glides. */
+    --segment-pace: var(--transition-duration-spring-glide) var(--ease-spring-glide);
+    /* A mark closes when the thumb has come over it, not when it sets off. */
+    --segment-seat: calc(var(--transition-duration-spring-snap) * 0.4);
+    /* On a trip, the stretch starts a frame after the thumb: see `data-travelling` below. */
+    --segment-stretch-wait: calc(1s / 60);
+    /* How the face's shape eases (its stretch, the edge that holds, the press), and how the
+       thumb's width does. Each state below sets them; the transition on the track reads them. */
+    --segment-shape-pace: var(--transition-duration-spring-rebound) var(--ease-spring-rebound);
+    --segment-width-pace: var(--segment-pace);
+    /* How far the face stands inside the chosen segment's box. The square thumb's box is
+       already inset in its trough. */
+    --thumb-fit: 0px;
+    /* The square thumb's corners: the trough's, less the 3px around it. */
+    --thumb-radius: calc(var(--radius-md) - 3px);
+    /* How much thinner the face gets, as a share of what it gets longer. */
+    --thumb-thin: 0.15;
+    /* Held, the thumb gives a little, like every fitting that is pressed. */
+    --thumb-press: 1;
+    /* The face's length and height as factors of its box: the stretch times the press. */
+    --thumb-long: calc(var(--thumb-s) * var(--thumb-press));
+    --thumb-tall: calc((1 - (var(--thumb-s) - 1) * var(--thumb-thin)) * var(--thumb-press));
+    /* How far the face's middle is off its box's, in box widths: the holding edge stays. */
+    --thumb-off: calc(var(--thumb-hold) * (var(--thumb-s) - 1) / -2);
+  }
+  /* With weight, the leading edge sets off on `settle` and the tail comes after: stretched
+     thumb and all, the trip takes as long as a glide. */
+  [data-slot="segmented-control"][data-weight] {
+    --segment-pace: var(--transition-duration-spring-settle) var(--ease-spring-settle);
+  }
+  /* The round thumb lies flush in its trough: a pixel inside the segment's box, so its outline
+     and the trough's are one line (Justin, 2026-11-15). At 0 it stood on the trough's wall, a
+     pixel taller than the trough. */
+  [data-slot="segmented-control"][data-shape="round"] {
+    --thumb-radius: 9999px;
+    --thumb-fit: 1px;
+  }
+  [data-slot="segmented-control"][data-grabbed] {
+    --thumb-press: var(--motion-press-scale);
+  }
+
+  [data-slot="segment-thumb"] {
+    width: var(--thumb-width);
+    translate: calc(var(--thumb-left, 0px) + var(--thumb-lean, 0px)) 0;
+  }
+  /* Until it is placed, the chosen segment's own seat stands in for it (segmented-control.tsx):
+     the two change places in one frame, so a page that came from a server has a thumb at once. */
+  [data-slot="segmented-control"]:not([data-placed]) > [data-slot="segment-thumb"] {
+    visibility: hidden;
+  }
+
+  /* T(c) S(l): scaled about its middle, then moved so that the holding edge stays. Lengths in
+     px, not in percent of the box. */
+  [data-slot="segment-thumb-face"] {
+    scale: var(--thumb-long) var(--thumb-tall);
+    translate: calc(var(--thumb-off) * var(--thumb-width)) 0;
+  }
+
+  /* The inverse: T(c) S(l) is undone by T(-c/l) S(1/l). The press is left in, so a held label
+     goes down with its thumb. */
+  [data-slot="segment-lens"] {
+    scale: calc(1 / var(--thumb-s)) calc(1 / (1 - (var(--thumb-s) - 1) * var(--thumb-thin)));
+    translate: calc(-1 * var(--thumb-off) * var(--thumb-width) / var(--thumb-long)) 0;
+  }
+  /* And the rider's way taken back: the labels stand where the track's labels stand. */
+  [data-slot="segment-lens-labels"] {
+    translate: calc(-1 * (var(--thumb-left, 0px) + var(--thumb-lean, 0px))) 0;
+  }
+
+  /* What eases. On the track, the numbers the face and the lens are worked out from; on the
+     rider and the lens's labels, the way, in pairs on one curve. */
+  [data-slot="segmented-control"][data-placed] {
+    transition:
+      --thumb-s var(--segment-shape-pace),
+      --thumb-hold var(--segment-shape-pace),
+      --thumb-press var(--segment-shape-pace),
+      --thumb-width var(--segment-width-pace);
+  }
+  [data-placed] > [data-slot="segment-thumb"],
+  [data-placed] [data-slot="segment-lens-labels"] {
+    transition: translate var(--segment-pace);
+  }
+  [data-placed] [data-slot="segment-thumb-face"] {
+    transition:
+      box-shadow var(--transition-duration-spring-seat) var(--ease-spring-seat),
+      background-color var(--transition-duration-spring-seat) var(--ease-spring-seat);
+  }
+
+  /* Following a pointer (a mouse it reaches for, the rest of the way after a drop): the rider
+     chases it, and the labels give the same way back. A thumb in a hand is placed without any
+     curve: see below. */
+  [data-slot="segmented-control"][data-placed][data-following] {
+    --segment-width-pace: var(--transition-duration-spring-snap) var(--segment-chase);
+  }
+  [data-placed][data-following] > [data-slot="segment-thumb"],
+  [data-placed][data-following] [data-slot="segment-lens-labels"] {
+    transition: translate var(--transition-duration-spring-snap) var(--segment-chase);
+  }
+
+  /* While the stretch is driven it follows at once, without a swing. */
+  [data-slot="segmented-control"][data-placed][data-moving] {
+    --segment-shape-pace: var(--transition-duration-spring-snap) var(--segment-chase);
+  }
+  [data-placed][data-moving] [data-slot="segment-thumb-face"] {
+    transition:
+      box-shadow var(--transition-duration-spring-snap) var(--ease-spring-snap),
+      background-color var(--transition-duration-spring-snap) var(--ease-spring-snap);
+  }
+
+  /* Setting off to a choice, the stretch grows on the thumb's own pace, a frame after it. The
+     stretch is a share of the way, so the tail behind the leading edge never makes up for the
+     way gone: it only moves the way the thumb goes, never back through the wall it left, even
+     if the trip itself starts a frame late. On the faster chase, from the same frame, it could:
+     on an iPhone, the tail of a thumb leaving the last segment showed past the trough's end. */
+  [data-slot="segmented-control"][data-placed][data-moving][data-travelling] {
+    --segment-shape-pace: var(--segment-pace) var(--segment-stretch-wait);
+  }
+
+  /* In a hand: the thumb stands where the hand has it, written on every move (`follow` in
+     segmented-control.tsx), and so do the labels and the stretch. Nothing eases in between: a
+     transition retargeted on every move stalls on iOS (measured on an iPhone: the thumb stood
+     still while the finger moved, then lurched after it). When the hand stops, `data-moving`
+     goes and the face swings back on the rebound; let go, the thumb travels on the chase. */
+  [data-slot="segmented-control"][data-placed][data-dragging] {
+    --segment-width-pace: 0s;
+  }
+  [data-slot="segmented-control"][data-placed][data-dragging][data-moving] {
+    --segment-shape-pace: 0s;
+  }
+  [data-placed][data-dragging] > [data-slot="segment-thumb"],
+  [data-placed][data-dragging] [data-slot="segment-lens-labels"] {
+    transition: none;
+  }
+
+  /* A layout changed (the web font arrived, the container resized): the thumb takes its new
+     place at once. Only a choice travels. */
+  [data-slot="segmented-control"][data-placed][data-settling] {
+    --segment-shape-pace: 0s;
+    --segment-width-pace: 0s;
+  }
+  [data-placed][data-settling] [data-slot^="segment-thumb"],
+  [data-placed][data-settling] [data-slot^="segment-lens"] {
+    transition: none;
+  }
+}

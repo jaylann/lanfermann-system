@@ -1,0 +1,53 @@
+/*
+ * Density: how large controls are. Sizes are variables, not constants, so the choice stays open:
+ * `compact` is the default, `data-density="comfortable"` on <html> or on any subtree gives the
+ * larger set. Components read these variables and never hard-code a control height.
+ *
+ * Only control and field labels follow the density (`text-control`: 15px compact, 16px
+ * comfortable). Reading text stays on the type scale; helper and error text is 13.5px in both.
+ */
+
+:root,
+[data-density="compact"] {
+  --control-sm: 1.625rem; /* 26 */
+  --control-md: 2rem; /* 32 */
+  --control-lg: 2.5rem; /* 40 */
+  /* inline padding of a button */
+  --control-pad-sm: 0.625rem;
+  --control-pad-md: 0.875rem;
+  --control-pad-lg: 1.25rem;
+  /* inline padding of a field or a segment: text starts closer to the edge than a label does */
+  --field-pad-sm: 0.5rem;
+  --field-pad-md: 0.625rem;
+  --field-pad-lg: 0.875rem;
+  --control-text: 0.9375rem; /* 15 */
+  --control-item: 1.75rem; /* 28: a row in a menu or a list */
+  --check-size: 1rem; /* 16: checkbox and radio */
+  --radio-dot: 0.5rem;
+  --switch-w: 2rem;
+  --switch-h: 1.125rem;
+}
+
+[data-density="comfortable"] {
+  --control-sm: 1.75rem; /* 28 */
+  --control-md: 2.25rem; /* 36 */
+  --control-lg: 2.75rem; /* 44 */
+  --control-pad-sm: 0.75rem;
+  --control-pad-md: 1rem;
+  --control-pad-lg: 1.5rem;
+  --field-pad-sm: 0.625rem;
+  --field-pad-md: 0.75rem;
+  --field-pad-lg: 1rem;
+  --control-text: 1rem; /* 16 */
+  --control-item: 2rem; /* 32 */
+  --check-size: 1.125rem; /* 18 */
+  --radio-dot: 0.625rem;
+  --switch-w: 2.25rem;
+  --switch-h: 1.25rem;
+}
+
+/* `inline`, so the size resolves where it is used and a nested density wins. */
+@theme inline {
+  --text-control: var(--control-text);
+  --text-control--line-height: 1.4;
+}

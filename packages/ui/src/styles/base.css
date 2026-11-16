@@ -1,0 +1,93 @@
+/*
+ * The little this library sets globally. Everything else is opt-in through utilities.
+ */
+
+@layer base {
+  /* A ground paints itself, so nesting `data-theme` switches a whole region. */
+  [data-theme] {
+    background-color: var(--lf-ground);
+    color: var(--lf-text-body);
+  }
+
+  /*
+   * At the floor of a page that ends on a `SiteFooter`, the window around the page takes the
+   * footer's colour. Safari 26 fills what lies beyond the page (above it behind the status bar,
+   * under it behind the toolbar, and past either end when the page is pulled) from <html> and
+   * <body> blended, the body on top. So the body stays transparent and the app's wrapper paints
+   * the ground (README, "Root"), and the root takes the colour of the end the reader is at: the
+   * ground at the top, the footer's once its end is near (`SiteFooterFloor` sets the attribute).
+   * One colour for both ends left a strip of the wrong one at the other (Justin's iPhone,
+   * 2026-11-16: under the footer, then above the docs).
+   */
+  html[data-site-floor] {
+    background-color: var(--lf-surface-quiet);
+  }
+
+  /*
+   * While the site's menu covers the window, the window around it takes the menu's colour, so
+   * Safari's toolbar under it is the menu's ground and not the footer's colour from the rule
+   * above (Justin's iPhone, 2026-11-16: "the bottom tab bar doesn't fill"). Later and as
+   * specific, so it wins.
+   */
+  html:has(> body [data-slot="site-header-menu-sheet"]) {
+    background-color: var(--lf-ground);
+  }
+
+  /*
+   * And the page under the open menu is hidden. Safari 26 draws the page itself behind its
+   * floating toolbar, below where a fixed layer reaches (`100lvh` ends above the toolbar there),
+   * so the page showed through under the menu (Justin's iPhone, 2026-11-16). Hidden, the root
+   * shows there, in the menu's colour. It hides once the menu has mostly risen, so the page does
+   * not blink away under a menu still fading in, and it is back the moment the menu starts to
+   * close (`data-open` goes first). Everything in the body but the menu's portal is hidden.
+   */
+  html:has(> body [data-slot="site-header-menu-sheet"][data-open])
+    body
+    > :not(:has([data-slot="site-header-menu-sheet"])) {
+    visibility: hidden;
+    transition: visibility 0s linear calc(var(--transition-duration-spring-sheet) / 2);
+  }
+
+  /*
+   * The body holds the margins of what it starts with (the site bar stands 8px down), so they
+   * never push it down and leave the canvas showing above the bar. The app's wrapper needs the
+   * same (`flow-root`).
+   */
+  body {
+    display: flow-root;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Sofia Sans has real italics and weights; never fake them. */
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--lf-accent) 28%, transparent);
+  }
+}
+
+/*
+ * The drag handle of a resizable field, for Chromium and Safari: two short strokes that end
+ * square, like the glyphs' butt ends, in the line colour of the ground. Other browsers keep
+ * their own grip.
+ *
+ * Keeping the grip clear of a rounded corner is not done here: the field moves it inward with
+ * transparent borders (see Textarea), which works in every browser.
+ */
+@utility resize-grip {
+  &::-webkit-resizer {
+    background: linear-gradient(
+        135deg,
+        transparent 0 53%,
+        var(--lf-line) 53% 65%,
+        transparent 65% 80%,
+        var(--lf-line) 80% 92%,
+        transparent 92%
+      )
+      no-repeat calc(100% - 1px) calc(100% - 1px) / 9px 9px;
+  }
+}

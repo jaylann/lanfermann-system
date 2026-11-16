@@ -1,0 +1,55 @@
+{
+  "name": "lanfermann-system",
+  "private": true,
+  "description": "Lanfermann design system: React components for Next.js + Tailwind CSS, built on Base UI.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "postinstall": "bun run --filter @lanfermann/ui build",
+    "dev": "bun run --filter '*' dev",
+    "build": "bun run --filter '*' build",
+    "storybook": "bun run --filter @lanfermann/ui storybook",
+    "build-storybook": "bun run --filter @lanfermann/ui build-storybook",
+    "shots": "bun run --cwd packages/ui shots",
+    "gen:motion": "bun run --filter @lanfermann/ui gen:motion",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun run --filter '*' test",
+    "test:stories": "bun run --filter @lanfermann/ui test:stories"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md,yml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@next/eslint-plugin-next": "^16.4.6",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "eslint-plugin-storybook": "^10.6.7",
+    "globals": "^17.14.0",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.10.1",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.2"
+  }
+}

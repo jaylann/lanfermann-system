@@ -1,0 +1,38 @@
+/*
+ * @lanfermann/ui: tokens, depth, motion and source registration for Tailwind CSS v4.
+ *
+ * Consumers import it right after Tailwind in their global stylesheet:
+ *   @import "tailwindcss";
+ *   @import "@lanfermann/ui/styles.css";
+ *
+ * Contract: components use only the semantic tokens defined in ./styles (bg-ground, text-fg,
+ * border-line, depth-raised, spring-settle, …), never raw palette colours and never a `dark:`
+ * variant. Grounds switch with `data-theme="paper|tint|ink|indigo"` on any element; `.dark` is an
+ * alias for Ink. Control size switches with `data-density="compact|comfortable"` (compact is the
+ * default). The partials are private: import this file only.
+ */
+
+@import "./styles/grounds.css";
+@import "./styles/status.css";
+@import "./styles/code.css";
+@import "./styles/type.css";
+@import "./styles/radius.css";
+@import "./styles/density.css";
+@import "./styles/touch.css";
+@import "./styles/depth.css";
+@import "./styles/motion.generated.css";
+@import "./styles/motion.css";
+@import "./styles/marks.css";
+@import "./styles/toast.css";
+@import "./styles/slider.css";
+@import "./styles/segmented.css";
+@import "./styles/tabs.css";
+@import "./styles/calendar.css";
+@import "./styles/prose.css";
+@import "./styles/base.css";
+
+/* Let the consumer's Tailwind see the class names used in the compiled components. */
+@source "../dist";
+
+/* For app code that wants a dark variant: it follows the Ink ground. */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="ink"], [data-theme="ink"] *));

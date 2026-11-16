@@ -1,0 +1,501 @@
+/*
+ * Depth: the one place where the raised look is defined. Change a recipe here and every
+ * component follows. The look is "Fase" (see DESIGN.md): glossy faces, 1px edges in the fill's
+ * own hue, a light top edge, short soft shadows.
+ *
+ * The rule: only what moves casts a shadow.
+ *   Panel    content and ground                  flat; rules and lines, no shadow
+ *   Fitting  what a hand presses                 depth-raised (+ -hover, depth-pressed)
+ *   Plug     a fitting seated in a socket        depth-plug (a checked box)
+ *   Socket   what receives a value or a part     depth-socket, depth-trough, depth-field
+ *   Card     one object you act on               depth-card
+ *   Sheet    what floats temporarily             depth-floating, depth-overlay
+ *   Bar      the site's bar over the page        depth-bar
+ *
+ * One light, from above, tinted: edges and contact shadows come from Ink (19 18 28), ambient
+ * shadows from Ink mixed 30% toward Indigo (42 37 82), never neutral black.
+ *
+ * How it is wired:
+ *   1. Per-ground knobs (`--depth-<tone>-<part>`), plain values in the ground blocks below.
+ *   2. Geometry in `@theme inline`, split over Tailwind's shadow layers so they still compose:
+ *      inset-shadow = light and shade inside the part, shadow = edge + contact + ambient.
+ *      Every state of a recipe keeps the same number of layers so `box-shadow` can transition.
+ *   3. One `depth-*` utility per role. `depth-tone-*` re-tints a fitting by setting the
+ *      non-inheriting `--d-*` knobs, so a toned parent never leaks into its children.
+ *   4. The gloss is a `background-image` laid over the part's `background-color`: a translucent
+ *      gradient, so hover and press still transition the colour underneath. Pressed and disabled
+ *      parts lose it.
+ *   Focus is `outline`, except on text fields, whose focus halo is part of their recipe.
+ *   In forced-colours mode (Windows high contrast) box-shadows are dropped, so every recipe that
+ *   draws an edge falls back to a 1px outline there. Focus outlines come later and win.
+ *
+ * Names here must match `depthNames` in src/lib/cn.ts (asserted by a test).
+ */
+
+@property --d-edge {
+  syntax: "*";
+  inherits: false;
+}
+@property --d-hi {
+  syntax: "*";
+  inherits: false;
+}
+@property --d-lo {
+  syntax: "*";
+  inherits: false;
+}
+@property --d-contact {
+  syntax: "*";
+  inherits: false;
+}
+@property --d-ambient {
+  syntax: "*";
+  inherits: false;
+}
+@property --d-press {
+  syntax: "*";
+  inherits: false;
+}
+@property --d-face {
+  syntax: "*";
+  inherits: false;
+}
+
+:root,
+[data-theme="paper"],
+[data-theme="tint"] {
+  /* neutral fitting: a white face that shades toward the bottom */
+  --depth-surface-face: linear-gradient(rgb(42 37 82 / 0) 40%, rgb(42 37 82 / 0.085));
+  --depth-surface-edge: rgb(19 18 28 / 0.12);
+  --depth-surface-hi: rgb(255 255 255 / 0);
+  --depth-surface-lo: rgb(19 18 28 / 0.06);
+  --depth-surface-contact: rgb(19 18 28 / 0.08);
+  --depth-surface-ambient: rgb(42 37 82 / 0.16);
+  --depth-surface-press: rgb(19 18 28 / 0.1);
+
+  /* committed fitting: a charcoal face with a soft gloss, falling off in the upper half */
+  --depth-key-face: linear-gradient(
+    rgb(255 255 255 / 0.2),
+    rgb(255 255 255 / 0.06) 50%,
+    rgb(255 255 255 / 0)
+  );
+  --depth-key-edge: #08070c;
+  --depth-key-hi: rgb(255 255 255 / 0.2);
+  --depth-key-lo: rgb(0 0 0 / 0.35);
+  --depth-key-contact: rgb(19 18 28 / 0.3);
+  --depth-key-ambient: rgb(42 37 82 / 0.4);
+  --depth-key-press: rgb(0 0 0 / 0.55);
+
+  /* the ask and every checked state: Indigo face */
+  --depth-accent-face: linear-gradient(rgb(255 255 255 / 0.16), rgb(255 255 255 / 0));
+  --depth-accent-edge: #4c40a3;
+  --depth-accent-hi: rgb(255 255 255 / 0.22);
+  --depth-accent-lo: rgb(19 18 28 / 0.18);
+  --depth-accent-contact: rgb(95 80 208 / 0.35);
+  --depth-accent-ambient: rgb(95 80 208 / 0.3);
+  --depth-accent-press: rgb(19 18 28 / 0.35);
+
+  --depth-danger-face: linear-gradient(rgb(255 255 255 / 0.16), rgb(255 255 255 / 0));
+  --depth-danger-edge: #9a1730;
+  --depth-danger-hi: rgb(255 255 255 / 0.2);
+  --depth-danger-lo: rgb(19 18 28 / 0.2);
+  --depth-danger-contact: rgb(189 31 61 / 0.32);
+  --depth-danger-ambient: rgb(189 31 61 / 0.26);
+  --depth-danger-press: rgb(19 18 28 / 0.35);
+
+  /* a small moving part inside a trough (switch thumb, segment): contact shadow only, so
+     nothing spills over the wall of the trough */
+  --depth-thumb-face: none;
+  --depth-thumb-edge: rgb(19 18 28 / 0.14);
+  --depth-thumb-hi: rgb(255 255 255 / 0);
+  --depth-thumb-lo: rgb(19 18 28 / 0.1);
+  --depth-thumb-contact: rgb(19 18 28 / 0.28);
+  --depth-thumb-ambient: rgb(42 37 82 / 0);
+  --depth-thumb-press: rgb(19 18 28 / 0.12);
+
+  --depth-socket-rim: rgb(19 18 28 / 0.24);
+  --depth-socket-shade: rgb(19 18 28 / 0.1);
+  --depth-trough-edge: rgb(19 18 28 / 0.07);
+  --depth-trough-shade: rgb(19 18 28 / 0.12);
+  --depth-field-edge: rgb(19 18 28 / 0.14);
+  --depth-field-contact: rgb(19 18 28 / 0.05);
+  --depth-field-shade: rgb(19 18 28 / 0);
+  --depth-field-halo: rgb(95 80 208 / 0.18);
+  --depth-field-halo-danger: rgb(189 31 61 / 0.14);
+
+  --depth-card-edge: rgb(19 18 28 / 0.08);
+  --depth-card-hi: rgb(255 255 255 / 0);
+  --depth-card-near: rgb(19 18 28 / 0.05);
+  --depth-card-far: rgb(42 37 82 / 0.2);
+
+  --depth-sheet-edge: rgb(19 18 28 / 0.12);
+  --depth-sheet-hi: rgb(255 255 255 / 0);
+  --depth-sheet-near: rgb(19 18 28 / 0.08);
+  --depth-sheet-mid: rgb(42 37 82 / 0.22);
+  --depth-sheet-far: rgb(42 37 82 / 0.18);
+  --depth-overlay-mid: rgb(42 37 82 / 0.26);
+  --depth-overlay-far: rgb(42 37 82 / 0.24);
+
+  /* the bar: a light edge on the frosted face, a short shadow under it */
+  --depth-bar-edge: rgb(19 18 28 / 0.1);
+  --depth-bar-hi: rgb(255 255 255 / 0.7);
+  --depth-bar-near: rgb(19 18 28 / 0.05);
+  --depth-bar-far: rgb(42 37 82 / 0.1);
+}
+
+.dark,
+[data-theme="ink"] {
+  --depth-surface-face: linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0));
+  --depth-surface-edge: rgb(8 7 12 / 0.7);
+  --depth-surface-hi: rgb(255 255 255 / 0.1);
+  --depth-surface-lo: rgb(0 0 0 / 0);
+  --depth-surface-contact: rgb(8 7 12 / 0.5);
+  --depth-surface-ambient: rgb(8 7 12 / 0.35);
+  --depth-surface-press: rgb(8 7 12 / 0.7);
+
+  /* the key inverts to a Paper face */
+  --depth-key-face: linear-gradient(rgb(19 18 28 / 0), rgb(19 18 28 / 0.08));
+  --depth-key-edge: rgb(8 7 12 / 0.6);
+  --depth-key-hi: rgb(255 255 255 / 0);
+  --depth-key-lo: rgb(19 18 28 / 0.18);
+  --depth-key-contact: rgb(8 7 12 / 0.6);
+  --depth-key-ambient: rgb(8 7 12 / 0.5);
+  --depth-key-press: rgb(19 18 28 / 0.28);
+
+  --depth-accent-face: linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0));
+  --depth-accent-edge: rgb(8 7 12 / 0.6);
+  --depth-accent-hi: rgb(255 255 255 / 0.35);
+  --depth-accent-lo: rgb(19 18 28 / 0.2);
+  --depth-accent-contact: rgb(8 7 12 / 0.6);
+  --depth-accent-ambient: rgb(8 7 12 / 0.45);
+  --depth-accent-press: rgb(19 18 28 / 0.3);
+
+  --depth-danger-face: linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0));
+  --depth-danger-edge: rgb(8 7 12 / 0.6);
+  --depth-danger-hi: rgb(255 255 255 / 0.35);
+  --depth-danger-lo: rgb(19 18 28 / 0.2);
+  --depth-danger-contact: rgb(8 7 12 / 0.6);
+  --depth-danger-ambient: rgb(8 7 12 / 0.45);
+  --depth-danger-press: rgb(19 18 28 / 0.3);
+
+  --depth-thumb-face: none;
+  --depth-thumb-edge: rgb(8 7 12 / 0.6);
+  --depth-thumb-hi: rgb(255 255 255 / 0.14);
+  --depth-thumb-lo: rgb(19 18 28 / 0.2);
+  --depth-thumb-contact: rgb(8 7 12 / 0.7);
+  --depth-thumb-ambient: rgb(8 7 12 / 0);
+  --depth-thumb-press: rgb(8 7 12 / 0.5);
+
+  --depth-socket-rim: rgb(255 255 255 / 0.22);
+  --depth-socket-shade: rgb(8 7 12 / 0.5);
+  --depth-trough-edge: rgb(255 255 255 / 0.09);
+  --depth-trough-shade: rgb(8 7 12 / 0.6);
+  --depth-field-edge: rgb(255 255 255 / 0.14);
+  --depth-field-contact: rgb(8 7 12 / 0);
+  --depth-field-shade: rgb(8 7 12 / 0.4);
+  --depth-field-halo: rgb(166 161 253 / 0.24);
+  --depth-field-halo-danger: rgb(241 135 140 / 0.22);
+
+  --depth-card-edge: rgb(255 255 255 / 0.08);
+  --depth-card-hi: rgb(255 255 255 / 0.06);
+  --depth-card-near: rgb(8 7 12 / 0.4);
+  --depth-card-far: rgb(8 7 12 / 0.3);
+
+  --depth-sheet-edge: rgb(8 7 12 / 0.8);
+  --depth-sheet-hi: rgb(255 255 255 / 0.08);
+  --depth-sheet-near: rgb(8 7 12 / 0.4);
+  --depth-sheet-mid: rgb(8 7 12 / 0.7);
+  --depth-sheet-far: rgb(8 7 12 / 0.6);
+  --depth-overlay-mid: rgb(8 7 12 / 0.8);
+  --depth-overlay-far: rgb(8 7 12 / 0.7);
+
+  --depth-bar-edge: rgb(255 255 255 / 0.1);
+  --depth-bar-hi: rgb(255 255 255 / 0.06);
+  --depth-bar-near: rgb(8 7 12 / 0.4);
+  --depth-bar-far: rgb(8 7 12 / 0.35);
+}
+
+[data-theme="indigo"] {
+  --depth-surface-face: linear-gradient(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0));
+  --depth-surface-edge: rgb(19 18 28 / 0.28);
+  --depth-surface-hi: rgb(255 255 255 / 0.18);
+  --depth-surface-lo: rgb(19 18 28 / 0.14);
+  --depth-surface-contact: rgb(19 18 28 / 0.18);
+  --depth-surface-ambient: rgb(19 18 28 / 0.22);
+  --depth-surface-press: rgb(19 18 28 / 0.28);
+
+  --depth-key-face: linear-gradient(
+    rgb(255 255 255 / 0.2),
+    rgb(255 255 255 / 0.06) 50%,
+    rgb(255 255 255 / 0)
+  );
+  --depth-key-edge: #08070c;
+  --depth-key-hi: rgb(255 255 255 / 0.2);
+  --depth-key-lo: rgb(0 0 0 / 0.35);
+  --depth-key-contact: rgb(19 18 28 / 0.3);
+  --depth-key-ambient: rgb(19 18 28 / 0.4);
+  --depth-key-press: rgb(0 0 0 / 0.55);
+
+  /* on Indigo the ask is a white face */
+  --depth-accent-face: linear-gradient(rgb(42 37 82 / 0) 40%, rgb(42 37 82 / 0.085));
+  --depth-accent-edge: rgb(19 18 28 / 0.2);
+  --depth-accent-hi: rgb(255 255 255 / 0);
+  --depth-accent-lo: rgb(19 18 28 / 0.08);
+  --depth-accent-contact: rgb(19 18 28 / 0.2);
+  --depth-accent-ambient: rgb(19 18 28 / 0.3);
+  --depth-accent-press: rgb(19 18 28 / 0.14);
+
+  --depth-danger-face: linear-gradient(rgb(42 37 82 / 0) 40%, rgb(42 37 82 / 0.085));
+  --depth-danger-edge: rgb(19 18 28 / 0.2);
+  --depth-danger-hi: rgb(255 255 255 / 0);
+  --depth-danger-lo: rgb(19 18 28 / 0.08);
+  --depth-danger-contact: rgb(19 18 28 / 0.2);
+  --depth-danger-ambient: rgb(19 18 28 / 0.3);
+  --depth-danger-press: rgb(19 18 28 / 0.14);
+
+  --depth-thumb-face: none;
+  --depth-thumb-edge: rgb(19 18 28 / 0.2);
+  --depth-thumb-hi: rgb(255 255 255 / 0);
+  --depth-thumb-lo: rgb(19 18 28 / 0.1);
+  --depth-thumb-contact: rgb(19 18 28 / 0.3);
+  --depth-thumb-ambient: rgb(19 18 28 / 0);
+  --depth-thumb-press: rgb(19 18 28 / 0.14);
+
+  --depth-socket-rim: rgb(255 255 255 / 0.5);
+  --depth-socket-shade: rgb(19 18 28 / 0.25);
+  --depth-trough-edge: rgb(19 18 28 / 0.12);
+  --depth-trough-shade: rgb(19 18 28 / 0.3);
+  --depth-field-edge: rgb(255 255 255 / 0.3);
+  --depth-field-contact: rgb(19 18 28 / 0);
+  --depth-field-shade: rgb(19 18 28 / 0.2);
+  --depth-field-halo: rgb(255 255 255 / 0.3);
+  --depth-field-halo-danger: rgb(255 255 255 / 0.3);
+
+  --depth-card-edge: rgb(255 255 255 / 0.14);
+  --depth-card-hi: rgb(255 255 255 / 0.1);
+  --depth-card-near: rgb(19 18 28 / 0.14);
+  --depth-card-far: rgb(19 18 28 / 0.22);
+
+  --depth-sheet-edge: rgb(19 18 28 / 0.2);
+  --depth-sheet-hi: rgb(255 255 255 / 0);
+  --depth-sheet-near: rgb(19 18 28 / 0.14);
+  --depth-sheet-mid: rgb(19 18 28 / 0.3);
+  --depth-sheet-far: rgb(19 18 28 / 0.26);
+  --depth-overlay-mid: rgb(19 18 28 / 0.36);
+  --depth-overlay-far: rgb(19 18 28 / 0.32);
+
+  --depth-bar-edge: rgb(255 255 255 / 0.14);
+  --depth-bar-hi: rgb(255 255 255 / 0.1);
+  --depth-bar-near: rgb(19 18 28 / 0.14);
+  --depth-bar-far: rgb(19 18 28 / 0.2);
+}
+
+@theme inline {
+  /* Fittings. Outer: edge, contact, ambient. Inner: top light, bottom shade. */
+  --shadow-raised:
+    0 0 0 1px var(--d-edge, var(--depth-surface-edge)),
+    0 1px 2px 0 var(--d-contact, var(--depth-surface-contact)),
+    0 4px 10px -3px var(--d-ambient, var(--depth-surface-ambient));
+  --shadow-raised-hover:
+    0 0 0 1px var(--d-edge, var(--depth-surface-edge)),
+    0 1px 2px 0 var(--d-contact, var(--depth-surface-contact)),
+    0 6px 14px -4px var(--d-ambient, var(--depth-surface-ambient));
+  --shadow-pressed:
+    0 0 0 1px var(--d-edge, var(--depth-surface-edge)), 0 0 0 0 transparent, 0 0 0 0 transparent;
+  --shadow-flat: 0 0 0 1px var(--lf-hairline), 0 0 0 0 transparent, 0 0 0 0 transparent;
+  /* A plug sits in its socket: it has an edge and touches down, but throws no ambient shadow. */
+  --shadow-plug:
+    0 0 0 1px var(--d-edge, var(--depth-surface-edge)),
+    0 1px 2px 0 var(--d-contact, var(--depth-surface-contact)), 0 0 0 0 transparent;
+
+  --inset-shadow-raised:
+    inset 0 1px 0 0 var(--d-hi, var(--depth-surface-hi)),
+    inset 0 -1px 0 0 var(--d-lo, var(--depth-surface-lo));
+  --inset-shadow-pressed:
+    inset 0 2px 3px 0 var(--d-press, var(--depth-surface-press)), inset 0 0 0 0 transparent;
+  --inset-shadow-flat: inset 0 0 0 0 transparent, inset 0 0 0 0 transparent;
+
+  /* Sockets: an edge, and a shaded top inside. Same layer counts as a fitting, so a box can
+     transition between empty socket and seated plug. */
+  --shadow-socket: 0 0 0 1px var(--depth-socket-rim), 0 0 0 0 transparent, 0 0 0 0 transparent;
+  --inset-shadow-socket: inset 0 1px 2px 0 var(--depth-socket-shade), inset 0 0 0 0 transparent;
+
+  /* Troughs hold a moving part (switch thumb, segment). The part identifies the control, so the
+     edge is quiet and sits inside. */
+  --inset-shadow-trough:
+    inset 0 1px 2px 0 var(--depth-trough-shade), inset 0 0 0 1px var(--depth-trough-edge);
+
+  /* Text fields: a hairline and a faint contact shadow. Focus swaps them for an accent edge and a
+     4px halo; the halo grows out of the contact shadow because the layers line up. */
+  --shadow-field: 0 0 0 1px var(--depth-field-edge), 0 1px 2px 0 var(--depth-field-contact);
+  --shadow-field-focus: 0 0 0 1px var(--lf-accent), 0 0 0 4px var(--depth-field-halo);
+  --shadow-field-invalid: 0 0 0 1px var(--lf-danger), 0 0 0 4px var(--depth-field-halo-danger);
+  --inset-shadow-field: inset 0 1px 2px 0 var(--depth-field-shade);
+
+  /* Cards: softly raised. */
+  --shadow-card:
+    0 0 0 1px var(--depth-card-edge), 0 2px 4px 0 var(--depth-card-near),
+    0 12px 28px -8px var(--depth-card-far);
+  --inset-shadow-card: inset 0 1px 0 0 var(--depth-card-hi);
+
+  /* Sheets. */
+  --shadow-floating:
+    0 0 0 1px var(--depth-sheet-edge), 0 1px 2px 0 var(--depth-sheet-near),
+    0 8px 20px -6px var(--depth-sheet-mid), 0 20px 44px -12px var(--depth-sheet-far);
+  --shadow-overlay:
+    0 0 0 1px var(--depth-sheet-edge), 0 2px 4px 0 var(--depth-sheet-near),
+    0 16px 32px -8px var(--depth-overlay-mid), 0 40px 80px -20px var(--depth-overlay-far);
+  --inset-shadow-sheet: inset 0 1px 0 0 var(--depth-sheet-hi);
+
+  /* The bar: it floats over the page for as long as the page is read, so its shadow is short and
+     light, a sheet's edge without a sheet's height. */
+  --shadow-bar:
+    0 0 0 1px var(--depth-bar-edge), 0 1px 2px 0 var(--depth-bar-near),
+    0 6px 16px -6px var(--depth-bar-far);
+  --inset-shadow-bar: inset 0 1px 0 0 var(--depth-bar-hi);
+}
+
+@utility depth-raised {
+  @apply shadow-raised inset-shadow-raised;
+  background-image: var(--d-face, var(--depth-surface-face));
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-raised-hover {
+  @apply shadow-raised-hover inset-shadow-raised;
+  background-image: var(--d-face, var(--depth-surface-face));
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-pressed {
+  @apply shadow-pressed inset-shadow-pressed;
+  background-image: none;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+/* A fitting that cannot move (disabled): the edge stays; light, gloss and shadow go. */
+@utility depth-flat {
+  @apply shadow-flat inset-shadow-flat;
+  background-image: none;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-plug {
+  @apply shadow-plug inset-shadow-raised;
+  background-image: var(--d-face, var(--depth-surface-face));
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-socket {
+  @apply shadow-socket inset-shadow-socket;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-trough {
+  @apply shadow-none inset-shadow-trough;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-field {
+  @apply shadow-field inset-shadow-field;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-field-focus {
+  @apply shadow-field-focus inset-shadow-field;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-field-invalid {
+  @apply shadow-field-invalid inset-shadow-field;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-card {
+  @apply shadow-card inset-shadow-card;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-floating {
+  @apply shadow-floating inset-shadow-sheet;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-overlay {
+  @apply shadow-overlay inset-shadow-sheet;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-bar {
+  @apply shadow-bar inset-shadow-bar;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-none {
+  @apply shadow-none inset-shadow-none;
+}
+
+@utility depth-tone-key {
+  --d-edge: var(--depth-key-edge);
+  --d-hi: var(--depth-key-hi);
+  --d-lo: var(--depth-key-lo);
+  --d-contact: var(--depth-key-contact);
+  --d-ambient: var(--depth-key-ambient);
+  --d-press: var(--depth-key-press);
+  --d-face: var(--depth-key-face);
+}
+@utility depth-tone-accent {
+  --d-edge: var(--depth-accent-edge);
+  --d-hi: var(--depth-accent-hi);
+  --d-lo: var(--depth-accent-lo);
+  --d-contact: var(--depth-accent-contact);
+  --d-ambient: var(--depth-accent-ambient);
+  --d-press: var(--depth-accent-press);
+  --d-face: var(--depth-accent-face);
+}
+@utility depth-tone-danger {
+  --d-edge: var(--depth-danger-edge);
+  --d-hi: var(--depth-danger-hi);
+  --d-lo: var(--depth-danger-lo);
+  --d-contact: var(--depth-danger-contact);
+  --d-ambient: var(--depth-danger-ambient);
+  --d-press: var(--depth-danger-press);
+  --d-face: var(--depth-danger-face);
+}
+@utility depth-tone-thumb {
+  --d-edge: var(--depth-thumb-edge);
+  --d-hi: var(--depth-thumb-hi);
+  --d-lo: var(--depth-thumb-lo);
+  --d-contact: var(--depth-thumb-contact);
+  --d-ambient: var(--depth-thumb-ambient);
+  --d-press: var(--depth-thumb-press);
+  --d-face: var(--depth-thumb-face);
+}

@@ -1,0 +1,252 @@
+/*
+ * Prose: running text that arrives as markup, from Markdown or an editor, where no component
+ * can be put on each paragraph. The `Prose` component carries the class.
+ *
+ * Two jobs, kept apart:
+ *
+ * - The rhythm between blocks. It applies to every child of the prose, plain element or library
+ *   component alike: a heading has more air above than below, so it belongs to what follows;
+ *   a block with an edge (code, a table, a callout, a figure) keeps a little more room.
+ * - The look of plain elements (p, lists, quote, rule, strong, link, inline code). It applies
+ *   only where no library component stands between the prose and the element: a `<p>` inside a
+ *   callout or a code block belongs to that component, which sets it itself.
+ *
+ * Everything is in the components layer and inside `:where()`, so a utility class on an element
+ * always wins. `not-prose` on an element takes it and its content out.
+ *
+ * Sizes are written out: theme variables that no utility uses are not emitted, so a stylesheet
+ * cannot count on `--text-xl` or `--radius-xs` being there. They match type.css and radius.css.
+ */
+
+@layer components {
+  .prose {
+    color: var(--lf-text-body);
+    font-size: 1rem;
+    /* Long reading: a little more lead than the UI's 1.5. Sofia Sans is small on its em. */
+    line-height: 1.625;
+    overflow-wrap: break-word;
+  }
+
+  /* --- Rhythm between blocks ------------------------------------------------------------ */
+
+  .prose > :where(*) {
+    margin-block: 0;
+  }
+
+  .prose > :where(* + *) {
+    margin-top: 1rem;
+  }
+
+  /* A block with an edge stands a little apart from the text around it. */
+  .prose
+    > :where(
+      [data-slot="code-block"],
+      [data-slot="code-tabs"],
+      [data-slot="table-container"],
+      [data-slot="callout"],
+      [data-slot="quote"],
+      [data-slot="figure"],
+      [data-slot="diagram"],
+      [data-slot="parameter-list"],
+      pre,
+      figure,
+      table
+    ) {
+    margin-top: 1.5rem;
+  }
+
+  .prose
+    > :where(
+      [data-slot="code-block"],
+      [data-slot="code-tabs"],
+      [data-slot="table-container"],
+      [data-slot="callout"],
+      [data-slot="quote"],
+      [data-slot="figure"],
+      [data-slot="diagram"],
+      [data-slot="parameter-list"],
+      pre,
+      figure,
+      table
+    )
+    + :where(*) {
+    margin-top: 1.5rem;
+  }
+
+  /* Example sentences in a row belong together. */
+  .prose > :where([data-slot="quote"] + [data-slot="quote"]) {
+    margin-top: 0.75rem;
+  }
+
+  /* A heading opens what follows: much air above, little below. */
+  .prose > :where(h2) {
+    margin-top: 3.5rem;
+  }
+
+  .prose > :where(h3) {
+    margin-top: 2.5rem;
+  }
+
+  .prose > :where(h4, h5, h6) {
+    margin-top: 2rem;
+  }
+
+  .prose > :where(h2, h3, h4, h5, h6) + :where(*) {
+    margin-top: 0.75rem;
+  }
+
+  .prose > :where(:first-child) {
+    margin-top: 0;
+  }
+
+  /* --- Plain elements, where no component stands between ------------------------------- */
+
+  /*
+   * `:not(:where(.prose [data-slot] *, …))` reads: not inside a library component that stands
+   * inside the prose (a component around the prose, such as the page's layout, does not count).
+   * Elements that are a component themselves (`[data-slot]`) are left out where the component
+   * renders that element: a `Heading`, a `Link`, a `Code`. Written once per rule, because CSS has
+   * no variable for a selector.
+   */
+
+  .prose :where(h2, h3, h4, h5, h6):not(:where(.prose [data-slot] *, [data-slot], .not-prose *)) {
+    color: var(--lf-text);
+    text-wrap: balance;
+  }
+
+  .prose :where(h2):not(:where(.prose [data-slot] *, [data-slot], .not-prose *)) {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.008em;
+    font-weight: 600;
+  }
+
+  .prose :where(h3):not(:where(.prose [data-slot] *, [data-slot], .not-prose *)) {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  .prose :where(h4, h5, h6):not(:where(.prose [data-slot] *, [data-slot], .not-prose *)) {
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  .prose :where(ul, ol):not(:where(.prose [data-slot] *, .not-prose, .not-prose *)) {
+    padding-left: 1.375rem;
+  }
+
+  .prose :where(ul):not(:where(.prose [data-slot] *, .not-prose, .not-prose *)) {
+    list-style-type: disc;
+  }
+
+  .prose :where(ol):not(:where(.prose [data-slot] *, .not-prose, .not-prose *)) {
+    list-style-type: decimal;
+  }
+
+  /* A list inside a list item takes the next marker, so the levels can be told apart. */
+  .prose :where(li ul):not(:where(.prose [data-slot] *, .not-prose *)) {
+    list-style-type: circle;
+  }
+
+  .prose :where(li):not(:where(.prose [data-slot] *, .not-prose *)) {
+    padding-left: 0.25rem;
+  }
+
+  .prose :where(li):not(:where(.prose [data-slot] *, .not-prose *))::marker {
+    color: var(--lf-text-muted);
+  }
+
+  .prose :where(ol > li):not(:where(.prose [data-slot] *, .not-prose *))::marker {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .prose :where(li + li):not(:where(.prose [data-slot] *, .not-prose *)) {
+    margin-top: 0.5rem;
+  }
+
+  /* A loose item holds blocks: paragraphs, code, a list of its own. They keep the text's rhythm. */
+  .prose :where(li > * + *):not(:where(.prose [data-slot] *, .not-prose *)) {
+    margin-top: 0.75rem;
+  }
+
+  .prose
+    :where(
+      li
+        > :is(
+          [data-slot="code-block"],
+          [data-slot="code-tabs"],
+          [data-slot="callout"],
+          [data-slot="quote"],
+          [data-slot="table-container"]
+        )
+    ):not(:where(.prose [data-slot] *)) {
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .prose :where(li > ul, li > ol):not(:where(.prose [data-slot] *, .not-prose *)) {
+    margin-top: 0.5rem;
+  }
+
+  .prose
+    :where(blockquote):not(:where(.prose [data-slot] *, [data-slot], .not-prose, .not-prose *)) {
+    border-left: 2px solid var(--lf-line);
+    padding-left: 1rem;
+  }
+
+  .prose :where(hr):not(:where(.prose [data-slot] *, [data-slot], .not-prose *)) {
+    border: 0;
+    border-top: 1px solid var(--lf-hairline);
+    margin-block: 3rem;
+  }
+
+  .prose :where(strong, b):not(:where(.prose [data-slot] *, .not-prose *)) {
+    color: var(--lf-text);
+    font-weight: 600;
+  }
+
+  /* The look of `linkVariants()`'s accent, for a link nobody could give the class. */
+  .prose :where(a):not(:where(.prose [data-slot] *, [data-slot], [class], .not-prose *)) {
+    border-radius: calc(var(--radius-base) - 3px);
+    color: var(--lf-accent);
+    font-weight: 500;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition: color var(--transition-duration-spring-snap) var(--ease-spring-snap);
+  }
+
+  .prose :where(a):not(:where(.prose [data-slot] *, [data-slot], [class], .not-prose *)):hover {
+    color: var(--lf-accent-hover);
+  }
+
+  .prose
+    :where(a):not(:where(.prose [data-slot] *, [data-slot], [class], .not-prose *)):focus-visible {
+    outline: 2px solid var(--lf-accent);
+    outline-offset: 2px;
+  }
+
+  /* The look of `Code`, for inline code nobody could give the component. */
+  .prose :where(code):not(:where(.prose [data-slot] *, [data-slot], pre *, .not-prose *)) {
+    border: 1px solid var(--lf-hairline);
+    border-radius: calc(var(--radius-base) - 3px);
+    background-color: var(--lf-well);
+    padding-inline: 0.3em;
+    color: var(--lf-text);
+    font-family:
+      var(--font-jetbrains-mono, "JetBrains Mono Variable", "JetBrains Mono"), "Courier New",
+      monospace;
+    font-size: 0.84em;
+    font-variant-ligatures: none;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  .prose :where(img, svg, video):not(:where(.prose [data-slot] *, .not-prose *)) {
+    max-width: 100%;
+    height: auto;
+  }
+}

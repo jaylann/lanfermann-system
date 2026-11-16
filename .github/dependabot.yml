@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ["/", "/.github/actions/setup"]
+    target-branch: stage
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: bun
+    directory: "/"
+    target-branch: stage
+    schedule:
+      interval: weekly
+    groups:
+      # Storybook's packages only work at the same version: always move them together.
+      storybook:
+        patterns: ["storybook", "@storybook/*", "eslint-plugin-storybook"]
+      # Vitest and its browser provider are released together.
+      vitest:
+        patterns: ["vitest", "@vitest/*"]
+      # A new Playwright is a new browser build: it needs the image tag in
+      # packages/ui/scripts/visual/image.ts and a redrawn baseline, so it is never auto-merged.
+      playwright:
+        patterns: ["playwright", "@playwright/*"]
+      deps:
+        update-types: [minor, patch]

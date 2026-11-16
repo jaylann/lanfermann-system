@@ -1,0 +1,17 @@
+/* Workshop stylesheet: Tailwind + the library's tokens, scanning source instead of dist. */
+@import "tailwindcss";
+@import "../src/styles.css";
+
+@source "../src";
+@source "../stories";
+@source "./";
+
+html {
+  background: var(--lf-ground);
+  color: var(--lf-text-body);
+}
+
+/* Base UI: iOS backdrops need a positioned body. */
+body {
+  position: relative;
+}

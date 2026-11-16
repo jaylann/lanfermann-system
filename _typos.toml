@@ -1,0 +1,30 @@
+[files]
+extend-exclude = [
+  "*.lock",
+  "*.svg",
+  "*.min.*",
+  "dist/",
+  "build/",
+  ".git/",
+  "storybook-static/",
+  ".visual/",
+  "*.generated.css",
+  # German sample copy: the checker knows English only.
+  "*.stories.tsx",
+  "apps/docs/src/app/",
+  # Pictures.
+  "packages/ui/visual-baseline/",
+]
+
+[default.extend-words]
+# German words in the library's own copy (labels, error messages, the forms a typed date and
+# time are read in), and "Fase", the name of the design direction.
+sie = "sie"
+ein = "ein"
+beginn = "beginn"
+alle = "alle"
+ende = "ende"
+ist = "ist"
+produkt = "produkt"
+titel = "titel"
+fase = "fase"

@@ -1,0 +1,55 @@
+/*
+ * Motion that is not a spring curve. The springs themselves (`spring-snap`, `spring-settle`, …)
+ * are generated into motion.generated.css from src/motion/springs.ts.
+ *
+ * Rules: everything a person triggers is a transition or a spring, never a keyframe animation, so
+ * it can be reversed mid-flight. Popups grow out of their trigger (`--transform-origin`). Exits
+ * are shorter than entrances and never bounce or travel. Keyboard focus, menu highlight, error
+ * colours and page load do not animate.
+ */
+
+:root {
+  /* How far a sheet scales and travels when it enters. Reduced motion zeroes both. */
+  --motion-enter-scale: 0.96;
+  --motion-enter-offset: 4px;
+  --motion-press-scale: 0.98;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-enter-scale: 1;
+    --motion-enter-offset: 0px;
+    --motion-press-scale: 1;
+  }
+}
+
+/*
+ * The three keyframe animations in the system. All show ongoing work nobody triggered a state
+ * change for: the spinner turns, a progress bar without a known end runs through its trough, and
+ * under reduced motion both breathe instead.
+ */
+@theme {
+  --animate-spinner: spinner 0.75s linear infinite;
+  --animate-indeterminate: indeterminate 1.5s ease-in-out infinite;
+  --animate-breathe: breathe 1.4s ease-in-out infinite;
+
+  @keyframes spinner {
+    to {
+      rotate: 1turn;
+    }
+  }
+  /* A fill two fifths of the trough wide enters at the start and leaves at the end. */
+  @keyframes indeterminate {
+    from {
+      translate: -100%;
+    }
+    to {
+      translate: 250%;
+    }
+  }
+  @keyframes breathe {
+    50% {
+      opacity: 0.4;
+    }
+  }
+}

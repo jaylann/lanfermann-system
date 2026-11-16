@@ -1,0 +1,117 @@
+/*
+ * What is chosen in a calendar, drawn as one raised shape over the days: a day, or a range.
+ *
+ * It is the plug's recipe: edge, face, top light, bottom shade and contact shadow, with the
+ * tone's knobs from depth.css. But a box-shadow follows a box, and a range over several weeks is
+ * a stair. So every layer is the outline itself, cut out with `clip-path`:
+ *
+ *   edge    the outline grown by a pixel, under everything: the ring around the shape
+ *   face    the fill and its gloss, one gradient over the whole shape, and on it the numbers
+ *           of the days in the colour that reads there, cut to the outline like the fill
+ *   light   a pixel along every edge that faces up: the shape, less itself moved down by one
+ *   shade   the same along every edge that faces down
+ *
+ * The points come from src/internal/range-shape.ts as custom properties: `--shape`, `--shape-edge`
+ * and `--shape-start` (the first point, which closes the cut-out of light and shade). They are
+ * written in the calendar's units: `--u` (the pitch of the days), `--g` (their gap), `--r` (the
+ * corner). The layers keep `--room` around the grid, so the ring and the moved copies are whole.
+ *
+ * The shape does not move by itself here: when the selection changes, the component rewrites
+ * those properties frame by frame (see calendar-selection.tsx). What this file animates is only
+ * the seating of a selection made where there was none.
+ */
+@utility calendar-selection {
+  --g: var(--calendar-gap);
+  --r: var(--radius-md);
+  /*
+   * The tone's knobs (`--d-*`) do not inherit: they belong to the element that carries the tone.
+   * Handed on here under names that do, for the layers inside.
+   */
+  --range-edge: var(--d-edge, var(--depth-surface-edge));
+  --range-face: var(--d-face, var(--depth-surface-face));
+  --range-hi: var(--d-hi, var(--depth-surface-hi));
+  --range-lo: var(--d-lo, var(--depth-surface-lo));
+
+  position: absolute;
+  pointer-events: none;
+  /* Over the six weeks of days: below the row of weekdays, which is as tall as a small control. */
+  top: calc(var(--control-sm) + var(--g) - var(--room));
+  inset-inline-start: calc(-1 * var(--room));
+  width: calc(7 * var(--u) - var(--g) + 2 * var(--room));
+  height: calc(6 * var(--u) - var(--g) + 2 * var(--room));
+  /* The contact shadow follows the shape, whatever it is. */
+  filter: drop-shadow(0 1px 2px var(--d-contact, var(--depth-surface-contact)));
+
+  /*
+   * Chosen where nothing was, it seats: it grows out of the middle of its first day. The
+   * component sets the smaller size and lets go of it; this is the way back.
+   */
+  transition:
+    scale var(--transition-duration-spring-seat) var(--ease-spring-seat),
+    opacity var(--transition-duration-spring-snap) var(--ease-spring-snap);
+
+  /* Nothing chosen: nothing drawn. */
+  &[data-empty] {
+    visibility: hidden;
+  }
+
+  & > * {
+    position: absolute;
+    inset: 0;
+  }
+  & > [data-layer="edge"] {
+    background: var(--range-edge);
+    clip-path: polygon(var(--shape-edge, 0 0));
+  }
+  & > [data-layer="face"] {
+    background-color: var(--color-accent);
+    background-image: var(--range-face);
+    clip-path: polygon(var(--shape, 0 0));
+  }
+  & > [data-layer="light"],
+  & > [data-layer="shade"] {
+    clip-path: polygon(var(--shape, 0 0));
+  }
+  /* Everything but the shape: a frame around it, joined to the outline by a line there and back. */
+  & > [data-layer="light"]::before,
+  & > [data-layer="shade"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(
+      evenodd,
+      -1rem -1rem,
+      calc(100% + 1rem) -1rem,
+      calc(100% + 1rem) calc(100% + 1rem),
+      -1rem calc(100% + 1rem),
+      -1rem -1rem,
+      var(--shape, 0 0),
+      var(--shape-start, 0 0),
+      -1rem -1rem
+    );
+  }
+  & > [data-layer="light"]::before {
+    background: var(--range-hi);
+    translate: 0 1px;
+  }
+  & > [data-layer="shade"]::before {
+    background: var(--range-lo);
+    translate: 0 -1px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  @media (forced-colors: active) {
+    filter: none;
+    & > [data-layer="face"] {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+    & > :not([data-layer="face"]) {
+      display: none;
+    }
+  }
+}

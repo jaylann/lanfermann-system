@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Testing / coverage
+coverage/
+*.lcov
+
+# Caches
+.vite/
+.eslintcache
+.turbo/
+.cache/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Deployment
+.vercel
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Claude Code (local-only)
+.claude/settings.local.json
+.claude/worktrees/
+
+# Next.js
+.next/
+next-env.d.ts
+
+# Storybook build + visual capture output
+storybook-static/
+.visual/
+debug-storybook.log

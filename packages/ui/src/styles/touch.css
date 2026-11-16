@@ -1,0 +1,41 @@
+/*
+ * Touch: what changes when the pointer is a finger (`pointer: coarse`).
+ *
+ * Controls keep their size and their look. A control smaller than 44px gets an invisible target
+ * of that size around it (`touch-target`), so a thumb can still hit it. The control has to be
+ * positioned (`relative` or `absolute`) and must not clip.
+ *
+ * Two things do grow, because an invisible target cannot help them: the text of a field is 16px
+ * on touch (`pointer-coarse:text-base` in the field recipe; below that iOS zooms in on focus),
+ * and the days of a calendar, which stand edge to edge, are larger cells.
+ *
+ * `data-pointer="coarse"` on any element turns the targets on for its subtree without a touch
+ * device: for a kiosk, and for looking at them on a desk (see the Foundations/Touch board).
+ */
+
+/*
+ * The target is the control's `::after`: centred on it, at least 44px each way, never smaller
+ * than the control itself. A press on it is a press on the control.
+ */
+@utility touch-target {
+  @media (pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      translate: -50% -50%;
+    }
+  }
+  &:where([data-pointer="coarse"] *)::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    translate: -50% -50%;
+  }
+}

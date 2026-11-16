@@ -1,0 +1,191 @@
+/*
+ * Grounds: the four colour scopes of the Lanfermann kit. A ground says who is speaking: Paper is
+ * evidence (the default app surface), Tint is someone else's words, Ink is the claim (and the
+ * system's own voice: tooltips, toasts), Indigo is the ask.
+ *
+ * Source of the brand values: the "Lanfermann Freelance" design system, tokens v3 (2026-11-12).
+ * The first ten tokens of each block are copied verbatim from it; everything below "UI layer" is
+ * this library's extension for interactive parts.
+ *
+ * Switch with `data-theme` on any element (the kit's attribute); `.dark` aliases Ink. Components
+ * never branch on the ground themselves: every difference flows through these variables.
+ *
+ * Scope rule: a custom property that references a ground token resolves where it is DECLARED. Put
+ * derived values in every ground block or in `@theme inline`, never on `:root` alone, or a nested
+ * ground silently keeps its parent's colours.
+ */
+
+:root,
+[data-theme="paper"] {
+  color-scheme: light;
+
+  --lf-ground: #fbfbfd;
+  --lf-text: #13121c;
+  --lf-text-body: #302f39;
+  --lf-text-muted: #686775;
+  --lf-line: #8f8e9c;
+  --lf-rule: #13121c;
+  --lf-accent: #5f50d0;
+  --lf-on-accent: #ffffff;
+  --lf-surface: #ffffff;
+  --lf-surface-quiet: #f2f2f7;
+
+  /* UI layer */
+  --lf-raised: #ffffff; /* face of a neutral fitting (secondary button, thumb) */
+  --lf-raised-pressed: #f2f2f7;
+  --lf-sheet: #ffffff; /* face of a floating sheet (menu, popover, dialog) */
+  --lf-key: #24232f; /* face of the committed action (primary button): charcoal under a gloss */
+  --lf-key-hover: #2e2d3a;
+  --lf-key-pressed: #1b1a25;
+  --lf-on-key: #fbfbfd;
+  --lf-accent-hover: #5244c2;
+  --lf-accent-pressed: #5044ac;
+  --lf-tint: #edeafc; /* soft accent wash: "you are here" rows, info */
+  --lf-hairline: rgb(19 18 28 / 0.12); /* quiet 1px edge of fittings and sheets */
+  --lf-hover: rgb(19 18 28 / 0.05); /* hover and keyboard highlight wash */
+  --lf-scrim: rgb(42 37 82 / 0.36);
+  --lf-disabled: #f2f2f7;
+  --lf-on-disabled: #686775;
+  --lf-trough: #e9e9f0; /* floor of a sunken track: switch off, segmented control */
+  --lf-well: #f6f6fa; /* a recessed strip inside a surface: card footer */
+  --lf-thumb: #ffffff; /* the part that runs in a switch */
+}
+
+[data-theme="tint"] {
+  color-scheme: light;
+
+  --lf-ground: #edeafc;
+  --lf-text: #13121c;
+  --lf-text-body: #302f39;
+  --lf-text-muted: #5f5e6e;
+  --lf-line: #8785a0;
+  --lf-rule: #13121c;
+  --lf-accent: #5f50d0;
+  --lf-on-accent: #ffffff;
+  --lf-surface: #ffffff;
+  --lf-surface-quiet: #e3dff8;
+
+  --lf-raised: #ffffff;
+  --lf-raised-pressed: #f2f2f7;
+  --lf-sheet: #ffffff;
+  --lf-key: #24232f;
+  --lf-key-hover: #2e2d3a;
+  --lf-key-pressed: #1b1a25;
+  --lf-on-key: #fbfbfd;
+  --lf-accent-hover: #5244c2;
+  --lf-accent-pressed: #5044ac;
+  --lf-tint: #e3dff8;
+  --lf-hairline: rgb(19 18 28 / 0.14);
+  --lf-hover: rgb(19 18 28 / 0.06);
+  --lf-scrim: rgb(42 37 82 / 0.36);
+  --lf-disabled: #e3dff8;
+  --lf-on-disabled: #5f5e6e;
+  --lf-trough: #dedaf5;
+  --lf-well: #f6f5fd;
+  --lf-thumb: #ffffff;
+}
+
+.dark,
+[data-theme="ink"] {
+  color-scheme: dark;
+
+  --lf-ground: #13121c;
+  --lf-text: #fbfbfd;
+  --lf-text-body: #d8d8df;
+  --lf-text-muted: #aaa9ba;
+  --lf-line: #6a6979;
+  --lf-rule: #fbfbfd;
+  --lf-accent: #a6a1fd;
+  --lf-on-accent: #13121c;
+  --lf-surface: #1d1c28;
+  --lf-surface-quiet: #1d1c28;
+
+  --lf-raised: #272632;
+  --lf-raised-pressed: #1d1c28;
+  --lf-sheet: #272632;
+  --lf-key: #fbfbfd;
+  --lf-key-hover: #ffffff;
+  --lf-key-pressed: #e4e4ec;
+  --lf-on-key: #13121c;
+  --lf-accent-hover: #b6b2fe;
+  --lf-accent-pressed: #9590ee;
+  --lf-tint: #2b2654;
+  --lf-hairline: rgb(255 255 255 / 0.12);
+  --lf-hover: rgb(255 255 255 / 0.07);
+  --lf-scrim: rgb(8 7 12 / 0.6);
+  --lf-disabled: #1d1c28;
+  --lf-on-disabled: #8a8999;
+  --lf-trough: #0c0b12;
+  --lf-well: #181721;
+  --lf-thumb: #e4e4ec;
+}
+
+[data-theme="indigo"] {
+  color-scheme: dark;
+
+  --lf-ground: #5f50d0;
+  --lf-text: #ffffff;
+  --lf-text-body: #ffffff;
+  --lf-text-muted: #e6e3fb;
+  --lf-line: #b9b1f3;
+  --lf-rule: #ffffff;
+  --lf-accent: #ffffff;
+  --lf-on-accent: #5f50d0;
+  --lf-surface: #5244c2;
+  --lf-surface-quiet: #5244c2;
+
+  --lf-raised: #6e60d8;
+  --lf-raised-pressed: #5244c2;
+  --lf-sheet: #4a3db6; /* a deeper Indigo, so the ground's white text still reads on it */
+  --lf-key: #24232f;
+  --lf-key-hover: #2e2d3a;
+  --lf-key-pressed: #1b1a25;
+  --lf-on-key: #fbfbfd;
+  --lf-accent-hover: #f2f0fd;
+  --lf-accent-pressed: #e6e3fb;
+  --lf-tint: #5244c2;
+  --lf-hairline: rgb(255 255 255 / 0.22);
+  --lf-hover: rgb(255 255 255 / 0.1);
+  --lf-scrim: rgb(19 18 28 / 0.5);
+  --lf-disabled: #5244c2;
+  --lf-on-disabled: #e6e3fb;
+  --lf-trough: #4a3db6;
+  --lf-well: #4b3eb8;
+  --lf-thumb: #ffffff;
+}
+
+@theme inline {
+  --color-ground: var(--lf-ground);
+  --color-surface: var(--lf-surface);
+  --color-surface-quiet: var(--lf-surface-quiet);
+  --color-raised: var(--lf-raised);
+  --color-raised-pressed: var(--lf-raised-pressed);
+  --color-sheet: var(--lf-sheet);
+  --color-trough: var(--lf-trough);
+  --color-well: var(--lf-well);
+  --color-thumb: var(--lf-thumb);
+
+  --color-fg: var(--lf-text);
+  --color-fg-body: var(--lf-text-body);
+  --color-fg-muted: var(--lf-text-muted);
+
+  --color-line: var(--lf-line);
+  --color-rule: var(--lf-rule);
+  --color-hairline: var(--lf-hairline);
+
+  --color-key: var(--lf-key);
+  --color-key-hover: var(--lf-key-hover);
+  --color-key-pressed: var(--lf-key-pressed);
+  --color-on-key: var(--lf-on-key);
+
+  --color-accent: var(--lf-accent);
+  --color-accent-hover: var(--lf-accent-hover);
+  --color-accent-pressed: var(--lf-accent-pressed);
+  --color-on-accent: var(--lf-on-accent);
+  --color-tint: var(--lf-tint);
+
+  --color-hover: var(--lf-hover);
+  --color-scrim: var(--lf-scrim);
+  --color-disabled: var(--lf-disabled);
+  --color-on-disabled: var(--lf-on-disabled);
+}

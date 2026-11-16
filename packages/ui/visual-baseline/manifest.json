@@ -1,0 +1,14 @@
+{
+  "engines": {
+    "chromium": "159.0.8154.6"
+  },
+  "platform": "linux",
+  "arch": "arm64",
+  "scale": 1,
+  "grounds": [
+    "paper",
+    "ink",
+    "indigo"
+  ],
+  "touch": false
+}

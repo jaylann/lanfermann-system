@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+coverage
+.next
+next-env.d.ts
+*.lock
+bun.lockb
+storybook-static
+.visual
+*.generated.css
+# Written by `bun run visual:baseline`: kept as the tool writes it, so a run changes nothing.
+packages/ui/visual-baseline

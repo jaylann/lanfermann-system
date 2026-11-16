@@ -1,0 +1,42 @@
+name: Visual baseline
+
+# Draws every story again on the runner and offers the pictures as a download. For when a
+# change of look is meant and no machine with Docker is at hand, and for a Playwright bump,
+# which redraws everything.
+#
+# It does not commit them: the pictures are part of the change, so the person who made the
+# change looks at them and commits them, under their own name:
+#
+#   gh run download <run id> --name visual-baseline --dir packages/ui/visual-baseline
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: visual-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baseline:
+    name: Redraw the baseline
+    # arm64, like the machines the baseline is otherwise made on (see ci.yml, job visual).
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build the workshop
+        run: bun run build-storybook
+      - name: Draw and accept
+        working-directory: packages/ui
+        run: bun run visual:baseline
+      - name: Say what changed
+        run: |
+          changed=$(git status --short packages/ui/visual-baseline | wc -l | tr -d ' ')
+          echo "$changed pictures differ from the committed baseline." >> "$GITHUB_STEP_SUMMARY"
+      - name: Offer the pictures
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baseline
+          path: packages/ui/visual-baseline

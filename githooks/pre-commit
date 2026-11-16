@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Lint + format only the staged files. Wire with: git config core.hooksPath githooks
+set -eu
+exec bunx lint-staged
