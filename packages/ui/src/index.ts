@@ -240,6 +240,8 @@ export {
   ReferenceEntryName,
   ReferenceEntryTitle,
 } from "./components/reference-entry/reference-entry";
+export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
+export { useScrollEdges } from "./components/scroll-fade/use-scroll-edges";
 export { Seam, type SeamProps } from "./components/seam/seam";
 export { Section, type SectionProps } from "./components/section/section";
 export {

@@ -1,8 +1,8 @@
 import type { ComponentProps } from "react";
 
+import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { ArrowUpGlyph } from "@/internal/glyphs";
 import { ruleTop } from "@/internal/rule";
-import { ScrollFade } from "@/internal/scroll-fade";
 import { cn } from "@/lib/cn";
 
 /** A table scrolls sideways in its own region, and a region needs a name. */
@@ -65,6 +65,7 @@ export function Table({
       )}
     >
       <ScrollFade
+        axis="x"
         data-slot="table-scroll"
         role="region"
         aria-label={label}

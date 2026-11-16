@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 
 import { containerVariants } from "@/components/container/container";
-import { ScrollFade } from "@/internal/scroll-fade";
+import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { cn } from "@/lib/cn";
 
 /**

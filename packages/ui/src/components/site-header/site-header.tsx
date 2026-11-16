@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/button/button";
 import { useGround } from "@/components/ground/ground";
 import { Icon } from "@/components/icon/icon";
-import { useScrollEdges } from "@/internal/scroll-edges";
+import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { cn } from "@/lib/cn";
 
 /**
