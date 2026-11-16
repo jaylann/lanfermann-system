@@ -83,9 +83,11 @@ function ScrolledToMiddle({ children }: { children: ReactNode }) {
   useEffect(() => {
     const box = ref.current?.querySelector<HTMLElement>('[data-slot="scroll-fade"]');
     if (!box) return;
+    // The pictures of this story are compared, so the place must not depend on when the web
+    // font arrives. With scroll anchoring, a font that came after the scroll moved the list by
+    // a pixel (the first line's box changes with the font, and the browser holds on to it).
+    box.style.overflowAnchor = "none";
     const observer = new ResizeObserver(() => {
-      // To a whole pixel: half of an odd way is drawn a pixel up in one run and down in the
-      // next, and the pictures of this story are compared.
       box.scrollTop = Math.floor((box.scrollHeight - box.clientHeight) / 2);
       box.scrollLeft = Math.floor((box.scrollWidth - box.clientWidth) / 2);
     });
