@@ -43,8 +43,8 @@ Then Read the PNGs it lists (`.visual/sheets/*.png`, or one shot under `.visual/
 - `bun add` / `bun install` and git hooks inside the sandbox need
   `BUN_TMPDIR="$TMPDIR" BUN_INSTALL_CACHE_DIR="$TMPDIR/bun-cache"`.
 - A Storybook dev server started inside the sandbox (`bun run storybook`, background) serves fine
-  on `http://127.0.0.1:6006` but **does not watch files**. Stop and restart it after changes
-  before asking someone to look.
+  on `http://127.0.0.1:6006` but **does not watch files**. Restart it after changes; what
+  to do before asking Justin to look is in `AGENTS.md` (Rules).
 - Run heavy commands one at a time (builds, captures): the machine runs out of memory otherwise.
 
 ## Rules of thumb

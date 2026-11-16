@@ -50,5 +50,12 @@ read the one for what you change.
   (`bun run storybook:phone`) before it is called smooth.
 - Look-and-feel decisions are Justin's: build the options as switches, show them side by side at
   real size, and ask. Record the outcome in `packages/ui/DESIGN.md`.
+- Before asking him to look or pick, rebuild (`bun run build-storybook`) and serve the build
+  (`bun run storybook:phone`, which prints the Mac and phone links). Open the exact story on the
+  served build and check that the switch you ask about changes the page. Then lead the reply with
+  those links. While he is still looking, list the open picks in the reply; open the question
+  dialog only once he says he has looked. Each question says in one line what is being decided
+  and what changes for him. (Retro 2026-11-16: about ten questions in five sessions were
+  rejected because he had nothing to look at yet.)
 - Sample copy in stories is German, sentence case, real content. The wording of interface strings
   is Justin's to decide as well.
