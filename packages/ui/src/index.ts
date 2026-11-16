@@ -33,6 +33,7 @@ export {
 } from "./components/breadcrumbs/breadcrumbs";
 export { Button, type ButtonProps } from "./components/button/button";
 export { type ButtonVariants, buttonVariants } from "./components/button/button-variants";
+export { ButtonGroup, type ButtonGroupProps } from "./components/button-group/button-group";
 export { Calendar, type CalendarProps, type DateRange } from "./components/calendar/calendar";
 export { Callout, type CalloutProps, type CalloutTone } from "./components/callout/callout";
 export {
@@ -57,6 +58,7 @@ export {
   type CodePiece,
   type CodeRole,
 } from "./components/code-block/code-block-live";
+export type { CodeKeyOptions } from "./components/code-block/code-keys";
 export { type CodeTab, CodeTabs, type CodeTabsProps } from "./components/code-block/code-tabs";
 export { type CodeLanguage } from "./components/code-block/highlight";
 export { type LineSpec } from "./components/code-block/lines";
@@ -127,6 +129,17 @@ export {
   DocsLayoutNav,
 } from "./components/docs-layout/docs-layout";
 export {
+  type DocsCrumb,
+  type DocsGroup,
+  type DocsNav,
+  type DocsPage,
+  docsPages,
+  docsPageState,
+  type DocsPlace,
+  findDocsPage,
+  sameDocsPage,
+} from "./components/docs-layout/docs-nav";
+export {
   Drawer,
   DrawerBody,
   DrawerClose,
@@ -146,6 +159,13 @@ export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
 export { Form, type FormProps } from "./components/form/form";
 export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
 export { Heading, type HeadingProps } from "./components/heading/heading";
+export {
+  HoverCard,
+  HoverCardContent,
+  type HoverCardContentProps,
+  HoverCardTrigger,
+  type HoverCardTriggerProps,
+} from "./components/hover-card/hover-card";
 export { Icon, type IconProps, type IconSvgElement } from "./components/icon/icon";
 export { Input, type InputProps } from "./components/input/input";
 export {
@@ -207,14 +227,6 @@ export {
   NumberFieldInput,
   type NumberFieldProps,
 } from "./components/number-field/number-field";
-export {
-  PageHeader,
-  PageHeaderActions,
-  PageHeaderLead,
-  type PageHeaderProps,
-  PageHeaderTitle,
-  type PageHeaderTitleProps,
-} from "./components/page-header/page-header";
 export { Pager, PagerLink, type PagerLinkProps, type PagerProps } from "./components/pager/pager";
 export {
   Parameter,
@@ -248,6 +260,8 @@ export {
   ReferenceEntryName,
   ReferenceEntryTitle,
 } from "./components/reference-entry/reference-entry";
+export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
+export { useScrollEdges } from "./components/scroll-fade/use-scroll-edges";
 export { Seam, type SeamProps } from "./components/seam/seam";
 export { Section, type SectionProps } from "./components/section/section";
 export {
@@ -272,6 +286,7 @@ export {
   type SelectTriggerProps,
 } from "./components/select/select";
 export { Separator, type SeparatorProps } from "./components/separator/separator";
+export { Shimmer, type ShimmerProps } from "./components/shimmer/shimmer";
 export {
   SideNav,
   SideNavGroup,
@@ -350,6 +365,11 @@ export {
 } from "./components/tabs/tabs";
 export { Text, type TextProps } from "./components/text/text";
 export { Textarea, type TextareaProps } from "./components/textarea/textarea";
+export {
+  type Theme,
+  ThemeSwitch,
+  type ThemeSwitchProps,
+} from "./components/theme-switch/theme-switch";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
 export {
   toast,
@@ -366,5 +386,15 @@ export {
   TooltipProvider,
   TooltipTrigger,
 } from "./components/tooltip/tooltip";
+export {
+  Trace,
+  type TraceMarks,
+  type TraceProps,
+  type TraceStatus,
+  TraceStep,
+  type TraceStepProps,
+  TraceSummary,
+  type TraceSummaryProps,
+} from "./components/trace/trace";
 export { cn, mergeClassName } from "./lib/cn";
 export { type SpringName, springs, transitions } from "./motion/springs";

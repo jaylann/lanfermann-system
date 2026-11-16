@@ -109,24 +109,8 @@
 }
 
 /*
- * The edges of a block that scrolls sideways fade where more code waits. The two lengths are
- * registered so the mask can move between them on a spring; the scroller sets them from
- * `data-overflow` (code-block-frame.tsx).
- */
-@property --code-fade-start {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
-}
-@property --code-fade-end {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
-}
-
-/*
- * The parts of a block that Tailwind classes cannot say well: counters, generated signs and the
- * mask. Measures come from the block (code-block-frame.tsx):
+ * The parts of a block that Tailwind classes cannot say well: counters and generated signs.
+ * Measures come from the block (code-block-frame.tsx):
  *   --code-pad-x     the inset of the code from the block's edge
  *   --code-gutter    the room before the code: line numbers and the sign of a change
  *   --code-digits    the width of the widest line number
@@ -142,10 +126,18 @@
     font-variant-ligatures: none;
     tab-size: 2;
   }
-  [data-slot="code-block-code"][data-wrap] {
+  /* Long lines break: because the code was rendered so, or because the wrap key of the block is on. */
+  [data-slot="code-block-code"][data-wrap],
+  [data-wrap="on"] [data-slot="code-block-code"] {
     width: auto;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+  /* The key is off: lines run on and scroll, whatever the code was rendered with. */
+  [data-wrap="off"] [data-slot="code-block-code"] {
+    width: max-content;
+    white-space: pre;
+    overflow-wrap: normal;
   }
 
   [data-slot="code-block-line"] {
@@ -195,27 +187,11 @@
     color: var(--lf-danger);
   }
 
-  /* The edges fade where more code waits to the side; the mask moves on `settle`. The focus
-     outline is drawn by the block around it, since a mask would cut it off. */
+  /* The edges fade where more code waits to the side (scroll-fade.css). The focus outline is
+     drawn by the block around it, since the mask would cut it off. */
   [data-slot="code-block-scroll"] {
-    mask-image: linear-gradient(
-      to right,
-      transparent,
-      #000 var(--code-fade-start),
-      #000 calc(100% - var(--code-fade-end)),
-      transparent
-    );
-    transition:
-      --code-fade-start var(--transition-duration-spring-settle) var(--ease-spring-settle),
-      --code-fade-end var(--transition-duration-spring-settle) var(--ease-spring-settle);
     scrollbar-width: thin;
     scrollbar-color: var(--lf-line) transparent;
-  }
-  [data-slot="code-block-scroll"][data-overflow~="start"] {
-    --code-fade-start: 2.5rem;
-  }
-  [data-slot="code-block-scroll"][data-overflow~="end"] {
-    --code-fade-end: 2.5rem;
   }
 
   /* The copy key's confirmation is shared with every control that copies: see copy.css. */

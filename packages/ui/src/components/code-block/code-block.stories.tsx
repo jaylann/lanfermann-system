@@ -90,6 +90,92 @@ export const Untitled: Story = {
   parameters: { visual: { viewport: { width: 760, height: 220 } } },
 };
 
+/**
+ * Two more keys beside the copy, on request: one breaks long lines and puts them back, one
+ * saves the file. The copy stays last, where every block has it.
+ */
+export const Keys: Story = {
+  args: { code: readme, language: "md", title: "README.md", wrapToggle: true, download: true },
+  parameters: {
+    visual: {
+      viewport: { width: 760, height: 260 },
+      target: '[data-slot="code-wrap"]',
+      motion: [{ name: "download", click: '[data-slot="code-download"] button', frames: 8 }],
+    },
+  },
+};
+
+/** The wrap key on: the lines break, and the key keeps its wash while they do. */
+export const KeysWrapped: Story = {
+  args: { ...Keys.args, wrap: true },
+  parameters: { visual: { viewport: { width: 760, height: 260 } } },
+};
+
+/** Without a header the keys stand together in the corner, on the block's face. */
+export const KeysUntitled: Story = {
+  args: {
+    code: sendQuote.split("\n").slice(9, 13).join("\n"),
+    title: undefined,
+    wrapToggle: true,
+    download: "send-quote.tsx",
+  },
+  parameters: { visual: { viewport: { width: 760, height: 220 } } },
+};
+
+/**
+ * The two keys, as a test: Tab reaches the wrap key first, Enter breaks the lines and says so
+ * (`aria-pressed`), the next key saves the file under the block's title, and the copy is last.
+ */
+export const KeysKeyboard: Story = {
+  args: Keys.args,
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    const block = canvasElement.querySelector<HTMLElement>('[data-slot="code-block"]')!;
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-slot="code-block-scroll"]')!;
+    const wrap = canvas.getByRole("button", { name: "Zeilen umbrechen" });
+    // The download goes nowhere; the spy says what would have been saved.
+    let saved = "";
+    const click = spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      saved = this.download;
+    });
+    try {
+      await step("Tab reaches the wrap key, and lines run on", async () => {
+        await userEvent.tab();
+        await expect(wrap).toHaveFocus();
+        await expect(wrap).toHaveAttribute("aria-pressed", "false");
+        await expect(block).toHaveAttribute("data-wrap", "off");
+        await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+      });
+
+      await step("Enter breaks them, and the key says so", async () => {
+        await userEvent.keyboard("{Enter}");
+        await expect(wrap).toHaveAttribute("aria-pressed", "true");
+        await expect(block).toHaveAttribute("data-wrap", "on");
+        await waitFor(() => expect(scroller.scrollWidth).toBe(scroller.clientWidth));
+      });
+
+      await step("The next key saves the file under the block's title", async () => {
+        await userEvent.tab();
+        await expect(canvas.getByRole("button", { name: "Herunterladen" })).toHaveFocus();
+        await userEvent.keyboard("{Enter}");
+        await expect(click).toHaveBeenCalledOnce();
+        await expect(saved).toBe("README.md");
+        await waitFor(() =>
+          expect(canvas.getByText("Die Datei wurde heruntergeladen.")).toBeInTheDocument(),
+        );
+      });
+
+      await step("The copy is the last key", async () => {
+        await userEvent.tab();
+        await expect(canvas.getByRole("button", { name: "Code kopieren" })).toHaveFocus();
+      });
+    } finally {
+      click.mockRestore();
+    }
+  },
+};
+
 /** The settings a server's docs show: a TOML file, an environment file, a Windows shell. */
 export const Configuration: Story = {
   args: { code: "" },

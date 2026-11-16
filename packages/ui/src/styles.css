@@ -27,8 +27,9 @@
 @import "./styles/toast.css";
 @import "./styles/slider.css";
 @import "./styles/segmented.css";
-@import "./styles/tabs.css";
+@import "./styles/button-group.css";
 @import "./styles/scroll-fade.css";
+@import "./styles/shimmer.css";
 @import "./styles/calendar.css";
 @import "./styles/prose.css";
 @import "./styles/base.css";

@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/button/button";
 import { useGround } from "@/components/ground/ground";
 import { Icon } from "@/components/icon/icon";
-import { useScrollEdges } from "@/internal/scroll-edges";
+import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { cn } from "@/lib/cn";
 
 /**
@@ -26,9 +26,12 @@ import { cn } from "@/lib/cn";
  * the window (16px from `sm`) and padded 12px (16px), so what stands in it lines up with the
  * content of a `Container`: 8 + 12 is its 20px gutter on a phone, 16 + 16 its 32px above. At its
  * widest it is the page's 72rem plus its own padding.
+ *
+ * It is 48px tall: 8px above and below a control, the 8px it keeps from the window's top. (It was
+ * 56; Justin found it too tall, 2026-11-16.)
  */
 const barFrame =
-  "mx-auto flex h-14 w-[calc(100%-1rem)] max-w-[calc(72rem+2rem)] items-center gap-6 px-3 sm:w-[calc(100%-2rem)] sm:px-4";
+  "mx-auto flex h-12 w-[calc(100%-1rem)] max-w-[calc(72rem+2rem)] items-center gap-6 px-3 sm:w-[calc(100%-2rem)] sm:px-4";
 
 export type SiteHeaderProps = ComponentProps<"header"> & {
   /** Stays at the top of the window while the page scrolls under it. */

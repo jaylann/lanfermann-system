@@ -1,0 +1,68 @@
+/*
+ * Shimmer: a soft light that passes through a line of text while the work it names is going on
+ * ("Zahlungen werden abgeglichen"). The text stands in the muted colour and the light is the
+ * ground's strongest text colour, so nothing is brighter than what stands beside it: it is a
+ * sign of life, not a glare. Both come from the ground the line stands on.
+ *
+ * It is one of the system's four keyframe animations (motion.css): work that goes on by itself,
+ * which nobody triggered a state change for.
+ *
+ * How it is drawn: the text is filled with a gradient three times its width, with one narrow
+ * band of light in its middle, and the gradient is pushed through from one side to the other.
+ * For half of the way the band is on the text; before and after, it is outside it. That is the
+ * rest between two passes, which keeps the line calm.
+ *
+ *   --shimmer-duration   one pass and its rest (2.4s)
+ *   --shimmer-band       half the width of the light (3em: it grows with the type)
+ *   --shimmer-from, --shimmer-to   the text's colour and the light's
+ *
+ * It is a paint, not a transform: a browser redraws the line on every frame. That is fine for a
+ * line of text and wrong for a block of it. Under reduced motion nothing passes and the line
+ * breathes like the spinner; in forced colours and where text cannot clip a background it is
+ * plain text.
+ */
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@utility shimmer {
+  --shimmer-from: var(--lf-text-muted);
+  --shimmer-to: var(--lf-text);
+  color: var(--shimmer-from);
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    @media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+      background-image: linear-gradient(
+        100deg,
+        var(--shimmer-from) calc(50% - var(--shimmer-band, 3em)),
+        var(--shimmer-to) 50%,
+        var(--shimmer-from) calc(50% + var(--shimmer-band, 3em))
+      );
+      background-size: 300% 100%;
+      background-repeat: no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer var(--shimmer-duration, 2.4s) linear infinite;
+
+      /* Read from the right, the light passes from the right. */
+      &:dir(rtl) {
+        animation-direction: reverse;
+      }
+      /* Selected, the text is filled again: a transparent fill would leave the selection empty. */
+      &::selection,
+      & ::selection {
+        -webkit-text-fill-color: currentColor;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: var(--animate-breathe);
+  }
+}

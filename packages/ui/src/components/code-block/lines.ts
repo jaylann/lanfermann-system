@@ -55,3 +55,28 @@ export function lineKinds(
     r.has(i + 1) ? "removed" : a.has(i + 1) ? "added" : m.has(i + 1) ? "marked" : undefined,
   );
 }
+
+/**
+ * The file a block of code is saved as when nothing names it: the last part of its title if that
+ * is a file's name ("app/api/route.ts" gives "route.ts"), or `code` with the ending of its
+ * language.
+ */
+export function codeFileName(title: string | undefined, language = "text") {
+  const name = title?.split(/[/\\]/).pop();
+  // A name with an ending and no spaces; a dotfile (".env") is one too.
+  if (name && /^\S*\.[A-Za-z0-9]+$/.test(name)) return name;
+  const endings: Record<string, string> = {
+    text: "txt",
+    shell: "sh",
+    bash: "sh",
+    zsh: "sh",
+    typescript: "ts",
+    javascript: "js",
+    markdown: "md",
+    python: "py",
+    powershell: "ps1",
+    dotenv: "env",
+    yml: "yaml",
+  };
+  return `code.${endings[language] ?? language}`;
+}

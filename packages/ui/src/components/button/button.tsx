@@ -2,6 +2,11 @@
 
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 
+import { useButtonGroup } from "@/components/button-group/button-group-context";
+import {
+  buttonGroupKeyDisabledLook,
+  buttonGroupKeyVariants,
+} from "@/components/button-group/button-group-variants";
 import { Spinner } from "@/components/spinner/spinner";
 import { mergeClassName } from "@/lib/cn";
 
@@ -33,6 +38,9 @@ export type ButtonProps = ButtonPrimitive.Props &
  * Label it with what happens ("Angebot senden", not "OK"). Icons go inside as children, before
  * the label: 14px in `sm`, 16px in `md`, 18px in `lg`. For a link that should look like a button,
  * style an `<a>` with `buttonVariants()` instead of rendering one through `Button`.
+ *
+ * Inside a `ButtonGroup` it is one key of the group's fitting: it has no face of its own and
+ * takes the group's size, and its `variant` is not read.
  */
 export function Button({
   className,
@@ -45,23 +53,30 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
+  const group = useButtonGroup();
   const resolvedVariant = variant ?? "secondary";
-  const resolvedSize = size ?? "md";
+  const resolvedSize = group?.size ?? size ?? "md";
   return (
     <ButtonPrimitive
       data-slot="button"
-      data-variant={resolvedVariant}
+      data-group-key={group ? "" : undefined}
+      data-variant={group ? undefined : resolvedVariant}
       data-size={resolvedSize}
       data-loading={loading ? "" : undefined}
       aria-busy={loading || undefined}
-      disabled={disabled || loading}
+      disabled={disabled || loading || group?.disabled}
       // A loading button stays focusable, so focus is not thrown to <body> mid-action.
       focusableWhenDisabled={focusableWhenDisabled ?? loading}
       className={mergeClassName(
-        [
-          buttonVariants({ variant, size, iconOnly }),
-          !loading && buttonDisabledLook[resolvedVariant],
-        ],
+        group
+          ? [
+              buttonGroupKeyVariants({ size: resolvedSize, iconOnly }),
+              !loading && buttonGroupKeyDisabledLook,
+            ]
+          : [
+              buttonVariants({ variant, size, iconOnly }),
+              !loading && buttonDisabledLook[resolvedVariant],
+            ],
         className,
       )}
       {...props}

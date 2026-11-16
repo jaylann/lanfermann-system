@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 import type { IconSvgElement } from "@/components/icon/icon";
 
 import { CodeBlockFrame } from "./code-block-frame";
-import type { CodeCopyLabels } from "./code-copy";
+import type { CodeKeyOptions } from "./code-keys";
 import { type CodeLinesOptions, CodeLinesView, type CodeToken } from "./code-lines-view";
-import { parseLines } from "./lines";
+import { codeFileName, parseLines } from "./lines";
 
 /*
  * No highlighter is imported here, and none may be: this file and what it imports are the whole
@@ -33,7 +33,7 @@ export type CodeRole =
 export type CodePiece = { text: string; role?: CodeRole };
 
 export type CodeBlockLiveProps = CodeLinesOptions &
-  CodeCopyLabels & {
+  CodeKeyOptions & {
     /** The code, line by line, each line as its runs in order. */
     lines: readonly (readonly CodePiece[])[];
     /** The file name or the place the code goes, set in the header. Without it, no header. */
@@ -81,7 +81,7 @@ export function CodeBlockLive({
   wrap,
   addedLabel,
   removedLabel,
-  ...copyLabels
+  ...keyOptions
 }: CodeBlockLiveProps) {
   const coloured: CodeToken[][] = lines.map((line) =>
     line.map((piece) => ({
@@ -109,7 +109,9 @@ export function CodeBlockLive({
       fold={fold}
       foldLabel={fold === undefined ? undefined : foldLabel(lines.length - fold)}
       className={className}
-      {...copyLabels}
+      fileName={codeFileName(title)}
+      wrap={wrap}
+      {...keyOptions}
     >
       <CodeLinesView
         lines={coloured}

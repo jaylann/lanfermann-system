@@ -1,0 +1,57 @@
+/*
+ * The keys of a ButtonGroup: where they meet and how they take the fitting's corners. A group is
+ * one fitting (one face, one edge, one shadow, on the group) with several keys in it, so the
+ * keys have no edge of their own. What divides two of them is a seam: the fitting's edge drawn
+ * once more, in its own colour, from one side of the face to the other.
+ *
+ * The first and the last key take the fitting's corners, so the wash under the pointer and the
+ * shade of a press fill the fitting right up to its edge instead of ending in a square inside
+ * it. With the keyboard on it a key rounds all four corners (button-group-variants.ts), so its
+ * ring closes around that key alone.
+ *
+ * A key is whatever carries `data-group-key` (a `Button` or a `SelectTrigger` inside a group),
+ * and it must be a child of the fitting: the corners are inherited from it.
+ */
+@layer components {
+  [data-group-key] {
+    border: 0 solid var(--d-edge, var(--depth-surface-edge));
+    border-radius: 0;
+  }
+
+  /* In a row. */
+  :not([data-orientation="vertical"]) > [data-group-key] {
+    &:is([data-group-key] ~ *) {
+      border-inline-start-width: 1px;
+    }
+    &:not([data-group-key] ~ *) {
+      border-start-start-radius: inherit;
+      border-end-start-radius: inherit;
+    }
+    &:not(:has(~ [data-group-key])) {
+      border-start-end-radius: inherit;
+      border-end-end-radius: inherit;
+    }
+  }
+
+  /* One over the other. */
+  [data-orientation="vertical"] > [data-group-key] {
+    &:is([data-group-key] ~ *) {
+      border-block-start-width: 1px;
+    }
+    &:not([data-group-key] ~ *) {
+      border-start-start-radius: inherit;
+      border-start-end-radius: inherit;
+    }
+    &:not(:has(~ [data-group-key])) {
+      border-end-start-radius: inherit;
+      border-end-end-radius: inherit;
+    }
+  }
+
+  /* Forced colours drop the face and the washes: the seams stay as lines. */
+  @media (forced-colors: active) {
+    [data-group-key] {
+      border-color: ButtonBorder;
+    }
+  }
+}

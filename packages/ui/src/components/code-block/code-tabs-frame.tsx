@@ -13,25 +13,29 @@ import {
 
 import { cn } from "@/lib/cn";
 
-import { CodeCopy, type CodeCopyLabels } from "./code-copy";
+import { type CodeKeyOptions, CodeKeys } from "./code-keys";
 import { CodeScroll } from "./code-scroll";
 import { codeHead, codeRoot } from "./code-surface";
 import { readChoice, subscribeChoices, writeChoice } from "./code-tabs-store";
 
-type CodeTabsFrameProps = CodeCopyLabels & {
+type CodeTabsFrameProps = Omit<CodeKeyOptions, "download"> & {
   /** One `<code>` per tab, in the order of `tabs`. */
   children: ReactNode;
-  tabs: { label: string; copyText: string }[];
+  tabs: { label: string; copyText: string; fileName: string }[];
   group?: string;
   defaultValue?: string;
   label: string;
+  /** A key that saves the version that is shown. */
+  download?: boolean;
+  /** Long lines break when the block first shows. With `wrapToggle` the reader can change it. */
+  wrap?: boolean;
   className?: string;
 };
 
 /**
  * The client half of CodeTabs: a row of tabs in the header, each with its mark, and one soft
  * highlight that glides to the chosen tab (`glide`, placed by Base UI's measure and moved by
- * `translate`). The copy button takes the code that is shown.
+ * `translate`). The keys at the end of the header take the code that is shown.
  */
 export function CodeTabsFrame({
   children,
@@ -39,9 +43,13 @@ export function CodeTabsFrame({
   group,
   defaultValue,
   label,
+  download,
+  wrap = false,
+  wrapToggle = false,
   className,
-  ...labels
+  ...keyOptions
 }: CodeTabsFrameProps) {
+  const [wrapped, setWrapped] = useState(wrap);
   const names = tabs.map((tab) => tab.label);
   const [own, setOwn] = useState(defaultValue ?? names[0]);
   const shared = useSyncExternalStore(
@@ -79,6 +87,7 @@ export function CodeTabsFrame({
         setOwn(next);
         if (group) writeChoice(group, next);
       }}
+      data-wrap={wrapToggle ? (wrapped ? "on" : "off") : undefined}
       className={cn(codeRoot, className)}
     >
       <div data-slot="code-tabs-header" className={cn(codeHead, "pl-1.5")}>
@@ -111,7 +120,16 @@ export function CodeTabsFrame({
             )}
           />
         </TabsPrimitive.List>
-        <CodeCopy text={tabs[index]?.copyText ?? ""} codeRef={activeCode} {...labels} />
+        <CodeKeys
+          text={tabs[index]?.copyText ?? ""}
+          codeRef={activeCode}
+          fileName={tabs[index]?.fileName}
+          download={download}
+          wrapToggle={wrapToggle}
+          wrapped={wrapped}
+          onWrappedChange={setWrapped}
+          {...keyOptions}
+        />
       </div>
       {panels.map((panel, at) => (
         <TabsPrimitive.Panel

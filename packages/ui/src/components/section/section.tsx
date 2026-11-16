@@ -24,7 +24,8 @@ export type SectionProps = ComponentProps<"section"> & VariantProps<typeof secti
 /**
  * One part of a page, with the air above and below it. It is a `<section>`: name it with
  * `aria-labelledby` and the id of its title. Put a `Container` inside, and open it with a
- * `PageHeader`. A part on another ground stands in a `Ground` with the section inside.
+ * `Heading` (`size="title"`), under a `Separator` rule unless a `Seam` opens the section. A part
+ * on another ground stands in a `Ground` with the section inside.
  */
 export function Section({ space, className, ...props }: SectionProps) {
   return (

@@ -1,9 +1,8 @@
-"use client";
-
-import { useRender } from "@base-ui/react/use-render";
+import type { useRender } from "@base-ui/react/use-render";
 import type { ComponentProps, ReactNode } from "react";
 
 import { ActionArrow } from "@/internal/arrow";
+import { renderAs } from "@/internal/render-as";
 import { cn } from "@/lib/cn";
 
 export type PagerProps = ComponentProps<"nav"> & {
@@ -50,43 +49,39 @@ export function PagerLink({
   ...props
 }: PagerLinkProps) {
   const next = direction === "next";
-  return useRender({
-    defaultTagName: "a",
-    render,
-    props: {
-      ...props,
-      "data-slot": "pager-link",
-      "data-direction": direction,
-      rel: next ? "next" : "prev",
-      className: cn(
-        // Flat like the text it ends: only a wash under the pointer says it is one block.
-        "group/pager -mx-3 flex min-w-0 flex-col gap-1 rounded-lg px-3 py-3 transition-colors duration-150 ease-out hover:bg-hover",
-        "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent",
-        // On a phone both stand one over the other on the left edge, where the eye already is;
-        // side by side, the next one takes the right.
-        next && "sm:col-start-2 sm:items-end sm:text-right",
-        className,
-      ),
-      children: (
-        <>
-          <span
-            data-slot="pager-label"
-            className={cn(
-              "flex items-center gap-1.5 text-sm text-fg-muted",
-              next && "sm:flex-row-reverse",
-            )}
-          >
-            <ActionArrow direction={next ? "right" : "left"} size={14} />
-            {label}
-          </span>
-          <span
-            data-slot="pager-title"
-            className="max-w-full text-lg font-medium text-pretty text-fg"
-          >
-            {title}
-          </span>
-        </>
-      ),
-    },
+  return renderAs("a", render, {
+    ...props,
+    "data-slot": "pager-link",
+    "data-direction": direction,
+    rel: next ? "next" : "prev",
+    className: cn(
+      // Flat like the text it ends: only a wash under the pointer says it is one block.
+      "group/pager -mx-3 flex min-w-0 flex-col gap-1 rounded-lg px-3 py-3 transition-colors duration-150 ease-out hover:bg-hover",
+      "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent",
+      // On a phone both stand one over the other on the left edge, where the eye already is;
+      // side by side, the next one takes the right.
+      next && "sm:col-start-2 sm:items-end sm:text-right",
+      className,
+    ),
+    children: (
+      <>
+        <span
+          data-slot="pager-label"
+          className={cn(
+            "flex items-center gap-1.5 text-sm text-fg-muted",
+            next && "sm:flex-row-reverse",
+          )}
+        >
+          <ActionArrow direction={next ? "right" : "left"} size={14} />
+          {label}
+        </span>
+        <span
+          data-slot="pager-title"
+          className="max-w-full text-lg font-medium text-pretty text-fg"
+        >
+          {title}
+        </span>
+      </>
+    ),
   });
 }

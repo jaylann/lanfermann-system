@@ -1,12 +1,16 @@
 /*
- * A box that scrolls (`ScrollFade`: a wide table, the side columns of a docs page) fades at the
- * edges where more waits, as a code block's long lines (code.css) and a long row of tabs
- * (tabs.css) do: what the edge cuts says that it goes on, instead of looking cut off.
- * `useScrollEdges` sets `data-overflow` from the scroll position; the two lengths are
- * registered so the mask moves on `settle`. A box that fits has no mask.
+ * A box that scrolls fades at the edges where more waits: what the edge cuts says that it goes
+ * on, instead of looking cut off. It is the one fade of the library: a `ScrollFade`, a wide
+ * table, the side columns of a docs page, a code block's long lines and a long row of tabs all
+ * carry `data-scroll-fade` with their axis, and `useScrollEdges` sets `data-overflow` on them
+ * from the scroll position. A box that fits has no mask.
+ *
+ * `--scroll-fade-size` is how deep the fade is (40px). The two lengths the mask is drawn from
+ * are registered, so they can move between nothing and that depth on `settle`.
  *
  * The mask cuts everything the box paints, its outline too: a box that takes the keyboard
- * focus has its outline drawn by a box around it (`Table`).
+ * focus has its outline drawn by a box around it (`Table`). What takes the focus inside is
+ * scrolled clear of the fade.
  */
 @property --scroll-fade-start {
   syntax: "<length>";
@@ -25,28 +29,30 @@
       --scroll-fade-start var(--transition-duration-spring-settle) var(--ease-spring-settle),
       --scroll-fade-end var(--transition-duration-spring-settle) var(--ease-spring-settle);
   }
-  [data-scroll-fade="x"][data-overflow] {
+  [data-scroll-fade="x"] {
+    --scroll-fade-to: right;
+    scroll-padding-inline: var(--scroll-fade-size, 2.5rem);
+    &:dir(rtl) {
+      --scroll-fade-to: left;
+    }
+  }
+  [data-scroll-fade="y"] {
+    --scroll-fade-to: bottom;
+    scroll-padding-block: var(--scroll-fade-size, 2.5rem);
+  }
+  [data-scroll-fade][data-overflow] {
     mask-image: linear-gradient(
-      to right,
+      to var(--scroll-fade-to),
       transparent,
       #000 var(--scroll-fade-start),
       #000 calc(100% - var(--scroll-fade-end)),
       transparent
     );
   }
-  [data-scroll-fade="y"][data-overflow] {
-    mask-image: linear-gradient(
-      to bottom,
-      transparent,
-      #000 var(--scroll-fade-start),
-      #000 calc(100% - var(--scroll-fade-end)),
-      transparent
-    );
+  [data-scroll-fade][data-overflow~="start"]:not([data-fade-edges="end"]) {
+    --scroll-fade-start: var(--scroll-fade-size, 2.5rem);
   }
-  [data-scroll-fade][data-overflow~="start"] {
-    --scroll-fade-start: 2.5rem;
-  }
-  [data-scroll-fade][data-overflow~="end"] {
-    --scroll-fade-end: 2.5rem;
+  [data-scroll-fade][data-overflow~="end"]:not([data-fade-edges="start"]) {
+    --scroll-fade-end: var(--scroll-fade-size, 2.5rem);
   }
 }
