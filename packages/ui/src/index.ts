@@ -266,6 +266,7 @@ export {
   type SelectTriggerProps,
 } from "./components/select/select";
 export { Separator, type SeparatorProps } from "./components/separator/separator";
+export { Shimmer, type ShimmerProps } from "./components/shimmer/shimmer";
 export {
   SideNav,
   SideNavGroup,
