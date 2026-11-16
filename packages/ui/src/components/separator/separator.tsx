@@ -14,8 +14,8 @@ const separatorVariants = cva(
         hairline: "bg-hairline [--separator-size:1px]",
         /** The kit's structural 1px line, visible on its own (3:1). */
         line: "bg-line [--separator-size:1px]",
-        /** The 2px rule that opens a block. */
-        rule: "bg-rule [--separator-size:2px]",
+        /** The 2px rule that opens a block: a line with round ends. */
+        rule: "rounded-full bg-rule [--separator-size:2px]",
       },
     },
     defaultVariants: { variant: "hairline" },
