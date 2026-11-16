@@ -11,8 +11,8 @@ import {
   DocsLayoutMain,
   DocsLayoutNav,
 } from "@/components/docs-layout/docs-layout";
+import { Heading } from "@/components/heading/heading";
 import { Link } from "@/components/link/link";
-import { PageHeader, PageHeaderTitle } from "@/components/page-header/page-header";
 import { Pager, PagerLink } from "@/components/pager/pager";
 import { Prose } from "@/components/prose/prose";
 import { Quote } from "@/components/quote/quote";
@@ -114,20 +114,20 @@ function Page() {
           </SideNav>
         </DocsLayoutNav>
         <DocsLayoutMain className="max-w-[44rem]">
-          <PageHeader className="gap-5 pb-8">
+          <div className="flex flex-col items-start gap-5 pb-8">
             <Breadcrumbs>
               <BreadcrumbItem>
                 <BreadcrumbLink href="#">Doku</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbItem>Erste Schritte</BreadcrumbItem>
             </Breadcrumbs>
-            <PageHeaderTitle level={1}>Schnellstart</PageHeaderTitle>
+            <Heading level={1}>Schnellstart</Heading>
             <TableOfContents
               items={sections}
               collapsible
               className="self-stretch border-y border-hairline py-1 xl:hidden"
             />
-          </PageHeader>
+          </div>
           <Prose>
             <p>
               Diese Seite führt dich in etwa zehn Minuten von einem sevDesk-Konto zur ersten

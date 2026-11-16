@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
  * in the middle, the page's sections on the right.
  *
  * The side columns stay in view while the text scrolls, below a sticky bar of the height in
- * `--docs-top` (4rem: the `SiteHeader`'s bar, 8px off the top and 56px tall). A side column
+ * `--docs-top` (3.5rem: the `SiteHeader`'s bar, 8px off the top and 48px tall). A side column
  * longer than the window scrolls inside itself, and fades at the end that has more. The pages
  * column shows from `lg`, the sections column from `xl`; below that, the pages go into the
  * site's menu and the sections fold above the text.
@@ -21,7 +21,7 @@ export function DocsLayout({ className, ...props }: ComponentProps<"div">) {
       data-slot="docs-layout"
       className={cn(
         containerVariants(),
-        "grid [--docs-top:4rem] lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-x-10 xl:grid-cols-[13.5rem_minmax(0,1fr)_12rem]",
+        "grid [--docs-top:3.5rem] lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-x-10 xl:grid-cols-[13.5rem_minmax(0,1fr)_12rem]",
         className,
       )}
       {...props}

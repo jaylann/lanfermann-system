@@ -207,14 +207,6 @@ export {
   NumberFieldInput,
   type NumberFieldProps,
 } from "./components/number-field/number-field";
-export {
-  PageHeader,
-  PageHeaderActions,
-  PageHeaderLead,
-  type PageHeaderProps,
-  PageHeaderTitle,
-  type PageHeaderTitleProps,
-} from "./components/page-header/page-header";
 export { Pager, PagerLink, type PagerLinkProps, type PagerProps } from "./components/pager/pager";
 export {
   Parameter,

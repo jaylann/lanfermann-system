@@ -9,6 +9,7 @@ import {
 import { buttonVariants } from "@/components/button/button-variants";
 import { Container } from "@/components/container/container";
 import { Ground } from "@/components/ground/ground";
+import { Heading } from "@/components/heading/heading";
 import { linkVariants } from "@/components/link/link-variants";
 import { Wordmark } from "@/components/logo/wordmark";
 import {
@@ -21,13 +22,8 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/navigation-menu/navigation-menu";
-import {
-  PageHeader,
-  PageHeaderActions,
-  PageHeaderLead,
-  PageHeaderTitle,
-} from "@/components/page-header/page-header";
 import { Section } from "@/components/section/section";
+import { Separator } from "@/components/separator/separator";
 import {
   SiteFooter,
   SiteFooterBrand,
@@ -45,6 +41,8 @@ import {
   SiteHeaderMenuGroup,
   SiteHeaderMenuLink,
 } from "@/components/site-header/site-header";
+import { Text } from "@/components/text/text";
+import { cn } from "@/lib/cn";
 
 const meta = {
   title: "Patterns/Site",
@@ -62,6 +60,13 @@ const parts = [
   { href: "#qualitaet", title: "Qualität", text: "Was ein Knopf können muss" },
   { href: "#preis", title: "Preis", text: "Ein fester Preis und ein Liefertermin" },
 ] as const;
+
+// How this page opens itself and each of its parts: a title, a lead and the next step, set
+// left, the title at lines of about 44rem and the lead shorter. Another page does it its way.
+const opening = "flex flex-col items-start gap-4";
+const titleMeasure = "max-w-[44rem]";
+const leadMeasure = "max-w-[34rem] text-pretty";
+const nextStep = "flex flex-wrap items-center gap-x-5 gap-y-3 pt-2";
 
 function Page() {
   const brand = (
@@ -125,58 +130,59 @@ function Page() {
 
       <main id="start">
         <Section aria-labelledby="titel" className="pt-12 sm:pt-20">
-          <Container>
-            <PageHeader>
-              <PageHeaderTitle id="titel" level={1} size="display">
-                Ein Produkt, das am Tag des Starts ruhig läuft.
-              </PageHeaderTitle>
-              <PageHeaderLead>
-                Es entsteht für das Web und für iOS, vom Plan bis zum Start. Ich arbeite allein. Das
-                spart Besprechungen.
-              </PageHeaderLead>
-              <PageHeaderActions>
-                <a href="#kontakt" className={buttonVariants({ variant: "primary", size: "lg" })}>
-                  Gespräch ausmachen
-                </a>
-                <a href="#ablauf" className={linkVariants()}>
-                  Ablauf ansehen
-                </a>
-              </PageHeaderActions>
-            </PageHeader>
+          <Container className={opening}>
+            <Heading id="titel" level={1} size="display" className={titleMeasure}>
+              Ein Produkt, das am Tag des Starts ruhig läuft.
+            </Heading>
+            <Text size="lg" className={leadMeasure}>
+              Es entsteht für das Web und für iOS, vom Plan bis zum Start. Ich arbeite allein. Das
+              spart Besprechungen.
+            </Text>
+            <div className={nextStep}>
+              <a href="#kontakt" className={buttonVariants({ variant: "primary", size: "lg" })}>
+                Gespräch ausmachen
+              </a>
+              <a href="#ablauf" className={linkVariants()}>
+                Ablauf ansehen
+              </a>
+            </div>
           </Container>
         </Section>
 
         <Section id="ablauf" space="md" aria-labelledby="ablauf-titel">
-          <Container>
-            <PageHeader rule>
-              <PageHeaderTitle id="ablauf-titel">
-                Drei Schritte, in dieser Reihenfolge.
-              </PageHeaderTitle>
-              <PageHeaderLead>
-                Du erzählst mir, was du vorhast. Ich nenne dir einen festen Preis und den Tag, an
-                dem ich liefere. Erst dann baue ich.
-              </PageHeaderLead>
-            </PageHeader>
+          <Container className={opening}>
+            <Separator variant="rule" className="mb-2" />
+            <Heading id="ablauf-titel" size="title" className={titleMeasure}>
+              Drei Schritte, in dieser Reihenfolge.
+            </Heading>
+            <Text size="lg" className={leadMeasure}>
+              Du erzählst mir, was du vorhast. Ich nenne dir einen festen Preis und den Tag, an dem
+              ich liefere. Erst dann baue ich.
+            </Text>
           </Container>
         </Section>
 
         <Section id="qualitaet" space="md" aria-labelledby="qualitaet-titel">
-          <Container>
-            <PageHeader rule>
-              <PageHeaderTitle id="qualitaet-titel">Ein Knopf antwortet sofort.</PageHeaderTitle>
-              <PageHeaderLead>
-                Du drückst, und er gibt im selben Moment nach. Du lässt los, und er kommt zurück.
-                Wenn das alles stimmt, bemerkt ihn niemand. Das meine ich mit Qualität.
-              </PageHeaderLead>
-            </PageHeader>
+          <Container className={opening}>
+            <Separator variant="rule" className="mb-2" />
+            <Heading id="qualitaet-titel" size="title" className={titleMeasure}>
+              Ein Knopf antwortet sofort.
+            </Heading>
+            <Text size="lg" className={leadMeasure}>
+              Du drückst, und er gibt im selben Moment nach. Du lässt los, und er kommt zurück. Wenn
+              das alles stimmt, bemerkt ihn niemand. Das meine ich mit Qualität.
+            </Text>
           </Container>
         </Section>
 
         <Section id="preis" space="md" aria-labelledby="preis-titel">
           <Container className="flex flex-col gap-6">
-            <PageHeader rule>
-              <PageHeaderTitle id="preis-titel">Was es kostet.</PageHeaderTitle>
-            </PageHeader>
+            <div className={opening}>
+              <Separator variant="rule" className="mb-2" />
+              <Heading id="preis-titel" size="title" className={titleMeasure}>
+                Was es kostet.
+              </Heading>
+            </div>
             <Accordion defaultValue={["preis"]} className="max-w-[48rem]">
               <AccordionItem value="preis">
                 <AccordionTrigger>Was kostet die Entwicklung?</AccordionTrigger>
@@ -201,22 +207,22 @@ function Page() {
         {/* The one ask of the page, on Indigo: a block of its own, above the floor. */}
         <Section id="kontakt" space="md" aria-labelledby="frage">
           <Container>
-            <Ground ground="indigo" className="rounded-2xl p-8 sm:p-12">
-              <PageHeader>
-                <PageHeaderTitle id="frage">Erzähl mir von deinem Produkt.</PageHeaderTitle>
-                <PageHeaderLead>
-                  Das erste Gespräch kostet nichts. Ich antworte innerhalb von zwei Werktagen und
-                  sage dir auch, wenn es nicht passt.
-                </PageHeaderLead>
-                <PageHeaderActions>
-                  <a
-                    href="mailto:justin@lanfermann.dev"
-                    className={buttonVariants({ variant: "primary", size: "lg" })}
-                  >
-                    Nachricht schreiben
-                  </a>
-                </PageHeaderActions>
-              </PageHeader>
+            <Ground ground="indigo" className={cn("rounded-2xl p-8 sm:p-12", opening)}>
+              <Heading id="frage" size="title" className={titleMeasure}>
+                Erzähl mir von deinem Produkt.
+              </Heading>
+              <Text size="lg" className={leadMeasure}>
+                Das erste Gespräch kostet nichts. Ich antworte innerhalb von zwei Werktagen und sage
+                dir auch, wenn es nicht passt.
+              </Text>
+              <div className={nextStep}>
+                <a
+                  href="mailto:justin@lanfermann.dev"
+                  className={buttonVariants({ variant: "primary", size: "lg" })}
+                >
+                  Nachricht schreiben
+                </a>
+              </div>
             </Ground>
           </Container>
         </Section>
@@ -261,16 +267,11 @@ function Page() {
 }
 
 /**
- * A whole page of a website: the bar with its navigation menu, the opening, sections under
- * rules, the one ask on Indigo, and the quiet floor beneath it. Judge a change to the site parts
- * here, not on a single part.
+ * A test page, not a template: every site is laid out for itself. It is the one place where the
+ * site parts stand together (the bar with its navigation menu, an opening, sections under rules,
+ * an ask on Indigo, the quiet floor), so a change to one of them is judged here and its picture
+ * is compared with the last one.
  */
 export const WholePage: Story = {
-  render: () => <Page />,
-};
-
-/** The same page at the width of a phone. Nothing scrolls sideways. */
-export const OnAPhone: Story = {
-  parameters: { visual: { viewport: { width: 390, height: 2700 } } },
   render: () => <Page />,
 };

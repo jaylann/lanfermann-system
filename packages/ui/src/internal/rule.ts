@@ -1,8 +1,9 @@
 /**
- * The 2px rule that opens a block (`Table`, `Accordion`, `ParameterList`, a `PageHeader` with
- * `rule`): a straight line with round ends. The box keeps a transparent 2px top border, so it is
- * laid out exactly as with `border-t-2`, and the line is drawn into that border as `::before`.
- * A border cannot round its own ends: with a radius it bends down at the corners instead.
+ * The 2px rule that opens a block (`Table`, `Accordion`, `ParameterList`): a straight line with
+ * round ends. The box keeps a transparent 2px top border, so it is laid out exactly as with
+ * `border-t-2`, and the line is drawn into that border as `::before`. A border cannot round its
+ * own ends: with a radius it bends down at the corners instead. Where the rule stands by itself,
+ * above a section's title, it is a `Separator` (`variant="rule"`).
  *
  * The box becomes positioned, and must not clip its top edge. Server-safe.
  */
