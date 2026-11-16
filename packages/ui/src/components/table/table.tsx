@@ -1,6 +1,8 @@
 import type { ComponentProps } from "react";
 
 import { ArrowUpGlyph } from "@/internal/glyphs";
+import { ruleTop } from "@/internal/rule";
+import { ScrollFade } from "@/internal/scroll-fade";
 import { cn } from "@/lib/cn";
 
 /** A table scrolls sideways in its own region, and a region needs a name. */
@@ -10,7 +12,7 @@ type Named =
 
 export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labelledby"> &
   Named & {
-    /** Classes for the scrolling region around the table. */
+    /** Classes for the box around the table (its rule and the scrolling region): its place. */
     containerClassName?: string;
     /**
      * What the cells hold. `data` (the default): short values, centred on the row's line.
@@ -29,13 +31,13 @@ export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labe
 
 /**
  * Rows of the same kind of thing, compared column by column: quotes, invoice lines, members.
- * Real `<table>` markup, structured by line and not by box: a 2px rule opens it, hairlines
- * divide the rows, no stripes and no card around it.
+ * Real `<table>` markup, structured by line and not by box: a 2px rule with round ends opens it,
+ * hairlines divide the rows, no stripes and no card around it.
  *
  * On a narrow screen the table keeps its columns and scrolls sideways inside its own region,
- * which is focusable so the keyboard can scroll it too. Name it with `aria-label` (or
- * `aria-labelledby`, pointing at a heading or the `TableCaption`). Give the table a `min-w-*`
- * if its columns must not squeeze.
+ * which is focusable so the keyboard can scroll it too. Its edges fade where more columns wait;
+ * the rule above stays whole. Name it with `aria-label` (or `aria-labelledby`, pointing at a
+ * heading or the `TableCaption`). Give the table a `min-w-*` if its columns must not squeeze.
  *
  * Sorting, filtering and paging are the caller's state; the table only provides the slots.
  */
@@ -51,31 +53,46 @@ export function Table({
   return (
     <div
       data-slot="table-container"
-      role="region"
-      aria-label={label}
-      aria-labelledby={labelledBy}
-      tabIndex={0}
       className={cn(
-        // `relative`: what is positioned inside (a visually hidden column name, a touch target)
-        // then belongs to this box and scrolls with it, instead of widening the page.
-        "relative w-full overflow-x-auto rounded-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        // The rule and the focus outline are drawn here, outside the region's edge mask, which
+        // would fade them with the columns.
+        ruleTop,
+        "rounded-xs",
+        "has-[[data-slot=table-scroll]:focus-visible]:outline-2",
+        "has-[[data-slot=table-scroll]:focus-visible]:outline-offset-2",
+        "has-[[data-slot=table-scroll]:focus-visible]:outline-accent",
         containerClassName,
       )}
     >
-      <table
-        data-slot="table"
-        data-content={content}
-        data-stack={stack ? "" : undefined}
-        // The roles are written out because a stacked table is no longer laid out as one, and
-        // some browsers then stop telling assistive tech that it is a table.
-        role="table"
+      <ScrollFade
+        data-slot="table-scroll"
+        role="region"
+        aria-label={label}
+        aria-labelledby={labelledBy}
+        tabIndex={0}
         className={cn(
-          "w-full caption-bottom border-collapse border-t-2 border-rule text-left text-base text-fg-body",
-          "data-stack:max-sm:block",
-          className,
+          // `relative`: what is positioned inside (a visually hidden column name, a touch target)
+          // then belongs to this box and scrolls with it, instead of widening the page.
+          "relative w-full overflow-x-auto focus-visible:outline-hidden",
+          // What takes the keyboard focus inside is scrolled clear of the fade.
+          "scroll-px-10",
         )}
-        {...props}
-      />
+      >
+        <table
+          data-slot="table"
+          data-content={content}
+          data-stack={stack ? "" : undefined}
+          // The roles are written out because a stacked table is no longer laid out as one, and
+          // some browsers then stop telling assistive tech that it is a table.
+          role="table"
+          className={cn(
+            "w-full caption-bottom border-collapse text-left text-base text-fg-body",
+            "data-stack:max-sm:block",
+            className,
+          )}
+          {...props}
+        />
+      </ScrollFade>
     </div>
   );
 }

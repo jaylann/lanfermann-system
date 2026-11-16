@@ -1,19 +1,12 @@
 "use client";
 
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
-import {
-  type ComponentProps,
-  createContext,
-  type Ref,
-  type RefCallback,
-  useContext,
-  useEffect,
-  useRef,
-} from "react";
+import { type ComponentProps, createContext, useContext, useEffect, useRef } from "react";
 
 import { useReducedMotion } from "@/internal/reduced-motion";
 import { useScrollEdges } from "@/internal/scroll-edges";
 import { cn, mergeClassName } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 
 export type TabsProps = TabsPrimitive.Root.Props;
 
@@ -30,15 +23,6 @@ export function Tabs({ className, ...props }: TabsProps) {
 
 /** How far a tab keeps off the edge it is scrolled to: past the fade (tabs.css), in px. */
 const REVEAL_MARGIN = 40;
-
-function mergeRefs<T>(own: Ref<T>, theirs: Ref<T> | undefined): RefCallback<T> {
-  return (node) => {
-    for (const ref of [own, theirs]) {
-      if (typeof ref === "function") ref(node);
-      else if (ref) ref.current = node;
-    }
-  };
-}
 
 /**
  * A row of labels, each with a mark. One soft highlight glides to the current tab (`glide`) and

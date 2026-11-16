@@ -2,6 +2,7 @@ import type { ComponentProps } from "react";
 
 import { Heading, type HeadingProps } from "@/components/heading/heading";
 import { Text, type TextProps } from "@/components/text/text";
+import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
 
 export type PageHeaderProps = ComponentProps<"div"> & {
@@ -20,11 +21,7 @@ export function PageHeader({ rule = false, className, ...props }: PageHeaderProp
   return (
     <div
       data-slot="page-header"
-      className={cn(
-        "flex flex-col items-start gap-4",
-        rule && "border-t-2 border-rule pt-6",
-        className,
-      )}
+      className={cn("flex flex-col items-start gap-4", rule && [ruleTop, "pt-6"], className)}
       {...props}
     />
   );

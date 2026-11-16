@@ -119,19 +119,24 @@ function useCurrentSection(ids: readonly string[]) {
   return [current, hold] as const;
 }
 
-/** Brings an entry into view inside the box that scrolls the contents, never the page. */
+/**
+ * Brings an entry into view inside the box that scrolls the contents, never the page. It keeps
+ * the box's scroll padding off the edge, which clears the box's fade (`DocsLayoutAside`).
+ */
 function keepInView(link: HTMLElement) {
   let box = link.parentElement;
+  let style: CSSStyleDeclaration | undefined;
   while (box && box !== document.body) {
-    const { overflowY } = getComputedStyle(box);
-    if (overflowY === "auto" || overflowY === "scroll") break;
+    style = getComputedStyle(box);
+    if (style.overflowY === "auto" || style.overflowY === "scroll") break;
     box = box.parentElement;
   }
-  if (!box || box === document.body) return;
+  if (!box || box === document.body || !style) return;
+  const margin = parseFloat(style.scrollPaddingTop) || 24;
   const top = link.offsetTop - box.offsetTop;
-  if (top < box.scrollTop + 24) box.scrollTop = Math.max(0, top - 24);
-  else if (top + link.offsetHeight > box.scrollTop + box.clientHeight - 24)
-    box.scrollTop = top + link.offsetHeight - box.clientHeight + 24;
+  if (top < box.scrollTop + margin) box.scrollTop = Math.max(0, top - margin);
+  else if (top + link.offsetHeight > box.scrollTop + box.clientHeight - margin)
+    box.scrollTop = top + link.offsetHeight - box.clientHeight + margin;
 }
 
 export type TableOfContentsProps = Omit<ComponentProps<"nav">, "children" | "title"> & {
