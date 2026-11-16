@@ -354,6 +354,11 @@ export {
 } from "./components/tabs/tabs";
 export { Text, type TextProps } from "./components/text/text";
 export { Textarea, type TextareaProps } from "./components/textarea/textarea";
+export {
+  type Theme,
+  ThemeSwitch,
+  type ThemeSwitchProps,
+} from "./components/theme-switch/theme-switch";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
 export {
   toast,
