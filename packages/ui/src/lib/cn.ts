@@ -23,6 +23,7 @@ export const depthNames = [
   "floating",
   "overlay",
   "bar",
+  "seam",
   "none",
 ] as const;
 
