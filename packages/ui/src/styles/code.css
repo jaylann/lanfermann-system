@@ -126,10 +126,18 @@
     font-variant-ligatures: none;
     tab-size: 2;
   }
-  [data-slot="code-block-code"][data-wrap] {
+  /* Long lines break: because the code was rendered so, or because the wrap key of the block is on. */
+  [data-slot="code-block-code"][data-wrap],
+  [data-wrap="on"] [data-slot="code-block-code"] {
     width: auto;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+  /* The key is off: lines run on and scroll, whatever the code was rendered with. */
+  [data-wrap="off"] [data-slot="code-block-code"] {
+    width: max-content;
+    white-space: pre;
+    overflow-wrap: normal;
   }
 
   [data-slot="code-block-line"] {

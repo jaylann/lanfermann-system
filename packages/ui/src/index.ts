@@ -58,6 +58,7 @@ export {
   type CodePiece,
   type CodeRole,
 } from "./components/code-block/code-block-live";
+export type { CodeKeyOptions } from "./components/code-block/code-keys";
 export { type CodeTab, CodeTabs, type CodeTabsProps } from "./components/code-block/code-tabs";
 export { type CodeLanguage } from "./components/code-block/highlight";
 export { type LineSpec } from "./components/code-block/lines";

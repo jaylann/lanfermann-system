@@ -1,7 +1,21 @@
 import { describe, expect, it } from "vitest";
 
 import { highlightLines } from "./highlight";
-import { copyText, lineKinds, parseLines, trimCode } from "./lines";
+import { codeFileName, copyText, lineKinds, parseLines, trimCode } from "./lines";
+
+describe("codeFileName", () => {
+  it("takes the title when it is a file's name, without the folders before it", () => {
+    expect(codeFileName("README.md", "md")).toBe("README.md");
+    expect(codeFileName("app/api/route.ts", "ts")).toBe("route.ts");
+    expect(codeFileName(".env", "env")).toBe(".env");
+  });
+
+  it("names the file after the language when the title is none", () => {
+    expect(codeFileName("PowerShell", "powershell")).toBe("code.ps1");
+    expect(codeFileName(undefined, "sh")).toBe("code.sh");
+    expect(codeFileName(undefined)).toBe("code.txt");
+  });
+});
 
 describe("parseLines", () => {
   it("reads a number, a string of ranges and a list", () => {

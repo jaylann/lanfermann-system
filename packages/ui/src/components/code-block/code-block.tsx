@@ -4,10 +4,10 @@ import type { ReactNode } from "react";
 import type { IconSvgElement } from "@/components/icon/icon";
 
 import { CodeBlockFrame } from "./code-block-frame";
-import type { CodeCopyLabels } from "./code-copy";
+import type { CodeKeyOptions } from "./code-keys";
 import { CodeLines, type CodeLinesOptions } from "./code-lines";
 import { type CodeLanguage, isShell } from "./highlight";
-import { copyText, trimCode } from "./lines";
+import { codeFileName, copyText, trimCode } from "./lines";
 
 /*
  * Server-safe: no "use client". Rendered in a Server Component, the highlighting happens on the
@@ -22,7 +22,7 @@ export function codeSymbol(language: CodeLanguage): IconSvgElement {
 }
 
 export type CodeBlockProps = CodeLinesOptions &
-  CodeCopyLabels & {
+  CodeKeyOptions & {
     /** The code, as it is in the file. One trailing line break is ignored. */
     code: string;
     language?: CodeLanguage;
@@ -52,6 +52,10 @@ export type CodeBlockProps = CodeLinesOptions &
  *
  * Mark the lines a text talks about (`marked`), show a change with `added` and `removed`, and
  * keep the file name as it is (`quote-form.tsx`). For a word in running text, use `Code`.
+ *
+ * Two more keys can stand beside the copy. `download` saves the code as a file: for a whole file
+ * a reader will keep, such as a configuration. `wrapToggle` lets the reader break long lines
+ * and put them back: for code with long lines that are read, not run.
  */
 export function CodeBlock({
   code,
@@ -70,7 +74,7 @@ export function CodeBlock({
   wrap,
   addedLabel,
   removedLabel,
-  ...copyLabels
+  ...keyOptions
 }: CodeBlockProps) {
   const lineCount = trimCode(code).split("\n").length;
   const prompt = isShell(language) && lineCount === 1 && !title;
@@ -86,7 +90,9 @@ export function CodeBlock({
       fold={fold}
       foldLabel={fold === undefined ? undefined : foldLabel(lineCount - fold)}
       className={className}
-      {...copyLabels}
+      fileName={codeFileName(title, language)}
+      wrap={wrap}
+      {...keyOptions}
     >
       <CodeLines
         code={code}
