@@ -370,5 +370,14 @@ export {
   TooltipProvider,
   TooltipTrigger,
 } from "./components/tooltip/tooltip";
+export {
+  Trace,
+  type TraceProps,
+  type TraceStatus,
+  TraceStep,
+  type TraceStepProps,
+  TraceSummary,
+  type TraceSummaryProps,
+} from "./components/trace/trace";
 export { cn, mergeClassName } from "./lib/cn";
 export { type SpringName, springs, transitions } from "./motion/springs";
