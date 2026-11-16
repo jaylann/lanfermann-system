@@ -6,13 +6,15 @@ name: Release
 #   build    installs, builds and packs the package, without privileges (contents: read)
 #   publish  publishes that tarball with npm trusted publishing and provenance (no NPM_TOKEN),
 #            in the `release` environment (main only), installing nothing
+#   sync     brings the release commit back to stage: a fast-forward, or a main → stage PR when
+#            stage moved on in the meantime
 #
 # npm trusts exactly this file name and that environment (the package's trusted publisher), so
 # renaming either breaks publishing.
 #
 # The release PR is opened with GITHUB_TOKEN, so GitHub runs no CI on it: it changes only the
 # version and the changelog. That needs the repository setting "Allow GitHub Actions to create and
-# approve pull requests". After a release, merge main back into stage.
+# approve pull requests".
 on:
   push:
     branches: [main]
@@ -50,6 +52,43 @@ jobs:
           target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # main now carries the release commit (version, CHANGELOG, manifest), and stage needs it before
+  # the next stage → main merge. Usually stage is an ancestor of main, so stage is fast-forwarded.
+  # If something landed on stage while the release was cut, nothing is overwritten: a main → stage
+  # PR is opened instead. A push made with GITHUB_TOKEN starts no workflow; CI already ran on main.
+  sync:
+    name: Bring the release back to stage
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # fast-forward stage
+      pull-requests: write # or open the main → stage PR
+    env:
+      TAG: ${{ needs.release-please.outputs.tag_name }}
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward stage, or open a PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin stage
+          if git merge-base --is-ancestor origin/stage HEAD; then
+            git push origin HEAD:refs/heads/stage
+            echo "stage fast-forwarded to the $TAG release."
+          elif [ -n "$(gh pr list --base stage --head main --state open --json number --jq '.[].number')" ]; then
+            echo "stage moved on, and a main → stage PR is already open."
+          else
+            gh pr create --base stage --head main \
+              --title "chore: bring the $TAG release back to stage" \
+              --body "stage moved on while $TAG was cut, so it could not be fast-forwarded. Merge this to bring the release commit (version, CHANGELOG, manifest) to stage."
+          fi
 
   # Dependency code runs here, in a job that holds no token worth stealing.
   build:
