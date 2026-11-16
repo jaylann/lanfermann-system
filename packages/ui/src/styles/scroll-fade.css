@@ -1,0 +1,52 @@
+/*
+ * A box that scrolls (`ScrollFade`: a wide table, the side columns of a docs page) fades at the
+ * edges where more waits, as a code block's long lines (code.css) and a long row of tabs
+ * (tabs.css) do: what the edge cuts says that it goes on, instead of looking cut off.
+ * `useScrollEdges` sets `data-overflow` from the scroll position; the two lengths are
+ * registered so the mask moves on `settle`. A box that fits has no mask.
+ *
+ * The mask cuts everything the box paints, its outline too: a box that takes the keyboard
+ * focus has its outline drawn by a box around it (`Table`).
+ */
+@property --scroll-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@layer components {
+  [data-scroll-fade] {
+    transition:
+      --scroll-fade-start var(--transition-duration-spring-settle) var(--ease-spring-settle),
+      --scroll-fade-end var(--transition-duration-spring-settle) var(--ease-spring-settle);
+  }
+  [data-scroll-fade="x"][data-overflow] {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--scroll-fade-start),
+      #000 calc(100% - var(--scroll-fade-end)),
+      transparent
+    );
+  }
+  [data-scroll-fade="y"][data-overflow] {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--scroll-fade-start),
+      #000 calc(100% - var(--scroll-fade-end)),
+      transparent
+    );
+  }
+  [data-scroll-fade][data-overflow~="start"] {
+    --scroll-fade-start: 2.5rem;
+  }
+  [data-scroll-fade][data-overflow~="end"] {
+    --scroll-fade-end: 2.5rem;
+  }
+}

@@ -56,6 +56,10 @@ const groups = [
   { title: "Erste Schritte", pages: ["Überblick", "Schnellstart", "Clients"] },
   { title: "Anleitungen", pages: ["Berechtigungen", "Fernzugriff", "Deployment-Vorlagen"] },
   { title: "Referenz", pages: ["Konfiguration", "Werkzeuge", "Häufige Fragen"] },
+  {
+    title: "Projekt",
+    pages: ["Datenschutz", "Architektur", "Entscheidungen (ADR)", "Mitwirken", "Änderungen"],
+  },
 ];
 
 const sections: TocItem[] = [
@@ -193,6 +197,15 @@ function Page() {
 }
 
 export const Desktop: Story = { render: () => <Page /> };
+
+/**
+ * A window lower than the pages of the set: the column scrolls inside itself and fades at its
+ * foot, where more pages wait.
+ */
+export const ShortWindow: Story = {
+  render: () => <Page />,
+  parameters: { visual: { viewport: { width: 1290, height: 720 } } },
+};
 
 /** On a phone the pages move into the bar's menu and the sections fold above the text. */
 export const Phone: Story = {

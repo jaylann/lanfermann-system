@@ -1,6 +1,6 @@
 import { Copy01Icon, Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { expect } from "storybook/test";
 
 import { Badge } from "@/components/badge/badge";
@@ -269,14 +269,10 @@ export const WithFooter: Story = {
   ),
 };
 
-/**
- * On a phone the table keeps its columns and scrolls sideways inside its own region. `min-w-*`
- * on the table says how narrow the columns may get.
- */
-export const Narrow: Story = {
-  parameters: { visual: { viewport: { width: 390, height: 330 } } },
-  render: () => (
-    <Table aria-label="Angebote" className="min-w-[36rem]">
+/** A table held to a phone's width, so it scrolls in any window. */
+function NarrowQuotes() {
+  return (
+    <Table aria-label="Angebote" className="min-w-[36rem]" containerClassName="max-w-[22rem]">
       <TableHeader>
         <TableRow>
           <TableHead>Kunde</TableHead>
@@ -296,6 +292,47 @@ export const Narrow: Story = {
         ))}
       </TableBody>
     </Table>
+  );
+}
+
+/**
+ * On a phone the table keeps its columns and scrolls sideways inside its own region. `min-w-*`
+ * on the table says how narrow the columns may get. The edge fades where more columns wait;
+ * the rule above stays whole.
+ */
+export const Narrow: Story = {
+  parameters: {
+    // The region is the control: its focus ring is drawn around the rule and the mask.
+    visual: { viewport: { width: 390, height: 330 }, target: '[data-slot="table-scroll"]' },
+  },
+  render: () => <NarrowQuotes />,
+};
+
+/**
+ * Scrolls the table's region to the middle, as a reader would; again whenever the region changes
+ * its size (the fonts arrive, the window turns narrow), so it stays in the middle.
+ */
+function ScrolledToMiddle({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const region = ref.current?.querySelector<HTMLElement>('[data-slot="table-scroll"]');
+    if (!region) return;
+    const observer = new ResizeObserver(() => {
+      region.scrollLeft = (region.scrollWidth - region.clientWidth) / 2;
+    });
+    observer.observe(region);
+    return () => observer.disconnect();
+  }, []);
+  return <div ref={ref}>{children}</div>;
+}
+
+/** Scrolled to the middle, columns wait on both sides: both edges fade. */
+export const Scrolled: Story = {
+  parameters: { visual: { viewport: { width: 390, height: 330 } } },
+  render: () => (
+    <ScrolledToMiddle>
+      <NarrowQuotes />
+    </ScrolledToMiddle>
   ),
 };
 
