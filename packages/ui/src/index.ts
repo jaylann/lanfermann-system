@@ -147,6 +147,13 @@ export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
 export { Form, type FormProps } from "./components/form/form";
 export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
 export { Heading, type HeadingProps } from "./components/heading/heading";
+export {
+  HoverCard,
+  HoverCardContent,
+  type HoverCardContentProps,
+  HoverCardTrigger,
+  type HoverCardTriggerProps,
+} from "./components/hover-card/hover-card";
 export { Icon, type IconProps, type IconSvgElement } from "./components/icon/icon";
 export { Input, type InputProps } from "./components/input/input";
 export {
