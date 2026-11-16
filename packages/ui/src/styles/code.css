@@ -218,35 +218,5 @@
     --code-fade-end: 2.5rem;
   }
 
-  /*
-   * Copy: the copy symbol shrinks away and a tick is drawn in its place, short leg first, as in
-   * a checkbox. When the moment has passed the tick fades where it is (it is not undrawn) and the
-   * copy symbol seats back with a little bounce.
-   */
-  [data-slot="code-copy-symbol"] {
-    transition-property: scale, opacity;
-    transition-duration: var(--transition-duration-spring-seat);
-    transition-timing-function: var(--ease-spring-seat);
-  }
-  [data-copied] > [data-slot="code-copy-symbol"] {
-    scale: 0.5;
-    opacity: 0;
-    transition-duration: var(--transition-duration-spring-leave);
-    transition-timing-function: var(--ease-spring-leave);
-  }
-  [data-slot="code-copy-tick"] {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    opacity: 0;
-    transition:
-      opacity var(--transition-duration-spring-leave) var(--ease-spring-leave),
-      stroke-dashoffset 0s var(--transition-duration-spring-leave);
-  }
-  [data-copied] > [data-slot="code-copy-tick"] {
-    stroke-dashoffset: 0;
-    opacity: 1;
-    transition:
-      opacity 60ms linear 60ms,
-      stroke-dashoffset 220ms cubic-bezier(0.3, 0, 0.2, 1) 60ms;
-  }
+  /* The copy key's confirmation is shared with every control that copies: see copy.css. */
 }
