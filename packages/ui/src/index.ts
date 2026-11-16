@@ -129,6 +129,17 @@ export {
   DocsLayoutNav,
 } from "./components/docs-layout/docs-layout";
 export {
+  type DocsCrumb,
+  type DocsGroup,
+  type DocsNav,
+  type DocsPage,
+  docsPages,
+  docsPageState,
+  type DocsPlace,
+  findDocsPage,
+  sameDocsPage,
+} from "./components/docs-layout/docs-nav";
+export {
   Drawer,
   DrawerBody,
   DrawerClose,

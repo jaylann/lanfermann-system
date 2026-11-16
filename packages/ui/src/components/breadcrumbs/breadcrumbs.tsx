@@ -1,9 +1,8 @@
-"use client";
-
-import { useRender } from "@base-ui/react/use-render";
+import type { useRender } from "@base-ui/react/use-render";
 import type { ComponentProps } from "react";
 
 import { ChevronRightGlyph } from "@/internal/glyphs";
+import { renderAs } from "@/internal/render-as";
 import { cn } from "@/lib/cn";
 
 export type BreadcrumbsProps = ComponentProps<"nav"> & {
@@ -56,18 +55,14 @@ export type BreadcrumbLinkProps = useRender.ComponentProps<"a">;
 
 /** A place that is a page. For a router's link, pass it as `render`. */
 export function BreadcrumbLink({ render, className, ...props }: BreadcrumbLinkProps) {
-  return useRender({
-    defaultTagName: "a",
-    render,
-    props: {
-      ...props,
-      "data-slot": "breadcrumb-link",
-      className: cn(
-        "rounded-xs underline decoration-transparent decoration-1 underline-offset-[0.25em] transition-colors spring-snap hover:text-fg hover:decoration-current",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-        className,
-      ),
-    },
+  return renderAs("a", render, {
+    ...props,
+    "data-slot": "breadcrumb-link",
+    className: cn(
+      "rounded-xs underline decoration-transparent decoration-1 underline-offset-[0.25em] transition-colors spring-snap hover:text-fg hover:decoration-current",
+      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+      className,
+    ),
   });
 }
 

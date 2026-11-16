@@ -11,12 +11,18 @@ import {
   DocsLayoutMain,
   DocsLayoutNav,
 } from "@/components/docs-layout/docs-layout";
+import {
+  type DocsNav,
+  docsPageState,
+  findDocsPage,
+  sameDocsPage,
+} from "@/components/docs-layout/docs-nav";
 import { Heading } from "@/components/heading/heading";
 import { Link } from "@/components/link/link";
 import { Pager, PagerLink } from "@/components/pager/pager";
 import { Prose } from "@/components/prose/prose";
 import { Quote } from "@/components/quote/quote";
-import { SideNav, SideNavGroup, SideNavLink } from "@/components/side-nav/side-nav";
+import { SideNav, SideNavGroup, SideNavLink, SideNavSubLink } from "@/components/side-nav/side-nav";
 import {
   SiteHeader,
   SiteHeaderActions,
@@ -40,6 +46,11 @@ import { TableOfContents, type TocItem } from "@/components/table-of-contents/ta
  * the set beside the text, the text in prose with an anchored heading per section, a callout,
  * an example prompt, code and a table that stacks on a phone, the way on, and the page's
  * sections beside it. The board to judge the docs parts on.
+ *
+ * It is also how a product builds its docs. What belongs to the product is data: its name, the
+ * pages of its set (`nav`) and the sections of the page. Where the page stands is worked out
+ * from the set (`findDocsPage`), so the navigation, the menu on a phone, the trail above the
+ * title and the way on at the page's end are four views of one description and cannot disagree.
  */
 const meta = {
   title: "Patterns/Docs",
@@ -52,16 +63,49 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const groups = [
-  { title: "Erste Schritte", pages: ["Überblick", "Schnellstart", "Clients"] },
-  { title: "Anleitungen", pages: ["Berechtigungen", "Fernzugriff", "Deployment-Vorlagen"] },
-  { title: "Referenz", pages: ["Konfiguration", "Werkzeuge", "Häufige Fragen"] },
+/** Whose docs these are. */
+const product = { name: "sevDesk MCP", docs: "Doku", home: "/doku" };
+
+/** The pages of the set, in the order they are read. */
+const nav: DocsNav = [
+  {
+    title: "Erste Schritte",
+    pages: [
+      { title: "Überblick", href: "/doku" },
+      { title: "Schnellstart", href: "/doku/schnellstart" },
+      { title: "Clients", href: "/doku/clients" },
+    ],
+  },
+  {
+    title: "Anleitungen",
+    pages: [
+      { title: "Berechtigungen", href: "/doku/berechtigungen" },
+      { title: "Fernzugriff", href: "/doku/fernzugriff" },
+      { title: "Deployment-Vorlagen", href: "/doku/deployment-vorlagen" },
+    ],
+  },
+  {
+    title: "Referenz",
+    pages: [
+      { title: "Konfiguration", href: "/doku/konfiguration" },
+      { title: "Werkzeuge", href: "/doku/werkzeuge" },
+      { title: "Häufige Fragen", href: "/doku/fragen" },
+    ],
+  },
   {
     title: "Projekt",
-    pages: ["Datenschutz", "Architektur", "Entscheidungen (ADR)", "Mitwirken", "Änderungen"],
+    pages: [
+      { title: "Datenschutz", href: "/doku/datenschutz" },
+      { title: "Architektur", href: "/doku/architektur" },
+      { title: "Entscheidungen (ADR)", href: "/doku/entscheidungen" },
+      { title: "Mitwirken", href: "/doku/mitwirken" },
+      { title: "Änderungen", href: "/doku/aenderungen" },
+    ],
   },
 ];
 
+/** The page this story shows, and its sections. */
+const here = "/doku/schnellstart";
 const sections: TocItem[] = [
   { id: "bevor-du-beginnst", label: "Bevor du beginnst" },
   { id: "eintragen", label: "1. Den Server im Client eintragen" },
@@ -70,14 +114,23 @@ const sections: TocItem[] = [
 ];
 
 function Page() {
+  const place = findDocsPage(nav, here);
+  if (!place) throw new Error(`The set has no page at ${here}.`);
   const brand = (
-    <SiteHeaderBrand href="#" className="gap-3">
-      sevDesk MCP
-      <span className="text-base font-medium text-fg-muted">Doku</span>
+    <SiteHeaderBrand href={product.home} className="gap-3">
+      {product.name}
+      <span className="text-base font-medium text-fg-muted">{product.docs}</span>
     </SiteHeaderBrand>
   );
   return (
-    <div className="isolate min-h-dvh bg-ground">
+    <div
+      className="isolate min-h-dvh bg-ground"
+      // The pages of the set exist only as data here: a link to one stays on this board.
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest('a[href^="/"]'))
+          event.preventDefault();
+      }}
+    >
       <SiteHeader>
         {brand}
         <SiteHeaderActions>
@@ -87,11 +140,15 @@ function Page() {
             closeLabel="Schließen"
             brand={brand}
           >
-            {groups.map((group) => (
+            {nav.map((group) => (
               <SiteHeaderMenuGroup key={group.title} title={group.title}>
                 {group.pages.map((page) => (
-                  <SiteHeaderMenuLink key={page} href="#" current={page === "Schnellstart"}>
-                    {page}
+                  <SiteHeaderMenuLink
+                    key={page.href}
+                    href={page.href}
+                    current={sameDocsPage(page.href, here)}
+                  >
+                    {page.title}
                   </SiteHeaderMenuLink>
                 ))}
               </SiteHeaderMenuGroup>
@@ -102,11 +159,24 @@ function Page() {
       <DocsLayout>
         <DocsLayoutNav>
           <SideNav aria-label="Dokumentation">
-            {groups.map((group) => (
+            {nav.map((group) => (
               <SideNavGroup key={group.title} title={group.title}>
                 {group.pages.map((page) => (
-                  <SideNavLink key={page} href="#" current={page === "Schnellstart"}>
-                    {page}
+                  <SideNavLink
+                    key={page.href}
+                    href={page.href}
+                    {...docsPageState(page, here)}
+                    sub={page.pages?.map((sub) => (
+                      <SideNavSubLink
+                        key={sub.href}
+                        href={sub.href}
+                        current={sameDocsPage(sub.href, here)}
+                      >
+                        {sub.title}
+                      </SideNavSubLink>
+                    ))}
+                  >
+                    {page.title}
                   </SideNavLink>
                 ))}
               </SideNavGroup>
@@ -117,11 +187,19 @@ function Page() {
           <div className="flex flex-col items-start gap-5 pb-8">
             <Breadcrumbs>
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">Doku</BreadcrumbLink>
+                <BreadcrumbLink href={product.home}>{product.docs}</BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbItem>Erste Schritte</BreadcrumbItem>
+              {place.trail.map((crumb) => (
+                <BreadcrumbItem key={crumb.title}>
+                  {crumb.href ? (
+                    <BreadcrumbLink href={crumb.href}>{crumb.title}</BreadcrumbLink>
+                  ) : (
+                    crumb.title
+                  )}
+                </BreadcrumbItem>
+              ))}
             </Breadcrumbs>
-            <Heading level={1}>Schnellstart</Heading>
+            <Heading level={1}>{place.page.title}</Heading>
             <TableOfContents
               items={sections}
               collapsible
@@ -131,7 +209,8 @@ function Page() {
           <Prose>
             <p>
               Diese Seite führt dich in etwa zehn Minuten von einem sevDesk-Konto zur ersten
-              Antwort. Für ein Team auf einem Server lies <Link href="#">Fernzugriff</Link>.
+              Antwort. Für ein Team auf einem Server lies{" "}
+              <Link href="/doku/fernzugriff">Fernzugriff</Link>.
             </p>
             <AnchorHeading id="bevor-du-beginnst">Bevor du beginnst</AnchorHeading>
             <ul>
@@ -184,8 +263,16 @@ function Page() {
             </Table>
           </Prose>
           <Pager className="mt-16">
-            <PagerLink direction="previous" href="#" title="Überblick" />
-            <PagerLink direction="next" href="#" title="Clients" />
+            {place.previous && (
+              <PagerLink
+                direction="previous"
+                href={place.previous.href}
+                title={place.previous.title}
+              />
+            )}
+            {place.next && (
+              <PagerLink direction="next" href={place.next.href} title={place.next.title} />
+            )}
           </Pager>
         </DocsLayoutMain>
         <DocsLayoutAside>
