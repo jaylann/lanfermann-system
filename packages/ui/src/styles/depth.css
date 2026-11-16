@@ -3,7 +3,8 @@
  * component follows. The look is "Fase" (see DESIGN.md): glossy faces, 1px edges in the fill's
  * own hue, a light top edge, short soft shadows.
  *
- * The rule: only what moves casts a shadow.
+ * The rule: only what moves casts a shadow. The one exception is the seam, where a website's
+ * sections lie on each other as plates (Justin, 2026-11-16).
  *   Panel    content and ground                  flat; rules and lines, no shadow
  *   Fitting  what a hand presses                 depth-raised (+ -hover, depth-pressed)
  *   Plug     a fitting seated in a socket        depth-plug (a checked box)
@@ -11,6 +12,7 @@
  *   Card     one object you act on               depth-card
  *   Sheet    what floats temporarily             depth-floating, depth-overlay
  *   Bar      the site's bar over the page        depth-bar
+ *   Seam     where two sections of a site meet   depth-seam (components/seam)
  *
  * One light, from above, tinted: edges and contact shadows come from Ink (19 18 28), ambient
  * shadows from Ink mixed 30% toward Indigo (42 37 82), never neutral black.
@@ -141,6 +143,12 @@
   --depth-bar-hi: rgb(255 255 255 / 0.7);
   --depth-bar-near: rgb(19 18 28 / 0.05);
   --depth-bar-far: rgb(42 37 82 / 0.1);
+
+  /* the seam between two sections: a quiet edge, a short shadow from the plate on top */
+  --depth-seam-edge: rgb(19 18 28 / 0.1);
+  --depth-seam-lo: rgb(19 18 28 / 0.035);
+  --depth-seam-contact: rgb(19 18 28 / 0.06);
+  --depth-seam-ambient: rgb(42 37 82 / 0.1);
 }
 
 .dark,
@@ -213,6 +221,11 @@
   --depth-bar-hi: rgb(255 255 255 / 0.06);
   --depth-bar-near: rgb(8 7 12 / 0.4);
   --depth-bar-far: rgb(8 7 12 / 0.35);
+
+  --depth-seam-edge: rgb(8 7 12 / 0.7);
+  --depth-seam-lo: rgb(8 7 12 / 0.2);
+  --depth-seam-contact: rgb(8 7 12 / 0.5);
+  --depth-seam-ambient: rgb(8 7 12 / 0.35);
 }
 
 [data-theme="indigo"] {
@@ -288,6 +301,11 @@
   --depth-bar-hi: rgb(255 255 255 / 0.1);
   --depth-bar-near: rgb(19 18 28 / 0.14);
   --depth-bar-far: rgb(19 18 28 / 0.2);
+
+  --depth-seam-edge: rgb(19 18 28 / 0.28);
+  --depth-seam-lo: rgb(19 18 28 / 0.1);
+  --depth-seam-contact: rgb(19 18 28 / 0.18);
+  --depth-seam-ambient: rgb(19 18 28 / 0.22);
 }
 
 @theme inline {
@@ -458,6 +476,11 @@
     outline: 1px solid ButtonBorder;
     outline-offset: -1px;
   }
+}
+/* The shadow a seam's upper plate throws: a filter, because the plate is a clipped shape. */
+@utility depth-seam {
+  filter: drop-shadow(0 1px 1px var(--depth-seam-contact))
+    drop-shadow(0 4px 6px var(--depth-seam-ambient));
 }
 @utility depth-none {
   @apply shadow-none inset-shadow-none;
