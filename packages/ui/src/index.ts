@@ -158,6 +158,7 @@ export { Fieldset, FieldsetLegend } from "./components/fieldset/fieldset";
 export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
 export { Form, type FormProps } from "./components/form/form";
 export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
+export { Grow, type GrowProps } from "./components/grow/grow";
 export { Heading, type HeadingProps } from "./components/heading/heading";
 export {
   HoverCard,
