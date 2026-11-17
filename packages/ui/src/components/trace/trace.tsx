@@ -194,7 +194,9 @@ function TraceDetail({ children }: { children: ReactNode }) {
   return (
     <CollapsiblePrimitive.Panel
       data-slot="trace-detail"
-      className={cn("h-(--collapsible-panel-height)", disclosurePanel)}
+      // As wide as the step or the summary, not as its longest line: a line that is too long
+      // then shortens its title, instead of pushing the panel past the edge of the page.
+      className={cn("h-(--collapsible-panel-height) self-stretch", disclosurePanel)}
     >
       {/* The panel clips, so what stands inside keeps a little room to its edge. */}
       <div className="flex flex-col gap-2 pt-1 pr-1 pb-2 pl-[1.625rem] text-sm text-fg-body">

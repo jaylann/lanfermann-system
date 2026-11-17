@@ -1,0 +1,118 @@
+"use client";
+
+import { type ComponentProps, useLayoutEffect, useRef } from "react";
+
+import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
+
+export type GrowProps = ComponentProps<"div">;
+
+/** The transitions of a part inside that already move the content's height by themselves. */
+const heightProperties = new Set(["height", "max-height", "grid-template-rows"]);
+
+/** Whether something inside is moving its own height: a panel opening, another `Grow`. */
+function movingInside(content: HTMLElement) {
+  return content
+    .getAnimations({ subtree: true })
+    .some(
+      (animation) =>
+        animation instanceof CSSTransition &&
+        heightProperties.has(animation.transitionProperty) &&
+        animation.playState !== "finished",
+    );
+}
+
+/**
+ * A block whose height follows what it holds. When something joins it (a step of a `Trace`, a
+ * paragraph that arrives, the next tab's panel), it eases to its new height on `settle`, and
+ * what stands below moves down with it instead of jumping. It shrinks the same way.
+ *
+ * Put it around the part that changes, not around the page: what stands inside below the change
+ * still moves at once. Give each part that grows on its own a `Grow` of its own, side by side;
+ * one inside another sets its height in the middle of the other's measuring, and the outer one
+ * then learns of it a frame late.
+ *
+ * At rest it is a plain block of the content's height that clips nothing. It clips only while
+ * it moves, so a line that joins at its foot is uncovered as the block opens. From rest it does
+ * not animate the first height, a resize of the window, or a height that something inside is
+ * already animating (an opening `Collapsible`): then it simply follows.
+ * Already on its way, it takes a new height as its goal from where it stands. Under reduced
+ * motion it always follows.
+ */
+export function Grow({ className, children, ref, ...props }: GrowProps) {
+  const box = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const outer = box.current;
+    const inner = content.current;
+    if (!outer || !inner) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    /** The content's height when it was last measured, and the window's width then. */
+    let height = inner.offsetHeight;
+    let width = window.innerWidth;
+
+    const rest = () => {
+      delete outer.dataset.moving;
+      outer.style.height = "";
+    };
+
+    // Called after layout and before paint: the box already has the content's new height, and
+    // is set back to where it stood before anyone sees it.
+    const observer = new ResizeObserver(() => {
+      const nextHeight = inner.offsetHeight;
+      // A window being resized reflows everything at once; easing each step would lag behind.
+      const nextWidth = window.innerWidth;
+      const moving = outer.dataset.moving !== undefined;
+      // Mid-move the box stands where its transition has brought it.
+      const from = moving ? outer.getBoundingClientRect().height : height;
+      const follow = reduced.matches || nextWidth !== width || movingInside(inner);
+      height = nextHeight;
+      width = nextWidth;
+      if (Math.abs(nextHeight - from) < 0.5) {
+        if (moving) rest();
+        return;
+      }
+      // At rest the box is as tall as its content anyway. Already on its way, it takes the new
+      // height as its goal from where it stands, rather than jumping to it.
+      if (follow && (!moving || reduced.matches)) {
+        if (moving) rest();
+        return;
+      }
+      outer.dataset.moving = "";
+      outer.style.transition = "none";
+      outer.style.height = `${from}px`;
+      // Lay the box out at the old height, so the transition starts from there.
+      void outer.offsetHeight;
+      outer.style.transition = "";
+      outer.style.height = `${nextHeight}px`;
+    });
+    observer.observe(inner);
+
+    const arrived = (event: TransitionEvent) => {
+      if (event.target === outer && event.propertyName === "height") rest();
+    };
+    outer.addEventListener("transitionend", arrived);
+    outer.addEventListener("transitioncancel", arrived);
+    return () => {
+      observer.disconnect();
+      outer.removeEventListener("transitionend", arrived);
+      outer.removeEventListener("transitioncancel", arrived);
+      rest();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={mergeRefs(box, ref)}
+      data-slot="grow"
+      className={cn("transition-[height] spring-settle data-moving:overflow-clip", className)}
+      {...props}
+    >
+      {/* A block of its own, so the margins of what it holds stay inside the measured height. */}
+      <div ref={content} data-slot="grow-content" className="flow-root">
+        {children}
+      </div>
+    </div>
+  );
+}
