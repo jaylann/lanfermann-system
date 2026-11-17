@@ -28,6 +28,16 @@
   transition-timing-function: var(--ease-spring-seat);
 }
 
+/*
+ * A disc that appears already closed starts as the ring and closes where it stands: the step of
+ * a `Trace` that has just finished, whose mark was the spinner a moment ago. Beside `mark-on`.
+ */
+@utility mark-closes {
+  @starting-style {
+    box-shadow: inset 0 0 0 1.5px var(--mark-ring, var(--lf-line));
+  }
+}
+
 /* Forced colours drop box-shadows: draw the ring as an outline and the disc as a fill. */
 @media (forced-colors: active) {
   .mark {

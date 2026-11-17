@@ -24,9 +24,10 @@
 }
 
 /*
- * The three keyframe animations in the system. All show ongoing work nobody triggered a state
- * change for: the spinner turns, a progress bar without a known end runs through its trough, and
- * under reduced motion both breathe instead.
+ * Three of the four keyframe animations in the system (the fourth is the shimmer of a line of
+ * text, shimmer.css). All show ongoing work nobody triggered a state change for: the spinner
+ * turns, a progress bar without a known end runs through its trough, and under reduced motion
+ * all of them breathe instead.
  */
 @theme {
   --animate-spinner: spinner 0.75s linear infinite;

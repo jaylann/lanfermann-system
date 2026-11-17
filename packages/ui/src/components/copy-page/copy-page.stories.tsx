@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, waitFor } from "storybook/test";
 
 import { BreadcrumbItem, BreadcrumbLink, Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
-import { PageHeader, PageHeaderTitle } from "@/components/page-header/page-header";
+import { Heading } from "@/components/heading/heading";
 
 import { CopyPage } from "./copy-page";
 
@@ -37,7 +37,7 @@ const meta = {
     },
   },
   render: (args) => (
-    <PageHeader className="w-[min(44rem,100%)] gap-5">
+    <div className="flex w-[min(44rem,100%)] flex-col items-start gap-5">
       <div className="flex w-full flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <Breadcrumbs>
           <BreadcrumbItem>
@@ -47,8 +47,8 @@ const meta = {
         </Breadcrumbs>
         <CopyPage {...args} />
       </div>
-      <PageHeaderTitle level={1}>Schnellstart</PageHeaderTitle>
-    </PageHeader>
+      <Heading level={1}>Schnellstart</Heading>
+    </div>
   ),
 } satisfies Meta<typeof CopyPage>;
 

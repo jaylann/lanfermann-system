@@ -7,7 +7,8 @@ import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
-import { CodeCopy, type CodeCopyLabels } from "./code-copy";
+import { CodeCopy } from "./code-copy";
+import { type CodeKeyOptions, CodeKeys } from "./code-keys";
 import { CodeScroll } from "./code-scroll";
 import { codeHead, codeRoot } from "./code-surface";
 
@@ -15,11 +16,15 @@ import { codeHead, codeRoot } from "./code-surface";
 const PAD_Y_REM = 0.75;
 const LINE_REM = 1.375;
 
-type CodeBlockFrameProps = CodeCopyLabels & {
+type CodeBlockFrameProps = CodeKeyOptions & {
   /** The highlighted `<code>` (CodeLines), rendered where the block is: usually the server. */
   children: ReactNode;
   copyText: string;
   lineCount: number;
+  /** The name of the file the download saves, unless `download` names one. */
+  fileName?: string;
+  /** Long lines break when the block first shows. With `wrapToggle` the reader can change it. */
+  wrap?: boolean;
   title?: string;
   icon: IconSvgElement;
   /** A mark of the caller's own in place of the symbol: a product's logo. */
@@ -34,13 +39,20 @@ type CodeBlockFrameProps = CodeCopyLabels & {
 };
 
 /**
- * The client half of a CodeBlock: its header, the scrolling region, the copy button and the
- * fold. The code itself arrives finished as `children`.
+ * The client half of a CodeBlock: its header, the scrolling region, its keys (the copy, and on
+ * request a download and a line wrap) and the fold. The code itself arrives finished as
+ * `children`.
+ *
+ * With a wrap key the block says whether lines break (`data-wrap` is `on` or `off`) and the
+ * stylesheet follows it, whatever the code was rendered with: the code stays the server's.
  */
 export function CodeBlockFrame({
   children,
   copyText,
   lineCount,
+  fileName,
+  wrap = false,
+  wrapToggle = false,
   title,
   icon,
   mark,
@@ -49,10 +61,22 @@ export function CodeBlockFrame({
   fold,
   foldLabel,
   className,
-  ...labels
+  ...keyOptions
 }: CodeBlockFrameProps) {
   const codeRef = useRef<HTMLPreElement>(null);
-  const copy = <CodeCopy text={copyText} codeRef={codeRef} {...labels} />;
+  const [wrapped, setWrapped] = useState(wrap);
+  const copy = <CodeCopy text={copyText} codeRef={codeRef} {...keyOptions} />;
+  const keys = (
+    <CodeKeys
+      text={copyText}
+      codeRef={codeRef}
+      fileName={fileName}
+      wrapToggle={wrapToggle}
+      wrapped={wrapped}
+      onWrappedChange={setWrapped}
+      {...keyOptions}
+    />
+  );
 
   if (prompt) {
     return (
@@ -77,7 +101,11 @@ export function CodeBlockFrame({
   }
 
   return (
-    <div data-slot="code-block" className={cn(codeRoot, className)}>
+    <div
+      data-slot="code-block"
+      data-wrap={wrapToggle ? (wrapped ? "on" : "off") : undefined}
+      className={cn(codeRoot, className)}
+    >
       {title ? (
         <div data-slot="code-block-header" className={codeHead}>
           {mark ?? <Icon icon={icon} size={14} />}
@@ -87,10 +115,10 @@ export function CodeBlockFrame({
           >
             {title}
           </span>
-          {copy}
+          {keys}
         </div>
       ) : (
-        <div className="absolute top-1.5 right-1.5 z-10 rounded-md bg-(--code-face)">{copy}</div>
+        <div className="absolute top-1.5 right-1.5 z-10 rounded-md bg-(--code-face)">{keys}</div>
       )}
       <CodeFold lineCount={lineCount} fold={fold} label={foldLabel}>
         <CodeScroll label={title ?? label} codeRef={codeRef} preClassName="py-3">

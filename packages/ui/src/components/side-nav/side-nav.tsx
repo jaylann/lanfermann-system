@@ -1,8 +1,7 @@
-"use client";
-
-import { useRender } from "@base-ui/react/use-render";
+import type { useRender } from "@base-ui/react/use-render";
 import { type ComponentProps, type ReactNode, useId } from "react";
 
+import { renderAs } from "@/internal/render-as";
 import { cn } from "@/lib/cn";
 
 const focusRing =
@@ -74,23 +73,19 @@ export function SideNavLink({
   className,
   ...props
 }: SideNavLinkProps) {
-  const link = useRender({
-    defaultTagName: "a",
-    render,
-    props: {
-      ...props,
-      "data-slot": "side-nav-link",
-      "aria-current": current ? "page" : undefined,
-      className: cn(
-        "flex min-h-8 items-center rounded-md px-2.5 py-1 text-control text-fg-body",
-        // Instant, like the highlight of a menu: it follows the pointer without lag.
-        "hover:bg-hover hover:text-fg",
-        "aria-[current=page]:bg-tint aria-[current=page]:font-medium aria-[current=page]:text-fg",
-        "forced-colors:aria-[current=page]:outline forced-colors:aria-[current=page]:-outline-offset-1",
-        focusRing,
-        className,
-      ),
-    },
+  const link = renderAs("a", render, {
+    ...props,
+    "data-slot": "side-nav-link",
+    "aria-current": current ? "page" : undefined,
+    className: cn(
+      "flex min-h-8 items-center rounded-md px-2.5 py-1 text-control text-fg-body",
+      // Instant, like the highlight of a menu: it follows the pointer without lag.
+      "hover:bg-hover hover:text-fg",
+      "aria-[current=page]:bg-tint aria-[current=page]:font-medium aria-[current=page]:text-fg",
+      "forced-colors:aria-[current=page]:outline forced-colors:aria-[current=page]:-outline-offset-1",
+      focusRing,
+      className,
+    ),
   });
   return (
     <li data-slot="side-nav-item" className="flex flex-col">
@@ -123,21 +118,17 @@ export function SideNavSubLink({
   className,
   ...props
 }: SideNavSubLinkProps) {
-  const link = useRender({
-    defaultTagName: "a",
-    render,
-    props: {
-      ...props,
-      "data-slot": "side-nav-sub-link",
-      "aria-current": current ? "page" : undefined,
-      className: cn(
-        "-ml-px flex min-h-7 items-center rounded-r-xs border-l border-transparent py-0.5 pl-3.5 text-sm text-fg-muted hover:border-line hover:text-fg",
-        "aria-[current=page]:border-fg aria-[current=page]:font-medium aria-[current=page]:text-fg",
-        "forced-colors:aria-[current=page]:border-[Highlight]",
-        focusRing,
-        className,
-      ),
-    },
+  const link = renderAs("a", render, {
+    ...props,
+    "data-slot": "side-nav-sub-link",
+    "aria-current": current ? "page" : undefined,
+    className: cn(
+      "-ml-px flex min-h-7 items-center rounded-r-xs border-l border-transparent py-0.5 pl-3.5 text-sm text-fg-muted hover:border-line hover:text-fg",
+      "aria-[current=page]:border-fg aria-[current=page]:font-medium aria-[current=page]:text-fg",
+      "forced-colors:aria-[current=page]:border-[Highlight]",
+      focusRing,
+      className,
+    ),
   });
   return <li data-slot="side-nav-sub-item">{link}</li>;
 }

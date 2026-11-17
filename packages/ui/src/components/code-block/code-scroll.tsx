@@ -2,7 +2,7 @@
 
 import { type ReactNode, type RefObject, useRef } from "react";
 
-import { useScrollEdges } from "@/internal/scroll-edges";
+import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { cn } from "@/lib/cn";
 
 type CodeScrollProps = {
@@ -29,6 +29,7 @@ export function CodeScroll({ label, codeRef, className, preClassName, children }
     <div
       ref={ref}
       data-slot="code-block-scroll"
+      data-scroll-fade="x"
       // A group, not a region: a page of documentation holds many blocks, and landmarks there
       // would crowd the outline (and need names that differ).
       role="group"

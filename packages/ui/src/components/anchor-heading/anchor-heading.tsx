@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 export type AnchorHeadingProps = Omit<HeadingProps, "id" | "level"> & {
   /** The section's id: the part of the address after `#`. */
   id: string;
-  /** `<h2>` to `<h4>`: a section of a page and its parts. The page's title is `PageHeaderTitle`. */
+  /** `<h2>` to `<h4>`: a section of a page and its parts. The page's title is a `Heading`. */
   level?: 2 | 3 | 4;
   /** The name of the link to the section, read out by a screen reader. */
   anchorLabel?: string;

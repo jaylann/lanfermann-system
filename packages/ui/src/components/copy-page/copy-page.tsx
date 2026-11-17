@@ -11,6 +11,8 @@ import {
   useState,
 } from "react";
 
+import { Button } from "@/components/button/button";
+import { ButtonGroup } from "@/components/button-group/button-group";
 import { Icon } from "@/components/icon/icon";
 import { MenuContent, MenuItem, MenuLinkItem } from "@/components/menu/menu";
 import { ActionArrow } from "@/internal/arrow";
@@ -20,7 +22,10 @@ import { cn } from "@/lib/cn";
 /** How long a copy stays confirmed before the symbol comes back, in ms (as in a code block). */
 const CONFIRM_MS = 1600;
 
-export type CopyPageProps = Omit<ComponentProps<"div">, "children"> & {
+export type CopyPageProps = Omit<
+  ComponentProps<"div">,
+  "children" | "aria-label" | "aria-labelledby"
+> & {
   /** The page as Markdown, on this site: what is copied, and what "view" opens. */
   href: string;
   /** The button, and the first entry of the menu: the thing, then the action ("Seite kopieren"). */
@@ -46,10 +51,10 @@ export type CopyPageProps = Omit<ComponentProps<"div">, "children"> & {
 /**
  * Hands a docs page on as Markdown: one raised fitting split in two, the copy and the menu. The
  * copy fetches the page's Markdown and puts it on the clipboard, for a model or an agent; the
- * menu repeats it with a line on what it is, and opens the Markdown in a new tab. Put it in the
- * page header, at the end of the row above the title.
+ * menu repeats it with a line on what it is, and opens the Markdown in a new tab. Put it at the
+ * end of the row above the page's title.
  *
- * It is one part with two keys, so it moves as one: under the pointer the whole fitting lifts,
+ * It is a `ButtonGroup`, named by its `label`: one part with two keys, so it moves as one: under the pointer the whole fitting lifts,
  * and the key under it takes the hover wash. Pressed, the fitting goes down and drops its
  * ambient shadow, and only the pressed key takes the inner shade, so it rocks on that key and the
  * other keeps its gloss. A copy is confirmed in the key, as in a code block: the copy symbol
@@ -128,17 +133,12 @@ export function CopyPage({
   const isCopied = state === "copied";
 
   return (
-    <div
+    <ButtonGroup
+      size="sm"
+      aria-label={label}
       data-slot="copy-page"
-      className={cn(
-        "relative inline-flex h-(--control-sm) shrink-0 items-stretch rounded-md bg-raised depth-raised text-sm font-medium text-fg",
-        // One fitting: it lifts under the pointer and goes down under a press, whichever key.
-        "transition-[box-shadow,scale] spring-seat",
-        // Hover only while nothing is pressed, so the press never competes with it for the shadow.
-        "has-[button:hover]:spring-snap has-[button:hover:not(:active)]:depth-raised-hover",
-        "has-[button:active]:scale-(--motion-press-scale) has-[button:active]:shadow-pressed has-[button:active]:spring-snap",
-        className,
-      )}
+      // A small fitting with the corners of a default one: it stands alone above a title.
+      className={cn("rounded-md", className)}
       onPointerEnter={(event) => {
         void load().catch(() => {});
         onPointerEnter?.(event);
@@ -149,12 +149,11 @@ export function CopyPage({
       }}
       {...props}
     >
-      <button
-        type="button"
+      <Button
         data-slot="copy-page-copy"
         data-copied={isCopied ? "" : undefined}
         onClick={() => void copy()}
-        className={cn(key, "gap-1.5 rounded-l-md pr-2.5 pl-(--control-pad-sm)")}
+        className="pr-2.5"
       >
         <span className="relative flex size-4 shrink-0 items-center justify-center">
           <Icon data-slot="copy-page-symbol" icon={Copy01Icon} size={16} className="absolute" />
@@ -168,18 +167,17 @@ export function CopyPage({
           />
         </span>
         {label}
-      </button>
-
-      <span aria-hidden data-slot="copy-page-divider" className="w-px bg-hairline" />
+      </Button>
 
       <MenuPrimitive.Root modal={false} defaultOpen={defaultOpen}>
         <MenuPrimitive.Trigger
-          data-slot="copy-page-more"
-          aria-label={moreLabel}
-          className={cn(
-            key,
-            "group/more justify-center rounded-r-md px-1.5 data-popup-open:bg-hover pointer-coarse:px-2.5",
-          )}
+          render={
+            <Button
+              data-slot="copy-page-more"
+              aria-label={moreLabel}
+              className="group/more px-1.5 pointer-coarse:px-2.5"
+            />
+          }
         >
           <ChevronDownGlyph
             width={12}
@@ -214,23 +212,9 @@ export function CopyPage({
       <span role="status" className="sr-only">
         {state === "copied" ? copiedSentence : state === "failed" ? failedSentence : ""}
       </span>
-    </div>
+    </ButtonGroup>
   );
 }
-
-/**
- * One key of the fitting. It has no face of its own: the fitting's gloss shows through, a wash
- * marks the key under the pointer, and a press shades only this key. On a touch screen its target
- * grows to 44px up and down, never sideways, so the two keys never take each other's taps.
- */
-const key = [
-  "relative inline-flex items-center outline-offset-2 select-none",
-  "transition-[background-color,box-shadow] spring-seat hover:bg-hover hover:spring-snap",
-  "active:bg-raised-pressed active:inset-shadow-pressed active:spring-snap",
-  // With the keyboard on it a key rounds all four corners, so its ring closes around that key.
-  "focus-visible:z-1 focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-accent",
-  "pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:top-1/2 pointer-coarse:after:h-11 pointer-coarse:after:-translate-y-1/2 pointer-coarse:after:content-['']",
-].join(" ");
 
 /** A row of the menu: a tile, then two lines. It keeps the list's instant highlight. */
 const row = "group/row items-center gap-3 px-2 py-2";

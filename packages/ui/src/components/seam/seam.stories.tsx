@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Container } from "@/components/container/container";
-import { PageHeader, PageHeaderLead, PageHeaderTitle } from "@/components/page-header/page-header";
+import { Heading } from "@/components/heading/heading";
 import { Section } from "@/components/section/section";
+import { Text } from "@/components/text/text";
 
 import { Seam } from "./seam";
 
@@ -21,18 +22,28 @@ type Story = StoryObj<typeof meta>;
 type Face = "ground" | "well";
 const faceClass: Record<Face, string> = { ground: "bg-ground", well: "bg-well" };
 
+/** What a part of the page says: its title and a lead under it, set left. */
+function Opening({ id, title, lead }: { id: string; title: string; lead: string }) {
+  return (
+    <Container className="flex flex-col items-start gap-4">
+      <Heading id={id} size="title" className="max-w-[44rem]">
+        {title}
+      </Heading>
+      <Text size="lg" className="max-w-[34rem] text-pretty">
+        {lead}
+      </Text>
+    </Container>
+  );
+}
+
 function Steps({ face }: { face: Face }) {
   return (
     <Section space="md" aria-labelledby="ablauf" className={faceClass[face]}>
-      <Container>
-        <PageHeader>
-          <PageHeaderTitle id="ablauf">Drei Schritte, in dieser Reihenfolge.</PageHeaderTitle>
-          <PageHeaderLead>
-            Du erzählst mir, was du vorhast. Ich nenne dir einen festen Preis und den Tag, an dem
-            ich liefere. Erst dann baue ich.
-          </PageHeaderLead>
-        </PageHeader>
-      </Container>
+      <Opening
+        id="ablauf"
+        title="Drei Schritte, in dieser Reihenfolge."
+        lead="Du erzählst mir, was du vorhast. Ich nenne dir einen festen Preis und den Tag, an dem ich liefere. Erst dann baue ich."
+      />
     </Section>
   );
 }
@@ -40,12 +51,11 @@ function Steps({ face }: { face: Face }) {
 function Result({ face }: { face: Face }) {
   return (
     <Section aria-labelledby="ergebnis" className={faceClass[face]}>
-      <Container>
-        <PageHeader>
-          <PageHeaderTitle id="ergebnis">Die Seite lädt jetzt in 0,9 Sekunden.</PageHeaderTitle>
-          <PageHeaderLead>Vorher waren es 4,1.</PageHeaderLead>
-        </PageHeader>
-      </Container>
+      <Opening
+        id="ergebnis"
+        title="Die Seite lädt jetzt in 0,9 Sekunden."
+        lead="Vorher waren es 4,1."
+      />
     </Section>
   );
 }
@@ -54,12 +64,11 @@ function Result({ face }: { face: Face }) {
 function Invoice({ face }: { face: Face }) {
   return (
     <Section aria-labelledby="rechnung" className={faceClass[face]}>
-      <Container>
-        <PageHeader>
-          <PageHeaderTitle id="rechnung">Die Rechnung kommt nach der Abnahme.</PageHeaderTitle>
-          <PageHeaderLead>Vorher zahlst du nichts.</PageHeaderLead>
-        </PageHeader>
-      </Container>
+      <Opening
+        id="rechnung"
+        title="Die Rechnung kommt nach der Abnahme."
+        lead="Vorher zahlst du nichts."
+      />
     </Section>
   );
 }

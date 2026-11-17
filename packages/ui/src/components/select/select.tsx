@@ -4,6 +4,11 @@ import { Select as SelectPrimitive } from "@base-ui/react/select";
 import { cva, type VariantProps } from "class-variance-authority";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 
+import { useButtonGroup } from "@/components/button-group/button-group-context";
+import {
+  buttonGroupKeyDisabledLook,
+  buttonGroupKeyVariants,
+} from "@/components/button-group/button-group-variants";
 import { useGround } from "@/components/ground/ground";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
@@ -161,7 +166,10 @@ export type SelectTriggerProps = Omit<SelectPrimitive.Trigger.Props, "children">
     children?: SelectPrimitive.Value.Props["children"];
   };
 
-/** Shows the chosen value and opens the list. Give it a name: a `FieldLabel` or `aria-label`. */
+/**
+ * Shows the chosen value and opens the list. Give it a name: a `FieldLabel` or `aria-label`.
+ * Inside a `ButtonGroup` it is one key of the group's fitting and takes the group's size.
+ */
 export function SelectTrigger({
   className,
   size,
@@ -170,7 +178,8 @@ export function SelectTrigger({
   ...props
 }: SelectTriggerProps) {
   const options = useContext(OptionsContext);
-  const resolvedSize = size ?? "md";
+  const group = useButtonGroup();
+  const resolvedSize = group?.size ?? size ?? "md";
   // For plain options Base UI renders the label itself. Once options carry an icon or a detail we
   // lay the value out ourselves: icon, label, and the detail at the right edge.
   const rich =
@@ -180,8 +189,20 @@ export function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
+      data-group-key={group ? "" : undefined}
       data-size={resolvedSize}
-      className={mergeClassName(selectTriggerVariants({ size }), className)}
+      disabled={group?.disabled || undefined}
+      className={mergeClassName(
+        group
+          ? // A key of the group's fitting. The value is still set like typed text.
+            [
+              buttonGroupKeyVariants({ size: resolvedSize }),
+              buttonGroupKeyDisabledLook,
+              "min-w-32 justify-between text-left font-normal",
+            ]
+          : selectTriggerVariants({ size }),
+        className,
+      )}
       {...props}
     >
       <SelectPrimitive.Value

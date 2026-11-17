@@ -3,8 +3,8 @@
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import { type ComponentProps, createContext, useContext, useEffect, useRef } from "react";
 
+import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { useReducedMotion } from "@/internal/reduced-motion";
-import { useScrollEdges } from "@/internal/scroll-edges";
 import { cn, mergeClassName } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
 
@@ -21,7 +21,7 @@ export function Tabs({ className, ...props }: TabsProps) {
   );
 }
 
-/** How far a tab keeps off the edge it is scrolled to: past the fade (tabs.css), in px. */
+/** How far a tab keeps off the edge it is scrolled to: past the fade (scroll-fade.css), in px. */
 const REVEAL_MARGIN = 40;
 
 /**
@@ -58,6 +58,8 @@ export function TabsList({ className, children, ref, ...props }: TabsPrimitive.L
     <TabsPrimitive.List
       ref={mergeRefs(list, ref)}
       data-slot="tabs-list"
+      // The edges fade where more tabs wait (scroll-fade.css).
+      data-scroll-fade="x"
       className={mergeClassName(
         [
           // `isolate` lets the highlight sit behind the tabs without leaving the list.
