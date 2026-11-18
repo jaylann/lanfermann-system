@@ -9,6 +9,12 @@ export {
   AccordionTrigger,
   type AccordionTriggerProps,
 } from "./components/accordion/accordion";
+export {
+  ActionBar,
+  ActionBarButton,
+  type ActionBarButtonProps,
+  type ActionBarProps,
+} from "./components/action-bar/action-bar";
 export { Alert, AlertDescription, type AlertProps, AlertTitle } from "./components/alert/alert";
 export {
   AlertDialog,
