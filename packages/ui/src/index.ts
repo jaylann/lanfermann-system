@@ -87,6 +87,34 @@ export {
   ComboboxSeparator,
 } from "./components/combobox/combobox";
 export {
+  ConsentGate,
+  type ConsentGateProps,
+  ConsentProvider,
+  type ConsentProviderProps,
+  ConsentSettingsTrigger,
+  type ConsentSettingsTriggerProps,
+  useConsent,
+  type UseConsentResult,
+} from "./components/consent/consent";
+export { ConsentEmbed, type ConsentEmbedProps } from "./components/consent/consent-embed";
+export { type ConsentLabels, consentLabels } from "./components/consent/consent-labels";
+export {
+  consentAllows,
+  type ConsentCategory,
+  type ConsentConfig,
+  type ConsentRecord,
+  type ConsentService,
+  type ConsentStorage,
+  type ConsentStorageKind,
+  parseConsent,
+} from "./components/consent/consent-record";
+export {
+  type ConsentChange,
+  type ConsentJar,
+  type ConsentStatus,
+  createMemoryJar,
+} from "./components/consent/consent-store";
+export {
   Container,
   type ContainerProps,
   containerVariants,
