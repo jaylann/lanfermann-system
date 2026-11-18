@@ -48,7 +48,8 @@ function Paged({ page: start, pages, total = 248, buttons = false, ...props }: P
         {...props}
         page={page}
         pages={pages}
-        href={buttons ? undefined : (number) => `#seite-${number}`}
+        // The address as a pattern: the form a Server Component can hand in.
+        href={buttons ? undefined : "#seite-{page}"}
         onPageChange={(number, event) => {
           event.preventDefault();
           setPage(number);

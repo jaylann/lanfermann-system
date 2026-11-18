@@ -39,8 +39,11 @@ export type PaginationProps = Omit<ComponentProps<"nav">, "children"> & {
   /**
    * Where a page lives. With it every number is a real link, so a page can be opened in a new
    * tab, sent to someone and found again with the Back button. Keep the page in the address.
+   *
+   * A pattern in which `{page}` stands for the number (`"/angebote?seite={page}"`), or a
+   * function. From a Server Component only the pattern can be handed in.
    */
-  href?: (page: number) => string;
+  href?: string | ((page: number) => string);
   /**
    * Called with the page that was asked for. Without `href` the numbers are buttons and this is
    * all that happens; with it, call `event.preventDefault()` here if a router takes over.
@@ -55,10 +58,13 @@ export type PaginationProps = Omit<ComponentProps<"nav">, "children"> & {
   siblings?: number;
   /** The name of the navigation for assistive tech. */
   "aria-label"?: string;
-  /** What a page number is called: "Seite 3". */
-  pageLabel?: (page: number) => string;
-  /** The line of the compact form: "Seite 3 von 12". */
-  positionLabel?: (page: number, pages: number) => ReactNode;
+  /** What a page number is called: "Seite 3". A pattern (`"Page {page}"`) or a function. */
+  pageLabel?: string | ((page: number) => string);
+  /**
+   * The line of the compact form: "Seite 3 von 12". A pattern (`"Page {page} of {pages}"`) or a
+   * function.
+   */
+  positionLabel?: string | ((page: number, pages: number) => ReactNode);
   /** The name of the arrow that goes one page back. */
   previousLabel?: string;
   /** The name of the arrow that goes one page on. */
@@ -77,6 +83,11 @@ const place =
  */
 const reach =
   "relative pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:top-1/2 pointer-coarse:after:h-11 pointer-coarse:after:-translate-y-1/2 pointer-coarse:after:content-['']";
+
+/** A pattern with its numbers put in: `{page}` and `{pages}`. */
+function fill(pattern: string, page: number, pages: number) {
+  return pattern.replaceAll("{page}", String(page)).replaceAll("{pages}", String(pages));
+}
 
 /** An arrow leans a pixel the way it leads while the pointer is on it. */
 const lean = "transition-[translate] spring-seat group-hover/arrow:spring-snap";
@@ -98,8 +109,8 @@ export function Pagination({
   variant = "numbered",
   siblings = 1,
   "aria-label": label = "Seiten",
-  pageLabel = (number) => `Seite ${number}`,
-  positionLabel = (number, total) => `Seite ${number} von ${total}`,
+  pageLabel = "Seite {page}",
+  positionLabel = "Seite {page} von {pages}",
   previousLabel = "Vorherige Seite",
   nextLabel = "Nächste Seite",
   className,
@@ -108,6 +119,10 @@ export function Pagination({
   const list = useRef<HTMLUListElement>(null);
   const mark = useRef<HTMLLIElement>(null);
   useTravellingMark(list, mark, { enabled: variant === "numbered" });
+
+  const hrefOf = (to: number) => (typeof href === "string" ? fill(href, to, pages) : href?.(to));
+  const nameOf = (to: number) =>
+    typeof pageLabel === "string" ? fill(pageLabel, to, pages) : pageLabel(to);
 
   /**
    * What an arrow or a number says and does. One that leads nowhere (back from the first page,
@@ -130,7 +145,7 @@ export function Pagination({
 
   /** What makes it a link while it leads somewhere, and says it is one while it does not. */
   const address = (to: number, off: boolean) =>
-    off ? { role: "link", tabIndex: 0 } : { href: href?.(to) };
+    off ? { role: "link", tabIndex: 0 } : { href: hrefOf(to) };
 
   if (variant === "compact") {
     const step = (to: number, name: string, glyph: ReactNode) => {
@@ -166,7 +181,9 @@ export function Pagination({
         {...props}
       >
         <span data-slot="pagination-position" className="text-sm text-fg-muted tabular-nums">
-          {positionLabel(page, pages)}
+          {typeof positionLabel === "string"
+            ? fill(positionLabel, page, pages)
+            : positionLabel(page, pages)}
         </span>
         <ButtonGroup size="sm" aria-label={label}>
           {step(page - 1, previousLabel, <ChevronLeftGlyph />)}
@@ -231,7 +248,7 @@ export function Pagination({
           ) : (
             <li key={entry}>
               {go(entry, {
-                label: pageLabel(entry),
+                label: nameOf(entry),
                 className: cn(
                   place,
                   reach,
