@@ -16,11 +16,10 @@ import { ButtonGroup } from "@/components/button-group/button-group";
 import { Icon } from "@/components/icon/icon";
 import { MenuContent, MenuItem, MenuLinkItem } from "@/components/menu/menu";
 import { ActionArrow } from "@/internal/arrow";
+import { writeClipboard } from "@/internal/clipboard";
+import { COPY_SHOWN_MS } from "@/internal/copy";
 import { ChevronDownGlyph, TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
-
-/** How long a copy stays confirmed before the symbol comes back, in ms (as in a code block). */
-const CONFIRM_MS = 1600;
 
 export type CopyPageProps = Omit<
   ComponentProps<"div">,
@@ -103,30 +102,18 @@ export function CopyPage({
   const settle = (next: "copied" | "failed") => {
     clearTimeout(timer.current);
     setState(next);
-    timer.current = setTimeout(() => setState("idle"), CONFIRM_MS);
+    timer.current = setTimeout(() => setState("idle"), COPY_SHOWN_MS);
   };
 
   async function copy() {
-    const text = load();
     try {
-      if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
-        // A promise keeps the write inside the press while the text may still be on its way.
-        const blob = text.then((body) => new Blob([body], { type: "text/plain" }));
-        await navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
-      } else {
-        await navigator.clipboard.writeText(await text);
-      }
+      // The promise keeps the write inside the press while the text may still be on its way.
+      await writeClipboard(load());
       settle("copied");
       onCopied?.();
     } catch {
-      try {
-        await navigator.clipboard.writeText(await text);
-        settle("copied");
-        onCopied?.();
-      } catch {
-        markdown.current = undefined;
-        settle("failed");
-      }
+      markdown.current = undefined;
+      settle("failed");
     }
   }
 
