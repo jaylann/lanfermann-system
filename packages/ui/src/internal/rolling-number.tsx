@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 import { cn } from "@/lib/cn";
 
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -28,9 +26,12 @@ export function RollingNumber({ value, className }: { value: number; className?:
           <span
             // Counted from the right: the ones stay the ones when a digit joins at the front.
             key={digits.length - index}
-            style={{ "--roll": `${Number(digit) * -10}%` } as CSSProperties}
+            // Written as `translate` itself, not as a custom property a class reads. A place
+            // that joins has a starting style (below), and WebKit works that out with the
+            // property still empty: the column then rolled in from 0, on page load as well.
+            style={{ translate: `0 ${Number(digit) * -10}%` }}
             // A place that joins (9 becomes 10) fades in; it has nothing to roll from.
-            className="flex translate-y-(--roll) flex-col transition-[translate,opacity] spring-settle motion-reduce:transition-none starting:opacity-0"
+            className="flex flex-col transition-[translate,opacity] spring-settle motion-reduce:transition-none starting:opacity-0"
           >
             {DIGITS.map((each) => (
               <span key={each} className="h-[1lh]">
