@@ -35,6 +35,8 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Chip,
+  ChipGroup,
   Code,
   CodeBlock,
   type CodeTab,
@@ -76,6 +78,8 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
+  Empty,
+  EmptyTitle,
   Field,
   FieldDescription,
   FieldLabel,
@@ -92,6 +96,7 @@ import {
   InputGroupAddon,
   Kbd,
   Link,
+  Loaded,
   Logomark,
   Menu,
   MenuCheckboxItem,
@@ -107,6 +112,7 @@ import {
   NumberFieldInput,
   Pager,
   PagerLink,
+  Pagination,
   Parameter,
   ParameterList,
   Popover,
@@ -144,6 +150,8 @@ import {
   SideNavGroup,
   SideNavLink,
   SideNavSubLink,
+  Skeleton,
+  SkeletonGroup,
   Slider,
   SliderControl,
   Spinner,
@@ -170,6 +178,7 @@ import {
 } from "@lanfermann/ui";
 
 import { QuoteForm } from "./quote-form";
+import { Selection } from "./selection";
 
 const GROUNDS: GroundName[] = ["paper", "tint", "ink", "indigo"];
 
@@ -511,6 +520,39 @@ export default function Home() {
                   </TableRow>
                 </TableBody>
               </Table>
+
+              {/* What stands around a list of records. The pages take their address as a
+                  pattern: a function could not be handed in from this Server Component. */}
+              <div className="flex flex-col gap-4">
+                <ChipGroup aria-label={`Filter (${ground})`}>
+                  <Chip>Offen</Chip>
+                  <Chip>Seit Oktober</Chip>
+                </ChipGroup>
+                <Loaded
+                  ready
+                  skeleton={
+                    <SkeletonGroup label="Die Angebote werden gerade geladen.">
+                      <Skeleton className="w-40" />
+                    </SkeletonGroup>
+                  }
+                >
+                  <Empty size="inline">
+                    <EmptyTitle level={3}>
+                      Zu diesen Filtern wurde kein Angebot gefunden.
+                    </EmptyTitle>
+                  </Empty>
+                </Loaded>
+                <SkeletonGroup label="Die Rechnungen werden gerade geladen." light="still">
+                  <Skeleton className="w-48" />
+                </SkeletonGroup>
+                <Pagination
+                  page={3}
+                  pages={12}
+                  href="#seite-{page}"
+                  aria-label={`Seiten (${ground})`}
+                />
+                <Selection />
+              </div>
 
               {/* The symbol stands apart from the wordmark above: the two are never side by side. */}
               <div className="flex items-center justify-between gap-6">
