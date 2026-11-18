@@ -29,3 +29,8 @@ produkt = "produkt"
 titel = "titel"
 als = "als"
 fase = "fase"
+# The consent banner's copy.
+oder = "oder"
+unter = "unter"
+tage = "tage"
+adresse = "adresse"
