@@ -232,6 +232,7 @@ export function SidebarContent({ className, children, ...props }: ComponentProps
     // A subpage wears the hairline, not the tint (`SidebarSubItem`).
     current: '[data-slot="sidebar-item"][aria-current="page"]',
     still: "data-folding",
+    folds: '[data-slot="sidebar-sub"]',
     enabled: travel,
   });
   return (
@@ -411,33 +412,97 @@ const rowStrip = "flex w-(--sidebar-row) shrink-0 items-center gap-2.5 px-(--sid
 const rowStripMedia = "gap-1.5 px-[calc((var(--control-md)-1.5rem)/2)]";
 const rowLabel = cn("min-w-0 flex-1 truncate", leaves);
 const rowDetail = cn("flex shrink-0 items-center text-sm text-fg-muted tabular-nums", leaves);
-const rowSymbol =
-  "text-fg-muted group-hover/row:text-fg group-aria-[current=page]/row:text-fg group-data-popup-open/row:text-fg";
+/**
+ * The symbol answers the hand. Its colour eases from muted to full; under a press it dips and,
+ * let go, seats back with the small bounce a button has (`seat`). Under the pointer it does one
+ * small thing of its own, which `iconMotion` chooses. All of it is a transform, and none of it
+ * runs under reduced motion.
+ */
+const rowSymbol = [
+  "text-fg-muted transition-[color,scale,rotate] spring-seat",
+  "group-hover/row:text-fg group-hover/row:spring-snap group-aria-[current=page]/row:text-fg group-data-popup-open/row:text-fg",
+  "motion-safe:group-active/row:scale-90 group-active/row:spring-snap",
+].join(" ");
+
+/** What the symbol does under the pointer. */
+const symbolMotion = {
+  /** It comes a little towards the hand. Right for nearly every symbol. */
+  lift: "motion-safe:group-hover/row:scale-110 motion-safe:group-active/row:scale-90",
+  /** It turns by a sixth: for what turns, a gear, a wheel, something that reloads. */
+  turn: "motion-safe:group-hover/row:rotate-60",
+  /** It leans, the way a sheet is picked up by its corner: for a page, a note, a letter. */
+  tilt: "motion-safe:group-hover/row:-rotate-8",
+  /** It keeps still, apart from the press. */
+  none: "",
+} as const;
+
+/** Two chevrons that part a little: the row opens a menu. */
+function UnfoldGlyph() {
+  const part = "transition-[translate] spring-seat group-hover/row:spring-snap";
+  return (
+    <svg
+      data-slot="glyph"
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="shrink-0 overflow-visible"
+    >
+      <path
+        d="M3.5 4.5 6 2l2.5 2.5"
+        className={cn(
+          part,
+          "motion-safe:group-hover/row:-translate-y-px motion-safe:group-data-popup-open/row:-translate-y-px",
+        )}
+      />
+      <path
+        d="M3.5 7.5 6 10l2.5-2.5"
+        className={cn(
+          part,
+          "motion-safe:group-hover/row:translate-y-px motion-safe:group-data-popup-open/row:translate-y-px",
+        )}
+      />
+    </svg>
+  );
+}
 
 type RowParts = {
   /** The symbol in front of the name, from `@hugeicons/core-free-icons`. */
   icon?: IconSvgElement;
+  /**
+   * What the symbol does under the pointer: `lift` (the default), `turn` for what turns (a
+   * gear), `tilt` for a sheet or a note, `none`. A press makes every symbol dip and seat back.
+   */
+  iconMotion?: keyof typeof symbolMotion;
   /** A picture in place of the symbol: an `Avatar size="sm"`. */
   media?: ReactNode;
-  /**
-   * A quiet fact at the end of the row: how many wait there (a number), a `Shortcut`, a
-   * chevron for a row that opens a menu.
-   */
+  /** A quiet fact at the end of the row: how many wait there (a number), a `Shortcut`. */
   detail?: ReactNode;
 };
 
-function RowContent({ icon, media, detail, children }: RowParts & { children?: ReactNode }) {
+function RowContent({
+  icon,
+  iconMotion = "lift",
+  media,
+  detail,
+  children,
+}: RowParts & { children?: ReactNode }) {
   return (
     <span className={cn(rowStrip, media !== undefined && rowStripMedia)}>
       {media !== undefined ? (
         <span
           data-slot="sidebar-media"
-          className="flex size-6 shrink-0 items-center justify-center"
+          className="flex size-6 shrink-0 items-center justify-center transition-[scale] spring-seat group-active/row:spring-snap motion-safe:group-active/row:scale-92"
         >
           {media}
         </span>
       ) : icon ? (
-        <Icon icon={icon} size={16} className={rowSymbol} />
+        <Icon icon={icon} size={16} className={cn(rowSymbol, symbolMotion[iconMotion])} />
       ) : null}
       <span data-slot="sidebar-label" className={rowLabel}>
         {children}
@@ -458,7 +523,8 @@ export type SidebarItemProps = Omit<useRender.ComponentProps<"a">, "className"> 
     current?: boolean;
     /**
      * What lies under this page, as `SidebarSubItem`s. Shown under the current page, or under
-     * any page that is `open`.
+     * any page that is `open`. They fold open under their page and fold away again, and what
+     * stands below moves with them.
      */
     sub?: ReactNode;
     /**
@@ -474,6 +540,7 @@ export type SidebarItemProps = Omit<useRender.ComponentProps<"a">, "className"> 
  */
 export function SidebarItem({
   icon,
+  iconMotion,
   media,
   detail,
   current = false,
@@ -486,6 +553,8 @@ export function SidebarItem({
   ...props
 }: SidebarItemProps) {
   const { rail, onNavigate } = useContext(SidebarLayoutContext);
+  // On the rail there is no room for subpages: they fold away, and come back with it.
+  const unfolded = (current || open) && !rail;
   const link = renderAs("a", render, {
     ...props,
     "data-slot": "sidebar-item",
@@ -496,7 +565,7 @@ export function SidebarItem({
     },
     className: cn(row, className),
     children: (
-      <RowContent icon={icon} media={media} detail={detail}>
+      <RowContent icon={icon} iconMotion={iconMotion} media={media} detail={detail}>
         {children}
       </RowContent>
     ),
@@ -510,16 +579,32 @@ export function SidebarItem({
           {children}
         </TooltipContent>
       </Tooltip>
-      {(current || open) && sub ? (
+      {sub ? (
         <div
           data-slot="sidebar-sub"
-          // On the rail there is no room for subpages: they fold away, and come back with it.
-          className="grid grid-rows-[1fr] overflow-hidden transition-[grid-template-rows,opacity,visibility] spring-settle in-data-rail:invisible in-data-rail:grid-rows-[0fr] in-data-rail:opacity-0"
+          data-open={unfolded ? "" : undefined}
+          // Folded away they are still in the page, so they can fold open and shut; nothing in
+          // them can be reached then.
+          inert={!unfolded}
+          // A row that opens from nothing (`0fr`) on `settle` and closes on the faster `leave`.
+          // The box clips; what it holds overflows its row on the way, which is what a row of a
+          // fraction needs (motion.md).
+          className={cn(
+            "grid grid-rows-[0fr] overflow-hidden opacity-0 transition-[grid-template-rows,opacity,visibility] spring-leave",
+            "invisible data-open:visible data-open:grid-rows-[1fr] data-open:opacity-100 data-open:spring-settle",
+          )}
         >
-          {/* The hairline runs down from the middle of the symbol above it. */}
-          <ul className="mt-1 mb-1.5 ml-[calc(var(--sidebar-pad)+0.5rem-0.5px)] flex min-h-0 w-(--sidebar-row) flex-col border-l border-hairline">
-            {sub}
-          </ul>
+          <div className="min-h-0">
+            {/* The space around the list is a padding, not the list's margin: a margin is not
+                part of what the box says it holds, and the tint asks it how tall it will be
+                (`folds` in `useTravellingMark`). */}
+            <div className="pt-1 pb-1.5">
+              {/* The hairline runs down from the middle of the symbol above it. */}
+              <ul className="ml-[calc(var(--sidebar-pad)+0.5rem-0.5px)] flex w-(--sidebar-row) flex-col border-l border-hairline">
+                {sub}
+              </ul>
+            </div>
+          </div>
         </div>
       ) : null}
     </li>
@@ -565,18 +650,27 @@ export function SidebarSubItem({
 }
 
 export type SidebarButtonProps = Omit<useRender.ComponentProps<"button">, "className"> &
-  RowParts & { className?: string };
+  RowParts & {
+    className?: string;
+    /**
+     * The row opens a menu: two small chevrons at its end say so. They part a little under the
+     * pointer, and stay parted while the menu is open. Takes the place of `detail`.
+     */
+    menu?: boolean;
+  };
 
 /**
  * A row that is pressed instead of leading somewhere, for the header and the footer: the
  * workspace or the person, as the trigger of a `Menu`
- * (`<MenuTrigger render={<SidebarButton media={…}>…</SidebarButton>} />`). Not for the list
- * of places: those are `SidebarItem`s.
+ * (`<MenuTrigger render={<SidebarButton menu media={…}>…</SidebarButton>} />`). Not for the
+ * list of places: those are `SidebarItem`s.
  */
 export function SidebarButton({
   icon,
+  iconMotion,
   media,
   detail,
+  menu = false,
   render,
   className,
   children,
@@ -588,7 +682,12 @@ export function SidebarButton({
     "data-slot": "sidebar-button",
     className: cn(row, className),
     children: (
-      <RowContent icon={icon} media={media} detail={detail}>
+      <RowContent
+        icon={icon}
+        iconMotion={iconMotion}
+        media={media}
+        detail={menu ? <UnfoldGlyph /> : detail}
+      >
         {children}
       </RowContent>
     ),

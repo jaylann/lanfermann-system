@@ -1,17 +1,20 @@
 import {
+  Add01Icon,
   Analytics01Icon,
   Calendar03Icon,
   Home01Icon,
   InboxIcon,
   Invoice01Icon,
+  Logout01Icon,
   NoteEditIcon,
+  Notification01Icon,
   Settings01Icon,
-  UnfoldMoreIcon,
+  UserIcon,
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
-import { expect, waitFor } from "storybook/test";
+import { expect, screen, waitFor } from "storybook/test";
 
 import {
   AppShell,
@@ -23,6 +26,17 @@ import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
 import { BreadcrumbItem, BreadcrumbPage, Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
 import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
+import {
+  Menu,
+  MenuContent,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  MenuTrigger,
+} from "@/components/menu/menu";
 import { ShortcutProvider } from "@/components/shortcut/shortcut";
 import { Text } from "@/components/text/text";
 
@@ -69,42 +83,103 @@ const pages = {
 
 type Page = keyof typeof pages;
 
+/** The pages that have pages of their own under them. */
+const subpages: Partial<Record<Page, readonly string[]>> = {
+  angebote: ["Entwürfe", "Gesendet", "Angenommen"],
+  einstellungen: ["Betrieb", "Team", "Abrechnung"],
+};
+
+const businesses = [
+  { value: "huber", name: "Schreinerei Huber", initials: "SH" },
+  { value: "weiss", name: "Gärtnerei Weiß", initials: "GW" },
+];
+
 type EntriesProps = Partial<SidebarProps> & {
   /** The page the story opens on. */
   start?: Page;
-  /** The subpage of „Einstellungen“ that is being worked on, if any. */
+  /** The subpage of that page that is being worked on, if any. */
   subpage?: string;
   /** Whether the last group folds. */
   folds?: boolean;
 };
 
-/** The sidebar of a workshop's office: a few places, and the page one is on kept in state. */
+/**
+ * The sidebar of a workshop's office: a few places, and where one is kept in state. The story
+ * has no router, so a press only changes which page counts as current.
+ */
 function Entries({ start = "angebote", subpage, folds = false, ...props }: EntriesProps) {
-  const [current, setCurrent] = useState<Page>(start);
+  const [at, setAt] = useState<{ page: Page; sub?: string }>({ page: start, sub: subpage });
+  const [business, setBusiness] = useState("huber");
+  const active = businesses.find((entry) => entry.value === business) ?? businesses[0];
+
   const item = (page: Page) => ({
     href: `#${page}`,
-    current: current === page && !subpage,
-    // The story has no router: the press only changes which page counts as current.
+    current: at.page === page && !at.sub,
+    open: at.page === page && Boolean(at.sub),
     onClick: (event: MouseEvent) => {
       event.preventDefault();
-      setCurrent(page);
+      setAt({ page });
     },
     children: pages[page],
+    sub: subpages[page] && (
+      <>
+        {subpages[page].map((name) => (
+          <SidebarSubItem
+            key={name}
+            href={`#${name}`}
+            current={at.page === page && at.sub === name}
+            onClick={(event) => {
+              event.preventDefault();
+              setAt({ page, sub: name });
+            }}
+          >
+            {name}
+          </SidebarSubItem>
+        ))}
+      </>
+    ),
   });
+
   return (
     <Sidebar aria-label="Hauptnavigation" {...props}>
       <SidebarHeader>
-        <SidebarButton
-          media={
-            <Avatar size="sm">
-              <AvatarFallback>SH</AvatarFallback>
-            </Avatar>
-          }
-          detail={<Icon icon={UnfoldMoreIcon} size={14} />}
-          className="font-medium text-fg"
-        >
-          Schreinerei Huber
-        </SidebarButton>
+        <Menu>
+          <MenuTrigger
+            render={
+              <SidebarButton
+                menu
+                media={
+                  <Avatar size="sm">
+                    <AvatarFallback>{active?.initials}</AvatarFallback>
+                  </Avatar>
+                }
+                className="font-medium text-fg"
+              />
+            }
+          >
+            {active?.name}
+          </MenuTrigger>
+          <MenuContent className="min-w-56">
+            <MenuGroup>
+              <MenuGroupLabel>Betriebe</MenuGroupLabel>
+              <MenuRadioGroup
+                value={business}
+                onValueChange={(value: string) => setBusiness(value)}
+              >
+                {businesses.map((entry) => (
+                  <MenuRadioItem key={entry.value} value={entry.value}>
+                    {entry.name}
+                  </MenuRadioItem>
+                ))}
+              </MenuRadioGroup>
+            </MenuGroup>
+            <MenuSeparator />
+            <MenuItem>
+              <Icon icon={Add01Icon} size={16} className="text-fg-muted" />
+              Betrieb hinzufügen
+            </MenuItem>
+          </MenuContent>
+        </Menu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -112,39 +187,48 @@ function Entries({ start = "angebote", subpage, folds = false, ...props }: Entri
           <SidebarItem icon={InboxIcon} detail="3" {...item("posteingang")} />
         </SidebarGroup>
         <SidebarGroup title="Arbeit">
-          <SidebarItem icon={NoteEditIcon} detail="12" {...item("angebote")} />
-          <SidebarItem icon={Invoice01Icon} {...item("rechnungen")} />
+          <SidebarItem icon={NoteEditIcon} iconMotion="tilt" detail="12" {...item("angebote")} />
+          <SidebarItem icon={Invoice01Icon} iconMotion="tilt" {...item("rechnungen")} />
           <SidebarItem icon={UserMultipleIcon} {...item("kunden")} />
           <SidebarItem icon={Calendar03Icon} {...item("termine")} />
         </SidebarGroup>
         <SidebarGroup title="Verwaltung" collapsible={folds}>
           <SidebarItem icon={Analytics01Icon} {...item("auswertung")} />
-          <SidebarItem
-            icon={Settings01Icon}
-            {...item("einstellungen")}
-            open={Boolean(subpage)}
-            sub={
-              <>
-                {["Betrieb", "Team", "Abrechnung"].map((name) => (
-                  <SidebarSubItem key={name} href={`#${name}`} current={subpage === name}>
-                    {name}
-                  </SidebarSubItem>
-                ))}
-              </>
-            }
-          />
+          <SidebarItem icon={Settings01Icon} iconMotion="turn" {...item("einstellungen")} />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarButton
-          media={
-            <Avatar size="sm">
-              <AvatarFallback>MH</AvatarFallback>
-            </Avatar>
-          }
-        >
-          Maria Huber
-        </SidebarButton>
+        <Menu>
+          <MenuTrigger
+            render={
+              <SidebarButton
+                menu
+                media={
+                  <Avatar size="sm">
+                    <AvatarFallback>MH</AvatarFallback>
+                  </Avatar>
+                }
+              />
+            }
+          >
+            Maria Huber
+          </MenuTrigger>
+          <MenuContent side="top" className="min-w-56">
+            <MenuItem>
+              <Icon icon={UserIcon} size={16} className="text-fg-muted" />
+              Mein Profil
+            </MenuItem>
+            <MenuItem>
+              <Icon icon={Notification01Icon} size={16} className="text-fg-muted" />
+              Benachrichtigungen
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem>
+              <Icon icon={Logout01Icon} size={16} className="text-fg-muted" />
+              Abmelden
+            </MenuItem>
+          </MenuContent>
+        </Menu>
       </SidebarFooter>
     </Sidebar>
   );
@@ -176,12 +260,20 @@ function Page({ children }: { children?: ReactNode }) {
 const shell = { viewport: { width: 900, height: 560 }, clip: "viewport" } as const;
 
 /**
- * The sidebar by itself, on the page „Angebote“. Press another entry: the tint travels there.
+ * The sidebar by itself, on the page „Angebote“, which has pages of its own under it. Press
+ * another entry: the tint travels there while the subpages fold away, and „Einstellungen“
+ * folds its own open. The workspace above and the person below each open a menu.
+ *
+ * The tint's travel is stepped by hand, which a frame strip cannot hold still: the strips show
+ * the folding, and the travel is looked at in the running story.
  */
 export const Default: Story = {
   parameters: {
     visual: {
-      motion: [{ name: "travel", click: 'a[href="#termine"]', frames: 8 }],
+      motion: [
+        { name: "fold", click: 'a[href="#termine"]', frames: 8 },
+        { name: "unfold", click: 'a[href="#einstellungen"]', frames: 8 },
+      ],
     },
   },
   render: (args) => <Entries {...args} />,
@@ -338,9 +430,20 @@ export const Keyboard: Story = {
     const trigger = canvas.getByRole("button", { name: "Seitenleiste" });
     const sidebar = nav.closest<HTMLElement>('[data-slot="sidebar"]');
 
-    await step("Tab walks the entries in order, after the workspace", async () => {
+    await step("the workspace opens its menu, and Escape gives the focus back", async () => {
       await userEvent.tab();
-      await expect(canvas.getByRole("button", { name: /Schreinerei Huber/ })).toHaveFocus();
+      const workspace = canvas.getByRole("button", { name: /Schreinerei Huber/ });
+      await expect(workspace).toHaveFocus();
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() =>
+        expect(screen.getByRole("menuitemradio", { name: "Schreinerei Huber" })).toHaveFocus(),
+      );
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+      await expect(workspace).toHaveFocus();
+    });
+
+    await step("Tab walks the entries in order, and the current page says so", async () => {
       await userEvent.tab();
       await expect(canvas.getByRole("link", { name: "Übersicht" })).toHaveFocus();
       await userEvent.tab();
@@ -350,17 +453,34 @@ export const Keyboard: Story = {
       await expect(current).toHaveAttribute("aria-current", "page");
     });
 
-    await step("Enter on another entry makes it the current one", async () => {
+    await step("its subpages follow it, and one of them takes the page over", async () => {
       await userEvent.tab();
+      const drafts = canvas.getByRole("link", { name: "Entwürfe" });
+      await expect(drafts).toHaveFocus();
       await userEvent.keyboard("{Enter}");
-      await expect(canvas.getByRole("link", { name: "Rechnungen" })).toHaveAttribute(
-        "aria-current",
-        "page",
-      );
+      await expect(drafts).toHaveAttribute("aria-current", "page");
       await expect(canvas.getByRole("link", { name: /Angebote/ })).not.toHaveAttribute(
         "aria-current",
       );
     });
+
+    await step(
+      "Enter on another entry makes it current, and the subpages are out of reach",
+      async () => {
+        await userEvent.tab();
+        await userEvent.tab();
+        await userEvent.tab();
+        await userEvent.keyboard("{Enter}");
+        await expect(canvas.getByRole("link", { name: "Rechnungen" })).toHaveAttribute(
+          "aria-current",
+          "page",
+        );
+        // Folded away they stay in the page, unseen and out of the reach of the keyboard.
+        await waitFor(() =>
+          expect(canvas.queryByRole("link", { name: "Entwürfe" })).not.toBeInTheDocument(),
+        );
+      },
+    );
 
     await step("Strg and B collapses the sidebar, and the button says so", async () => {
       await expect(trigger).toHaveAttribute("aria-expanded", "true");

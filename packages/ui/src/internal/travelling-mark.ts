@@ -2,17 +2,37 @@
 
 import { type RefObject, useLayoutEffect } from "react";
 
+import { atRest, type Moving, springForce, stepSpring } from "@/motion/spring-step";
+import { springs } from "@/motion/springs";
+
+/** Where an entry stands inside the list, and how large it is, in layout pixels. */
+type Place = { x: number; y: number; w: number; h: number };
+
+const sides = ["x", "y", "w", "h"] as const;
+
+// Without bounce: a mark that overshoots would stand on its neighbour for a moment.
+const force = springForce(springs.glide);
+
+/** A tenth of a pixel from its place, and all but still: nobody sees the difference. */
+const ARRIVED = 0.1;
+
+/**
+ * How long a fold may claim it has further to go without going there. Something sticks out of
+ * it then (it is never as tall as what it holds), and the mark stops waiting for it.
+ */
+const STALLED_MS = 250;
+
 /** Where an element stands inside a box that is one of its positioned ancestors. */
-function offsetWithin(element: HTMLElement, box: HTMLElement) {
-  let left = 0;
-  let top = 0;
+function placeWithin(element: HTMLElement, box: HTMLElement): Place {
+  let x = 0;
+  let y = 0;
   let node: HTMLElement | null = element;
   while (node && node !== box) {
-    left += node.offsetLeft;
-    top += node.offsetTop;
+    x += node.offsetLeft;
+    y += node.offsetTop;
     node = node.offsetParent as HTMLElement | null;
   }
-  return { left, top };
+  return { x, y, w: element.offsetWidth, h: element.offsetHeight };
 }
 
 export type TravellingMarkOptions = {
@@ -24,6 +44,13 @@ export type TravellingMarkOptions = {
    * for that time the mark is gone and the entry wears the look itself.
    */
   still?: string;
+  /**
+   * Which parts of the list fold open and shut by themselves while the mark may be on its way
+   * (the subpages of an entry). Each is a box that clips and carries `data-open` while it is
+   * open or opening. The mark then heads for where its entry will stand once they have
+   * arrived, instead of running after an entry that is still sliding.
+   */
+  folds?: string;
   /** Set to `false` for a list whose entries wear the mark themselves. */
   enabled?: boolean;
 };
@@ -32,67 +59,146 @@ export type TravellingMarkOptions = {
  * Keeps one mark on the current entry of a list and lets it travel when another entry becomes
  * current: the tint of a `Sidebar`, the tint under a page number. "The mark travels" (DESIGN.md).
  *
- * `listRef` is the positioned box that holds the entries and the mark. The mark is placed from the
- * entry's measured offsets (layout pixels, so it is right under `zoom`), which are written onto
- * it as `--mark-x`, `--mark-y`, `--mark-w` and `--mark-h`; the `travels` utility (travel.css)
- * moves it by `translate`. Nothing renders: the list is watched for the entry that says it is
- * current.
+ * `listRef` is the positioned box that holds the entries and the mark. The mark's place is the
+ * entry's measured offsets (layout pixels, so it is right under `zoom`), written onto it as
+ * `--mark-x`, `--mark-y`, `--mark-w` and `--mark-h`; the `travels` utility (travel.css) turns
+ * them into a box moved by `translate`. Nothing renders: the list is watched for the entry that
+ * says it is current.
+ *
+ * The travel is a spring stepped by hand (`glide`), not a CSS transition, because the place it
+ * travels to may itself be moving: the subpages of the entry it left fold away, and every entry
+ * below slides up while the mark is on its way. A transition would have to be given a new goal
+ * on every frame, and such a transition never arrives. The spring reads its goal anew each
+ * frame and keeps its speed. For the parts named in `folds` it also knows how far they still
+ * have to go, so its goal is where the entry will come to rest: it does not overshoot an entry
+ * that comes towards it.
+ *
+ * At rest the mark is part of its entry: when the layout moves under it (a group folds, the
+ * list narrows), it is set to the entry's new place at once, frame by frame.
  *
  * What the stylesheet reads:
  *
- *   `data-shown` on the mark     an entry is current and laid out; without it the mark fades
- *   `data-placed` on the list    the mark has taken over. Until then (on the server, before the
- *                                first measure) the current entry wears the same look itself,
- *                                so nothing appears late.
- *   `data-settling` on the list  the layout is moving under the mark (a group folds, the list
- *                                narrows). The mark then follows without a transition: one that
- *                                is given a new goal on every frame never arrives.
+ *   `data-shown` on the mark    an entry is current and laid out; without it the mark fades
+ *   `data-placed` on the list   the mark has taken over. Until then (on the server, before the
+ *                               first measure) the current entry wears the same look itself,
+ *                               so nothing appears late.
  */
 export function useTravellingMark(
   listRef: RefObject<HTMLElement | null>,
   markRef: RefObject<HTMLElement | null>,
-  { current = '[aria-current="page"]', still, enabled = true }: TravellingMarkOptions = {},
+  { current = '[aria-current="page"]', still, folds, enabled = true }: TravellingMarkOptions = {},
 ) {
   useLayoutEffect(() => {
     const box = listRef.current;
     const piece = markRef.current;
     if (!enabled || !box || !piece) return;
-    let frame = 0;
 
-    const place = () => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    /** Where the mark is right now, and how fast each of its sides moves. */
+    let at: Record<keyof Place, Moving> | null = null;
+    let frame = 0;
+    let then = 0;
+    /** What the folds last said they had to go, and when that last changed. */
+    let lastRest = Number.NaN;
+    let movedAt = 0;
+
+    /** The entry the mark belongs on, if it has a place: laid out, and not inside a moving part. */
+    const entryNow = () => {
       const entry = box.querySelector<HTMLElement>(current);
-      // An entry inside a folded group is not laid out and has no place; one inside a group
-      // that is folding right now wears the look itself.
-      if (!entry || entry.offsetParent === null || (still && entry.closest(`[${still}]`))) {
+      if (!entry || entry.offsetParent === null) return null;
+      if (still && entry.closest(`[${still}]`)) return null;
+      return entry;
+    };
+
+    const goal = (): Place | null => {
+      const entry = entryNow();
+      return entry && placeWithin(entry, box);
+    };
+
+    /**
+     * How far the entry still has to slide down (or, negative, up) until the parts that fold
+     * above it have arrived: what each of them will be tall, less what it is tall now.
+     */
+    const stillToCome = (): number => {
+      const entry = folds ? entryNow() : null;
+      if (!entry || !folds) return 0;
+      let rest = 0;
+      for (const part of box.querySelectorAll<HTMLElement>(folds)) {
+        const above = part.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING;
+        if (!above || part.contains(entry)) continue;
+        // A box that clips knows how tall what it holds would be: its scroll height.
+        rest += (part.hasAttribute("data-open") ? part.scrollHeight : 0) - part.offsetHeight;
+      }
+      return rest;
+    };
+
+    const draw = (place: Place) => {
+      for (const side of sides) piece.style.setProperty(`--mark-${side}`, `${place[side]}px`);
+    };
+
+    const stop = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    /** Stands on the entry at once: the first place, a layout that moved, reduced motion. */
+    const seat = () => {
+      stop();
+      const place = goal();
+      if (!place) {
+        at = null;
         delete piece.dataset.shown;
         return;
       }
-      const { left, top } = offsetWithin(entry, box);
-      piece.style.setProperty("--mark-x", `${left}px`);
-      piece.style.setProperty("--mark-y", `${top}px`);
-      piece.style.setProperty("--mark-w", `${entry.offsetWidth}px`);
-      piece.style.setProperty("--mark-h", `${entry.offsetHeight}px`);
+      at = { x: still0(place.x), y: still0(place.y), w: still0(place.w), h: still0(place.h) };
+      draw(place);
       piece.dataset.shown = "";
     };
 
-    /** Follows a layout that moves, or takes the first place: without a transition. */
-    const settle = () => {
-      box.dataset.settling = "";
-      place();
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        delete box.dataset.settling;
-      });
+    const tick = (now: number) => {
+      frame = 0;
+      const place = goal();
+      if (!place || !at) return seat();
+      // Where the entry will stand, not where it is while the layout is still moving.
+      let rest = stillToCome();
+      if (rest !== lastRest) {
+        lastRest = rest;
+        movedAt = now;
+      }
+      if (now - movedAt > STALLED_MS) rest = 0;
+      place.y += rest;
+      const seconds = (now - then) / 1000;
+      then = now;
+      let arrived = Math.abs(rest) < ARRIVED;
+      for (const side of sides) {
+        at[side] = stepSpring(at[side], place[side], force, seconds);
+        arrived &&= atRest(at[side], place[side], ARRIVED);
+      }
+      // Only once the layout has arrived as well: seated earlier, it would jump back to an
+      // entry that is still on its way.
+      if (arrived) return seat();
+      draw({ x: at.x.value, y: at.y.value, w: at.w.value, h: at.h.value });
+      frame = requestAnimationFrame(tick);
     };
 
-    settle();
+    /** Another entry is current: the mark sets off for it from where it stands. */
+    const travel = () => {
+      // Nowhere to come from (it was hidden), nowhere to go, or no travel wanted: it stands.
+      if (!at || !goal() || reduced.matches) return seat();
+      if (frame) return;
+      then = movedAt = performance.now();
+      lastRest = Number.NaN;
+      frame = requestAnimationFrame(tick);
+    };
+
+    seat();
     box.dataset.placed = "";
 
-    // Another entry says it is current, or entries come and go: the mark travels. A part that
-    // starts or stops folding hands the look over, which must not be seen: no transition.
+    // An entry says it is current, or entries come and go: the mark travels. A part that starts
+    // or stops folding hands the look over, which must not be seen: the mark stands at once.
     const changed = new MutationObserver((records) => {
-      if (still && records.some((record) => record.attributeName === still)) settle();
-      else place();
+      if (still && records.some((record) => record.attributeName === still)) seat();
+      else travel();
     });
     changed.observe(box, {
       subtree: true,
@@ -100,16 +206,24 @@ export function useTravellingMark(
       attributes: true,
       attributeFilter: still ? ["aria-current", still] : ["aria-current"],
     });
-    const resized = new ResizeObserver(settle);
+    // The layout moved. On its way the mark reads its goal every frame anyway; at rest it is
+    // part of its entry and moves with it.
+    const resized = new ResizeObserver(() => {
+      if (!frame) seat();
+    });
     resized.observe(box);
 
     return () => {
-      cancelAnimationFrame(frame);
+      stop();
       changed.disconnect();
       resized.disconnect();
       delete box.dataset.placed;
-      delete box.dataset.settling;
       delete piece.dataset.shown;
     };
-  }, [listRef, markRef, current, still, enabled]);
+  }, [listRef, markRef, current, still, folds, enabled]);
+}
+
+/** A side that stands where it is. */
+function still0(value: number): Moving {
+  return { value, velocity: 0 };
 }
