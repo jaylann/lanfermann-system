@@ -94,6 +94,22 @@ export {
   ComboboxSeparator,
 } from "./components/combobox/combobox";
 export {
+  Command,
+  CommandContent,
+  type CommandContentProps,
+  type CommandEntry,
+  CommandFooter,
+  type CommandFooterProps,
+  CommandInput,
+  type CommandInputProps,
+  type CommandItems,
+  CommandList,
+  type CommandListProps,
+  type CommandProps,
+  type CommandSection,
+  CommandTrigger,
+} from "./components/command/command";
+export {
   ConsentGate,
   type ConsentGateProps,
   ConsentProvider,
