@@ -53,7 +53,7 @@ export const Inline: Story = {
   ),
 };
 
-/** To compare: the symbol alone (`EmptyMedia variant="bare"`), without its plate. */
+/** `EmptyMedia variant="bare"`: the symbol alone, where its tile would be one box too many. */
 export const Bare: Story = {
   render: (args) => (
     <Empty {...args}>

@@ -91,8 +91,8 @@ export const Few: Story = {
 };
 
 /**
- * To compare: `variant="compact"`, for a narrow place or a list nobody jumps around in. On the
- * first page the key that leads back is flat.
+ * `variant="compact"`: for a narrow place or a list nobody jumps around in. On the first page
+ * the key that leads back is flat.
  */
 export const Compact: Story = {
   args: { page: 1, variant: "compact" },

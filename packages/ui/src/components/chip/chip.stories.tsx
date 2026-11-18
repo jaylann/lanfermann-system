@@ -98,7 +98,7 @@ export const Plain: Story = {
   ),
 };
 
-/** To compare: `variant="flat"`, drawn like a `Badge` instead of raised. */
+/** `variant="flat"`: drawn like a `Badge`, for a row where raised chips would be too much. */
 export const Flat: Story = {
   parameters: { visual: { target: '[data-slot="chip-remove"]' } },
   render: () => <Filters variant="flat" />,

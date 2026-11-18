@@ -86,12 +86,12 @@ export const Arrived: Story = {
   render: () => <Rows />,
 };
 
-/** To compare: `light="passing"`, a light runs through all shapes at the same moment. */
+/** `light="passing"`: a light runs through all shapes at the same moment. */
 export const Passing: Story = {
   render: () => <Shapes light="passing" />,
 };
 
-/** To compare: `light="still"`, nothing moves. */
+/** `light="still"`: nothing moves. */
 export const Still: Story = {
   render: () => <Shapes light="still" />,
 };
