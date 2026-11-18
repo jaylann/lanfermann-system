@@ -355,7 +355,11 @@ Every component belongs to one of the four matters, and takes its treatment from
   the status bar white), and the page shows behind the status bar; what covers the window (the menu, the scrim
   of a dialog or drawer) is as tall as the window with the bars collapsed (`h-lvh`), so neither
   bar keeps a light strip. Content that must stay reachable above the toolbar is padded by
-  `100lvh − 100dvh`. No `viewport-fit=cover`, no `env()` insets for this.
+  `100lvh − 100dvh`. No `viewport-fit=cover`, no `env()` insets for this. A card pinned to the
+  window's foot is the same case from below: a fixed layer there, most of the window wide, brought
+  the shrunk toolbar back in its colour (the consent card, white). Safari passes over what a fixed
+  layer holds in absolute position, so the fixed part is an empty line of no height and the card
+  stands on it (`consentAnchor`; confirmed on Justin's iPhone, 2026-11-18).
 - **NavigationMenu** is a row of quiet entries: no face and no shadow, only the hover wash. An
   entry with pages behind it carries a chevron and opens a panel when it is pointed at or pressed.
   One sheet serves the whole row: it glides to the next entry and takes its size, and the content
