@@ -60,9 +60,20 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     const inner = content.current;
     if (!outer || !inner) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    /** The content's height when it was last measured, and the window's width then. */
+    /** The content's height when it was last measured. */
     let height = inner.offsetHeight;
-    let width = window.innerWidth;
+    /**
+     * The frame in which the window last changed its size. The browser runs the resize event and
+     * then the size observers in the same frame, so a measure in that frame was caused by the
+     * resize. (A width remembered from the last measure went stale when the window was resized
+     * without this content changing, and the next real change was then taken for a resize.)
+     */
+    const frame = () => Number(document.timeline.currentTime ?? performance.now());
+    let resizedIn = Number.NaN;
+    const resized = () => {
+      resizedIn = frame();
+    };
+    window.addEventListener("resize", resized);
 
     const rest = () => {
       delete outer.dataset.moving;
@@ -73,14 +84,13 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     // is set back to where it stood before anyone sees it.
     const observer = new ResizeObserver(() => {
       const nextHeight = inner.offsetHeight;
-      // A window being resized reflows everything at once; easing each step would lag behind.
-      const nextWidth = window.innerWidth;
       const moving = outer.dataset.moving !== undefined;
       // Mid-move the box stands where its transition has brought it.
       const from = moving ? outer.getBoundingClientRect().height : height;
-      const follow = reduced.matches || nextWidth !== width || movingInside(inner);
+      // A window being resized reflows everything at once; easing each step would lag behind.
+      const resizing = frame() === resizedIn;
+      const follow = reduced.matches || resizing || movingInside(inner);
       height = nextHeight;
-      width = nextWidth;
       if (Math.abs(nextHeight - from) < 0.5) {
         if (moving) rest();
         return;
@@ -112,6 +122,7 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     outer.addEventListener("transitioncancel", arrived);
     return () => {
       observer.disconnect();
+      window.removeEventListener("resize", resized);
       outer.removeEventListener("transitionend", arrived);
       outer.removeEventListener("transitioncancel", arrived);
       rest();

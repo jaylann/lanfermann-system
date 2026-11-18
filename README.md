@@ -122,6 +122,88 @@ What the app provides, and what it gets:
 - **Density:** controls are compact by default; `data-density="comfortable"` on `<html>` or on a
   subtree gives the larger set.
 
+### Consent (cookie banner)
+
+`ConsentProvider` asks before anything that stores or reads data in the browser is loaded, keeps
+the answer in a first-party cookie (`lf-consent`, no ID), and renders the banner itself. It is a
+client component that takes functions, so give it a small client file of its own:
+
+```tsx
+// app/consent.tsx
+"use client";
+import { type ConsentConfig, ConsentProvider } from "@lanfermann/ui";
+import { persistConsent } from "./actions";
+
+const config: ConsentConfig = {
+  revision: "2026-11-18", // change it when the texts change: everyone is asked again
+  categories: [
+    {
+      id: "medien",
+      name: "Externe Medien",
+      description: "Zeigt Videos von anderen Anbietern direkt auf der Seite.",
+      services: [
+        {
+          id: "youtube",
+          name: "YouTube",
+          provider: "Google Ireland Limited, Irland",
+          purpose: "Zeigt eingebettete Videos.",
+          profiling: true,
+          thirdCountry: "USA",
+          privacyUrl: "https://policies.google.com/privacy",
+        },
+      ],
+    },
+  ],
+};
+
+export function Consent({ children }: { children: React.ReactNode }) {
+  return (
+    <ConsentProvider
+      config={config}
+      privacyHref="/datenschutz"
+      imprintHref="/impressum"
+      persist={persistConsent}
+    >
+      {children}
+    </ConsentProvider>
+  );
+}
+```
+
+```ts
+// app/actions.ts — optional: Safari keeps a cookie written by script for at most 7 days.
+"use server";
+import { cookies } from "next/headers";
+
+export async function persistConsent(value: string, maxAge: number) {
+  if (value.length > 2048 || !/^[\w%.~-]*$/.test(value)) return;
+  (await cookies()).set("lf-consent", decodeURIComponent(value), {
+    path: "/",
+    maxAge,
+    sameSite: "lax",
+    secure: true,
+    httpOnly: false,
+  });
+}
+```
+
+- Wrap the app in `<Consent>` inside the `isolate` element of the root layout.
+- Gate what needs consent: `<ConsentGate service="matomo"><Script … /></ConsentGate>` renders
+  only once it is allowed (never on the server); `<ConsentEmbed service="youtube"><iframe …
+/></ConsentEmbed>` shows a placeholder that loads nothing until asked. `useConsent()` gives
+  `status`, `allows(id)` and the decisions, for code that loads a script itself.
+- Put `<ConsentSettingsTrigger />` among the legal links of every page's footer (in a
+  `SiteFooter`, with `className={siteFooterLinkClass}` inside a `<li>`).
+- `onChange(record, { granted, revoked, initial })` is the place for Google Consent Mode or a
+  server-side log; it also runs once on load with a stored answer.
+- A Server Component can read the same cookie: `parseConsent(cookie?.value, config)`. Reading
+  `cookies()` makes the route dynamic (under Cache Components it needs a `<Suspense>`); the
+  banner itself never needs it.
+- What the component cannot know, the site states: every service truthfully in `config`, the
+  same in its privacy policy, and old configs kept (git history does) as proof of what was asked.
+  Revoking deletes the first-party storage a service lists; its cookies on other domains are out
+  of reach.
+
 ## Adding a component
 
 1. Read `packages/ui/DESIGN.md` and the rule files in `.claude/rules/` (tokens, components,
