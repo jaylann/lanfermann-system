@@ -15,6 +15,9 @@ import {
   AlertDialogTrigger,
   AlertTitle,
   AnchorHeading,
+  AppShell,
+  AppShellBar,
+  AppShellPage,
   Avatar,
   AvatarFallback,
   Badge,
@@ -39,6 +42,13 @@ import {
   Collapsible,
   CollapsiblePanel,
   CollapsibleTrigger,
+  Command,
+  CommandContent,
+  CommandFooter,
+  CommandInput,
+  CommandList,
+  type CommandSection,
+  CommandTrigger,
   ConsentEmbed,
   ConsentSettingsTrigger,
   Cta,
@@ -121,6 +131,12 @@ import {
   SelectItem,
   SelectTrigger,
   Separator,
+  Shortcut,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarItem,
+  SidebarTrigger,
   SideNav,
   SideNavGroup,
   SideNavLink,
@@ -166,6 +182,18 @@ const INSTALL: CodeTab[] = [
   { label: "pnpm", code: "pnpm add @lanfermann/ui", language: "sh" },
 ];
 
+// Plain data, so it can cross from this Server Component into the palette.
+const COMMANDS: CommandSection[] = [
+  {
+    value: "Seiten",
+    items: [
+      { value: "angebote", label: "Angebote", detail: "12 offen" },
+      { value: "rechnungen", label: "Rechnungen" },
+      { value: "kunden", label: "Kunden", shortcut: "mod+shift+k" },
+    ],
+  },
+];
+
 const GLOBALS = `@import "tailwindcss";
 @import "@lanfermann/ui/styles.css";
 `;
@@ -209,6 +237,39 @@ export default function Home() {
                   Als Link
                 </a>
               </div>
+
+              {/* The frame of an app, small: the sidebar beside a bar that holds the palette. */}
+              <AppShell
+                sidebarShortcut={false}
+                className="min-h-0 overflow-hidden rounded-xl border border-hairline"
+              >
+                <Sidebar aria-label={`Navigation (${ground})`} className="static h-48">
+                  <SidebarContent>
+                    <SidebarGroup title="Arbeit">
+                      <SidebarItem href="#angebote" current detail="12">
+                        Angebote
+                      </SidebarItem>
+                      <SidebarItem href="#rechnungen">Rechnungen</SidebarItem>
+                      <SidebarItem href="#kunden">Kunden</SidebarItem>
+                    </SidebarGroup>
+                  </SidebarContent>
+                </Sidebar>
+                <AppShellPage>
+                  <AppShellBar className="static">
+                    <SidebarTrigger />
+                    <Command items={COMMANDS} shortcut={false} label={`Befehle (${ground})`}>
+                      <CommandTrigger render={<Button size="sm" className="ml-auto" />}>
+                        Suchen <Shortcut keys="mod+k" />
+                      </CommandTrigger>
+                      <CommandContent>
+                        <CommandInput placeholder="z. B. Angebote" />
+                        <CommandList empty="Zu dieser Suche wurde keine Seite gefunden." />
+                        <CommandFooter />
+                      </CommandContent>
+                    </Command>
+                  </AppShellBar>
+                </AppShellPage>
+              </AppShell>
 
               <Tabs defaultValue="formular">
                 <TabsList>
