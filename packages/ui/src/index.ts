@@ -57,6 +57,8 @@ export {
   CheckboxGroupItems,
   type CheckboxGroupProps,
 } from "./components/checkbox-group/checkbox-group";
+export { Chip, type ChipProps } from "./components/chip/chip";
+export { ChipGroup, type ChipGroupProps } from "./components/chip/chip-group";
 export { Code } from "./components/code/code";
 export { CodeBlock, type CodeBlockProps } from "./components/code-block/code-block";
 export {
