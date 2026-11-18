@@ -21,11 +21,26 @@ export type ActionBarProps = Omit<ComponentProps<"div">, "children"> & {
   clearLabel?: string;
   /** The name of the bar for assistive tech. */
   "aria-label"?: string;
-  /** Where it stands: fixed at the foot of the window, or at the foot of its nearest box. */
-  position?: "fixed" | "absolute";
+  /**
+   * Where it stands. `fixed` (the default): at the foot of the window, in its middle.
+   * `sticky`: at the foot of the box it is the last child of, and of the window while that box
+   * is taller. For the page beside a sidebar, where the middle of the window is not the middle
+   * of the list; give that box `flex flex-col`, so the bar stands at its foot when the list is
+   * short. It keeps a place of its own at the end of that box: scrolled to the end, it stands
+   * under the list and not on its last row. `absolute`: at the foot of its nearest positioned
+   * box.
+   */
+  position?: "fixed" | "sticky" | "absolute";
   /** The actions: `ActionBarButton`s. */
   children: ReactNode;
 };
+
+const places = {
+  fixed: "fixed inset-x-0 bottom-0",
+  absolute: "absolute inset-x-0 bottom-0",
+  // In the flow, as the last thing in its box: the end of the page is where it comes to rest.
+  sticky: "sticky bottom-0 mt-auto",
+} as const;
 
 /**
  * What can be done with the rows that are selected in a list: it rises at the foot of the
@@ -77,8 +92,8 @@ export function ActionBar({
       // Across the foot, but only the bar itself takes the pointer: the page beside it stays
       // in reach. Above the home indicator on a phone, and 8px off the edges like the site bar.
       className={cn(
-        "pointer-events-none inset-x-0 bottom-0 z-40 flex justify-center px-2 pb-[max(1rem,env(safe-area-inset-bottom))]",
-        position,
+        "pointer-events-none z-40 flex justify-center px-2 pb-[max(1rem,env(safe-area-inset-bottom))]",
+        places[position],
       )}
     >
       <ToolbarPrimitive.Root
