@@ -21,6 +21,13 @@ export {
   AlertDialogTrigger,
 } from "./components/alert-dialog/alert-dialog";
 export { AnchorHeading, type AnchorHeadingProps } from "./components/anchor-heading/anchor-heading";
+export {
+  AppShell,
+  AppShellBar,
+  AppShellMain,
+  AppShellPage,
+  type AppShellProps,
+} from "./components/app-shell/app-shell";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
 export { Badge, type BadgeProps } from "./components/badge/badge";
 export {
@@ -86,6 +93,22 @@ export {
   type ComboboxProps,
   ComboboxSeparator,
 } from "./components/combobox/combobox";
+export {
+  Command,
+  CommandContent,
+  type CommandContentProps,
+  type CommandEntry,
+  CommandFooter,
+  type CommandFooterProps,
+  CommandInput,
+  type CommandInputProps,
+  type CommandItems,
+  CommandList,
+  type CommandListProps,
+  type CommandProps,
+  type CommandSection,
+  CommandTrigger,
+} from "./components/command/command";
 export {
   ConsentGate,
   type ConsentGateProps,
@@ -317,6 +340,15 @@ export {
 export { Separator, type SeparatorProps } from "./components/separator/separator";
 export { Shimmer, type ShimmerProps } from "./components/shimmer/shimmer";
 export {
+  Shortcut,
+  type ShortcutProps,
+  ShortcutProvider,
+  type ShortcutProviderProps,
+  usePlatform,
+  useShortcut,
+  type UseShortcutOptions,
+} from "./components/shortcut/shortcut";
+export {
   SideNav,
   SideNavGroup,
   type SideNavGroupProps,
@@ -326,6 +358,25 @@ export {
   SideNavSubLink,
   type SideNavSubLinkProps,
 } from "./components/side-nav/side-nav";
+export {
+  Sidebar,
+  SidebarButton,
+  type SidebarButtonProps,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  type SidebarGroupProps,
+  SidebarHeader,
+  SidebarItem,
+  type SidebarItemProps,
+  SidebarMenu,
+  type SidebarMenuProps,
+  type SidebarProps,
+  SidebarSubItem,
+  type SidebarSubItemProps,
+  SidebarTrigger,
+  type SidebarTriggerProps,
+} from "./components/sidebar/sidebar";
 export {
   SiteFooter,
   SiteFooterBrand,
@@ -426,4 +477,5 @@ export {
   type TraceSummaryProps,
 } from "./components/trace/trace";
 export { cn, mergeClassName } from "./lib/cn";
+export { type Platform } from "./lib/shortcut";
 export { type SpringName, springs, transitions } from "./motion/springs";

@@ -34,3 +34,5 @@ oder = "oder"
 unter = "unter"
 tage = "tage"
 adresse = "adresse"
+# The command palette's copy.
+suche = "suche"

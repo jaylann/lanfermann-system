@@ -36,9 +36,11 @@ drift. Never edit the generated file. The table and its uses: `packages/ui/DESIG
   animation: it distorts shadows and breaks under CSS `zoom`.
 - Import Motion only through `src/motion/motion.tsx`, and only for gestures (drag, swipe with
   velocity) or content swaps. So far nothing needs it.
-- A spring stepped by hand (`src/motion/spring-step.ts`) is for the one case CSS cannot run: a
-  shape that is rebuilt from numbers every frame (the calendar's selection). Write only custom
-  properties from it, never layout, and never render React per frame.
+- A spring stepped by hand (`src/motion/spring-step.ts`) is for the two cases CSS cannot run: a
+  shape that is rebuilt from numbers every frame (the calendar's selection), and a mark whose
+  goal moves while it travels (the tint of a `Sidebar`, whose entries slide while subpages fold:
+  `src/internal/travelling-mark.ts`). Write only custom properties from it, never layout, and
+  never render React per frame.
 - Inertia on a dragged part: `src/motion/inertia.ts` decides the stretch once per move, CSS
   draws it and brings it back on `spring-rebound`.
 - Reduced motion: scale and travel go to zero through `--motion-enter-scale`,
