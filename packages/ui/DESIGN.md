@@ -102,6 +102,7 @@ story `Patterns/Specimen`.
 | Actions together | `ButtonGroup` is one fitting with several keys, the recipe `CopyPage` had for itself: one face, one edge, one shadow, a seam in the edge's colour, and it rocks on the pressed key. Not for choosing a state (`SegmentedControl`).                                                                                                                                                                                                                                                                                                                                                                                              | Claude, 2026-11-16; to be looked at |
 | Work in progress | A line that names work shimmers (`Shimmer`): muted text, a light in the text colour passing through and resting: 2.4s for a pass and its rest, 3em to either side, which he chose from three speeds and three widths. The steps of an assistant are a `Trace`: ring waits, arc works, disc is done, a hairline joins the marks, and a `TraceSummary` stands for the whole. Both marks stay: dots by default, and `marks="symbols"`, where a finished step carries the symbol of its kind; the rail is in both.                                                                                                                  | Justin, 2026-11-16                  |
 | Theme switch     | `ThemeSwitch` is the control only, in two forms. He thought of it as a select: that is the default, the choice by symbol and name in one button's room. `variant="segmented"` is three symbols in a round trough, without the round shape's marks: the symbol is the mark, and stands in a circle. It holds the choice and reports it; it is not wired to the page.                                                                                                                                                                                                                                                             | Justin, 2026-11-16                  |
+| Changing code    | A line that joins a `CodeBlockLive` opens like a fold ("Aufklappen"): its row opens on `settle` and pushes the lines below down while its text fades in and drops 4px into place. Chosen over a flap that swings down from its top edge and a drawer it slides out of. A changed value keeps both styles: it fades in (the default), or with `changeMotion="glow"` also lights up in the accent for a moment.                                                                                                                                                                                                                   | Justin, 2026-11-18                  |
 
 ## Colour
 
@@ -249,6 +250,11 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   new height on `settle` (`Grow`), the one place besides an opening panel where height moves.
   It does not ease a height that a panel inside is already animating, a change of width, or
   anything under reduced motion.
+- **Code that changes shows the change.** In a `CodeBlockLive` the lines are matched to the ones
+  before: a line that joins opens its row (`grid-template-rows` from `0fr`) and its text fades
+  in, a line that goes fades on `leave` while its row closes, and what a change put into a line
+  that stays (a value, a comma) arrives as new. A line that comes back mid-way turns round. A
+  block that has just mounted, like the next tab's, does not animate its lines.
 
 ## Icons
 
@@ -410,6 +416,8 @@ Every component belongs to one of the four matters, and takes its treatment from
   configuration built from the reader's choices. `CodeBlock` highlights where it renders, which
   in a client component would send the highlighter and its grammars along. Here the app hands
   over its lines as runs with one of the block's ten roles, and no highlighter is imported.
+  When the reader's choice changes the code, a new line opens like a fold, a gone one closes,
+  and a changed value fades in or, with `changeMotion="glow"`, lights up for a moment.
   The header of either block takes a `mark` in place of its symbol: the logo of the product the
   code is for.
 - **Cta** closes a page, once. Its cut follows its buttons, its inner corner as round as theirs,

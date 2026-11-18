@@ -22,6 +22,18 @@ function movingInside(content: HTMLElement) {
     );
 }
 
+/** Whether the box itself is on its way to a height. */
+function heightMoving(box: HTMLElement) {
+  return box
+    .getAnimations()
+    .some(
+      (animation) =>
+        animation instanceof CSSTransition &&
+        animation.transitionProperty === "height" &&
+        animation.playState === "running",
+    );
+}
+
 /**
  * A block whose height follows what it holds. When something joins it (a step of a `Trace`, a
  * paragraph that arrives, the next tab's panel), it eases to its new height on `settle`, and
@@ -90,7 +102,11 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     observer.observe(inner);
 
     const arrived = (event: TransitionEvent) => {
-      if (event.target === outer && event.propertyName === "height") rest();
+      if (event.target !== outer || event.propertyName !== "height") return;
+      // Taking a new goal mid-way cancels the transition to the old one; the one to the new goal
+      // is already running by the time that is said, and the box has not arrived.
+      if (event.type === "transitioncancel" && heightMoving(outer)) return;
+      rest();
     };
     outer.addEventListener("transitionend", arrived);
     outer.addEventListener("transitioncancel", arrived);

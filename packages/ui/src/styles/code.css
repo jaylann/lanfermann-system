@@ -140,12 +140,25 @@
     overflow-wrap: normal;
   }
 
+  /*
+   * A line is a grid of one row around its body, so a live block can open the row from nothing
+   * and close it again (below). It clips only up and down: an italic's overhang stays.
+   */
   [data-slot="code-block-line"] {
     position: relative;
-    min-height: 1lh;
+    display: grid;
+    grid-template-rows: 1fr;
+    overflow-y: clip;
     padding-inline: var(--code-pad-x) var(--code-pad-x);
     padding-left: calc(var(--code-pad-x) + var(--code-gutter, 0px));
     counter-increment: line;
+  }
+  [data-slot="code-block-line-body"] {
+    min-height: 0;
+  }
+  /* An empty line still holds one line of room: a zero-width space, which is never copied. */
+  [data-slot="code-block-line-body"]:empty::before {
+    content: "\200b";
   }
 
   /* Numbers are read past, not read out, and never copied with the code. */
@@ -185,6 +198,81 @@
   [data-slot="code-block-line"][data-kind="removed"]::after {
     content: "−" / attr(data-label);
     color: var(--lf-danger);
+  }
+
+  /*
+   * Lines that change (CodeBlockLive, code-lines-live.tsx). Only once the block stands
+   * (`data-live`): what is there when it first shows does not move.
+   *
+   * A line that joins opens like a fold: its row opens from nothing on `settle` and pushes the
+   * lines below down, while its text fades in and drops into place from just above
+   * (`--motion-enter-offset`). Chosen by Justin over a flap and a drawer (DESIGN.md). The row is
+   * the one height that moves here, because the lines below have to make room (motion.md); a
+   * `Grow` around the block sees it moving and follows. A line that goes fades on `leave` while
+   * its row closes, is not counted and has no number. Every state is a transition, so a line that
+   * comes back mid-way turns round.
+   *
+   * Part way, a row of `f fr` is narrower than the line around it (f times f, against f, of the
+   * line's height: fractions under 1 share out only part of the room). The line's own height is
+   * what makes room and what is seen, as it clips; the text overflows its row into it.
+   */
+  [data-live] > [data-slot="code-block-line"] {
+    transition: grid-template-rows var(--transition-duration-spring-settle)
+      var(--ease-spring-settle);
+    @starting-style {
+      grid-template-rows: 0fr;
+    }
+  }
+  [data-live] > [data-slot="code-block-line"] > [data-slot="code-block-line-body"] {
+    transition:
+      opacity var(--transition-duration-spring-settle) var(--ease-spring-settle),
+      translate var(--transition-duration-spring-settle) var(--ease-spring-settle);
+    @starting-style {
+      opacity: 0;
+      translate: 0 calc(-1 * var(--motion-enter-offset));
+    }
+  }
+  [data-slot="code-block-line"][data-motion="leave"] {
+    grid-template-rows: 0fr;
+    counter-increment: none;
+    user-select: none;
+    &::before {
+      content: none;
+    }
+    & > [data-slot="code-block-line-body"] {
+      opacity: 0;
+      transition-duration: var(--transition-duration-spring-leave);
+      transition-timing-function: var(--ease-spring-leave);
+    }
+  }
+
+  /*
+   * What a change put into a line that stays (a value, a comma) arrives as new. Two styles, both
+   * kept (DESIGN.md): it fades in (`fade`, Einblenden), or also lights up in the accent and lets
+   * the light go (`glow`, Aufleuchten).
+   */
+  [data-live] [data-slot="code-block-fresh"] {
+    transition:
+      opacity var(--transition-duration-spring-settle) var(--ease-spring-settle),
+      background-color 900ms ease-out;
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  [data-live][data-change-motion="glow"] [data-slot="code-block-fresh"] {
+    border-radius: 2px;
+    box-decoration-break: clone;
+    @starting-style {
+      background-color: color-mix(in oklab, var(--lf-accent) 28%, transparent);
+    }
+  }
+
+  /* Under reduced motion rows do not open or close, and the text does not travel (the offset is
+     zero, motion.css): it only fades. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-live] > [data-slot="code-block-line"] {
+      transition: none;
+    }
   }
 
   /* The edges fade where more code waits to the side (scroll-fade.css). The focus outline is
