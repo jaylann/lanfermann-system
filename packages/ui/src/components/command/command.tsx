@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 
+import { Chip } from "@/components/chip/chip";
 import { useGround } from "@/components/ground/ground";
 import { Grow } from "@/components/grow/grow";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
@@ -316,14 +317,15 @@ export function CommandInput({ className, placeholder, onKeyDown, ...props }: Co
     >
       <Icon icon={Search01Icon} size={16} className="text-fg-muted" />
       {trail.map((opened) => (
-        <span
+        // The page that was opened, as what was chosen: a chip. It seats in as it appears.
+        <Chip
           key={opened.value}
           data-slot="command-page"
-          className="flex h-[1.375rem] max-w-40 shrink-0 items-center rounded-sm bg-raised depth-plug px-1.5 text-sm font-medium text-fg transition-[opacity,scale] spring-seat starting:scale-90 starting:opacity-0"
+          className="max-w-40 shrink-0 delay-0 starting:scale-90 starting:opacity-0"
         >
           {/* The ellipsis said that more follows. Here it has followed. */}
-          <span className="truncate">{opened.label.replace(/\s*…$/, "")}</span>
-        </span>
+          {opened.label.replace(/\s*…$/, "")}
+        </Chip>
       ))}
       <AutocompletePrimitive.Input
         data-slot="command-input"
