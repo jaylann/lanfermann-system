@@ -1,0 +1,56 @@
+/*
+ * A mark that travels: one piece that stands on the current entry of a list and moves to the
+ * next when another becomes current (the tint of a `Sidebar`, the tint under a page number).
+ * `useTravellingMark` (internal/travelling-mark.ts) measures the entry and writes its place onto
+ * the piece as four lengths; this utility turns them into a box and moves it by `translate`.
+ *
+ *   --mark-x, --mark-y   where the entry stands inside the list
+ *   --mark-w, --mark-h   how large it is
+ *
+ * The piece only carries the place and the motion. What it looks like (a tint, a rule) and its
+ * corners are the part's own classes.
+ */
+@utility travels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--mark-w, 0px);
+  height: var(--mark-h, 0px);
+  translate: var(--mark-x, 0px) var(--mark-y, 0px);
+  opacity: 0;
+  pointer-events: none;
+
+  /* An entry is current and laid out. Without one the piece fades. */
+  &[data-shown] {
+    opacity: 1;
+  }
+
+  /*
+   * It takes its first place without moving there. Only from then on does it glide: without
+   * bounce, because a piece that overshoots would stand on its neighbour for a moment.
+   */
+  :where([data-placed]) & {
+    transition-property: translate, width, height, opacity;
+    transition-duration: var(--transition-duration-spring-glide);
+    transition-timing-function: var(--ease-spring-glide);
+  }
+
+  /*
+   * The layout moves under it (a group folds, the list narrows): it follows at once. A
+   * transition that is given a new goal on every frame never arrives.
+   */
+  :where([data-settling]) & {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-placed]) & {
+      transition-property: opacity;
+    }
+  }
+
+  /* Forced colours drop backgrounds: the current entry is outlined by its own part instead. */
+  @media (forced-colors: active) {
+    display: none;
+  }
+}

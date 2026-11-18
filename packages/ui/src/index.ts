@@ -21,6 +21,13 @@ export {
   AlertDialogTrigger,
 } from "./components/alert-dialog/alert-dialog";
 export { AnchorHeading, type AnchorHeadingProps } from "./components/anchor-heading/anchor-heading";
+export {
+  AppShell,
+  AppShellBar,
+  AppShellMain,
+  AppShellPage,
+  type AppShellProps,
+} from "./components/app-shell/app-shell";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
 export { Badge, type BadgeProps } from "./components/badge/badge";
 export {
@@ -335,6 +342,23 @@ export {
   SideNavSubLink,
   type SideNavSubLinkProps,
 } from "./components/side-nav/side-nav";
+export {
+  Sidebar,
+  SidebarButton,
+  type SidebarButtonProps,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  type SidebarGroupProps,
+  SidebarHeader,
+  SidebarItem,
+  type SidebarItemProps,
+  type SidebarProps,
+  SidebarSubItem,
+  type SidebarSubItemProps,
+  SidebarTrigger,
+  type SidebarTriggerProps,
+} from "./components/sidebar/sidebar";
 export {
   SiteFooter,
   SiteFooterBrand,
