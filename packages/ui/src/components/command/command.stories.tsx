@@ -153,14 +153,9 @@ function commands(onSelect: (value: string) => void = () => {}): CommandSection[
 
 type PaletteProps = Partial<CommandProps> & {
   onSelect?: (value: string) => void;
-  /** To compare: the list keeps one height instead of following its entries. */
-  fixed?: boolean;
-  /** To compare: how much the page behind is dimmed. */
-  scrim?: "full" | "light";
-  contentClassName?: string;
 };
 
-function Palette({ onSelect, fixed = false, scrim, contentClassName, ...props }: PaletteProps) {
+function Palette({ onSelect, ...props }: PaletteProps) {
   return (
     <Command items={commands(onSelect)} locale="de-DE" {...props}>
       <CommandTrigger render={<Button className="w-56 justify-start text-fg-muted" />}>
@@ -168,13 +163,9 @@ function Palette({ onSelect, fixed = false, scrim, contentClassName, ...props }:
         Suchen
         <Shortcut keys="mod+k" className="ml-auto" />
       </CommandTrigger>
-      <CommandContent scrim={scrim} className={contentClassName}>
+      <CommandContent>
         <CommandInput placeholder="z. B. Angebot schreiben" />
-        <CommandList
-          empty="Zu dieser Suche wurde kein Befehl gefunden."
-          grow={!fixed}
-          className={fixed ? "h-[22.5rem]" : undefined}
-        />
+        <CommandList empty="Zu dieser Suche wurde kein Befehl gefunden." />
         <CommandFooter />
       </CommandContent>
     </Command>
@@ -239,22 +230,6 @@ export const Page: Story = {
       <Palette defaultOpen modal={false} />
     </InPage>
   ),
-};
-
-/** To compare: the list keeps one height, whatever it holds. */
-export const FixedHeight: Story = {
-  render: () => <Palette defaultOpen modal={false} defaultQuery="ang" fixed />,
-};
-
-/** To compare: `scrim="light"`, the page behind is dimmed half as much as behind a dialog. */
-export const LightScrim: Story = {
-  render: () => <Palette defaultOpen modal={false} scrim="light" />,
-};
-
-/** To compare: the sheet is there at once, without the short growth on `snap`. */
-export const Instant: Story = {
-  parameters: { visual: { target: '[data-slot="command-trigger"]' } },
-  render: () => <Palette contentClassName="transition-none" />,
 };
 
 /** On a phone it keeps to the top of the window, above the keyboard, and shows no key hints. */

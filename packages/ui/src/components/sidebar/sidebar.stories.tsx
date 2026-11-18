@@ -423,15 +423,6 @@ export const Subpage: Story = {
   render: (args) => <Entries {...args} start="einstellungen" subpage="Team" />,
 };
 
-/**
- * To compare: `subpageMark="rule"`. The tint stays on the page above, and the subpage takes
- * the hairline beside it in the text colour.
- */
-export const SubpageRule: Story = {
-  parameters: { visual: { target: '[data-slot="sidebar-sub-item"]:not([aria-current])' } },
-  render: (args) => <Entries {...args} start="einstellungen" subpage="Team" subpageMark="rule" />,
-};
-
 /** On a subpage, collapsed to the rail: the subpages are folded away, so their page wears the tint. */
 export const RailSubpage: Story = {
   parameters: { visual: shell },
@@ -443,12 +434,10 @@ export const RailSubpage: Story = {
   ),
 };
 
-/** To compare: `travel={false}`, the tint changes its place at once. Nothing moves. */
-export const Instant: Story = {
-  render: (args) => <Entries {...args} travel={false} />,
-};
-
-/** To compare: the sidebar as a plate of its own (`bg-well`) instead of the page's ground. */
+/**
+ * The sidebar as a plate of its own beside the page: `bg-well` as its class. The page's ground
+ * with a hairline is the default; both are in use.
+ */
 export const Plate: Story = {
   parameters: { visual: shell },
   render: (args) => (

@@ -42,20 +42,11 @@ type SidebarLayout = {
   rail: boolean;
   /** The sidebar's name, which names its navigation. */
   label: string;
-  /** Whether the tint travels from entry to entry. */
-  travel: boolean;
-  /** What marks the subpage one is on: the tint, or the hairline beside it. */
-  subpageMark: "tint" | "rule";
   /** Called when an entry is pressed, inside the drawer: the drawer closes. */
   onNavigate?: () => void;
 };
 
-const SidebarLayoutContext = createContext<SidebarLayout>({
-  rail: false,
-  label: "",
-  travel: true,
-  subpageMark: "tint",
-});
+const SidebarLayoutContext = createContext<SidebarLayout>({ rail: false, label: "" });
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
@@ -87,23 +78,14 @@ export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
    * by a tooltip. `hidden`: nothing, and the page has the whole window.
    */
   collapse?: "rail" | "hidden";
-  /**
-   * The tint travels from the page that was current to the one that is now (the default). Set
-   * it to `false` and the tint changes its place at once.
-   */
-  travel?: boolean;
-  /**
-   * What marks the subpage one is on. `tint` (the default): the tint goes down to the subpage,
-   * and the page above it stays in the text colour. `rule`: the tint stays on the page above,
-   * and the subpage takes the hairline beside it in the text colour.
-   */
-  subpageMark?: "tint" | "rule";
 };
 
 /**
  * The navigation of an app, beside its pages: the places one works in, in groups, each with a
  * symbol. It is read and it leads somewhere, so it is flat: no shadow, a hairline to the page.
- * The page one is on stands on the tint, and the tint travels there when the page changes.
+ * The page one is on stands on the tint, and the tint travels there when the page changes; on a
+ * subpage it goes down to the subpage. By default it stands on the page's ground; `bg-well` as
+ * its class makes it a plate of its own beside the page.
  *
  * Put a `SidebarHeader`, a `SidebarContent` with the entries and a `SidebarFooter` inside, and
  * the sidebar inside an `AppShell`. The shell keeps whether it is open; a `SidebarTrigger`
@@ -117,8 +99,6 @@ export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
 export function Sidebar({
   "aria-label": label,
   collapse = "rail",
-  travel = true,
-  subpageMark = "tint",
   className,
   children,
   ...props
@@ -139,14 +119,11 @@ export function Sidebar({
       ?.focus();
   }, [gone]);
 
-  const layout = useMemo(
-    () => ({ rail, label, travel, subpageMark }),
-    [rail, label, travel, subpageMark],
-  );
+  const layout = useMemo(() => ({ rail, label }), [rail, label]);
   const closeDrawer = state?.setDrawerOpen;
   const drawerLayout = useMemo(
-    () => ({ rail: false, label, travel, subpageMark, onNavigate: () => closeDrawer?.(false) }),
-    [label, travel, subpageMark, closeDrawer],
+    () => ({ rail: false, label, onNavigate: () => closeDrawer?.(false) }),
+    [label, closeDrawer],
   );
 
   return (
@@ -244,7 +221,7 @@ export function SidebarFooter({ className, ...props }: ComponentProps<"div">) {
  * fading at the end that has more.
  */
 export function SidebarContent({ className, children, ...props }: ComponentProps<"nav">) {
-  const { label, travel } = useContext(SidebarLayoutContext);
+  const { label } = useContext(SidebarLayoutContext);
   const list = useRef<HTMLUListElement>(null);
   const mark = useRef<HTMLLIElement>(null);
   useTravellingMark(list, mark, {
@@ -256,7 +233,6 @@ export function SidebarContent({ className, children, ...props }: ComponentProps
     attribute: "data-current",
     still: "data-folding",
     folds: '[data-slot="sidebar-sub"]',
-    enabled: travel,
   });
   return (
     <nav
@@ -599,14 +575,14 @@ export function SidebarItem({
   onClick,
   ...props
 }: SidebarItemProps) {
-  const { rail, subpageMark, onNavigate } = useContext(SidebarLayoutContext);
+  const { rail, onNavigate } = useContext(SidebarLayoutContext);
   // On the rail there is no room for subpages: they fold away, and come back with it.
   const unfolded = (current || open) && !rail;
   // One of its subpages is the current page.
   const within = open && !current;
-  // The tint is the subpage's to wear. Where it cannot be seen there (folded away on the rail)
-  // or is not wanted there (`subpageMark="rule"`), the page above wears it.
-  const tinted = current || (within && (rail || subpageMark === "rule"));
+  // The tint is the subpage's to wear. Where it cannot be seen there (folded away on the
+  // rail), the page above wears it.
+  const tinted = current || (within && rail);
   const link = renderAs("a", render, {
     ...props,
     "data-slot": "sidebar-item",
@@ -677,27 +653,21 @@ export type SidebarSubItemProps = Omit<useRender.ComponentProps<"a">, "className
     current?: boolean;
   };
 
-/** What a subpage looks like under each `subpageMark`. Its name starts where the names above start. */
-const subItemMark = {
-  // The tint's own shape, set in from the hairline. The hairline stands on a half pixel (the
-  // middle of the symbol above); the half pixel here puts the shape back on whole ones, where
-  // the travelling tint is measured, and its name on the line of the names above.
-  tint: [
-    "ml-[7.5px] rounded-md pl-2.5 not-aria-[current=page]:hover:bg-hover data-current:bg-(--sidebar-current)",
-    "forced-colors:aria-[current=page]:outline forced-colors:aria-[current=page]:-outline-offset-1",
-  ].join(" "),
-  // On the hairline, which it takes in the text colour, as a `SideNav` marks its subpage.
-  rule: [
-    "-ml-px rounded-r-xs border-l border-transparent pl-4.5 hover:border-line aria-[current=page]:border-fg",
-    "forced-colors:aria-[current=page]:border-[Highlight]",
-  ].join(" "),
-} as const;
+/**
+ * The tint's own shape on a subpage, set in from the hairline. The hairline stands on a half
+ * pixel (the middle of the symbol above); the half pixel here puts the shape back on whole
+ * ones, where the travelling tint is measured, and its name on the line of the names above.
+ */
+const subItemShape = [
+  "ml-[7.5px] rounded-md pl-2.5 not-aria-[current=page]:hover:bg-hover data-current:bg-(--sidebar-current)",
+  "forced-colors:aria-[current=page]:outline forced-colors:aria-[current=page]:-outline-offset-1",
+].join(" ");
 
 /**
  * A subpage under an entry, with a 14px symbol if the subpages have them (all of them, or none:
  * the names should start on one line). The one being worked on stands on the tint, which comes
  * down to it from the page above; that page stays in the text colour, so the part of the app
- * one is in can still be told. (`subpageMark="rule"` on the `Sidebar` leaves the tint above.)
+ * one is in can still be told.
  */
 export function SidebarSubItem({
   icon,
@@ -709,14 +679,14 @@ export function SidebarSubItem({
   children,
   ...props
 }: SidebarSubItemProps) {
-  const { rail, subpageMark, onNavigate } = useContext(SidebarLayoutContext);
+  const { rail, onNavigate } = useContext(SidebarLayoutContext);
   const link = renderAs("a", render, {
     ...props,
     "data-slot": "sidebar-sub-item",
     "aria-current": current ? "page" : undefined,
     // The tint is this entry's to wear while it can be seen. Folded away on the rail, the page
     // above wears it (`SidebarItem`).
-    "data-current": current && subpageMark === "tint" && !rail ? "" : undefined,
+    "data-current": current && !rail ? "" : undefined,
     onClick: (event: MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event);
       onNavigate?.();
@@ -724,7 +694,7 @@ export function SidebarSubItem({
     className: cn(
       "group/row flex min-h-7 items-center gap-2 py-0.5 pr-2 text-sm text-fg-muted select-none hover:text-fg",
       "aria-[current=page]:font-medium aria-[current=page]:text-fg",
-      subItemMark[subpageMark],
+      subItemShape,
       focusRing,
       className,
     ),

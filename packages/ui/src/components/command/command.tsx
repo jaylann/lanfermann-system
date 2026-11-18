@@ -217,27 +217,17 @@ export function CommandTrigger(props: DialogPrimitive.Trigger.Props) {
   return <DialogPrimitive.Trigger data-slot="command-trigger" {...props} />;
 }
 
-export type CommandContentProps = DialogPrimitive.Popup.Props & {
-  /**
-   * How much the page behind is dimmed: `full` like a dialog (the default), or `light`, half of
-   * that, for a palette one looks past at the page it was called over.
-   */
-  scrim?: "full" | "light";
-};
+export type CommandContentProps = DialogPrimitive.Popup.Props;
 
 /**
- * The sheet, with its scrim. It stands in the upper third of the window, where the eyes are
- * and where a phone's keyboard leaves it alone.
+ * The sheet, with its scrim: the page behind is dimmed as it is behind a dialog. It stands in
+ * the upper third of the window, where the eyes are and where a phone's keyboard leaves it
+ * alone.
  *
  * It is opened many times a day, mostly from the keyboard, so it does not make an entrance: it
  * is there on `snap`, grown by a fiftieth and without travel, and it leaves by fading.
  */
-export function CommandContent({
-  scrim = "full",
-  className,
-  children,
-  ...props
-}: CommandContentProps) {
+export function CommandContent({ className, children, ...props }: CommandContentProps) {
   const ground = useGround();
   const { label, locale, items, query, setQuery, close } = useCommand("CommandContent");
   // Base UI's own matcher, set to compare letters by their base: "gart" finds "Gärtnerei". Its
@@ -255,10 +245,7 @@ export function CommandContent({
   );
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Backdrop
-        data-slot="command-backdrop"
-        className={cn(overlayBackdrop, scrim === "light" && "opacity-50")}
-      />
+      <DialogPrimitive.Backdrop data-slot="command-backdrop" className={overlayBackdrop} />
       <DialogPrimitive.Viewport
         data-slot="command-viewport"
         className="fixed inset-0 z-50 flex max-h-dvh items-start justify-center overflow-hidden px-3 pt-[min(18dvh,9rem)] pb-3"
@@ -404,11 +391,6 @@ export type CommandListProps = Omit<ComponentProps<"div">, "children"> & {
    * looked for ("Zu dieser Suche wurde nichts gefunden.").
    */
   empty?: ReactNode;
-  /**
-   * The sheet follows the height of the list as it changes (the default). Set it to `false`
-   * and the list keeps the height its class gives it.
-   */
-  grow?: boolean;
 };
 
 /**
@@ -416,7 +398,7 @@ export type CommandListProps = Omit<ComponentProps<"div">, "children"> & {
  * Enter takes it; the arrows move the highlight, which is instant like a menu's. The list is
  * as tall as what it holds, up to a limit, and the sheet follows it instead of jumping.
  */
-export function CommandList({ empty, grow = true, className, ...props }: CommandListProps) {
+export function CommandList({ empty, className, ...props }: CommandListProps) {
   const { trail, direction } = useCommand("CommandList");
   const list = (
     <ScrollFade
@@ -465,7 +447,8 @@ export function CommandList({ empty, grow = true, className, ...props }: Command
       </div>
     </ScrollFade>
   );
-  return grow ? <Grow data-slot="command-grow">{list}</Grow> : list;
+  // The sheet follows the list's height as it changes while one types, instead of jumping.
+  return <Grow data-slot="command-grow">{list}</Grow>;
 }
 
 function Hint({ keys, children }: { keys: string; children: ReactNode }) {
