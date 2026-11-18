@@ -4,6 +4,7 @@ import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar";
 import { type ComponentProps, type ReactNode, useRef, useState } from "react";
 
 import { Button, type ButtonProps } from "@/components/button/button";
+import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { CloseGlyph } from "@/internal/glyphs";
 import { RollingNumber } from "@/internal/rolling-number";
 import { cn } from "@/lib/cn";
@@ -132,12 +133,16 @@ export function ActionBar({
           data-slot="action-bar-separator"
           className="mx-1 h-5 w-px shrink-0 bg-hairline"
         />
-        <div
+        {/* Where the bar is too narrow for its actions they scroll inside it, and the edge that
+            has more fades instead of cutting a word in two. The box clips, so it is 4px larger
+            than its buttons on every side: the focus outline of a button is whole. */}
+        <ScrollFade
+          axis="x"
           data-slot="action-bar-actions"
-          className="flex min-w-0 [scrollbar-width:none] items-center gap-0.5 overflow-x-auto"
+          className="-m-1 flex min-w-0 [scrollbar-width:none] items-center gap-0.5 p-1"
         >
           {children}
-        </div>
+        </ScrollFade>
         <ToolbarPrimitive.Button
           data-slot="action-bar-clear"
           render={
