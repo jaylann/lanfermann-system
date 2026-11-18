@@ -204,10 +204,17 @@
    * Lines that change (CodeBlockLive, code-lines-live.tsx). Only once the block stands
    * (`data-live`): what is there when it first shows does not move.
    *
-   * A row opens from nothing and closes to nothing on `settle`; that is the one height that moves
-   * here, because the lines below have to make room (motion.md). A `Grow` around the block sees
-   * it moving and follows. A line that goes fades on `leave` while its row closes, is not counted
-   * and has no number. Every state is a transition, so a line that comes back mid-way turns round.
+   * A line that joins opens like a fold: its row opens from nothing on `settle` and pushes the
+   * lines below down, while its text fades in and drops into place from just above
+   * (`--motion-enter-offset`). Chosen by Justin over a flap and a drawer (DESIGN.md). The row is
+   * the one height that moves here, because the lines below have to make room (motion.md); a
+   * `Grow` around the block sees it moving and follows. A line that goes fades on `leave` while
+   * its row closes, is not counted and has no number. Every state is a transition, so a line that
+   * comes back mid-way turns round.
+   *
+   * Part way, a row of `f fr` is narrower than the line around it (f times f, against f, of the
+   * line's height: fractions under 1 share out only part of the room). The line's own height is
+   * what makes room and what is seen, as it clips; the text overflows its row into it.
    */
   [data-live] > [data-slot="code-block-line"] {
     transition: grid-template-rows var(--transition-duration-spring-settle)
@@ -219,8 +226,11 @@
   [data-live] > [data-slot="code-block-line"] > [data-slot="code-block-line-body"] {
     transition:
       opacity var(--transition-duration-spring-settle) var(--ease-spring-settle),
-      translate var(--transition-duration-spring-settle) var(--ease-spring-settle),
-      rotate var(--transition-duration-spring-seat) var(--ease-spring-seat);
+      translate var(--transition-duration-spring-settle) var(--ease-spring-settle);
+    @starting-style {
+      opacity: 0;
+      translate: 0 calc(-1 * var(--motion-enter-offset));
+    }
   }
   [data-slot="code-block-line"][data-motion="leave"] {
     grid-template-rows: 0fr;
@@ -237,44 +247,9 @@
   }
 
   /*
-   * How the text of a joining line arrives while its row opens. Three to compare, until one is
-   * chosen (DESIGN.md).
-   *   unfold  it fades in and drops into place from just above (`--motion-enter-offset`)
-   *   flap    it swings down from its top edge, from behind the line above, and seats
-   *   drawer  it stands at the foot of the opening row, so it slides out from under the line
-   *           above as the row opens; no fade
-   */
-  [data-live][data-line-motion="unfold"] > [data-slot="code-block-line"] > * {
-    @starting-style {
-      opacity: 0;
-      translate: 0 calc(-1 * var(--motion-enter-offset));
-    }
-  }
-  [data-live][data-line-motion="flap"] > [data-slot="code-block-line"] {
-    perspective: 24em;
-    & > [data-slot="code-block-line-body"] {
-      transform-origin: 50% 0;
-      @starting-style {
-        rotate: x -90deg;
-      }
-    }
-  }
-  /*
-   * Part way, a row of `f fr` is narrower than the line around it (f times f, against f, of the
-   * line's height: fractions under 1 share out only part of the room). The line's own height is
-   * what makes room and what is seen, as it clips; so the drawer's row sits at the line's foot,
-   * and the text stands on that.
-   */
-  [data-live][data-line-motion="drawer"] > [data-slot="code-block-line"] {
-    align-content: end;
-    & > [data-slot="code-block-line-body"] {
-      align-self: end;
-    }
-  }
-
-  /*
-   * What a change put into a line that stays (a value, a comma) arrives as new: it fades in
-   * (`fade`), or also lights up in the accent and lets the light go (`glow`).
+   * What a change put into a line that stays (a value, a comma) arrives as new. Two styles, both
+   * kept (DESIGN.md): it fades in (`fade`, Einblenden), or also lights up in the accent and lets
+   * the light go (`glow`, Aufleuchten).
    */
   [data-live] [data-slot="code-block-fresh"] {
     transition:
@@ -292,19 +267,11 @@
     }
   }
 
-  /* Under reduced motion rows do not open or close, and nothing travels or turns: only fades. */
+  /* Under reduced motion rows do not open or close, and the text does not travel (the offset is
+     zero, motion.css): it only fades. */
   @media (prefers-reduced-motion: reduce) {
-    /* As specific as the variants above, and later, so it wins over each of them. */
-    [data-live][data-line-motion] > [data-slot="code-block-line"] {
+    [data-live] > [data-slot="code-block-line"] {
       transition: none;
-      perspective: none;
-      & > [data-slot="code-block-line-body"] {
-        @starting-style {
-          opacity: 0;
-          translate: none;
-          rotate: none;
-        }
-      }
     }
   }
 

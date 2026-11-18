@@ -9,18 +9,14 @@ import { changedRange, diffLines } from "./line-diff";
 import { type LineKind, lineKinds } from "./lines";
 
 /**
- * How a line that joins a live block arrives. While its row opens and pushes the lines below
- * down, the text fades in and drops into place (`unfold`), swings down from its top edge like a
- * flap (`flap`), or slides out from under the line above (`drawer`).
+ * How the part of a line that a change put in shows (a value, a comma): it fades in (`fade`),
+ * or also lights up in the accent and lets the light go (`glow`), for a change the reader should
+ * not miss.
  */
-export type CodeLineMotion = "unfold" | "flap" | "drawer";
-
-/** How the part of a line that a change put in shows: it fades in, or also lights up briefly. */
 export type CodeChangeMotion = "fade" | "glow";
 
 export type CodeLinesLiveProps = CodeLinesOptions & {
   lines: readonly (readonly CodeToken[])[];
-  lineMotion?: CodeLineMotion;
   changeMotion?: CodeChangeMotion;
 };
 
@@ -148,17 +144,17 @@ function arrange({ lines, leaving, fresh }: Rows): CodeRow[] {
 
 /**
  * The lines of a `CodeBlockLive`: `CodeLinesView` for code that changes under the reader's hand.
- * When the code changes, the lines are matched to the ones before (line-diff.ts). A new line's
- * row opens and pushes the lines below down, a gone line fades and its row closes, and the part
- * of a line that changed shows as new. What stands when the block first shows does not move,
- * and neither does a block that has just mounted (the panel of another tab).
+ * When the code changes, the lines are matched to the ones before (line-diff.ts). A new line
+ * opens like a fold: its row opens and pushes the lines below down while its text fades in. A
+ * gone line fades and its row closes, and the part of a line that changed shows as new
+ * (code.css). What stands when the block first shows does not move, and neither does a block
+ * that has just mounted (the panel of another tab).
  */
 export function CodeLinesLive({
   lines,
   marked,
   added,
   removed,
-  lineMotion = "unfold",
   changeMotion = "fade",
   ...options
 }: CodeLinesLiveProps) {
@@ -220,7 +216,6 @@ export function CodeLinesLive({
       ref={code}
       rows={arrange(rows)}
       data-live={live ? "" : undefined}
-      data-line-motion={lineMotion}
       data-change-motion={changeMotion}
       {...options}
     />

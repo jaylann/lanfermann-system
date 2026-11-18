@@ -5,7 +5,7 @@ import type { IconSvgElement } from "@/components/icon/icon";
 
 import { CodeBlockFrame } from "./code-block-frame";
 import type { CodeKeyOptions } from "./code-keys";
-import { type CodeChangeMotion, type CodeLineMotion, CodeLinesLive } from "./code-lines-live";
+import { type CodeChangeMotion, CodeLinesLive } from "./code-lines-live";
 import type { CodeLinesOptions, CodeToken } from "./code-lines-view";
 import { codeFileName, parseLines } from "./lines";
 
@@ -52,10 +52,10 @@ export type CodeBlockLiveProps = CodeLinesOptions &
     foldLabel?: (hidden: number) => string;
     className?: string;
     /**
-     * How a line that joins arrives, and how a changed part of a line shows. For the comparison
-     * board only, until one of each is chosen (DESIGN.md).
+     * How what a change put into a line (a value, a comma) shows: it fades in (`fade`, the
+     * default), or also lights up in the accent for a moment (`glow`), for a change the reader
+     * should not miss.
      */
-    lineMotion?: CodeLineMotion;
     changeMotion?: CodeChangeMotion;
   };
 
@@ -71,9 +71,10 @@ export type CodeBlockLiveProps = CodeLinesOptions &
  * is built, `CodeBlockLive` for code that changes under the reader's hand. Mark the lines their
  * choice put there (`marked`), so they see what it changed.
  *
- * When the code changes, the block shows the change: a line that joins opens its row and the
- * lines below make room, a line that goes fades and its row closes, and what a change put into a
- * line arrives as new. The block's height follows, so a `Grow` around it needs nothing more.
+ * When the code changes, the block shows the change: a line that joins opens like a fold (its
+ * row opens and the lines below make room while its text fades in), a line that goes fades and
+ * its row closes, and what a change put into a line arrives as new (`changeMotion`). The block's
+ * height follows, so a `Grow` around it needs nothing more.
  */
 export function CodeBlockLive({
   lines,
@@ -92,7 +93,6 @@ export function CodeBlockLive({
   wrap,
   addedLabel,
   removedLabel,
-  lineMotion,
   changeMotion,
   ...keyOptions
 }: CodeBlockLiveProps) {
@@ -135,7 +135,6 @@ export function CodeBlockLive({
         wrap={wrap}
         addedLabel={addedLabel}
         removedLabel={removedLabel}
-        lineMotion={lineMotion}
         changeMotion={changeMotion}
       />
     </CodeBlockFrame>

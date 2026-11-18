@@ -335,7 +335,7 @@ const changes = [
   { name: "change", click: '[data-slot="segment"][data-value="senden"]', frames: 8 },
 ];
 
-function LiveConfigurator(props: Pick<CodeBlockLiveProps, "lineMotion" | "changeMotion">) {
+function LiveConfigurator(props: Pick<CodeBlockLiveProps, "changeMotion">) {
   const [choice, setChoice] = useState(firstChoice);
   return (
     <div className="flex w-[min(40rem,calc(100vw-2rem))] flex-col gap-6">
@@ -349,9 +349,9 @@ function LiveConfigurator(props: Pick<CodeBlockLiveProps, "lineMotion" | "change
 }
 
 /**
- * Code that changes under the reader's hand. A line their choice adds opens its row and the
- * lines below make room; a line it takes out fades and its row closes; a value it changes shows
- * the new part. The text below the block moves with it.
+ * Code that changes under the reader's hand. A line their choice adds opens like a fold: its row
+ * opens, the lines below make room and its text fades in. A line it takes out fades and its row
+ * closes; a value it changes shows the new part. The text below the block moves with it.
  */
 export const LiveChanges: Story = {
   args: { code: "" },
@@ -359,44 +359,31 @@ export const LiveChanges: Story = {
   parameters: { visual: { viewport: { width: 760, height: 560 }, motion: changes } },
 };
 
-const lineMotions = [
-  { value: "unfold", label: "Aufklappen" },
-  { value: "flap", label: "Klappe" },
-  { value: "drawer", label: "Schublade" },
+const changeMotions = [
+  { value: "fade", label: "Einblenden" },
+  { value: "glow", label: "Aufleuchten" },
 ] as const;
 
 /**
- * The board to choose from: one set of choices drives three blocks, one for each way a joining
- * line arrives, and the switch above sets how a changed value shows in all three.
+ * The two ways a changed value shows, driven by one set of choices: it fades in, or it also
+ * lights up for a moment, for a change the reader should not miss.
  */
-export const LineMotions: Story = {
+export const ChangeMotions: Story = {
   args: { code: "" },
   render: function Render() {
     const [choice, setChoice] = useState(firstChoice);
-    const [changeMotion, setChangeMotion] = useState<"fade" | "glow">("fade");
     const config = portalConfig(choice);
     return (
-      <div className="flex w-[min(78rem,calc(100vw-2rem))] flex-col gap-8">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <PortalChoices choice={choice} onChange={setChoice} />
-          <SegmentedControl
-            aria-label="Geänderter Wert"
-            value={changeMotion}
-            onValueChange={(value) => setChangeMotion(value as "fade" | "glow")}
-          >
-            <Segment value="fade">Einblenden</Segment>
-            <Segment value="glow">Aufleuchten</Segment>
-          </SegmentedControl>
-        </div>
-        <div className="grid items-start gap-6 lg:grid-cols-3">
-          {lineMotions.map((motion) => (
+      <div className="flex w-[min(60rem,calc(100vw-2rem))] flex-col gap-8">
+        <PortalChoices choice={choice} onChange={setChoice} />
+        <div className="grid items-start gap-6 md:grid-cols-2">
+          {changeMotions.map((motion) => (
             <figure key={motion.value} className="flex min-w-0 flex-col gap-3">
               <figcaption className="font-sans text-sm text-fg-muted">{motion.label}</figcaption>
               <CodeBlockLive
                 {...config}
                 title="claude_desktop_config.json"
-                lineMotion={motion.value}
-                changeMotion={changeMotion}
+                changeMotion={motion.value}
               />
             </figure>
           ))}
@@ -404,7 +391,12 @@ export const LineMotions: Story = {
       </div>
     );
   },
-  parameters: { visual: { viewport: { width: 1290, height: 640 }, motion: changes } },
+  parameters: {
+    visual: {
+      viewport: { width: 1040, height: 560 },
+      motion: changes.filter((change) => change.name === "change"),
+    },
+  },
 };
 
 /**
