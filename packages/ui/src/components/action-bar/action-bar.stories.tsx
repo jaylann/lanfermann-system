@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/table/table";
 
-import { ActionBar, ActionBarButton } from "./action-bar";
+import { ActionBar, ActionBarButton, type ActionBarProps } from "./action-bar";
 
 const meta = {
   title: "Components/ActionBar",
@@ -48,13 +48,15 @@ type SelectionProps = {
   start?: readonly string[];
   /** A narrow window: the actions are symbols alone. */
   narrow?: boolean;
+  /** What the bar is cut from: the dark sheet (the default) or the light one. */
+  ground?: ActionBarProps["ground"];
 };
 
 /**
  * A list of quotes whose rows can be ticked. The table needs nothing of its own for this: a
  * `Checkbox` per row, one in the head that stands for all of them, and the selection in state.
  */
-function Selection({ start = [], narrow = false }: SelectionProps) {
+function Selection({ start = [], narrow = false, ground }: SelectionProps) {
   const [selected, setSelected] = useState<readonly string[]>(start);
   const all = selected.length === QUOTES.length;
   const toggle = (id: string) =>
@@ -98,6 +100,7 @@ function Selection({ start = [], narrow = false }: SelectionProps) {
       </Table>
       <ActionBar
         position="absolute"
+        ground={ground}
         open={selected.length > 0}
         count={selected.length}
         onClear={() => setSelected([])}
@@ -151,6 +154,14 @@ export const Default: Story = {
     },
   },
   render: () => <Selection start={["2026-0421", "2026-0418"]} />,
+};
+
+/**
+ * `ground="paper"`: the bar as a light sheet. It is the one to take over a dark page, where the
+ * dark sheet would be dark on dark; look at it on the Ink ground.
+ */
+export const Light: Story = {
+  render: () => <Selection start={["2026-0421", "2026-0418"]} ground="paper" />,
 };
 
 /** Nothing is ticked yet: the bar is not there. It rises with the first row that is ticked. */

@@ -32,6 +32,12 @@ export type ActionBarProps = Omit<ComponentProps<"div">, "children"> & {
    * box.
    */
   position?: "fixed" | "sticky" | "absolute";
+  /**
+   * What it is cut from. `ink` (the default): a dark sheet, the way a toast speaks. `paper`: a
+   * light one. Take the one that stands apart from the page it floats over: the dark sheet
+   * over a light page, the light sheet over a dark one.
+   */
+  ground?: "ink" | "paper";
   /** The actions: `ActionBarButton`s. */
   children: ReactNode;
 };
@@ -46,7 +52,8 @@ const places = {
 /**
  * What can be done with the rows that are selected in a list: it rises at the foot of the
  * window with the first row that is ticked, counts them, and leaves with the last. It is the
- * system speaking about the selection, so it speaks on Ink, as a toast does.
+ * system speaking about the selection, so by default it speaks on Ink, as a toast does; over a
+ * dark page it can be the light sheet instead (`ground="paper"`).
  *
  * Put the actions inside as `ActionBarButton`s, worded like buttons ("Als PDF herunterladen").
  * Two or three; what is rare belongs in a `Menu` behind the last one. The bar is one stop for
@@ -63,6 +70,7 @@ export function ActionBar({
   clearLabel = "Auswahl aufheben",
   "aria-label": label = "Auswahl",
   position = "fixed",
+  ground = "ink",
   className,
   children,
   ...props
@@ -99,7 +107,7 @@ export function ActionBar({
     >
       <ToolbarPrimitive.Root
         data-slot="action-bar"
-        data-theme="ink"
+        data-theme={ground}
         data-open={open ? "" : undefined}
         aria-label={label}
         // Unseen, it is out of reach of the keyboard and of assistive tech as well.
