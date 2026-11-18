@@ -330,40 +330,54 @@ function ConsentBanner({ defaultView, ...card }: ConsentBannerProps) {
 
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Popup
-        ref={watch}
-        data-slot="consent-banner"
-        data-theme={pageGround}
-        // First visit: the card itself, not a button (that would lean towards an answer).
-        // Changing an answer: the settings' title.
-        initialFocus={() =>
-          (defaultView === "settings"
-            ? popup.current?.querySelector<HTMLElement>('[data-slot="consent-settings-title"]')
-            : popup.current) ?? true
-        }
-        className={consentSurface}
-      >
-        <ConsentCard
-          {...card}
-          defaultView={defaultView}
-          Title={DialogTitle}
-          Description={DialogDescription}
-        />
-      </DialogPrimitive.Popup>
+      <DialogPrimitive.Viewport data-slot="consent-anchor" className={consentAnchor}>
+        <DialogPrimitive.Popup
+          ref={watch}
+          data-slot="consent-banner"
+          data-theme={pageGround}
+          // First visit: the card itself, not a button (that would lean towards an answer).
+          // Changing an answer: the settings' title.
+          initialFocus={() =>
+            (defaultView === "settings"
+              ? popup.current?.querySelector<HTMLElement>('[data-slot="consent-settings-title"]')
+              : popup.current) ?? true
+          }
+          className={consentSurface}
+        >
+          <ConsentCard
+            {...card}
+            defaultView={defaultView}
+            Title={DialogTitle}
+            Description={DialogDescription}
+          />
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Viewport>
     </DialogPrimitive.Portal>
   );
 }
 
 /**
- * The card's surface and place: a sheet at the foot of the window, on the page's ground (white
- * on a light page, dark on a dark one). On a phone it spans the width above the home indicator;
- * on a wider window it stands in the bottom right corner. It rises 8px into place on `sheet` and
- * leaves by fading.
+ * Where the card stands: a line at the foot of the window, with no height and no colour. On a
+ * phone it spans the width above the home indicator; on a wider window it is the card's width in
+ * the bottom right corner.
+ *
+ * Safari 26 paints its toolbar in the background colour of a fixed layer it finds at the
+ * window's foot, and keeps the toolbar out while one stands there (Justin's iPhone, 2026-11-18:
+ * the bar came back, white). It passes over what a fixed layer holds in absolute position, so
+ * the fixed part here is this empty line and the card stands on it (`consentSurface`).
+ */
+export const consentAnchor = cn(
+  "fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-50 h-0",
+  "sm:right-[max(1rem,env(safe-area-inset-right))] sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:left-auto sm:w-108",
+);
+
+/**
+ * The card: a sheet on the page's ground (white on a light page, dark on a dark one), standing on
+ * `consentAnchor` and growing upwards. It rises 8px into place on `sheet` and leaves by fading.
  */
 export const consentSurface = cn(
-  "fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-50 flex max-h-[calc(100dvh-1rem)] flex-col",
+  "absolute inset-x-0 bottom-0 flex max-h-[calc(100dvh-1rem)] flex-col",
   "rounded-2xl bg-sheet p-5 text-fg-body depth-floating outline-hidden contain-layout",
-  "sm:right-[max(1rem,env(safe-area-inset-right))] sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:left-auto sm:w-108",
   "transition-[opacity,scale,translate] spring-sheet",
   "data-starting-style:translate-y-2 data-starting-style:scale-(--motion-enter-scale) data-starting-style:opacity-0",
   "data-ending-style:opacity-0 data-ending-style:spring-leave",

@@ -6,6 +6,7 @@ import { Button } from "@/components/button/button";
 import { linkVariants } from "@/components/link/link-variants";
 
 import {
+  consentAnchor,
   ConsentGate,
   ConsentProvider,
   type ConsentProviderProps,
@@ -156,16 +157,18 @@ export const SettingsOnFirstVisit: Story = {
     return (
       <ConsentProvider {...args} jar={jar}>
         <SamplePage>
-          <div data-slot="consent-banner" className={consentSurface}>
-            <ConsentCard
-              config={config}
-              labels={consentLabels}
-              privacyHref="#datenschutz"
-              imprintHref="#impressum"
-              granted={["matomo"]}
-              defaultView="settings"
-              onDecide={() => {}}
-            />
+          <div data-slot="consent-anchor" className={consentAnchor}>
+            <div data-slot="consent-banner" className={consentSurface}>
+              <ConsentCard
+                config={config}
+                labels={consentLabels}
+                privacyHref="#datenschutz"
+                imprintHref="#impressum"
+                granted={["matomo"]}
+                defaultView="settings"
+                onDecide={() => {}}
+              />
+            </div>
           </div>
         </SamplePage>
       </ConsentProvider>
