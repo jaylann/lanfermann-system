@@ -317,6 +317,15 @@ export {
 export { Separator, type SeparatorProps } from "./components/separator/separator";
 export { Shimmer, type ShimmerProps } from "./components/shimmer/shimmer";
 export {
+  Shortcut,
+  type ShortcutProps,
+  ShortcutProvider,
+  type ShortcutProviderProps,
+  usePlatform,
+  useShortcut,
+  type UseShortcutOptions,
+} from "./components/shortcut/shortcut";
+export {
   SideNav,
   SideNavGroup,
   type SideNavGroupProps,
@@ -426,4 +435,5 @@ export {
   type TraceSummaryProps,
 } from "./components/trace/trace";
 export { cn, mergeClassName } from "./lib/cn";
+export { type Platform } from "./lib/shortcut";
 export { type SpringName, springs, transitions } from "./motion/springs";
