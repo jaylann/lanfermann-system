@@ -1,8 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, spyOn, waitFor } from "storybook/test";
 
+import { Segment, SegmentedControl } from "@/components/segmented-control/segmented-control";
+import { Switch } from "@/components/switch/switch";
+
 import { CodeBlock } from "./code-block";
-import { CodeBlockLive, type CodePiece } from "./code-block-live";
+import { CodeBlockLive, type CodeBlockLiveProps, type CodePiece } from "./code-block-live";
 import { copyText } from "./lines";
 import { globalsBefore, passRenderer, readme, sendQuote } from "./samples";
 
@@ -237,6 +241,233 @@ export const Live: Story = {
       <CodeBlockLive lines={liveConfig} title="claude_desktop_config.json" marked={7} />
     </div>
   ),
+};
+
+type Reach = "lesen" | "entwerfen" | "senden";
+type PortalChoice = { reach: Reach; dryRun: boolean; log: boolean };
+
+const reaches: { value: Reach; label: string; allow?: string }[] = [
+  { value: "lesen", label: "Lesen" },
+  { value: "entwerfen", label: "Entwerfen", allow: "read,draft" },
+  { value: "senden", label: "Senden", allow: "read,draft,send" },
+];
+
+/** A line of JSON in the block's roles: keys, strings, numbers and the punctuation between. */
+function colourJson(line: string): CodePiece[] {
+  const pieces: CodePiece[] = [];
+  for (const [, space, text, colon, mark, word] of line.matchAll(
+    /(\s+)|("(?:[^"\\]|\\.)*")(\s*:)?|([{}[\],:])|([^\s{}[\],:"]+)/g,
+  )) {
+    if (space) pieces.push({ text: space });
+    else if (text) {
+      pieces.push({ text, role: colon ? "attribute" : "string" });
+      if (colon) pieces.push({ text: colon, role: "punct" });
+    } else if (mark) pieces.push({ text: mark, role: "punct" });
+    else if (word) pieces.push({ text: word, role: "number" });
+  }
+  return pieces;
+}
+
+/** The configuration a reader's choices make, with the lines their choices put there. */
+function portalConfig({ reach, dryRun, log }: PortalChoice) {
+  const env: Record<string, string> = { PORTAL_TOKEN: "<dein Token>" };
+  const allow = reaches.find((entry) => entry.value === reach)?.allow;
+  if (allow) env.PORTAL_ALLOW = allow;
+  if (dryRun) env.PORTAL_DRY_RUN = "1";
+  if (log) env.PORTAL_LOG = "/var/log/portal.jsonl";
+  const text = JSON.stringify(
+    { mcpServers: { kundenportal: { command: "npx", args: ["-y", "kundenportal-mcp"], env } } },
+    null,
+    2,
+  ).replace(/\[\n\s+("[^"]*"),\n\s+("[^"]*")\n\s+\]/, "[$1, $2]");
+  const lines = text.split("\n");
+  return {
+    lines: lines.map(colourJson),
+    marked: lines.flatMap((line, index) =>
+      /PORTAL_(ALLOW|DRY_RUN|LOG)/.test(line) ? [index + 1] : [],
+    ),
+  };
+}
+
+/** The reader's choices: how far the assistant may go, a dry run, a log. */
+function PortalChoices({
+  choice,
+  onChange,
+}: {
+  choice: PortalChoice;
+  onChange: (choice: PortalChoice) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-4 font-sans">
+      <SegmentedControl
+        shape="round"
+        aria-label="Reichweite"
+        value={choice.reach}
+        onValueChange={(reach) => onChange({ ...choice, reach: reach as Reach })}
+      >
+        {reaches.map((entry) => (
+          <Segment key={entry.value} value={entry.value}>
+            {entry.label}
+          </Segment>
+        ))}
+      </SegmentedControl>
+      <label data-setting="dry-run" className="flex items-center gap-3 text-control text-fg">
+        <Switch
+          checked={choice.dryRun}
+          onCheckedChange={(dryRun) => onChange({ ...choice, dryRun })}
+        />
+        Probelauf
+      </label>
+      <label data-setting="log" className="flex items-center gap-3 text-control text-fg">
+        <Switch checked={choice.log} onCheckedChange={(log) => onChange({ ...choice, log })} />
+        Protokoll
+      </label>
+    </div>
+  );
+}
+
+const firstChoice: PortalChoice = { reach: "entwerfen", dryRun: false, log: true };
+
+/** The three things a choice does to the code: a line joins, a line goes, a value changes. */
+const changes = [
+  { name: "join", click: '[data-setting="dry-run"] [data-slot="switch"]', frames: 8 },
+  { name: "leave", click: '[data-setting="log"] [data-slot="switch"]', frames: 8 },
+  { name: "change", click: '[data-slot="segment"][data-value="senden"]', frames: 8 },
+];
+
+function LiveConfigurator(props: Pick<CodeBlockLiveProps, "changeMotion">) {
+  const [choice, setChoice] = useState(firstChoice);
+  return (
+    <div className="flex w-[min(40rem,calc(100vw-2rem))] flex-col gap-6">
+      <PortalChoices choice={choice} onChange={setChoice} />
+      <CodeBlockLive {...portalConfig(choice)} title="claude_desktop_config.json" {...props} />
+      <p className="font-sans text-sm text-fg-muted">
+        Einfügen und den Client neu starten. Das Token liest der Server aus seiner Umgebung.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Code that changes under the reader's hand. A line their choice adds opens like a fold: its row
+ * opens, the lines below make room and its text fades in. A line it takes out fades and its row
+ * closes; a value it changes shows the new part. The text below the block moves with it.
+ */
+export const LiveChanges: Story = {
+  args: { code: "" },
+  render: () => <LiveConfigurator />,
+  parameters: { visual: { viewport: { width: 760, height: 560 }, motion: changes } },
+};
+
+const changeMotions = [
+  { value: "fade", label: "Einblenden" },
+  { value: "glow", label: "Aufleuchten" },
+] as const;
+
+/**
+ * The two ways a changed value shows, driven by one set of choices: it fades in, or it also
+ * lights up for a moment, for a change the reader should not miss.
+ */
+export const ChangeMotions: Story = {
+  args: { code: "" },
+  render: function Render() {
+    const [choice, setChoice] = useState(firstChoice);
+    const config = portalConfig(choice);
+    return (
+      <div className="flex w-[min(60rem,calc(100vw-2rem))] flex-col gap-8">
+        <PortalChoices choice={choice} onChange={setChoice} />
+        <div className="grid items-start gap-6 md:grid-cols-2">
+          {changeMotions.map((motion) => (
+            <figure key={motion.value} className="flex min-w-0 flex-col gap-3">
+              <figcaption className="font-sans text-sm text-fg-muted">{motion.label}</figcaption>
+              <CodeBlockLive
+                {...config}
+                title="claude_desktop_config.json"
+                changeMotion={motion.value}
+              />
+            </figure>
+          ))}
+        </div>
+      </div>
+    );
+  },
+  parameters: {
+    visual: {
+      viewport: { width: 1040, height: 560 },
+      motion: changes.filter((change) => change.name === "change"),
+    },
+  },
+};
+
+/**
+ * What a change does to the lines as the reader sees and copies them: the line a choice adds is
+ * there at once, the one it takes out is hidden from assistive tech while it closes and gone
+ * once it has, and nothing on its way out is ever copied. A choice undone mid-way leaves the
+ * lines as they were.
+ */
+export const LiveChangesTest: Story = {
+  args: { code: "" },
+  render: () => <LiveConfigurator />,
+  play: async ({ canvas, canvasElement, step, userEvent }) => {
+    const write = spyOn(navigator.clipboard, "writeText").mockResolvedValue();
+    const block = canvasElement.querySelector<HTMLElement>('[data-slot="code-block"]')!;
+    const lines = () => [...block.querySelectorAll<HTMLElement>('[data-slot="code-block-line"]')];
+    const shown = () => lines().filter((line) => line.dataset.motion !== "leave");
+    const text = () =>
+      shown()
+        .map((line) => line.textContent)
+        .join("\n");
+    const dryRun = canvasElement.querySelector<HTMLElement>(
+      '[data-setting="dry-run"] [data-slot="switch"]',
+    )!;
+    const log = canvasElement.querySelector<HTMLElement>(
+      '[data-setting="log"] [data-slot="switch"]',
+    )!;
+    const before = text();
+    try {
+      await step("A line the choice adds is there at once", async () => {
+        await userEvent.click(dryRun);
+        await waitFor(() => expect(text()).toContain('"PORTAL_DRY_RUN": "1"'));
+        await expect(text()).toBe(
+          portalConfig({ ...firstChoice, dryRun: true })
+            .lines.map((line) => line.map((piece) => piece.text).join(""))
+            .join("\n"),
+        );
+      });
+
+      await step("A line the choice takes out closes, hidden, and then is gone", async () => {
+        await userEvent.click(log);
+        const leaving = await waitFor(() => {
+          const line = block.querySelector<HTMLElement>('[data-motion="leave"]');
+          if (!line) throw new Error("no closing line");
+          return line;
+        });
+        await expect(leaving).toHaveAttribute("aria-hidden", "true");
+        await expect(leaving).toHaveTextContent("PORTAL_LOG");
+        await userEvent.click(canvas.getByRole("button", { name: "Code kopieren" }));
+        await expect(write).toHaveBeenLastCalledWith(
+          expect.not.stringContaining("PORTAL_LOG") as string,
+        );
+        await waitFor(() => expect(block.querySelector('[data-motion="leave"]')).toBeNull(), {
+          timeout: 2000,
+        });
+      });
+
+      await step("Choices undone at once leave the lines as they were", async () => {
+        await userEvent.click(log);
+        await userEvent.click(dryRun);
+        await userEvent.click(dryRun);
+        await userEvent.click(dryRun);
+        await waitFor(() => expect(block.querySelector('[data-motion="leave"]')).toBeNull(), {
+          timeout: 2000,
+        });
+        await expect(text()).toBe(before);
+        await expect(lines()).toHaveLength(before.split("\n").length);
+      });
+    } finally {
+      write.mockRestore();
+    }
+  },
 };
 
 /**

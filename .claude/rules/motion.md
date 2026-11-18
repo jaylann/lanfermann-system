@@ -11,7 +11,10 @@ drift. Never edit the generated file. The table and its uses: `packages/ui/DESIG
 - **Animate `translate`, `scale` and `opacity`, not `width`, `height`, insets or padding.** A
   layout property is laid out on every frame and stutters on a 120Hz phone. A fill is a bar
   pushed out of its trough (`troughFill`), a thumb a box moved by `translate` (`slider.css`).
-  Height is the exception where content below has to be pushed (a panel, an error).
+  Height is the exception where content below has to be pushed (a panel, an error, a line that
+  joins a `CodeBlockLive`, which opens its row with `grid-template-rows` from `0fr`). Part way,
+  a row of `f fr` is only f² of its content's height while its container is f: clip on the
+  container and let the content overflow the row.
 - What follows a finger eases on a bezier that stays within 0 and 1 (`--slider-chase`), not on
   a `linear()` spring: Safari runs only such a curve off its main thread.
 - On an iPhone, a transition that is retargeted on every touch move can stall: each move
