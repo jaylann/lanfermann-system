@@ -97,6 +97,7 @@ import {
   MenuCheckboxItem,
   MenuContent,
   MenuItem,
+  MenuLinkItem,
   MenuSeparator,
   MenuTrigger,
   Meter,
@@ -136,6 +137,8 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarItem,
+  SidebarMenu,
+  SidebarSubItem,
   SidebarTrigger,
   SideNav,
   SideNavGroup,
@@ -243,14 +246,36 @@ export default function Home() {
                 sidebarShortcut={false}
                 className="min-h-0 overflow-hidden rounded-xl border border-hairline"
               >
-                <Sidebar aria-label={`Navigation (${ground})`} className="static h-48">
+                <Sidebar aria-label={`Navigation (${ground})`} className="static h-64">
                   <SidebarContent>
                     <SidebarGroup title="Arbeit">
-                      <SidebarItem href="#angebote" current detail="12">
+                      <SidebarItem
+                        href="#angebote"
+                        open
+                        detail="12"
+                        sub={
+                          <>
+                            <SidebarSubItem href="#entwuerfe" current>
+                              Entwürfe
+                            </SidebarSubItem>
+                            <SidebarSubItem href="#gesendet">Gesendet</SidebarSubItem>
+                          </>
+                        }
+                      >
                         Angebote
                       </SidebarItem>
                       <SidebarItem href="#rechnungen">Rechnungen</SidebarItem>
                       <SidebarItem href="#kunden">Kunden</SidebarItem>
+                      <SidebarMenu
+                        items={
+                          <>
+                            <MenuLinkItem href="#vorlagen">Vorlagen</MenuLinkItem>
+                            <MenuLinkItem href="#artikel">Artikel</MenuLinkItem>
+                          </>
+                        }
+                      >
+                        Mehr
+                      </SidebarMenu>
                     </SidebarGroup>
                   </SidebarContent>
                 </Sidebar>
