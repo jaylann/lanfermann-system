@@ -5,7 +5,8 @@ import type { IconSvgElement } from "@/components/icon/icon";
 
 import { CodeBlockFrame } from "./code-block-frame";
 import type { CodeKeyOptions } from "./code-keys";
-import { type CodeLinesOptions, CodeLinesView, type CodeToken } from "./code-lines-view";
+import { type CodeChangeMotion, type CodeLineMotion, CodeLinesLive } from "./code-lines-live";
+import type { CodeLinesOptions, CodeToken } from "./code-lines-view";
 import { codeFileName, parseLines } from "./lines";
 
 /*
@@ -50,6 +51,12 @@ export type CodeBlockLiveProps = CodeLinesOptions &
     fold?: number;
     foldLabel?: (hidden: number) => string;
     className?: string;
+    /**
+     * How a line that joins arrives, and how a changed part of a line shows. For the comparison
+     * board only, until one of each is chosen (DESIGN.md).
+     */
+    lineMotion?: CodeLineMotion;
+    changeMotion?: CodeChangeMotion;
   };
 
 /**
@@ -63,6 +70,10 @@ export type CodeBlockLiveProps = CodeLinesOptions &
  * along, about a megabyte for a few lines. So: `CodeBlock` for code that is known when the page
  * is built, `CodeBlockLive` for code that changes under the reader's hand. Mark the lines their
  * choice put there (`marked`), so they see what it changed.
+ *
+ * When the code changes, the block shows the change: a line that joins opens its row and the
+ * lines below make room, a line that goes fades and its row closes, and what a change put into a
+ * line arrives as new. The block's height follows, so a `Grow` around it needs nothing more.
  */
 export function CodeBlockLive({
   lines,
@@ -81,6 +92,8 @@ export function CodeBlockLive({
   wrap,
   addedLabel,
   removedLabel,
+  lineMotion,
+  changeMotion,
   ...keyOptions
 }: CodeBlockLiveProps) {
   const coloured: CodeToken[][] = lines.map((line) =>
@@ -113,7 +126,7 @@ export function CodeBlockLive({
       wrap={wrap}
       {...keyOptions}
     >
-      <CodeLinesView
+      <CodeLinesLive
         lines={coloured}
         lineNumbers={lineNumbers}
         marked={marked}
@@ -122,6 +135,8 @@ export function CodeBlockLive({
         wrap={wrap}
         addedLabel={addedLabel}
         removedLabel={removedLabel}
+        lineMotion={lineMotion}
+        changeMotion={changeMotion}
       />
     </CodeBlockFrame>
   );
