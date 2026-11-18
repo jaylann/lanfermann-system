@@ -5,7 +5,15 @@ import { type ComponentProps, useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
 
-export type GrowProps = ComponentProps<"div">;
+export type GrowProps = ComponentProps<"div"> & {
+  /**
+   * Classes for the box inside, which holds the content and is the one that is measured. The
+   * layout of what the block holds (a flex row, a padding) goes here: on the block itself a
+   * padding or a minimum height would be added to the measured height and the block would
+   * never come to rest at it.
+   */
+  contentClassName?: string;
+};
 
 /** The transitions of a part inside that already move the content's height by themselves. */
 const heightProperties = new Set(["height", "max-height", "grid-template-rows"]);
@@ -51,7 +59,7 @@ function heightMoving(box: HTMLElement) {
  * Already on its way, it takes a new height as its goal from where it stands. Under reduced
  * motion it always follows.
  */
-export function Grow({ className, children, ref, ...props }: GrowProps) {
+export function Grow({ className, contentClassName, children, ref, ...props }: GrowProps) {
   const box = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
 
@@ -137,7 +145,7 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
       {...props}
     >
       {/* A block of its own, so the margins of what it holds stay inside the measured height. */}
-      <div ref={content} data-slot="grow-content" className="flow-root">
+      <div ref={content} data-slot="grow-content" className={cn("flow-root", contentClassName)}>
         {children}
       </div>
     </div>
