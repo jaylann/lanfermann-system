@@ -36,7 +36,9 @@
  *   viewport  { width, height }       the iframe size (default 720 by 480)
  *   clip      "content" | "viewport"  crop to the rendered content (default) or keep the viewport
  *   target    CSS selector            the control used for `states` (default: first control)
- *   motion    [{ name, click | hover | press: selector, frames? }]
+ *   motion    [{ name, click | hover | press | context: selector, type?, paste?, frames? }]
+ *             `context` is a right click. `type` and `paste` go to whatever has the focus after
+ *             the pointer step: text typed key by key, or one paste of the whole text.
  *   skip      true                    leave the story out
  *
  * Stories with a `play` function (Storybook tags them `play-fn`) are interaction tests, not
@@ -63,7 +65,19 @@ type Mode = "shots" | "states" | "motion" | "all";
 /** Stills (shots, states) and motion strips are taken in separate browser contexts. */
 type Pass = "stills" | "motion";
 type Clip = { x: number; y: number; width: number; height: number };
-type MotionSpec = { name: string; click?: string; hover?: string; press?: string; frames?: number };
+type MotionSpec = {
+  name: string;
+  click?: string;
+  hover?: string;
+  press?: string;
+  /** A right click, for a context menu. */
+  context?: string;
+  /** Typed key by key into what has the focus after the pointer step. */
+  type?: string;
+  /** Pasted in one go into what has the focus after the pointer step. */
+  paste?: string;
+  frames?: number;
+};
 type VisualParams = {
   viewport?: { width: number; height: number };
   clip?: "content" | "viewport";
@@ -500,6 +514,17 @@ async function captureMotion(page: Page, spec: MotionSpec, visual: VisualParams,
     await page.mouse.down();
   }
   if (spec.click) await page.locator(spec.click).first().click();
+  if (spec.context) await page.locator(spec.context).first().click({ button: "right" });
+  if (spec.type) await page.keyboard.type(spec.type);
+  if (spec.paste) {
+    await page.evaluate((text) => {
+      const data = new DataTransfer();
+      data.setData("text/plain", text);
+      document.activeElement?.dispatchEvent(
+        new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }),
+      );
+    }, spec.paste);
+  }
 
   const duration = await page.evaluate(async () => {
     const deadline = performance.now() + 600;
