@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/jaylann/lanfermann-system/compare/v0.4.0...v0.5.0) (2026-11-18)
+
+
+### Features
+
+* **ui:** show what a change does to the lines of a CodeBlockLive ([a0249d6](https://github.com/jaylann/lanfermann-system/commit/a0249d669175b58ca789b0fedd935f38d83e610c))
+
 ## [0.4.0](https://github.com/jaylann/lanfermann-system/compare/v0.3.0...v0.4.0) (2026-11-17)
 
 
