@@ -1,5 +1,24 @@
 "use server";
 
+import { cookies } from "next/headers";
+
+/**
+ * Sets the consent cookie from the server, so it lasts as long as the banner asked for: Safari
+ * keeps a cookie written by script for at most seven days. The value is what the banner wrote;
+ * it holds no ID. Script must still read it, so it is not `httpOnly`.
+ */
+export async function persistConsent(value: string, maxAge: number) {
+  // Only the shape the banner writes, and never longer than a year and a bit.
+  if (value.length > 2048 || !/^[\w%.~-]*$/.test(value)) return;
+  (await cookies()).set("lf-consent", decodeURIComponent(value), {
+    path: "/",
+    maxAge: Math.min(maxAge, 400 * 86_400),
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: false,
+  });
+}
+
 export type QuoteState = {
   /** What the server rejected, keyed by field name: `Form` shows each under its field. */
   errors: Record<string, string>;

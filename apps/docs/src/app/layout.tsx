@@ -4,6 +4,8 @@ import { cn } from "@lanfermann/ui";
 import type { Metadata } from "next";
 import { JetBrains_Mono, Sofia_Sans } from "next/font/google";
 
+import { Consent } from "./consent";
+
 // The library reads these two variables (see @lanfermann/ui styles/type.css). They must sit on
 // <html>: the root font stack resolves there, before <body> exists.
 const sofiaSans = Sofia_Sans({
@@ -29,7 +31,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="de" className={cn(sofiaSans.variable, jetBrainsMono.variable, "h-full")}>
       {/* Base UI: `relative` on body for iOS Safari backdrops, `isolate` root for portaled popups. */}
       <body className="relative min-h-full bg-ground font-sans text-fg-body">
-        <div className="isolate flex min-h-full flex-col">{children}</div>
+        <div className="isolate flex min-h-full flex-col">
+          <Consent>{children}</Consent>
+        </div>
       </body>
     </html>
   );

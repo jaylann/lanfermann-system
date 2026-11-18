@@ -39,6 +39,8 @@ import {
   Collapsible,
   CollapsiblePanel,
   CollapsibleTrigger,
+  ConsentEmbed,
+  ConsentSettingsTrigger,
   Cta,
   CtaAction,
   CtaActions,
@@ -547,6 +549,24 @@ export default function Home() {
           </Ground>
         ))}
       </main>
+      {/* Consent: a video that loads only with consent, and the way back to the settings. */}
+      <footer className="flex flex-col gap-6 border-t border-line px-6 py-10">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+          <ConsentEmbed service="youtube">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ"
+              title="Big Buck Bunny"
+              allow="encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          </ConsentEmbed>
+          <p className="flex gap-6 text-sm text-fg-muted">
+            <a href="#impressum">Impressum</a>
+            <a href="#datenschutz">Datenschutzerklärung</a>
+            <ConsentSettingsTrigger />
+          </p>
+        </div>
+      </footer>
       <Toaster />
     </TooltipProvider>
   );
