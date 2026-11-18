@@ -369,6 +369,8 @@ export {
   SidebarHeader,
   SidebarItem,
   type SidebarItemProps,
+  SidebarMenu,
+  type SidebarMenuProps,
   type SidebarProps,
   SidebarSubItem,
   type SidebarSubItemProps,

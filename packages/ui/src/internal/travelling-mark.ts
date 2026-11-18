@@ -36,8 +36,13 @@ function placeWithin(element: HTMLElement, box: HTMLElement): Place {
 }
 
 export type TravellingMarkOptions = {
-  /** Which entry inside the list the mark stands on. */
+  /** Which entry inside the list the mark stands on. Of several, the first in the page. */
   current?: string;
+  /**
+   * The attribute by which an entry says it is the current one, as `current` reads it. The
+   * list is watched for it: when it moves to another entry, the mark sets off.
+   */
+  attribute?: string;
   /**
    * The name of an attribute that a part of the list carries while it opens or closes
    * (`data-folding`). An entry inside such a part is clipped by it, which the mark cannot be:
@@ -86,7 +91,13 @@ export type TravellingMarkOptions = {
 export function useTravellingMark(
   listRef: RefObject<HTMLElement | null>,
   markRef: RefObject<HTMLElement | null>,
-  { current = '[aria-current="page"]', still, folds, enabled = true }: TravellingMarkOptions = {},
+  {
+    current = '[aria-current="page"]',
+    attribute = "aria-current",
+    still,
+    folds,
+    enabled = true,
+  }: TravellingMarkOptions = {},
 ) {
   useLayoutEffect(() => {
     const box = listRef.current;
@@ -177,7 +188,10 @@ export function useTravellingMark(
       // Only once the layout has arrived as well: seated earlier, it would jump back to an
       // entry that is still on its way.
       if (arrived) return seat();
-      draw({ x: at.x.value, y: at.y.value, w: at.w.value, h: at.h.value });
+      // Nothing leaves its container: while the list itself narrows (a sidebar on its way to
+      // the rail), the mark ends where the list ends, however far its own width still has to go.
+      const w = Math.min(at.w.value, Math.max(0, box.offsetWidth - at.x.value));
+      draw({ x: at.x.value, y: at.y.value, w, h: at.h.value });
       frame = requestAnimationFrame(tick);
     };
 
@@ -204,7 +218,7 @@ export function useTravellingMark(
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: still ? ["aria-current", still] : ["aria-current"],
+      attributeFilter: still ? [attribute, still] : [attribute],
     });
     // The layout moved. On its way the mark reads its goal every frame anyway; at rest it is
     // part of its entry and moves with it.
@@ -220,7 +234,7 @@ export function useTravellingMark(
       delete box.dataset.placed;
       delete piece.dataset.shown;
     };
-  }, [listRef, markRef, current, still, folds, enabled]);
+  }, [listRef, markRef, current, attribute, still, folds, enabled]);
 }
 
 /** A side that stands where it is. */

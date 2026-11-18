@@ -2,13 +2,21 @@ import {
   Add01Icon,
   Analytics01Icon,
   Calendar03Icon,
+  Clock01Icon,
+  CreditCardIcon,
+  DeliveryTruck01Icon,
   Home01Icon,
   InboxIcon,
   Invoice01Icon,
+  Layout01Icon,
   Logout01Icon,
+  MoreHorizontalIcon,
   NoteEditIcon,
   Notification01Icon,
+  PackageIcon,
   Settings01Icon,
+  Store01Icon,
+  UserGroupIcon,
   UserIcon,
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
@@ -25,13 +33,14 @@ import {
 import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
 import { BreadcrumbItem, BreadcrumbPage, Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
 import { Heading } from "@/components/heading/heading";
-import { Icon } from "@/components/icon/icon";
+import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import {
   Menu,
   MenuContent,
   MenuGroup,
   MenuGroupLabel,
   MenuItem,
+  MenuLinkItem,
   MenuRadioGroup,
   MenuRadioItem,
   MenuSeparator,
@@ -48,6 +57,7 @@ import {
   SidebarGroup,
   SidebarHeader,
   SidebarItem,
+  SidebarMenu,
   type SidebarProps,
   SidebarSubItem,
   SidebarTrigger,
@@ -60,7 +70,8 @@ const meta = {
   parameters: {
     layout: "fullscreen",
     visual: {
-      viewport: { width: 300, height: 600 },
+      // Wider than the sidebar: the menu of „Mehr“ opens beside it.
+      viewport: { width: 520, height: 640 },
       clip: "viewport",
       target: '[data-slot="sidebar-item"]:not([aria-current])',
     },
@@ -83,11 +94,25 @@ const pages = {
 
 type Page = keyof typeof pages;
 
-/** The pages that have pages of their own under them. */
-const subpages: Partial<Record<Page, readonly string[]>> = {
-  angebote: ["Entwürfe", "Gesendet", "Angenommen"],
-  einstellungen: ["Betrieb", "Team", "Abrechnung"],
+type Place = { name: string; icon?: IconSvgElement };
+
+/** The pages that have pages of their own under them: one set without symbols, one with. */
+const subpages: Partial<Record<Page, readonly Place[]>> = {
+  angebote: [{ name: "Entwürfe" }, { name: "Gesendet" }, { name: "Angenommen" }],
+  einstellungen: [
+    { name: "Betrieb", icon: Store01Icon },
+    { name: "Team", icon: UserGroupIcon },
+    { name: "Abrechnung", icon: CreditCardIcon },
+  ],
 };
+
+/** The places that are needed now and then: they wait in a menu beside the sidebar. */
+const more: readonly Required<Place>[] = [
+  { name: "Vorlagen", icon: Layout01Icon },
+  { name: "Artikel", icon: PackageIcon },
+  { name: "Zeiterfassung", icon: Clock01Icon },
+  { name: "Lieferanten", icon: DeliveryTruck01Icon },
+];
 
 const businesses = [
   { value: "huber", name: "Schreinerei Huber", initials: "SH" },
@@ -101,14 +126,25 @@ type EntriesProps = Partial<SidebarProps> & {
   subpage?: string;
   /** Whether the last group folds. */
   folds?: boolean;
+  /** Whether the menu beside the sidebar is open at first, so it shows in a still picture. */
+  moreOpen?: boolean;
 };
 
 /**
  * The sidebar of a workshop's office: a few places, and where one is kept in state. The story
  * has no router, so a press only changes which page counts as current.
  */
-function Entries({ start = "angebote", subpage, folds = false, ...props }: EntriesProps) {
-  const [at, setAt] = useState<{ page: Page; sub?: string }>({ page: start, sub: subpage });
+function Entries({
+  start = "angebote",
+  subpage,
+  folds = false,
+  moreOpen = false,
+  ...props
+}: EntriesProps) {
+  const [at, setAt] = useState<{ page: Page | "mehr"; sub?: string }>({
+    page: start,
+    sub: subpage,
+  });
   const [business, setBusiness] = useState("huber");
   const active = businesses.find((entry) => entry.value === business) ?? businesses[0];
 
@@ -123,9 +159,10 @@ function Entries({ start = "angebote", subpage, folds = false, ...props }: Entri
     children: pages[page],
     sub: subpages[page] && (
       <>
-        {subpages[page].map((name) => (
+        {subpages[page].map(({ name, icon }) => (
           <SidebarSubItem
             key={name}
+            icon={icon}
             href={`#${name}`}
             current={at.page === page && at.sub === name}
             onClick={(event) => {
@@ -191,6 +228,29 @@ function Entries({ start = "angebote", subpage, folds = false, ...props }: Entri
           <SidebarItem icon={Invoice01Icon} iconMotion="tilt" {...item("rechnungen")} />
           <SidebarItem icon={UserMultipleIcon} {...item("kunden")} />
           <SidebarItem icon={Calendar03Icon} {...item("termine")} />
+          <SidebarMenu
+            icon={MoreHorizontalIcon}
+            current={at.page === "mehr"}
+            defaultOpen={moreOpen}
+            modal={!moreOpen}
+            items={more.map(({ name, icon }) => (
+              <MenuLinkItem
+                key={name}
+                href={`#${name}`}
+                // The story has no router to take the reader away, so the menu closes itself.
+                closeOnClick
+                onClick={(event) => {
+                  event.preventDefault();
+                  setAt({ page: "mehr", sub: name });
+                }}
+              >
+                <Icon icon={icon} size={16} className="text-fg-muted" />
+                {name}
+              </MenuLinkItem>
+            ))}
+          >
+            Mehr
+          </SidebarMenu>
         </SidebarGroup>
         <SidebarGroup title="Verwaltung" collapsible={folds}>
           <SidebarItem icon={Analytics01Icon} {...item("auswertung")} />
@@ -262,7 +322,9 @@ const shell = { viewport: { width: 900, height: 560 }, clip: "viewport" } as con
 /**
  * The sidebar by itself, on the page „Angebote“, which has pages of its own under it. Press
  * another entry: the tint travels there while the subpages fold away, and „Einstellungen“
- * folds its own open. The workspace above and the person below each open a menu.
+ * folds its own open, with a symbol before each subpage. Press a subpage: the tint comes down
+ * to it. „Mehr“ opens a menu beside the sidebar; the workspace above and the person below each
+ * open one too.
  *
  * The tint's travel is stepped by hand, which a frame strip cannot hold still: the strips show
  * the folding, and the travel is looked at in the running story.
@@ -273,10 +335,16 @@ export const Default: Story = {
       motion: [
         { name: "fold", click: 'a[href="#termine"]', frames: 8 },
         { name: "unfold", click: 'a[href="#einstellungen"]', frames: 8 },
+        { name: "popout", click: '[data-slot="sidebar-menu"]', frames: 6 },
       ],
     },
   },
   render: (args) => <Entries {...args} />,
+};
+
+/** „Mehr“, open: the places that are needed now and then, each with its symbol. */
+export const MenuOpen: Story = {
+  render: (args) => <Entries {...args} moreOpen />,
 };
 
 /** Inside the shell, beside a page. The button in the bar, or ⌘B, collapses it to its rail. */
@@ -347,11 +415,32 @@ export const Folding: Story = {
 };
 
 /**
- * On a subpage, „Team“ under „Einstellungen“: the subpage takes the hairline in the text
- * colour, and its parent stands open without the tint.
+ * On a subpage, „Team“ under „Einstellungen“: the tint has come down to the subpage, and the
+ * page above it stays in the text colour.
  */
 export const Subpage: Story = {
+  parameters: { visual: { target: '[data-slot="sidebar-sub-item"]:not([aria-current])' } },
   render: (args) => <Entries {...args} start="einstellungen" subpage="Team" />,
+};
+
+/**
+ * To compare: `subpageMark="rule"`. The tint stays on the page above, and the subpage takes
+ * the hairline beside it in the text colour.
+ */
+export const SubpageRule: Story = {
+  parameters: { visual: { target: '[data-slot="sidebar-sub-item"]:not([aria-current])' } },
+  render: (args) => <Entries {...args} start="einstellungen" subpage="Team" subpageMark="rule" />,
+};
+
+/** On a subpage, collapsed to the rail: the subpages are folded away, so their page wears the tint. */
+export const RailSubpage: Story = {
+  parameters: { visual: shell },
+  render: (args) => (
+    <AppShell defaultSidebarOpen={false}>
+      <Entries {...args} start="einstellungen" subpage="Team" />
+      <Page />
+    </AppShell>
+  ),
 };
 
 /** To compare: `travel={false}`, the tint changes its place at once. Nothing moves. */
@@ -459,9 +548,12 @@ export const Keyboard: Story = {
       await expect(drafts).toHaveFocus();
       await userEvent.keyboard("{Enter}");
       await expect(drafts).toHaveAttribute("aria-current", "page");
-      await expect(canvas.getByRole("link", { name: /Angebote/ })).not.toHaveAttribute(
-        "aria-current",
-      );
+      // The tint is the subpage's now; the page above only says that one is inside it.
+      await expect(drafts).toHaveAttribute("data-current");
+      const above = canvas.getByRole("link", { name: /Angebote/ });
+      await expect(above).not.toHaveAttribute("aria-current");
+      await expect(above).not.toHaveAttribute("data-current");
+      await expect(above).toHaveAttribute("data-within");
     });
 
     await step(
@@ -502,6 +594,26 @@ export const Keyboard: Story = {
       await userEvent.keyboard("{Control>}b{/Control}");
       await expect(trigger).toHaveAttribute("aria-expanded", "true");
       await expect(sidebar).toHaveAttribute("data-state", "expanded");
+    });
+
+    await step("„Mehr“ opens its menu, and a place in it takes the page over", async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+      const moreEntry = canvas.getByRole("button", { name: "Mehr" });
+      await expect(moreEntry).toHaveFocus();
+      await expect(moreEntry).not.toHaveAttribute("aria-current");
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Vorlagen" })).toHaveFocus());
+      await userEvent.keyboard("{ArrowDown}");
+      await expect(screen.getByRole("menuitem", { name: "Artikel" })).toHaveFocus();
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+      await expect(moreEntry).toHaveFocus();
+      // Not a page itself: the current one is among what it holds.
+      await expect(moreEntry).toHaveAttribute("aria-current", "true");
+      await expect(canvas.getByRole("link", { name: "Rechnungen" })).not.toHaveAttribute(
+        "aria-current",
+      );
     });
   },
 };

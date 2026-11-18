@@ -1,6 +1,7 @@
 "use client";
 
 import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible";
+import type { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import type { useRender } from "@base-ui/react/use-render";
 import {
   type ComponentProps,
@@ -18,6 +19,7 @@ import {
 import { Button, type ButtonProps } from "@/components/button/button";
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "@/components/drawer/drawer";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
+import { Menu, MenuContent, MenuTrigger } from "@/components/menu/menu";
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { Shortcut } from "@/components/shortcut/shortcut";
 import {
@@ -42,11 +44,18 @@ type SidebarLayout = {
   label: string;
   /** Whether the tint travels from entry to entry. */
   travel: boolean;
+  /** What marks the subpage one is on: the tint, or the hairline beside it. */
+  subpageMark: "tint" | "rule";
   /** Called when an entry is pressed, inside the drawer: the drawer closes. */
   onNavigate?: () => void;
 };
 
-const SidebarLayoutContext = createContext<SidebarLayout>({ rail: false, label: "", travel: true });
+const SidebarLayoutContext = createContext<SidebarLayout>({
+  rail: false,
+  label: "",
+  travel: true,
+  subpageMark: "tint",
+});
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
@@ -83,6 +92,12 @@ export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
    * it to `false` and the tint changes its place at once.
    */
   travel?: boolean;
+  /**
+   * What marks the subpage one is on. `tint` (the default): the tint goes down to the subpage,
+   * and the page above it stays in the text colour. `rule`: the tint stays on the page above,
+   * and the subpage takes the hairline beside it in the text colour.
+   */
+  subpageMark?: "tint" | "rule";
 };
 
 /**
@@ -103,6 +118,7 @@ export function Sidebar({
   "aria-label": label,
   collapse = "rail",
   travel = true,
+  subpageMark = "tint",
   className,
   children,
   ...props
@@ -123,11 +139,14 @@ export function Sidebar({
       ?.focus();
   }, [gone]);
 
-  const layout = useMemo(() => ({ rail, label, travel }), [rail, label, travel]);
+  const layout = useMemo(
+    () => ({ rail, label, travel, subpageMark }),
+    [rail, label, travel, subpageMark],
+  );
   const closeDrawer = state?.setDrawerOpen;
   const drawerLayout = useMemo(
-    () => ({ rail: false, label, travel, onNavigate: () => closeDrawer?.(false) }),
-    [label, travel, closeDrawer],
+    () => ({ rail: false, label, travel, subpageMark, onNavigate: () => closeDrawer?.(false) }),
+    [label, travel, subpageMark, closeDrawer],
   );
 
   return (
@@ -229,8 +248,12 @@ export function SidebarContent({ className, children, ...props }: ComponentProps
   const list = useRef<HTMLUListElement>(null);
   const mark = useRef<HTMLLIElement>(null);
   useTravellingMark(list, mark, {
-    // A subpage wears the hairline, not the tint (`SidebarSubItem`).
-    current: '[data-slot="sidebar-item"][aria-current="page"]',
+    // Whichever entry wears the tint says so with `data-current`: a page, a subpage, or the
+    // page above a subpage that cannot wear it (`SidebarItem`). Of a page and its subpage the
+    // page comes first.
+    current:
+      ':is([data-slot="sidebar-item"], [data-slot="sidebar-sub-item"], [data-slot="sidebar-menu"])[data-current]',
+    attribute: "data-current",
     still: "data-folding",
     folds: '[data-slot="sidebar-sub"]',
     enabled: travel,
@@ -400,9 +423,13 @@ export function SidebarGroup({
 const row = [
   "group/row relative flex h-(--control-md) w-full shrink-0 items-center overflow-hidden rounded-md text-left text-control text-fg-body select-none",
   // Instant, like the highlight of a menu: it follows the pointer without lag.
-  "not-aria-[current=page]:hover:bg-hover hover:text-fg data-popup-open:text-fg not-aria-[current=page]:data-popup-open:bg-hover",
-  "aria-[current=page]:bg-(--sidebar-current) aria-[current=page]:font-medium aria-[current=page]:text-fg",
-  "forced-colors:aria-[current=page]:outline forced-colors:aria-[current=page]:-outline-offset-1",
+  "not-data-current:hover:bg-hover hover:text-fg data-popup-open:text-fg not-data-current:data-popup-open:bg-hover",
+  // `data-current`: this row wears the tint. That is the current page, and it is also the page
+  // above a subpage that cannot wear it; `aria-current` is said by the current page alone.
+  "data-current:bg-(--sidebar-current) data-current:font-medium data-current:text-fg",
+  // The page above the subpage one is on stays in the text colour: the part of the app one is in.
+  "data-within:text-fg",
+  "forced-colors:data-current:outline forced-colors:data-current:-outline-offset-1",
   focusRing,
 ].join(" ");
 
@@ -413,27 +440,27 @@ const rowStripMedia = "gap-1.5 px-[calc((var(--control-md)-1.5rem)/2)]";
 const rowLabel = cn("min-w-0 flex-1 truncate", leaves);
 const rowDetail = cn("flex shrink-0 items-center text-sm text-fg-muted tabular-nums", leaves);
 /**
- * The symbol answers the hand. Its colour eases from muted to full; under a press it dips and,
- * let go, seats back with the small bounce a button has (`seat`). Under the pointer it does one
- * small thing of its own, which `iconMotion` chooses. All of it is a transform, and none of it
- * runs under reduced motion.
+ * The symbol answers the hand. Under the pointer it darkens, from muted to the text colour, and
+ * that is all most symbols do. Under a press it dips and, let go, seats back with the small
+ * bounce a button has (`seat`). A symbol that has a motion of its own in it (a gear turns, a
+ * sheet is picked up) may show it under the pointer: `iconMotion`. The motions are transforms,
+ * and none of them runs under reduced motion.
  */
 const rowSymbol = [
   "text-fg-muted transition-[color,scale,rotate] spring-seat",
-  "group-hover/row:text-fg group-hover/row:spring-snap group-aria-[current=page]/row:text-fg group-data-popup-open/row:text-fg",
+  "group-hover/row:text-fg group-hover/row:spring-snap group-data-popup-open/row:text-fg",
+  "group-data-current/row:text-fg group-data-within/row:text-fg group-aria-[current=page]/row:text-fg",
   "motion-safe:group-active/row:scale-90 group-active/row:spring-snap",
 ].join(" ");
 
-/** What the symbol does under the pointer. */
+/** What the symbol does under the pointer, besides darkening. */
 const symbolMotion = {
-  /** It comes a little towards the hand. Right for nearly every symbol. */
-  lift: "motion-safe:group-hover/row:scale-110 motion-safe:group-active/row:scale-90",
+  /** Nothing. The default: a symbol is not sized up just so that something happens. */
+  none: "",
   /** It turns by a sixth: for what turns, a gear, a wheel, something that reloads. */
   turn: "motion-safe:group-hover/row:rotate-60",
   /** It leans, the way a sheet is picked up by its corner: for a page, a note, a letter. */
   tilt: "motion-safe:group-hover/row:-rotate-8",
-  /** It keeps still, apart from the press. */
-  none: "",
 } as const;
 
 /** Two chevrons that part a little: the row opens a menu. */
@@ -471,12 +498,30 @@ function UnfoldGlyph() {
   );
 }
 
+/**
+ * One chevron that points to where the menu opens: beside the sidebar. It leans there by a
+ * pixel under the pointer and while the menu is open. In the drawer the menu opens below.
+ */
+function AsideGlyph() {
+  return (
+    <ChevronRightGlyph
+      className={cn(
+        "shrink-0 transition-[translate] spring-seat group-hover/row:spring-snap in-data-drawer:rotate-90",
+        "motion-safe:group-hover/row:translate-x-px motion-safe:group-data-popup-open/row:translate-x-px",
+        "motion-safe:in-data-drawer:group-hover/row:translate-x-0 motion-safe:in-data-drawer:group-hover/row:translate-y-px",
+        "motion-safe:in-data-drawer:group-data-popup-open/row:translate-x-0 motion-safe:in-data-drawer:group-data-popup-open/row:translate-y-px",
+      )}
+    />
+  );
+}
+
 type RowParts = {
   /** The symbol in front of the name, from `@hugeicons/core-free-icons`. */
   icon?: IconSvgElement;
   /**
-   * What the symbol does under the pointer: `lift` (the default), `turn` for what turns (a
-   * gear), `tilt` for a sheet or a note, `none`. A press makes every symbol dip and seat back.
+   * What the symbol does under the pointer besides darkening: `none` (the default), `turn` for
+   * what turns (a gear), `tilt` for a sheet or a note. Give it only to a symbol that has such a
+   * motion in it. A press makes every symbol dip and seat back.
    */
   iconMotion?: keyof typeof symbolMotion;
   /** A picture in place of the symbol: an `Avatar size="sm"`. */
@@ -487,7 +532,7 @@ type RowParts = {
 
 function RowContent({
   icon,
-  iconMotion = "lift",
+  iconMotion = "none",
   media,
   detail,
   children,
@@ -528,8 +573,10 @@ export type SidebarItemProps = Omit<useRender.ComponentProps<"a">, "className"> 
      */
     sub?: ReactNode;
     /**
-     * Show `sub` although this page is not the current one: the reader is on one of its
-     * subpages, which then wears `current` itself.
+     * The reader is on one of its subpages, which then wears `current` itself: `sub` shows
+     * although this page is not the current one, and the page stays in the text colour. Say it
+     * only then. Where the subpage cannot wear the tint (folded away on the rail), this page
+     * wears it in its place.
      */
     open?: boolean;
   };
@@ -552,13 +599,20 @@ export function SidebarItem({
   onClick,
   ...props
 }: SidebarItemProps) {
-  const { rail, onNavigate } = useContext(SidebarLayoutContext);
+  const { rail, subpageMark, onNavigate } = useContext(SidebarLayoutContext);
   // On the rail there is no room for subpages: they fold away, and come back with it.
   const unfolded = (current || open) && !rail;
+  // One of its subpages is the current page.
+  const within = open && !current;
+  // The tint is the subpage's to wear. Where it cannot be seen there (folded away on the rail)
+  // or is not wanted there (`subpageMark="rule"`), the page above wears it.
+  const tinted = current || (within && (rail || subpageMark === "rule"));
   const link = renderAs("a", render, {
     ...props,
     "data-slot": "sidebar-item",
     "aria-current": current ? "page" : undefined,
+    "data-current": tinted ? "" : undefined,
+    "data-within": within ? "" : undefined,
     onClick: (event: MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event);
       onNavigate?.();
@@ -592,6 +646,9 @@ export function SidebarItem({
           className={cn(
             "grid grid-rows-[0fr] overflow-hidden opacity-0 transition-[grid-template-rows,opacity,visibility] spring-leave",
             "invisible data-open:visible data-open:grid-rows-[1fr] data-open:opacity-100 data-open:spring-settle",
+            // It clips, so it is 4px wider than its entries to both sides: the focus outline of
+            // a subpage is whole.
+            "-mx-1 px-1",
           )}
         >
           <div className="min-h-0">
@@ -599,8 +656,10 @@ export function SidebarItem({
                 part of what the box says it holds, and the tint asks it how tall it will be
                 (`folds` in `useTravellingMark`). */}
             <div className="pt-1 pb-1.5">
-              {/* The hairline runs down from the middle of the symbol above it. */}
-              <ul className="ml-[calc(var(--sidebar-pad)+0.5rem-0.5px)] flex w-(--sidebar-row) flex-col border-l border-hairline">
+              {/* The hairline runs down from the middle of the symbol above it, and the list
+                  ends where the rows end. Its width is a length, not what is left: nothing in
+                  it reflows while the sidebar collapses. */}
+              <ul className="ml-[calc(var(--sidebar-pad)+0.5rem-0.5px)] flex w-[calc(var(--sidebar-row)-var(--sidebar-pad)-0.5rem+0.5px)] flex-col gap-0.5 border-l border-hairline">
                 {sub}
               </ul>
             </div>
@@ -611,42 +670,166 @@ export function SidebarItem({
   );
 }
 
-export type SidebarSubItemProps = Omit<useRender.ComponentProps<"a">, "className"> & {
-  className?: string;
-  /** The subpage this entry leads to is the one being worked on. */
-  current?: boolean;
-};
+export type SidebarSubItemProps = Omit<useRender.ComponentProps<"a">, "className"> &
+  Pick<RowParts, "icon" | "iconMotion"> & {
+    className?: string;
+    /** The subpage this entry leads to is the one being worked on. */
+    current?: boolean;
+  };
+
+/** What a subpage looks like under each `subpageMark`. Its name starts where the names above start. */
+const subItemMark = {
+  // The tint's own shape, set in from the hairline. The hairline stands on a half pixel (the
+  // middle of the symbol above); the half pixel here puts the shape back on whole ones, where
+  // the travelling tint is measured, and its name on the line of the names above.
+  tint: [
+    "ml-[7.5px] rounded-md pl-2.5 not-aria-[current=page]:hover:bg-hover data-current:bg-(--sidebar-current)",
+    "forced-colors:aria-[current=page]:outline forced-colors:aria-[current=page]:-outline-offset-1",
+  ].join(" "),
+  // On the hairline, which it takes in the text colour, as a `SideNav` marks its subpage.
+  rule: [
+    "-ml-px rounded-r-xs border-l border-transparent pl-4.5 hover:border-line aria-[current=page]:border-fg",
+    "forced-colors:aria-[current=page]:border-[Highlight]",
+  ].join(" "),
+} as const;
 
 /**
- * A subpage under an entry. The one being worked on takes the hairline in the text colour, as
- * a `SideNav` marks its subpage; its parent then stands without the tint.
+ * A subpage under an entry, with a 14px symbol if the subpages have them (all of them, or none:
+ * the names should start on one line). The one being worked on stands on the tint, which comes
+ * down to it from the page above; that page stays in the text colour, so the part of the app
+ * one is in can still be told. (`subpageMark="rule"` on the `Sidebar` leaves the tint above.)
  */
 export function SidebarSubItem({
+  icon,
+  iconMotion = "none",
   current = false,
   render,
   className,
   onClick,
+  children,
   ...props
 }: SidebarSubItemProps) {
-  const { onNavigate } = useContext(SidebarLayoutContext);
+  const { rail, subpageMark, onNavigate } = useContext(SidebarLayoutContext);
   const link = renderAs("a", render, {
     ...props,
     "data-slot": "sidebar-sub-item",
     "aria-current": current ? "page" : undefined,
+    // The tint is this entry's to wear while it can be seen. Folded away on the rail, the page
+    // above wears it (`SidebarItem`).
+    "data-current": current && subpageMark === "tint" && !rail ? "" : undefined,
     onClick: (event: MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event);
       onNavigate?.();
     },
     className: cn(
-      // The name starts where the names of the entries above start.
-      "-ml-px flex min-h-7 items-center rounded-r-xs border-l border-transparent py-0.5 pr-2 pl-4.5 text-sm text-fg-muted select-none hover:border-line hover:text-fg",
-      "aria-[current=page]:border-fg aria-[current=page]:font-medium aria-[current=page]:text-fg",
-      "forced-colors:aria-[current=page]:border-[Highlight]",
+      "group/row flex min-h-7 items-center gap-2 py-0.5 pr-2 text-sm text-fg-muted select-none hover:text-fg",
+      "aria-[current=page]:font-medium aria-[current=page]:text-fg",
+      subItemMark[subpageMark],
       focusRing,
       className,
     ),
+    children: (
+      <>
+        {icon ? (
+          <Icon icon={icon} size={14} className={cn(rowSymbol, symbolMotion[iconMotion])} />
+        ) : null}
+        <span data-slot="sidebar-label" className="min-w-0 flex-1 truncate">
+          {children}
+        </span>
+      </>
+    ),
   });
   return <li data-slot="sidebar-sub-entry">{link}</li>;
+}
+
+export type SidebarMenuProps = Omit<useRender.ComponentProps<"button">, "className"> &
+  Omit<RowParts, "detail"> &
+  Pick<MenuPrimitive.Root.Props, "open" | "defaultOpen" | "onOpenChange" | "modal"> & {
+    className?: string;
+    /**
+     * What the menu holds: a `MenuLinkItem` for each place, with its 16px symbol before the
+     * name, or `MenuItem`s for things to do.
+     */
+    items: ReactNode;
+    /** One of the places in the menu is the page being worked on: the entry stands on the tint. */
+    current?: boolean;
+  };
+
+/**
+ * An entry that opens a menu beside the sidebar instead of leading somewhere: the places that
+ * are needed now and then and would make the list too long ("Mehr"). A chevron at its end
+ * points to where the menu opens. On the rail the menu opens from the symbol alone, and in the
+ * drawer of a narrow window it opens below the entry.
+ *
+ * Name it as what the menu holds, a noun, and put the places inside as `items`. What is needed
+ * every day stays in the list as a `SidebarItem`.
+ */
+export function SidebarMenu({
+  icon,
+  iconMotion,
+  media,
+  items,
+  current = false,
+  open,
+  defaultOpen = false,
+  onOpenChange,
+  modal,
+  render,
+  className,
+  children,
+  ...props
+}: SidebarMenuProps) {
+  const { rail, onNavigate } = useContext(SidebarLayoutContext);
+  const drawer = onNavigate !== undefined;
+  // Kept here as well, so the tooltip of the rail gives way to the menu while that is open.
+  const [unfolded, setUnfolded] = useState(defaultOpen);
+  const shown = open ?? unfolded;
+  const trigger = renderAs("button", render, {
+    type: "button",
+    ...props,
+    "data-slot": "sidebar-menu",
+    // Not a page itself, so not `page`: the current one is among what it holds.
+    "aria-current": current ? "true" : undefined,
+    "data-current": current ? "" : undefined,
+    className: cn(row, className),
+    children: (
+      <RowContent icon={icon} iconMotion={iconMotion} media={media} detail={<AsideGlyph />}>
+        {children}
+      </RowContent>
+    ),
+  });
+  return (
+    <li data-slot="sidebar-entry" className="flex flex-col">
+      <Menu
+        open={open}
+        defaultOpen={defaultOpen}
+        modal={modal}
+        onOpenChange={(next, details) => {
+          setUnfolded(next);
+          onOpenChange?.(next, details);
+        }}
+      >
+        <Tooltip disabled={!rail || shown}>
+          <TooltipTrigger render={<MenuTrigger render={trigger} />} />
+          <TooltipContent side="right" sideOffset={14}>
+            {children}
+          </TooltipContent>
+        </Tooltip>
+        <MenuContent
+          // 8px to the sidebar's edge and 6px beyond it, and up by the sheet's own padding, so
+          // its first row stands level with the entry.
+          side={drawer ? "bottom" : "right"}
+          align="start"
+          sideOffset={drawer ? 4 : 14}
+          alignOffset={drawer ? 0 : -4}
+          // A place was chosen: the drawer has done its work.
+          onClick={() => onNavigate?.()}
+        >
+          {items}
+        </MenuContent>
+      </Menu>
+    </li>
+  );
 }
 
 export type SidebarButtonProps = Omit<useRender.ComponentProps<"button">, "className"> &
