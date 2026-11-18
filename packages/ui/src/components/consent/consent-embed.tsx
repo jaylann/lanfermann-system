@@ -1,5 +1,6 @@
 "use client";
 
+import { Location01Icon, PlayIcon } from "@hugeicons/core-free-icons";
 import {
   type ComponentProps,
   type CSSProperties,
@@ -9,6 +10,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/button/button";
+import { Icon } from "@/components/icon/icon";
 import { linkVariants } from "@/components/link/link-variants";
 import { Spinner } from "@/components/spinner/spinner";
 import { cn } from "@/lib/cn";
@@ -21,6 +23,8 @@ export type ConsentEmbedProps = Omit<ComponentProps<"div">, "children"> & {
   service: string;
   /** The content's shape, as CSS `aspect-ratio`: „16 / 9“ for a video, „4 / 3“ for a map. */
   aspect?: string;
+  /** What it is, shown as a mark above the placeholder's title: a play mark or a map pin. */
+  kind?: "video" | "map";
   /** The content itself, usually an `<iframe>`. Rendered only with consent. */
   children: ReactNode;
 };
@@ -37,6 +41,7 @@ export type ConsentEmbedProps = Omit<ComponentProps<"div">, "children"> & {
 export function ConsentEmbed({
   service: serviceId,
   aspect = "16 / 9",
+  kind,
   className,
   style,
   children,
@@ -108,6 +113,15 @@ export function ConsentEmbed({
       {...props}
     >
       <div className="flex max-w-sm flex-col items-center gap-3">
+        {kind && (
+          // What waits here, at a glance. Drawn flat in a ring: it is no key, „Inhalt laden“ is.
+          <span
+            data-slot="consent-embed-mark"
+            className="mb-1 grid size-11 place-items-center rounded-full border border-line text-fg-muted"
+          >
+            <Icon icon={kind === "video" ? PlayIcon : Location01Icon} size={18} />
+          </span>
+        )}
         <p className="text-control leading-snug font-semibold text-balance text-fg">
           {labels.embedTitle(service)}
         </p>

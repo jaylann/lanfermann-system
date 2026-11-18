@@ -241,14 +241,23 @@ export const SettingsOnAPhone: Story = {
  * allow the service for good.
  */
 export const Embed: Story = {
-  parameters: { visual: { viewport: { width: 1100, height: 900 } } },
+  parameters: { visual: { viewport: { width: 1100, height: 1300 } } },
   render: (args) => {
     const [jar] = useState(() => answered(["matomo"]));
     return (
       <ConsentProvider {...args} jar={jar}>
         <SamplePage>
-          <ConsentEmbed service="youtube" className="mt-4">
+          <ConsentEmbed service="youtube" kind="video" className="mt-4">
             <SampleVideo />
+          </ConsentEmbed>
+          <ConsentEmbed service="google-maps" kind="map" aspect="4 / 3">
+            <div
+              role="img"
+              aria-label="Karte: Anfahrt zur Werkstatt"
+              className="grid size-full place-items-center bg-well text-sm text-fg-muted"
+            >
+              Karte: Anfahrt zur Werkstatt
+            </div>
           </ConsentEmbed>
           <ConsentGate service="matomo">
             <p className="text-sm text-fg-muted">Matomo zählt diesen Besuch.</p>
