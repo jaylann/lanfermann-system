@@ -292,6 +292,7 @@ export {
   type NumberFieldProps,
 } from "./components/number-field/number-field";
 export { Pager, PagerLink, type PagerLinkProps, type PagerProps } from "./components/pager/pager";
+export { Pagination, type PaginationProps } from "./components/pagination/pagination";
 export {
   Parameter,
   ParameterList,

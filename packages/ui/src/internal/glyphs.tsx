@@ -96,6 +96,15 @@ export function MinusGlyph(props: GlyphProps) {
   );
 }
 
+/** Three square dots on the middle line: something was left out here (pages, in a `Pagination`). */
+export function GapGlyph(props: GlyphProps) {
+  return (
+    <Glyph {...props}>
+      <path d="M1.5 6h1.75M5.125 6h1.75M8.75 6h1.75" />
+    </Glyph>
+  );
+}
+
 /** The direction mark of a sortable column: up is ascending; turned, descending. */
 export function ArrowUpGlyph(props: GlyphProps) {
   return (
