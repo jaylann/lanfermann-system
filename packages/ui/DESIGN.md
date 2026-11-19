@@ -205,6 +205,11 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
 - Popups grow out of their trigger (`--transform-origin`). Exits are shorter than entrances and
   do not travel.
 - Keyboard focus, menu highlight, error colours and page load do not animate.
+- **Typing does not wait.** What the keyboard does many times in a row is not eased: the halo
+  of an `OtpField` hops from slot to slot at once, and a digit is readable in its first frame;
+  only its seating springs. How often a motion is seen decides how much of it there is: a
+  `ContextMenu`, opened all day and under the hand, only fades in on `snap`; a step that is
+  finished or a file that arrives is rare and may take `settle`.
 - `box-shadow` transitions only on small controls. Under reduced motion only opacity changes.
 - Travelling parts are placed from measured offsets and moved with a CSS spring, not with a
   scale-based layout animation: that distorts shadows and breaks under CSS `zoom`.
@@ -290,12 +295,12 @@ that sit inside controls at 10 to 12px (tick, dash, chevron, close) are drawn in
 
 Every component belongs to one of the four matters, and takes its treatment from it.
 
-| Matter  | Components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Panel   | `Text`, `Heading`, `Link`, `Separator`, `Badge`, `Alert`, `Avatar`, `Icon`, `Spinner`, `Field`, `Fieldset`, `Form`, `Table`, `Ground`, `Wordmark`, `Logomark`, `Code`, `CodeBlock`, `CodeBlockLive`, `CodeTabs`, `Container`, `Section`, `SiteFooter`, `Prose`, `AnchorHeading`, `Callout`, `Quote`, `Breadcrumbs`, `SideNav`, `TableOfContents`, `Pager`, `ParameterList`, `ReferenceEntry`, `Figure`, `DocsLayout`, `ScrollFade`, `Shimmer`, `Trace`, `Grow`, `Sidebar`, `AppShell`, `Empty`, `Skeleton`, `Pagination`; `Accordion` and `Collapsible` are structure by line; `Seam` is the edge between two sections' plates, the one panel with a shadow |
-| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                                                                                                     |
-| Socket  | `Input`, `InputGroup`, `Textarea`, `NumberField`, `Combobox`, `DateField`, `DateRangeField`, `TimeField`, `Checkbox`, `CheckboxGroup`, `Radio`, `Switch`; the troughs of `Slider`, `Progress` and `Meter`                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Sheet   | `Menu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `ActionBar`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                          |
+| Matter  | Components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Panel   | `Text`, `Heading`, `Link`, `Separator`, `Badge`, `Alert`, `Avatar`, `Icon`, `Spinner`, `Field`, `Fieldset`, `Form`, `Table`, `Ground`, `Wordmark`, `Logomark`, `Code`, `CodeBlock`, `CodeBlockLive`, `CodeTabs`, `Container`, `Section`, `SiteFooter`, `Prose`, `AnchorHeading`, `Callout`, `Quote`, `Breadcrumbs`, `SideNav`, `TableOfContents`, `Pager`, `ParameterList`, `ReferenceEntry`, `Figure`, `DocsLayout`, `ScrollFade`, `Shimmer`, `Trace`, `Grow`, `Sidebar`, `AppShell`, `Empty`, `Skeleton`, `Pagination`, `Steps`, `Toolbar` (the tray its keys stand in), the rows of a `FileUpload`; `Accordion` and `Collapsible` are structure by line; `Seam` is the edge between two sections' plates, the one panel with a shadow |
+| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), `Toggle`, `ToggleGroup` (one fitting whose keys stay down), `CopyButton`, `RadioCard` and `CheckboxCard` (a softly raised sheet that is pressed), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                                |
+| Socket  | `Input`, `InputGroup`, `Textarea`, `NumberField`, `Combobox`, `DateField`, `DateRangeField`, `TimeField`, `OtpField`, `SecretField`, `Checkbox`, `CheckboxGroup`, `Radio`, `Switch`, the zone of a `FileUpload`; the troughs of `Slider`, `Progress` and `Meter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Sheet   | `Menu`, `ContextMenu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `ActionBar`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 - **Select** has a raised trigger, not a field: it is pressed, not typed into. In its list only
   the chosen option carries the mark (a disc); the rings are left out to keep long lists calm.
@@ -548,9 +553,63 @@ Every component belongs to one of the four matters, and takes its treatment from
   never takes the focus as it appears. It is one stop for Tab, the arrows move inside it, and
   Escape or its cross takes the selection back and returns the focus to where it came from.
   Beside a sidebar it stands in the page's own column (`position="sticky"`).
+- **A multi-select** is a `Combobox multiple` whose field is a `ComboboxChips`: every chosen
+  option is a `Chip` seated in the socket, with the input after the last one. Backspace in the
+  empty input takes the last chip and Arrow left walks into them. A chip that joins seats into
+  its place, one that leaves fades while its neighbours close up, and when the chips need
+  another line the socket itself eases to its new height (`Grow`), so what stands below is
+  pushed. The list stays open after a choice and the typed text goes, so several values are
+  taken in a row. With `onCreate` a last row offers to make what was typed („Dringend“
+  anlegen).
+- **OtpField** is a one-time code: a slot per character, in threes, the way a code is read
+  out, with a short line between the groups. The slot being typed wears the field's halo; it
+  opens with the field and then hops from slot to slot without easing, because typing must not
+  wait. A digit is drawn over its input, so it can seat into the slot, and is readable from
+  its first frame. A pasted code, or one the phone offers from a message, fills every slot, the
+  digits seating one after the other. A wrong code is said in words under the field; every
+  slot takes the danger edge and only the one being typed opens the halo. Nothing shakes.
+- **FileUpload** takes files and does not upload them: it sorts them by kind and size,
+  reports them, and shows the progress it is given. Its zone is a socket, cut like a field;
+  while a file hangs over it, it takes the halo, the sign that it will take what is let go.
+  There is no dashed border. A real file input stands behind its button. Each file is a row:
+  the system's mark in front as a `Trace` draws it (the ring waits, the arc works, the disc is
+  done), the name, the size in tabular digits, and a thin bar that folds away once the file
+  has arrived. A failure says why in words, with the danger symbol and „Noch einmal
+  versuchen“. A row that joins fades in while the list grows; one that is removed folds shut.
+- **RadioCard** and **CheckboxCard** are a choice whose options need a sentence each: a plan,
+  an answer in a set-up. The card is the control's label, so the whole of it is the target. It
+  is pressed, so it is a fitting: a softly raised sheet that goes down to the press scale and
+  seats back. Only the press moves; the edge of the chosen card changes at once and its mark
+  carries the motion, closing from ring to disc. Under the pointer the ring of the mark
+  darkens. The title names the control and the sentence describes it.
+- **Steps** is where one stands in a set-up of a few steps. It is read, so it is flat: the
+  system's marks joined by a hairline. A ring is ahead, the heavier ring in the accent is
+  where one stands (`mark-now`: the ring half closed), the disc is done, and the line behind a
+  finished step is filled in the text colour, pushed out from its start by `scale`. In a row
+  that is too narrow for every name only the current step is written out, under the row. A
+  finished step may be a link back. It is plain markup and sends no script.
+- **SecretField** is a value machines read and people must not read over a shoulder: an API
+  key, a webhook's secret. It stands in a field in mono behind discs until the key with the
+  eye is pressed; hidden, the value is not in the page, and a prefix may stay readable. The
+  eye gives way to the struck eye as the copy symbol gives way to the tick, and the value
+  settles out of a short blur, the one place a blur is used. **CopyButton** is the copy
+  confirmation as a key of its own: the symbol shrinks away, the tick draws itself, the
+  tooltip says „Kopiert“, and when the browser refuses the clipboard, what was to be copied is
+  selected instead.
+- **ContextMenu** is the menu of the thing under the pointer, with the rows of a `Menu`. It
+  opens where the pointer is and only fades in, fast: it opens often and under the hand, so it
+  neither grows nor travels. The keyboard cannot open it and nobody can see that it is there,
+  so everything in it also hangs from a key of the row ("Weitere Aktionen").
+- **Toggle** is a key that stays down: raised, it rests in the pressed recipe without the
+  press scale; quiet, it keeps the wash and its symbol stays dark. A **ToggleGroup** is one
+  fitting like a `ButtonGroup`, and every key that is on keeps the inner shade of a press. It
+  is for keys that are on each by itself (bold, italic) or for a choice that may be none; one
+  choice out of a few views stays a `SegmentedControl`. A **Toolbar** is a flat tray of such
+  keys: one stop for Tab, the arrows between its controls.
 
 Whole screens built from these are the `Patterns` stories (sign in, settings, quotes, specimen,
-site, docs, app): judge a change to a recipe there, not on a single component.
+site, docs, app, onboarding, API keys): judge a change to a recipe there, not on a single
+component.
 
 ## Logo
 
