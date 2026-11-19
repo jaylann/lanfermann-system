@@ -20,7 +20,9 @@ import {
   AppShellPage,
   Avatar,
   AvatarFallback,
+  AvatarGroup,
   Badge,
+  Banner,
   BreadcrumbItem,
   BreadcrumbLink,
   Breadcrumbs,
@@ -58,6 +60,9 @@ import {
   CtaActions,
   CtaText,
   CtaTitle,
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
   Dialog,
   DialogBody,
   DialogClose,
@@ -155,6 +160,11 @@ import {
   Slider,
   SliderControl,
   Spinner,
+  Stat,
+  StatChange,
+  StatGroup,
+  StatLabel,
+  StatValue,
   Switch,
   Tab,
   Table,
@@ -169,6 +179,9 @@ import {
   TabsPanel,
   Text,
   Textarea,
+  Timeline,
+  TimelineGroup,
+  TimelineItem,
   Toaster,
   Tooltip,
   TooltipContent,
@@ -177,6 +190,7 @@ import {
   Wordmark,
 } from "@lanfermann/ui";
 
+import { Figures } from "./figures";
 import { QuoteForm } from "./quote-form";
 import { Selection } from "./selection";
 
@@ -552,6 +566,76 @@ export default function Home() {
                   aria-label={`Seiten (${ground})`}
                 />
                 <Selection />
+              </div>
+
+              {/* The first page after sign-in. Stat, DescriptionList and Timeline are written
+                  here, on the server; the stack, the banner and the rolling figure are client
+                  parts handed plain data. */}
+              <div className="flex flex-col gap-6">
+                <Banner
+                  layout="inset"
+                  tone="warning"
+                  title="Ihre Testphase endet in drei Tagen."
+                  action={
+                    <a href="#tarife" className={buttonVariants({ size: "sm" })}>
+                      Tarif wählen
+                    </a>
+                  }
+                >
+                  Wählen Sie einen Tarif, damit Ihre Angebote erhalten bleiben.
+                </Banner>
+                <StatGroup>
+                  <Stat>
+                    <StatLabel>Offene Angebote</StatLabel>
+                    <StatValue>23</StatValue>
+                    <StatChange trend="flat" context="zur Vorwoche">
+                      ±0
+                    </StatChange>
+                  </Stat>
+                  <Stat>
+                    <StatLabel>Stornierungen</StatLabel>
+                    <StatValue>4</StatValue>
+                    <StatChange trend="up" tone="negative" context="zum Vormonat">
+                      +2
+                    </StatChange>
+                  </Stat>
+                </StatGroup>
+                <Figures />
+                <AvatarGroup
+                  label={`Im Team (${ground})`}
+                  people={[
+                    { name: "Maria Huber", presence: "online" },
+                    { name: "Jonas Klein" },
+                    { name: "Anna Weber" },
+                    { name: "Paul Wagner" },
+                    { name: "Mia Becker" },
+                  ]}
+                />
+                <DescriptionList>
+                  <DescriptionTerm>Kunde</DescriptionTerm>
+                  <DescriptionDetails>Bäckerei Kornprobst, Rosenheim</DescriptionDetails>
+                  <DescriptionTerm>Gültig bis</DescriptionTerm>
+                  <DescriptionDetails>15. Dezember 2026</DescriptionDetails>
+                  <DescriptionTerm>Summe</DescriptionTerm>
+                  <DescriptionDetails>4.860,00 € netto</DescriptionDetails>
+                </DescriptionList>
+                <Timeline>
+                  <TimelineGroup label="Heute" dateTime="2026-11-19">
+                    <TimelineItem
+                      time="14:32"
+                      avatar={
+                        <Avatar size="sm">
+                          <AvatarFallback>AW</AvatarFallback>
+                        </Avatar>
+                      }
+                    >
+                      <strong>Anna Weber</strong> hat ein Angebot angenommen.
+                    </TimelineItem>
+                    <TimelineItem time="11:05" tone="danger">
+                      Eine Zahlung ist fehlgeschlagen.
+                    </TimelineItem>
+                  </TimelineGroup>
+                </Timeline>
               </div>
 
               {/* The symbol stands apart from the wordmark above: the two are never side by side. */}
