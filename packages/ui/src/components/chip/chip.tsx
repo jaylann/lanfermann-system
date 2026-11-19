@@ -18,6 +18,11 @@ export type ChipProps = Omit<ComponentProps<"span">, "children"> & {
   children: ReactNode;
   /** A 12px symbol before the text. */
   icon?: IconSvgElement;
+  /**
+   * Something drawn before the text in place of `icon`: a mark that changes (a file on its way),
+   * a small picture. As tall as the chip's text at most.
+   */
+  lead?: ReactNode;
   /** With it the chip carries a key that takes it away. Remove it from your list here. */
   onRemove?: () => void;
   /**
@@ -61,6 +66,7 @@ function keyBeside(key: HTMLElement) {
  */
 export function Chip({
   icon,
+  lead,
   onRemove,
   removeLabel = "Entfernen",
   disabled = false,
@@ -87,7 +93,7 @@ export function Chip({
       )}
       {...props}
     >
-      {icon && <Icon icon={icon} size={12} className="-ml-0.5 text-fg-muted" />}
+      {lead ?? (icon && <Icon icon={icon} size={12} className="-ml-0.5 text-fg-muted" />)}
       <span id={labelId} data-slot="chip-label" className="truncate">
         {children}
       </span>

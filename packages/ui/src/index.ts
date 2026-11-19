@@ -34,6 +34,15 @@ export {
   AppShellPage,
   type AppShellProps,
 } from "./components/app-shell/app-shell";
+export {
+  Attachment,
+  type AttachmentProps,
+  type AttachmentStatus,
+  type AttachmentVariant,
+  MessageAttachments,
+  type MessageAttachmentsProps,
+} from "./components/attachment/attachment";
+export { type FileKind, kindOf } from "./components/attachment/kinds";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
 export { AvatarGroup, type AvatarGroupProps } from "./components/avatar-group/avatar-group";
 export { type AvatarPerson, type Presence } from "./components/avatar-group/people";
@@ -163,6 +172,16 @@ export {
   type ContextMenuContentProps,
   ContextMenuTrigger,
 } from "./components/context-menu/context-menu";
+export {
+  Conversation,
+  type ConversationApi,
+  ConversationContent,
+  type ConversationContentProps,
+  ConversationLatest,
+  type ConversationLatestProps,
+  type ConversationProps,
+  useConversation,
+} from "./components/conversation/conversation";
 export {
   CopyButton,
   type CopyButtonLabels,
@@ -312,6 +331,21 @@ export {
   MenuTrigger,
 } from "./components/menu/menu";
 export {
+  Message,
+  MessageAction,
+  type MessageActionProps,
+  MessageActions,
+  MessageContent,
+  type MessageContentProps,
+  MessageError,
+  type MessageErrorProps,
+  MessageFeedback,
+  type MessageFeedbackProps,
+  type MessageFrom,
+  type MessageProps,
+  type MessageVerdict,
+} from "./components/message/message";
+export {
   Meter,
   MeterLabel,
   type MeterProps,
@@ -365,6 +399,19 @@ export {
   ProgressTrack,
   ProgressValue,
 } from "./components/progress/progress";
+export {
+  PromptInput,
+  PromptInputActions,
+  PromptInputAttach,
+  PromptInputAttachments,
+  type PromptInputAttachmentsProps,
+  type PromptInputAttachProps,
+  type PromptInputProps,
+  PromptInputSubmit,
+  type PromptInputSubmitProps,
+  PromptInputTextarea,
+  type PromptInputTextareaProps,
+} from "./components/prompt-input/prompt-input";
 export { Prose } from "./components/prose/prose";
 export { Quote, type QuoteProps } from "./components/quote/quote";
 export { Radio, RadioGroup, type RadioGroupProps, type RadioProps } from "./components/radio/radio";
@@ -485,6 +532,15 @@ export {
   type SliderThumbProps,
   SliderValue,
 } from "./components/slider/slider";
+export { siteOf, type Source } from "./components/sources/source-list";
+export {
+  SourceList,
+  type SourceListProps,
+  SourceReference,
+  type SourceReferenceProps,
+  Sources,
+  type SourcesProps,
+} from "./components/sources/sources";
 export { Spinner, type SpinnerProps } from "./components/spinner/spinner";
 export {
   Stat,
