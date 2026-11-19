@@ -23,7 +23,13 @@ export function StatGroup({ variant = "cards", className, children, ...props }: 
     <div
       data-slot="stat-group"
       data-variant={variant}
-      className={cn("group/stats", variant === "ruled" && ruleTop, className)}
+      className={cn(
+        "group/stats",
+        variant === "ruled" && ruleTop,
+        // In a card the card's edge opens the row, as it does a table's.
+        variant === "ruled" && "in-data-[slot=card]:border-t-0 in-data-[slot=card]:before:hidden",
+        className,
+      )}
       {...props}
     >
       {/* The grid clips: the hairline before the first figure of each line, and above the
