@@ -9,7 +9,6 @@ import {
   choiceCardEdge,
   type ChoiceCardText,
   choiceControl,
-  ChoiceMark,
 } from "@/internal/choice-card";
 import { cn } from "@/lib/cn";
 
@@ -30,8 +29,8 @@ export type RadioCardProps = Omit<
 /**
  * One choice out of a few whose options need a sentence each: a plan, an answer in a set-up.
  * The whole card is the control and the target. It is a softly raised sheet that stands still:
- * a press anywhere on it dips its mark. Chosen, it takes the accent as its edge and its mark
- * closes from ring to disc.
+ * a press anywhere on it dips its radio. Chosen, it takes the accent as its edge and the disc
+ * seats into its radio's socket, as in a plain `Radio`.
  *
  * Put the cards into a `RadioGroup` and lay them out with a class on it (`grid sm:grid-cols-3`
  * with `gap-3`). The title names the choice, the sentence says what it means; keep both the
@@ -59,10 +58,19 @@ export function RadioCard({
         data-slot="choice-control"
         aria-labelledby={titleId}
         aria-describedby={description === undefined ? undefined : descriptionId}
-        className={choiceControl}
+        className={cn(
+          choiceControl,
+          // The radio's socket and disc (radio.tsx); the press comes from the card.
+          "rounded-full bg-surface depth-socket transition-[box-shadow,scale]",
+          "data-disabled:bg-disabled data-disabled:depth-flat",
+        )}
         {...props}
       >
-        <ChoiceMark />
+        <RadioPrimitive.Indicator
+          keepMounted
+          data-slot="radio-card-indicator"
+          className="size-(--radio-dot) scale-0 rounded-full bg-accent transition-[scale] spring-leave group-data-checked/control:scale-100 group-data-checked/control:spring-seat group-data-disabled/control:bg-on-disabled forced-colors:bg-[color:CanvasText]"
+        />
       </RadioPrimitive.Root>
       <ChoiceCardBody
         slot="radio-card"

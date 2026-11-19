@@ -60,7 +60,8 @@ function Plans({ chosen, ...props }: Options) {
 
 /**
  * Three plans, one chosen: it wears the accent as its edge and its mark is closed. Press
- * another: the card goes down and seats back, and the mark closes in it.
+ * another: its shadow tightens and its mark dips, then the accent edge eases over to it and
+ * the mark closes.
  */
 export const Default: Story = {
   render: () => <Plans />,

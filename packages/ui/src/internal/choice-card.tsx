@@ -33,8 +33,6 @@ export const choiceCard = [
   // one move. What is given up leaves faster.
   "transition-[box-shadow] spring-leave not-active:has-[[data-slot=choice-control][data-checked]]:spring-settle active:spring-snap",
   "not-has-[[data-slot=choice-control][data-disabled]]:hover:shadow-card-hover not-has-[[data-slot=choice-control][data-disabled]]:active:shadow-card-pressed",
-  // Under the pointer the ring of its mark darkens: the card says it can be taken.
-  "hover:[--mark-ring:var(--lf-text-muted)]",
   "has-[[data-slot=choice-control]:focus-visible]:outline-2 has-[[data-slot=choice-control]:focus-visible]:outline-offset-2 has-[[data-slot=choice-control]:focus-visible]:outline-accent",
   "has-[[data-slot=choice-control][data-disabled]]:cursor-default has-[[data-slot=choice-control][data-disabled]]:bg-disabled has-[[data-slot=choice-control][data-disabled]]:depth-flat",
 ].join(" ");
@@ -52,13 +50,6 @@ export const choiceControl = [
   "transition-[scale] spring-seat group-active/card:scale-[0.92] group-active/card:spring-snap",
   "data-disabled:scale-100",
 ].join(" ");
-
-/** The system's mark for a card: an open ring that closes to the disc when it is chosen. */
-export function ChoiceMark() {
-  return (
-    <span className="mark group-data-checked/control:mark-on group-data-disabled/control:[--mark-fill:var(--lf-on-disabled)] group-data-disabled/control:[--mark-ring:var(--lf-hairline)]" />
-  );
-}
 
 type ChoiceCardBodyProps = ChoiceCardText & {
   /** The slot name of the card, for the parts' own slots: "radio-card". */
