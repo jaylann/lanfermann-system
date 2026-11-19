@@ -539,7 +539,9 @@ async function captureMotion(page: Page, spec: MotionSpec, visual: VisualParams,
     let end = 0;
     for (const animation of document.getAnimations()) {
       animation.pause();
-      end = Math.max(end, Number(animation.effect?.getComputedTiming().endTime ?? 0));
+      const ends = Number(animation.effect?.getComputedTiming().endTime ?? 0);
+      // What runs without end (a spinner beside the part that moves) is held where it stands.
+      if (Number.isFinite(ends)) end = Math.max(end, ends);
     }
     return end;
   });
@@ -551,6 +553,7 @@ async function captureMotion(page: Page, spec: MotionSpec, visual: VisualParams,
         // Whatever started since the first pause is held as well.
         animation.pause();
         const end = Number(animation.effect?.getComputedTiming().endTime ?? 0);
+        if (!Number.isFinite(end)) continue;
         // Stay just short of the end, or the transition finishes and Base UI unmounts the popup.
         animation.currentTime = Math.min(t, Math.max(0, end - 0.5));
       }
