@@ -499,6 +499,13 @@ export {
 } from "./components/theme-switch/theme-switch";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
 export {
+  Timeline,
+  TimelineGroup,
+  type TimelineGroupProps,
+  TimelineItem,
+  type TimelineItemProps,
+} from "./components/timeline/timeline";
+export {
   toast,
   Toaster,
   type ToasterProps,

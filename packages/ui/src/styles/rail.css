@@ -10,6 +10,8 @@
  *   --rail-mark   height of what is drawn in that box: the 8px disc, or an avatar (8px)
  *   --rail-clear  room left between the line and the mark above and below it (5px)
  *   --rail-gap    space between two entries (0)
+ *   --rail-next   height of the mark of the entry below, where it differs (an avatar after a
+ *                 disc); by default the entry's own
  * Set them on the list or on an entry; the defaults are a `Trace`.
  *
  * The last entry keeps its piece, invisible: when an entry joins below it, the piece fades in
@@ -26,7 +28,7 @@
     );
     bottom: calc(
       var(--rail-clear, 0.3125rem) - var(--rail-gap, 0px) -
-        (var(--rail-line, 1.75rem) - var(--rail-mark, 0.5rem)) / 2
+        (var(--rail-line, 1.75rem) - var(--rail-next, var(--rail-mark, 0.5rem))) / 2
     );
     left: calc((var(--rail-lead, 1rem) - 1px) / 2);
     width: 1px;

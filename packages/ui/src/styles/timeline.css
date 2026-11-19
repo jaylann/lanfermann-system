@@ -1,0 +1,48 @@
+/*
+ * What happened lately, on the rail (`rail.css`). The newest entries stand at the top, so one
+ * that joins a list already on screen opens its room and fades in from above, and what stands
+ * below moves down with it instead of jumping. Page load does not animate: only an entry that
+ * joins once the list is `data-live` (a frame after it first showed) has a starting style.
+ *
+ * (A gate in CSS alone, a registered property flipped by an animation, was tried: Chrome takes
+ * transition lengths from a property's value before animations, so nothing ever moved there.)
+ */
+@layer components {
+  /* An entry and a day are a grid of one row, which can open from nothing. */
+  [data-slot="timeline-item"],
+  [data-slot="timeline-group"] {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition:
+      grid-template-rows var(--transition-duration-spring-settle) var(--ease-spring-settle),
+      opacity var(--transition-duration-spring-settle) var(--ease-spring-settle),
+      translate var(--transition-duration-spring-settle) var(--ease-spring-settle);
+
+    [data-live] & {
+      @starting-style {
+        grid-template-rows: 0fr;
+        opacity: 0;
+        translate: 0 calc(-1 * var(--motion-enter-offset));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: opacity var(--transition-duration-spring-settle) var(--ease-spring-settle);
+    }
+  }
+
+  /* The room clips what it holds while it opens; to the sides nothing is cut. */
+  [data-slot="timeline-entry"],
+  [data-slot="timeline-day"] {
+    min-height: 0;
+    overflow-y: clip;
+  }
+
+  /* Each entry's piece of the rail ends clear of the mark of the entry below. */
+  [data-slot="timeline-item"]:has(+ [data-lead="avatar"]) {
+    --rail-next: 1.5rem;
+  }
+  [data-slot="timeline-item"]:has(+ [data-lead="mark"]) {
+    --rail-next: 0.5rem;
+  }
+}
