@@ -136,9 +136,17 @@ export function SecretField({
           autoComplete="off"
           data-revealed={revealed ? "" : undefined}
           data-swapping={swapping ? "" : undefined}
-          // Shown, a press into the field takes the whole value. Discs are not worth selecting.
+          // Shown, a press into the field takes the whole value. Discs are not worth selecting:
+          // hidden, the caret goes to the start, so the prefix that names the key stays in view
+          // (a narrow field given the focus, as in a dialog on a phone, scrolled to its end).
           onFocus={(event) => {
-            if (revealed) event.currentTarget.select();
+            const input = event.currentTarget;
+            if (revealed) {
+              input.select();
+              return;
+            }
+            input.setSelectionRange(0, 0);
+            input.scrollLeft = 0;
           }}
           className={cn(
             "font-mono text-ellipsis",
