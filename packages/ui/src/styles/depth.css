@@ -471,10 +471,20 @@
   @apply shadow-card inset-shadow-card;
   /* On an app's page a card is a block of the page, not an object lifted off it: its edge and
      its close shade stay, the wide soft shadow goes (Justin, 2026-11-19: "super airy"). Set on
-     the card itself, so a ground nested in between cannot bring the shadow back. A choice card
-     is a control, not a block: it keeps the lift its hover and press move. */
-  [data-slot="app-shell-main"] &:not([data-slot="checkbox-card"], [data-slot="radio-card"]) {
+     the card itself, so a ground nested in between cannot bring the shadow back. */
+  [data-slot="app-shell-main"] & {
     --depth-card-far: transparent;
+  }
+  /* A choice card rests the same way, wherever it stands, and lifts only under the pointer,
+     where its hover and press move the wide shadow (Justin, 2026-11-19: "too shadowy").
+     `inherit` takes the ground's value back from the card's parent. */
+  &:is([data-slot="checkbox-card"], [data-slot="radio-card"]) {
+    --depth-card-far: transparent;
+    @media (hover: hover) {
+      &:hover:not(:has([data-slot="choice-control"][data-disabled])) {
+        --depth-card-far: inherit;
+      }
+    }
   }
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
