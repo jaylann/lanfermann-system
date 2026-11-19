@@ -1,8 +1,8 @@
 /*
- * The `list` look of a `Table` (temporary, `Lab/Table 2026-11-19`): rows as a list in the page's
- * column. The table reaches 12px past its column on both sides (`Table` does that), so the text
- * and the lines stand on the column's edges and the washes run past the text, rounded like the
- * rows of a sidebar.
+ * The rounded looks of a `Table`, `open` and `band` (temporary, `Lab/Table 2026-11-19`): rows on
+ * the page's ground, with no rule above them. The table reaches 12px past its column on both
+ * sides (`Table` does that), so the text and the lines stand on the column's edges and the washes
+ * run past the text, rounded like the rows of a sidebar.
  *
  * The table's cells are separate here, because only a separate cell can round its corners. Rows
  * have no border in that model, so every cell draws its share of the hairline under its row
@@ -13,7 +13,7 @@
  * against one; rows selected one after another are one shape, rounded only at its ends.
  */
 @layer components {
-  [data-slot="table"][data-look="list"] {
+  [data-slot="table"][data-rounded] {
     /* Ground tokens are read here, on the cell, so a table on a nested ground takes its colours. */
     & :is(th, td) {
       --table-line: var(--lf-hairline);
@@ -41,11 +41,11 @@
       --table-line: transparent;
     }
 
-    & td:first-child {
+    & :is(th, td):first-child {
       border-start-start-radius: var(--radius-md);
       border-end-start-radius: var(--radius-md);
     }
-    & td:last-child {
+    & :is(th, td):last-child {
       border-start-end-radius: var(--radius-md);
       border-end-end-radius: var(--radius-md);
     }
@@ -86,6 +86,40 @@
         border-bottom: 1px solid CanvasText;
         background-image: none;
       }
+    }
+  }
+
+  /*
+   * `band`: the column names stand in a rounded band on the quiet surface, which opens the table
+   * where the rule did, and the rows are divided by their rhythm alone. The band is drawn behind
+   * each name and stops 4px above the rows, so a washed first row does not touch it: a cell's own
+   * background cannot leave that gap and keep its corners round.
+   */
+  [data-slot="table"][data-look="band"] {
+    /* The name stands in the middle of the band, not of the band and the gap under it. */
+    & th {
+      --table-line: transparent;
+      position: relative;
+      isolation: isolate;
+      padding-bottom: 0.25rem;
+    }
+    & th::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 0.25rem;
+      z-index: -1;
+      background-color: var(--lf-surface-quiet);
+    }
+    & th:first-child::before {
+      border-start-start-radius: var(--radius-md);
+      border-end-start-radius: var(--radius-md);
+    }
+    & th:last-child::before {
+      border-start-end-radius: var(--radius-md);
+      border-end-end-radius: var(--radius-md);
+    }
+    & td {
+      --table-line: transparent;
     }
   }
 }
