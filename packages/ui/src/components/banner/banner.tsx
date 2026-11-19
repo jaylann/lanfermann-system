@@ -27,20 +27,12 @@ const wash: Record<BannerTone, string> = {
   danger: "bg-danger-soft",
 };
 
-/** The faint edge in the status colour: under a strip across the page, around one in a column. */
-const edge: Record<"bleed" | "inset", Record<BannerTone, string>> = {
-  bleed: {
-    info: "shadow-[inset_0_-1px_0] shadow-info/20",
-    success: "shadow-[inset_0_-1px_0] shadow-success/25",
-    warning: "shadow-[inset_0_-1px_0] shadow-warning/30",
-    danger: "shadow-[inset_0_-1px_0] shadow-danger/25",
-  },
-  inset: {
-    info: "rounded-lg inset-ring inset-ring-info/20",
-    success: "rounded-lg inset-ring inset-ring-success/25",
-    warning: "rounded-lg inset-ring inset-ring-warning/30",
-    danger: "rounded-lg inset-ring inset-ring-danger/25",
-  },
+/** The faint edge in the status colour under the strip. */
+const edge: Record<BannerTone, string> = {
+  info: "shadow-[inset_0_-1px_0] shadow-info/20",
+  success: "shadow-[inset_0_-1px_0] shadow-success/25",
+  warning: "shadow-[inset_0_-1px_0] shadow-warning/30",
+  danger: "shadow-[inset_0_-1px_0] shadow-danger/25",
 };
 
 /**
@@ -76,11 +68,6 @@ export type BannerProps = Omit<ComponentProps<"div">, "title"> & {
   /** The name of the close key. */
   closeLabel?: string;
   /**
-   * `bleed` is a wash across the full width of the page or of the main column, under its top
-   * edge. `inset` is a strip set into the column, with rounded corners.
-   */
-  layout?: "bleed" | "inset";
-  /**
    * Where the focus goes when the close key is pressed and the banner leaves. By default the
    * page's `<main>`, so a keyboard user is not dropped at the start of the document.
    */
@@ -93,8 +80,10 @@ export type BannerProps = Omit<ComponentProps<"div">, "title"> & {
  * A notice for the whole page: the trial ends in three days, a payment failed, maintenance
  * tonight. For a message inside a page's content, use an `Alert`.
  *
- * A strip in the status wash with the status symbol, a sentence, an optional action and a close
- * key. The title says what is the case, the text what to do. A banner that is there when the
+ * A strip in the status wash across the full width of the page or of its main column, under its
+ * top edge, with the status symbol, a sentence, an optional action and a close key. Put it first
+ * in that column, not inside the content's padding. The title says what is the case, the text
+ * what to do. A banner that is there when the
  * page loads stands still; one that arrives later pushes the page down and is announced. Closed,
  * it leaves the way it came: it rises into the top edge as it fades, and the page follows it up.
  */
@@ -108,7 +97,6 @@ export function Banner({
   onOpenChange,
   dismissible = true,
   closeLabel = "Hinweis schließen",
-  layout = "bleed",
   finalFocus,
   toneLabels,
   className,
@@ -158,7 +146,6 @@ export function Banner({
       role={tone === "danger" ? "alert" : "status"}
       data-slot="banner"
       data-tone={tone}
-      data-layout={layout}
       data-live={live ? "" : undefined}
       onTransitionEnd={settled}
       className={className}
@@ -176,10 +163,9 @@ export function Banner({
             inert={leaving}
             onTransitionEnd={settled}
             className={cn(
-              "flex items-start gap-3 py-2.5 ps-4 pe-2.5 text-control text-fg-body",
+              "flex items-start gap-3 py-2.5 ps-4 pe-2.5 text-control text-fg-body sm:ps-6 sm:pe-4",
               wash[tone],
-              edge[layout][tone],
-              layout === "bleed" && "sm:ps-6 sm:pe-4",
+              edge[tone],
               // Arriving after load it comes down from the top edge as the page makes room, and it
               // leaves the same way back, on the same spring as the room closing: a quicker fade
               // left the room empty while the page was still rising into it (Justin, 2026-11-19).

@@ -20,16 +20,6 @@
 }
 
 @layer components {
-  [data-slot="rolling-number"] {
-    --rolling-duration: var(--transition-duration-spring-settle);
-    --rolling-ease: var(--ease-spring-settle);
-
-    &[data-spring="seat"] {
-      --rolling-duration: var(--transition-duration-spring-seat);
-      --rolling-ease: var(--ease-spring-seat);
-    }
-  }
-
   [data-slot="rolling-number-place"] {
     display: inline-grid;
     grid-template-columns: 1fr;
@@ -82,7 +72,9 @@
     display: block;
     white-space: pre;
     translate: 0 calc(mod(var(--roll), 10) * -100% / 11);
-    transition: --roll var(--rolling-duration) var(--rolling-ease);
+    /* Without bounce: a digit that overshot would show the next one for a moment (Justin,
+       2026-11-19, `settle` over `seat`). */
+    transition: --roll var(--transition-duration-spring-settle) var(--ease-spring-settle);
 
     &::before {
       content: var(--rolling-digits, "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0");

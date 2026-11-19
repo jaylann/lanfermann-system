@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { CSSProperties } from "react";
 
 import { defaultPresenceLabels, type Presence } from "@/components/avatar-group/people";
-import { avatarGeometry, cutMask } from "@/internal/avatar-cut";
+import { AVATAR_GAP, avatarGeometry, cutMask } from "@/internal/avatar-cut";
 import { PresenceDot } from "@/internal/presence-dot";
 import { mergeClassName } from "@/lib/cn";
 
@@ -24,9 +24,6 @@ const avatarVariants = cva(
     defaultVariants: { size: "md" },
   },
 );
-
-/** The width of the gap a presence dot is cut out of the avatar with, in pixels. */
-const DOT_GAP = 2;
 
 export type AvatarProps = AvatarPrimitive.Root.Props &
   VariantProps<typeof avatarVariants> & {
@@ -66,7 +63,7 @@ export function Avatar({ className, size, presence, presenceLabel, style, ...pro
   if (!presence) return root();
 
   const geometry = avatarGeometry[size ?? "md"];
-  const cut = { size: geometry.size, gap: DOT_GAP, dot: geometry.dot };
+  const cut = { size: geometry.size, gap: AVATAR_GAP, dot: geometry.dot };
   return (
     <span data-slot="avatar-place" className="relative inline-flex shrink-0">
       {root(cutMask(cut), cutMask({ ...cut, rtl: true }))}

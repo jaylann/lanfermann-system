@@ -30,27 +30,19 @@ function Whole({ children }: { children: ReactNode }) {
   return <span className="whitespace-nowrap">{children}</span>;
 }
 
-/** Two days of a workshop's quotes, the way the forms of the lead compare. */
-function Days({ lead }: { lead: "marks" | "avatars" | "mixed" }) {
-  const person = (initials: string) =>
-    lead === "marks" ? undefined : <Person initials={initials} />;
-  const system = (avatar: ReactNode) => (lead === "avatars" ? avatar : undefined);
+/** Two days of a workshop's quotes, every kind of entry among them. */
+function Days() {
   return (
     <Timeline className="w-[540px]">
       <TimelineGroup label="Heute" dateTime="2026-11-19">
-        <TimelineItem time="14:32" dateTime="2026-11-19T14:32" avatar={person("AW")}>
+        <TimelineItem time="14:32" dateTime="2026-11-19T14:32" avatar={<Person initials="AW" />}>
           <strong>Anna Weber</strong> hat das Angebot <Whole>A-2026-0418</Whole> angenommen.
         </TimelineItem>
-        <TimelineItem
-          time="11:05"
-          dateTime="2026-11-19T11:05"
-          icon={lead === "marks" ? undefined : Mail01Icon}
-          avatar={system(<Person initials="JK" />)}
-        >
+        <TimelineItem time="11:05" dateTime="2026-11-19T11:05" icon={Mail01Icon}>
           Das Angebot <Whole>A-2026-0421</Whole> wurde an <strong>Bäckerei Kornprobst</strong>{" "}
           versendet.
         </TimelineItem>
-        <TimelineItem time="09:12" dateTime="2026-11-19T09:12" avatar={person("JK")}>
+        <TimelineItem time="09:12" dateTime="2026-11-19T09:12" avatar={<Person initials="JK" />}>
           <strong>Jonas Klein</strong> hat <strong>Lena Fischer</strong> ins Team eingeladen.
         </TimelineItem>
       </TimelineGroup>
@@ -58,12 +50,10 @@ function Days({ lead }: { lead: "marks" | "avatars" | "mixed" }) {
         <TimelineItem time="17:48" dateTime="2026-11-18T17:48" tone="danger">
           Die Zahlung für die Rechnung <Whole>R-2026-0112</Whole> ist fehlgeschlagen.
         </TimelineItem>
-        <TimelineItem
-          time="08:30"
-          dateTime="2026-11-18T08:30"
-          icon={lead === "marks" ? undefined : Invoice01Icon}
-          avatar={system(<Person initials="AW" />)}
-        >
+        <TimelineItem time="12:00" dateTime="2026-11-18T12:00">
+          Das Angebot <Whole>A-2026-0397</Whole> ist abgelaufen.
+        </TimelineItem>
+        <TimelineItem time="08:30" dateTime="2026-11-18T08:30" icon={Invoice01Icon}>
           Die Rechnung <Whole>R-2026-0112</Whole> über <Whole>1.240,00 €</Whole> wurde erstellt.
         </TimelineItem>
       </TimelineGroup>
@@ -71,17 +61,12 @@ function Days({ lead }: { lead: "marks" | "avatars" | "mixed" }) {
   );
 }
 
-/** The system's mark in front of every entry: the quietest form. */
-export const Marks: Story = { render: () => <Days lead="marks" /> };
-
-/** A small avatar in front of every entry, also where the system acted. */
-export const Avatars: Story = { render: () => <Days lead="avatars" /> };
-
 /**
- * By kind of entry: a person's avatar where a person acted, the event's symbol where the system
- * did. The rail runs straight through both.
+ * Each entry is led by what it is: a person's avatar where a person acted, the event's symbol
+ * where the system did something worth a symbol, the error mark where something failed, and the
+ * plain mark for the rest. The rail runs straight through all of them.
  */
-export const Mixed: Story = { render: () => <Days lead="mixed" /> };
+export const Default: Story = { render: () => <Days /> };
 
 const arrivals = [
   {
@@ -158,7 +143,7 @@ export const Phone: Story = {
   parameters: { layout: "padded", visual: { viewport: { width: 390, height: 520 } } },
   render: () => (
     <div className="w-full [&_[data-slot=timeline]]:w-full">
-      <Days lead="mixed" />
+      <Days />
     </div>
   ),
 };

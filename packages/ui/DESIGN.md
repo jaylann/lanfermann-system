@@ -123,6 +123,11 @@ story `Patterns/Specimen`.
 | Avatars                   | Round: "I would like avatars to be round". Before, a rounded square. In a stack the cut follows the circle in front, and a presence dot on the edge has its gap cut out of the avatar behind as well.                                                                                                                                                                                                                                                                                                                                                                                                                           | Justin, 2026-11-19                  |
 | Figures in a row          | Both stay: a `StatGroup` is a ruled row by default, and a card for each figure with `variant="cards"`: "both are important".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Justin, 2026-11-19                  |
 | A banner leaving          | A closed `Banner` leaves the way it came in: it rises into the top edge and fades on the spring its room closes on. Before, it faded faster than its room closed, and the page rose into an empty gap.                                                                                                                                                                                                                                                                                                                                                                                                                          | Justin, 2026-11-19                  |
+| Rolling figures           | A `RollingNumber` comes to rest on `settle`, without bounce, over `seat`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Justin, 2026-11-19                  |
+| Avatar stack              | One avatar lies a quarter over the next (6, 7, 9 and 12px from small to extra large), over a third; the cut between two and around a presence dot is 2px, over 3px.                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Justin, 2026-11-19                  |
+| Banner place              | A `Banner` is a wash across the full width of the page or its main column, under its top edge, with a faint line at its foot. The strip set into the column with rounded corners was dropped.                                                                                                                                                                                                                                                                                                                                                                                                                                   | Justin, 2026-11-19                  |
+| Timeline lead             | Each entry is led by what it is: a person's avatar, the symbol of a system event, the danger mark for a failure, or the plain mark, all in one list ("by kind but also just allowing the normal dots as a kind").                                                                                                                                                                                                                                                                                                                                                                                                               | Justin, 2026-11-19                  |
+| Dashboard strings         | The German defaults stand as built: „Hinweis schließen“, the banner's „Hinweis“, „Erledigt“, „Warnung“ and „Fehler“, the presence words „Online“, „Abwesend“ and „Offline“, and a trend's „Gestiegen“, „Gesunken“ and „Unverändert“.                                                                                                                                                                                                                                                                                                                                                                                            | Justin, 2026-11-19                  |
 
 ## Colour
 
@@ -283,6 +288,7 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   pixel-identical in three engines). A digit or a grouping dot that joins opens its place as it
   fades in, one that leaves fades and then closes: the one width that moves besides a chip's
   place, because the words beside the number have to be pushed, which a transform cannot do.
+  A digit comes to rest on `settle`: one that bounced would show its neighbour for a moment.
   Page load shows the plain number.
 - **A trend turns.** The arrow of a `StatChange` is one glyph turned per trend (up, flat, down)
   on `seat`; its colour eases on `settle`.
@@ -596,12 +602,16 @@ Every component belongs to one of the four matters, and takes its treatment from
   `ParameterList` stays the parameters of an API.
 - **Banner** is a notice for the whole page (a trial that ends, a payment that failed,
   maintenance tonight); `Alert` stays the message inside a page's content. A strip in the
-  status wash, its title what is the case and its text what to do, with one action and a close
-  key. However it closes, the focus that was in it goes to the page's `<main>`.
+  status wash across the full width of the page or its main column, its title what is the case
+  and its text what to do, with one action and a close key. The symbol, the first line, the
+  action and the close key share one axis, the middle of the first line; narrower than 32rem the
+  action goes under the sentence. However it closes, the focus that was in it goes to the page's
+  `<main>`.
 - **Timeline** is what happened lately on `Trace`'s rail and marks, newest first, grouped by
-  day: a sentence and its `<time>`, with the system's mark, the symbol of the kind of event or
-  a small avatar in front. The lead is an avatar's width for every entry, so the rail runs
-  straight through a list that mixes them. Its list is markup with one small client part that
+  day: a sentence and its `<time>`, led by what the entry is: the avatar of the person who
+  acted, the symbol of a system event, the danger mark for a failure, or the plain mark. The
+  lead is an avatar's width for every entry, so the rail runs straight through a list that
+  mixes them. Its list is markup with one small client part that
   tells load from later (`LiveList`): a gate in CSS alone did not move in Chrome, which takes a
   transition's length from a property's value before animations.
 

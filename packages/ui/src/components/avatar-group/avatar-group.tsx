@@ -4,7 +4,13 @@ import { type ComponentProps, type CSSProperties, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/avatar/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
-import { avatarGeometry, avatarOverlap, type AvatarSize, cutMask } from "@/internal/avatar-cut";
+import {
+  AVATAR_GAP,
+  avatarGeometry,
+  avatarOverlap,
+  type AvatarSize,
+  cutMask,
+} from "@/internal/avatar-cut";
 import { PresenceDot } from "@/internal/presence-dot";
 import { cn } from "@/lib/cn";
 
@@ -26,10 +32,6 @@ export type AvatarGroupProps = Omit<ComponentProps<"div">, "children"> & {
    */
   max?: number;
   size?: AvatarSize;
-  /** How far one lies over the next: about a quarter (`loose`) or a third (`tight`). */
-  overlap?: "loose" | "tight";
-  /** The width of the gap cut between two, in pixels. */
-  gap?: 2 | 3;
   /**
    * What the group is, before the names, for assistive tech: „Bearbeitet von“. The names follow
    * it; without it they stand alone.
@@ -55,8 +57,6 @@ export function AvatarGroup({
   people,
   max = 4,
   size = "md",
-  overlap = "loose",
-  gap = 2,
   label,
   presenceLabels,
   locale = "de-DE",
@@ -70,7 +70,8 @@ export function AvatarGroup({
   const rest = people.slice(front.length);
 
   const geometry = avatarGeometry[size];
-  const over = avatarOverlap[overlap][size];
+  const gap = AVATAR_GAP;
+  const over = avatarOverlap[size];
   const step = geometry.size - over;
   /**
    * The mask of a tile: cut by the one in front (and by its dot, which stands half outside it,

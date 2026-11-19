@@ -8,7 +8,7 @@ describe("cutShapes", () => {
   it("cuts the avatar in front grown by the gap, about its centre", () => {
     for (const size of sizes) {
       const { size: side } = avatarGeometry[size];
-      const step = side - avatarOverlap.tight[size];
+      const step = side - avatarOverlap[size];
       const [front] = cutShapes({ size: side, gap: 2, step });
       // The avatar in front stands at x = -step; its centre is half a side in from there.
       expect(front).toEqual({ cx: side / 2 - step, cy: side / 2, r: side / 2 + 2 });
@@ -16,13 +16,11 @@ describe("cutShapes", () => {
   });
 
   it("leaves the avatar underneath a crescent of at least the overlap", () => {
-    for (const overlap of Object.values(avatarOverlap)) {
-      for (const size of sizes) {
-        const { size: side } = avatarGeometry[size];
-        const [front] = cutShapes({ size: side, gap: 2, step: side - overlap[size] });
-        // The widest part of what is seen, along the middle line, is more than half the avatar.
-        expect(side - (front!.cx + front!.r)).toBeGreaterThan(side / 2);
-      }
+    for (const size of sizes) {
+      const { size: side } = avatarGeometry[size];
+      const [front] = cutShapes({ size: side, gap: 2, step: side - avatarOverlap[size] });
+      // The widest part of what is seen, along the middle line, is more than half the avatar.
+      expect(side - (front!.cx + front!.r)).toBeGreaterThan(side / 2);
     }
   });
 

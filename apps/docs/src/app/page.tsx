@@ -573,7 +573,6 @@ export default function Home() {
                   parts handed plain data. */}
               <div className="flex flex-col gap-6">
                 <Banner
-                  layout="inset"
                   tone="warning"
                   title="Ihre Testphase endet in drei Tagen."
                   action={

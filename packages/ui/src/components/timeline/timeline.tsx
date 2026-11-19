@@ -7,9 +7,12 @@ import { cn } from "@/lib/cn";
 
 /**
  * What happened lately: quotes sent and accepted, people invited, a payment that failed. A flat
- * list on a hairline rail, newest first, each entry a sentence and its time, with the system's
- * mark or a small avatar in front, drawn the way a `Trace` is (`rail.css`). Entries group under
- * their day with a `TimelineGroup`.
+ * list on a hairline rail, newest first, each entry a sentence and its time, drawn the way a
+ * `Trace` is (`rail.css`). Entries group under their day with a `TimelineGroup`.
+ *
+ * Each entry is led by what it is: the avatar of the person who acted, the symbol of an event the
+ * system did (a mail sent, an invoice made), the danger mark for a failure, and the plain mark for
+ * anything else. Mix them freely in one list; the rail runs straight through all of them.
  *
  * An entry that joins a list already on screen opens its room and fades in; what is there when
  * the list first shows does not move (`timeline.css`). Server-safe: the list is markup, and the

@@ -24,13 +24,11 @@ function Counter({
   start,
   steps,
   format,
-  spring,
   after,
 }: {
   start: number;
   steps: number[];
   format?: Intl.NumberFormatOptions;
-  spring?: "settle" | "seat";
   /** Words after the number, to see them pushed aside when it gains or loses a place. */
   after?: string;
 }) {
@@ -39,7 +37,7 @@ function Counter({
     // A fixed width, so the number grows to the right and does not re-centre.
     <div className="flex w-80 flex-col items-start gap-4">
       <p className="text-2xl font-medium tracking-[-0.017em] text-fg">
-        <RollingNumber value={value} format={format} spring={spring} />
+        <RollingNumber value={value} format={format} />
         {after && <span className="text-fg-muted"> {after}</span>}
       </p>
       <div className="flex gap-2">

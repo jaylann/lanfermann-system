@@ -30,8 +30,6 @@ export type RollingNumberProps = Omit<ComponentProps<"span">, "children"> & {
    * minus. To keep decimals from coming and going, give `minimumFractionDigits`.
    */
   format?: Intl.NumberFormatOptions;
-  /** How a digit comes to rest: `settle` without bounce, `seat` with a little. */
-  spring?: "settle" | "seat";
 };
 
 /** Formats are cached by what they are, so a `format` written inline costs nothing per render. */
@@ -86,7 +84,6 @@ export function RollingNumber({
   value,
   locale = "de-DE",
   format,
-  spring = "settle",
   className,
   style,
   ref,
@@ -159,7 +156,6 @@ export function RollingNumber({
       ref={mergeRefs(root, ref)}
       data-slot="rolling-number"
       data-live={live ? "" : undefined}
-      data-spring={spring}
       className={cn("inline-flex tabular-nums", className)}
       style={digits ? ({ "--rolling-digits": digits, ...style } as CSSProperties) : style}
       {...props}

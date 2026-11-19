@@ -23,11 +23,17 @@ export const avatarGeometry: Record<AvatarSize, { size: number; dot: number }> =
   xl: { size: 48, dot: 12 },
 };
 
-/** How far one avatar lies over the next, in pixels: a quarter (`loose`) or a third (`tight`). */
-export const avatarOverlap: Record<"loose" | "tight", Record<AvatarSize, number>> = {
-  loose: { sm: 6, md: 7, lg: 9, xl: 12 },
-  tight: { sm: 8, md: 9, lg: 12, xl: 16 },
-};
+/**
+ * How far one avatar lies over the next, in pixels: a quarter of it, so a face stays a face
+ * (Justin, 2026-11-19, over a third).
+ */
+export const avatarOverlap: Record<AvatarSize, number> = { sm: 6, md: 7, lg: 9, xl: 12 };
+
+/**
+ * The width of every cut, in pixels: between two avatars and around a presence dot. Fine enough
+ * that a stack reads as one group (Justin, 2026-11-19, over 3px).
+ */
+export const AVATAR_GAP = 2;
 
 export type CutOptions = {
   /** The avatar's diameter. */

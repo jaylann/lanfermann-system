@@ -74,27 +74,6 @@ export const WithAction: Story = {
   ),
 };
 
-/** Set into the page's column instead of across it. */
-export const Inset: Story = {
-  render: () => (
-    <div className="px-6 pt-6">
-      <Banner
-        layout="inset"
-        tone="danger"
-        title="Die Zahlung vom 1. November ist fehlgeschlagen."
-        action={
-          <a href="#zahlung" className={buttonVariants({ size: "sm" })}>
-            Zahlungsmethode ändern
-          </a>
-        }
-      >
-        Prüfen Sie Ihre Karte.
-      </Banner>
-      <Page />
-    </div>
-  ),
-};
-
 /** A banner that arrives after the page has loaded pushes the page down and comes in from the top. */
 export const Arriving: Story = {
   parameters: { visual: { motion: [{ name: "arrive", click: '[data-step="arrive"]' }] } },
