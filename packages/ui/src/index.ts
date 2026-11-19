@@ -54,6 +54,7 @@ export { Calendar, type CalendarProps, type DateRange } from "./components/calen
 export { Callout, type CalloutProps, type CalloutTone } from "./components/callout/callout";
 export {
   Card,
+  CardBar,
   CardContent,
   CardDescription,
   CardFooter,

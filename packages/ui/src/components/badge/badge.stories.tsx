@@ -30,3 +30,24 @@ export const Tones: Story = {
     </div>
   ),
 };
+
+/** The tone as a dot on a neutral badge: for a column of states, quieter than the row. */
+export const Dots: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      <Badge dot>Entwurf</Badge>
+      <Badge dot tone="info">
+        Gesendet
+      </Badge>
+      <Badge dot tone="success">
+        Angenommen
+      </Badge>
+      <Badge dot tone="warning">
+        Läuft bald ab
+      </Badge>
+      <Badge dot tone="danger">
+        Abgelaufen
+      </Badge>
+    </div>
+  ),
+};
