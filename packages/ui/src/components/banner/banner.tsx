@@ -5,6 +5,7 @@ import {
   type ReactNode,
   type RefObject,
   type TransitionEvent,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -115,20 +116,25 @@ export function Banner({
   const grow = useRef<HTMLDivElement>(null);
   const labels = { ...defaultToneLabels, ...toneLabels };
 
-  const close = (event: { currentTarget: HTMLElement }) => {
-    // The key is about to go: hand the focus on before it does.
-    const target =
-      finalFocus?.current ?? event.currentTarget.closest("main") ?? document.querySelector("main");
-    if (target) {
-      if (!target.hasAttribute("tabindex")) {
-        target.setAttribute("tabindex", "-1");
-        target.addEventListener("blur", () => target.removeAttribute("tabindex"), { once: true });
-      }
-      target.focus({ preventScroll: true });
-    }
+  const close = () => {
     setChosen(false);
     onOpenChange?.(false);
   };
+
+  // However it was closed (its key, its own action, the page), what had the focus in it is
+  // about to go: hand the focus on before it does, so it is not dropped at the top of the page.
+  // Before paint: the strip turns inert in this commit, and the browser would blur it first.
+  useLayoutEffect(() => {
+    const box = grow.current;
+    if (!leaving || !box?.contains(document.activeElement)) return;
+    const target = finalFocus?.current ?? box.closest("main") ?? document.querySelector("main");
+    if (!target) return;
+    if (!target.hasAttribute("tabindex")) {
+      target.setAttribute("tabindex", "-1");
+      target.addEventListener("blur", () => target.removeAttribute("tabindex"), { once: true });
+    }
+    target.focus({ preventScroll: true });
+  }, [leaving, finalFocus]);
 
   // Gone once nothing moves any more: the room has closed, or it never moved (reduced motion).
   const settled = (event: TransitionEvent<HTMLElement>) => {
