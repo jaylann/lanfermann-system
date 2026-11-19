@@ -50,10 +50,13 @@ const separateSlot = [
   "has-[input[data-disabled]]:bg-disabled has-[input[data-disabled]]:depth-flat",
 ].join(" ");
 
-/** The socket that the slots of a group share. */
+/**
+ * The socket that the slots of a group share. Invalid, it takes the danger edge without the
+ * halo, as the separate slots do: only the slot being typed opens one.
+ */
 const joinedGroup = [
   "rounded-md bg-surface depth-field",
-  "has-[input[data-invalid]]:depth-field-invalid",
+  "has-[input[data-invalid]]:[--depth-field-edge:var(--lf-danger)]",
   "has-[input[data-disabled]]:bg-disabled has-[input[data-disabled]]:depth-flat",
 ].join(" ");
 
