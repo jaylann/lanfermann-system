@@ -17,14 +17,10 @@ import { advancePieces, type PieceEnds, staggerDelays } from "./arriving-pieces"
 import { useReducedMotion } from "./reduced-motion";
 
 /**
- * How text that is still being written arrives: fading in a few words at a time (`words`), or a
- * line at a time, each once it is full (`lines`).
+ * Pieces of one look fade in this far apart at most, and all within this span (ms). Fading in
+ * by words was chosen over a line at a time, once it is full (Justin, 2026-11-19).
  */
-export type ArriveBy = "words" | "lines";
-
-/** Pieces of one look fade in this far apart at most, and all within this span (ms). */
 const WORD_STEP = 40;
-const LINE_STEP = 80;
 const SPAN = 240;
 /** How long a fade on `settle` takes in CSS, after its delay (motion.generated.css). */
 const FADE = 500;
@@ -166,7 +162,7 @@ function draw(children: ReactNode, look: Look): ReactNode {
  */
 export function useArrivingText(
   children: ReactNode,
-  { streaming, by, box }: { streaming: boolean; by: ArriveBy; box: RefObject<HTMLElement | null> },
+  { streaming, box }: { streaming: boolean; box: RefObject<HTMLElement | null> },
 ): ReactNode {
   const reduced = useReducedMotion();
   // A text that is complete when it mounts needs none of this.
@@ -191,43 +187,20 @@ export function useArrivingText(
     const since = handled.current;
     handled.current = look.generation;
 
-    // New pieces stand at nothing before anyone sees them; the ones that wait for their line
-    // already do.
-    for (const piece of root.querySelectorAll<HTMLElement>("[data-born]")) {
-      if (Number(piece.dataset.born) > since) piece.setAttribute("data-arriving", "");
-    }
-    const pending = [...root.querySelectorAll<HTMLElement>("[data-arriving]")];
-    if (pending.length === 0) return;
-
-    let release = pending;
-    let delays: number[];
-    if (by === "lines") {
-      // The line a piece ends on. Reading the boxes lays the page out, so the pieces have
-      // stood at nothing in it and their fade has a start.
-      const tops = new Map(
-        pending.map((piece) => {
-          const boxes = piece.getClientRects();
-          const top = boxes.length > 0 ? Math.round(boxes[boxes.length - 1]!.top) : Number.NaN;
-          return [piece, top] as const;
-        }),
-      );
-      const lastTop = tops.get(pending.at(-1)!) ?? Number.NaN;
-      // While the text is written, its last line is not full yet: it waits for the next.
-      if (look.streaming) release = pending.filter((piece) => tops.get(piece)! < lastTop - 2);
-      const lines = [...new Set(release.map((piece) => tops.get(piece)))];
-      const lineDelays = staggerDelays(lines.length, LINE_STEP, SPAN);
-      delays = release.map((piece) => lineDelays[lines.indexOf(tops.get(piece))] ?? 0);
-    } else {
-      // Lay the page out once, so the new pieces have stood at nothing and their fade has a
-      // start.
-      void root.offsetHeight;
-      delays = staggerDelays(release.length, WORD_STEP, SPAN);
-    }
-    release.forEach((piece, index) => {
+    // New pieces stand at nothing before anyone sees them.
+    const fresh = [...root.querySelectorAll<HTMLElement>("[data-born]")].filter(
+      (piece) => Number(piece.dataset.born) > since,
+    );
+    if (fresh.length === 0) return;
+    for (const piece of fresh) piece.setAttribute("data-arriving", "");
+    // Lay the page out once, so they have stood at nothing and their fade has a start.
+    void root.offsetHeight;
+    const delays = staggerDelays(fresh.length, WORD_STEP, SPAN);
+    fresh.forEach((piece, index) => {
       piece.style.transitionDelay = `${delays[index] ?? 0}ms`;
       piece.removeAttribute("data-arriving");
     });
-  }, [active, look, by, box]);
+  }, [active, look, box]);
 
   // Once the text is complete and its last pieces have faded in, the pieces go.
   useEffect(() => {

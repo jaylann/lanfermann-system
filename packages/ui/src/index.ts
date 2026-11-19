@@ -320,7 +320,6 @@ export {
   MenuTrigger,
 } from "./components/menu/menu";
 export {
-  type ArriveBy,
   Message,
   MessageAction,
   type MessageActionProps,
@@ -333,7 +332,6 @@ export {
   type MessageFeedbackProps,
   type MessageFrom,
   type MessageProps,
-  type MessageVariant,
   type MessageVerdict,
 } from "./components/message/message";
 export {
@@ -397,7 +395,6 @@ export {
   PromptInputAttachments,
   type PromptInputAttachmentsProps,
   type PromptInputAttachProps,
-  type PromptInputLayout,
   type PromptInputProps,
   PromptInputSubmit,
   type PromptInputSubmitProps,
@@ -528,7 +525,6 @@ export {
   SourceList,
   type SourceListProps,
   SourceReference,
-  type SourceReferenceLook,
   type SourceReferenceProps,
   Sources,
   type SourcesProps,

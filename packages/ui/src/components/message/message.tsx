@@ -17,27 +17,18 @@ import { useConversation } from "@/components/conversation/conversation";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { Toggle } from "@/components/toggle/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
-import { type ArriveBy, useArrivingText } from "@/internal/arriving";
+import { useArrivingText } from "@/internal/arriving";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
 
-export type { ArriveBy } from "@/internal/arriving";
-
 /** Who wrote a message: the assistant, or the person using it. */
 export type MessageFrom = "assistant" | "user";
 
-/**
- * How the person's own words are set off. `tint`: on the ground's tint, the bubble of a
- * `Quote`. `sheet`: a quiet sheet, white with a hairline edge.
- */
-export type MessageVariant = "tint" | "sheet";
-
-type MessageContextValue = { from: MessageFrom; variant: MessageVariant; streaming: boolean };
+type MessageContextValue = { from: MessageFrom; streaming: boolean };
 
 const MessageContext = createContext<MessageContextValue>({
   from: "assistant",
-  variant: "tint",
   streaming: false,
 });
 
@@ -45,16 +36,15 @@ export type MessageProps = ComponentProps<"article"> & {
   from: MessageFrom;
   /** The answer is still being written: its text arrives, and its actions wait. */
   streaming?: boolean;
-  /** How the person's words are set off (only for `from="user"`). */
-  variant?: MessageVariant;
   /** Who wrote it, for assistive tech: „KI“ for the assistant, „Du“ for the person. */
   label?: string;
 };
 
 /**
  * One message of a conversation with an assistant. The answer is read, so it is flat prose on
- * the page, with no bubble and no avatar; the person's own words are set off at the right.
- * Put a `MessageContent` inside, and under an answer its `MessageActions`.
+ * the page, with no bubble and no avatar; the person's own words are someone else's to the
+ * page, so they stand on the tint at the right, in the bubble of a `Quote` (Justin,
+ * 2026-11-19). Put a `MessageContent` inside, and under an answer its `MessageActions`.
  *
  * In a `Conversation`, a message of the person's that joins rises into place, and brings the
  * view back to the foot: whoever sends a prompt wants to see the answer.
@@ -62,7 +52,6 @@ export type MessageProps = ComponentProps<"article"> & {
 export function Message({
   from,
   streaming = false,
-  variant = "tint",
   label = from === "user" ? "Du" : "KI",
   className,
   children,
@@ -77,7 +66,7 @@ export function Message({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <MessageContext value={{ from, variant, streaming }}>
+    <MessageContext value={{ from, streaming }}>
       <article
         data-slot="message"
         data-from={from}
@@ -104,13 +93,7 @@ export function Message({
   );
 }
 
-export type MessageContentProps = ComponentProps<"div"> & {
-  /**
-   * How text that is still being written arrives: a few words at a time (`words`), or a line
-   * at a time once it is full (`lines`).
-   */
-  arrive?: ArriveBy;
-};
+export type MessageContentProps = ComponentProps<"div">;
 
 /**
  * What a message says. In an answer it is `Prose`: hand over the rendered Markdown (the
@@ -118,19 +101,12 @@ export type MessageContentProps = ComponentProps<"div"> & {
  * `streaming` what is new fades in, a few words at a time; code and pictures arrive whole.
  * The person's words stand as they were typed, line breaks kept.
  */
-export function MessageContent({
-  arrive = "words",
-  className,
-  children,
-  ref,
-  ...props
-}: MessageContentProps) {
-  const { from, variant, streaming } = useContext(MessageContext);
+export function MessageContent({ className, children, ref, ...props }: MessageContentProps) {
+  const { from, streaming } = useContext(MessageContext);
   const box = useRef<HTMLDivElement>(null);
   const conversation = useConversation();
   const content = useArrivingText(children, {
     streaming: from === "assistant" && streaming,
-    by: arrive,
     box,
   });
 
@@ -149,13 +125,10 @@ export function MessageContent({
       <div
         ref={mergeRefs(box, ref)}
         data-slot="message-content"
-        data-variant={variant}
         className={cn(
           "max-w-[min(80%,36rem)] text-base break-words whitespace-pre-wrap text-fg",
-          variant === "tint"
-            ? // The ground's tint and the quote's bubble, its tight corner towards the person.
-              "rounded-2xl rounded-tr-sm bg-tint px-4 py-2.5"
-            : "rounded-xl border border-hairline bg-surface px-4 py-2.5",
+          // The ground's tint and the quote's bubble, its tight corner towards the person.
+          "rounded-2xl rounded-tr-sm bg-tint px-4 py-2.5",
           className,
         )}
         {...props}

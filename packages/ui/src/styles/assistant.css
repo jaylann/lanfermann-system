@@ -1,12 +1,11 @@
 /*
  * The assistant's parts where CSS says more than a class list could: the key „Neueste“, the
- * layouts of a prompt, and its send key that becomes stop.
+ * layout of a prompt, and its send key that becomes stop.
  */
 @layer components {
   /*
-   * A prompt is a grid inside its field. Stacked: the files, the text, and a row of keys with
-   * send at its end. Inline: the files above, then attach, the text and send in one row, the
-   * keys at the text's last line.
+   * A prompt is a grid inside its field: the files, the text, and a row of keys with send at
+   * its end. (Send at the right of the text's last line was dropped, Justin, 2026-11-19.)
    */
   [data-slot="prompt-input-field"] > [data-slot="grow-content"] {
     grid-template-columns: minmax(0, 1fr);
@@ -24,19 +23,6 @@
   }
   [data-slot="prompt-input-submit"] {
     margin-inline-start: auto;
-  }
-  [data-layout="inline"] [data-slot="prompt-input-field"] > [data-slot="grow-content"] {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: "files files files" "start text end";
-  }
-  [data-layout="inline"] [data-slot="prompt-input-actions"] {
-    display: contents;
-  }
-  [data-layout="inline"] [data-slot="prompt-input-attach"] {
-    grid-area: start;
-  }
-  [data-layout="inline"] [data-slot="prompt-input-submit"] {
-    grid-area: end;
   }
 
   /*

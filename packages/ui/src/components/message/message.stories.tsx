@@ -7,14 +7,12 @@ import { Button } from "@/components/button/button";
 import { CopyButton } from "@/components/copy-button/copy-button";
 
 import {
-  type ArriveBy,
   Message,
   MessageAction,
   MessageActions,
   MessageContent,
   MessageError,
   MessageFeedback,
-  type MessageVariant,
 } from "./message";
 import {
   afterWords,
@@ -72,33 +70,23 @@ export const Answer: Story = {
   ),
 };
 
-function Asked({ variant }: { variant: MessageVariant }) {
-  return (
-    <div className="flex flex-col">
-      <Message from="user" variant={variant}>
-        <MessageContent>{QUESTION}</MessageContent>
-      </Message>
-    </div>
-  );
-}
-
 /**
  * The person's own words, set off at the right on the ground's tint: the bubble of a `Quote`,
  * its tight corner towards the person.
  */
 export const Question: Story = {
   parameters: { visual: { viewport: { width: 760, height: 160 } } },
-  render: () => <Asked variant="tint" />,
-};
-
-/** To compare: `variant="sheet"`, a quiet white sheet with a hairline edge instead of the tint. */
-export const QuestionOnSheet: Story = {
-  parameters: { visual: { viewport: { width: 760, height: 160 } } },
-  render: () => <Asked variant="sheet" />,
+  render: () => (
+    <div className="flex flex-col">
+      <Message from="user">
+        <MessageContent>{QUESTION}</MessageContent>
+      </Message>
+    </div>
+  ),
 };
 
 /** An answer that is being written, a step at a time: „Weiter“ lets the next words arrive. */
-function Arriving({ arrive }: { arrive: ArriveBy }) {
+function Arriving() {
   const [count, setCount] = useState(() => afterWords(0, 14));
   const streaming = count < ANSWER_LENGTH;
   return (
@@ -106,14 +94,13 @@ function Arriving({ arrive }: { arrive: ArriveBy }) {
       <Button
         size="sm"
         data-step="next"
-        // By lines, a step has to fill a line before anything shows.
-        onClick={() => setCount((now) => afterWords(now, arrive === "lines" ? 18 : 7))}
+        onClick={() => setCount((now) => afterWords(now, 7))}
         disabled={!streaming}
       >
         Weiter
       </Button>
       <Message from="assistant" streaming={streaming}>
-        <MessageContent arrive={arrive}>{answerUpTo(count)}</MessageContent>
+        <MessageContent>{answerUpTo(count)}</MessageContent>
         <Actions />
       </Message>
     </div>
@@ -132,23 +119,11 @@ export const Streaming: Story = {
       motion: [{ name: "arrive", click: '[data-step="next"]', frames: 8 }],
     },
   },
-  render: () => <Arriving arrive="words" />,
-};
-
-/** To compare: `arrive="lines"`, a line fades in once it is full, the last one waits. */
-export const StreamingByLines: Story = {
-  parameters: {
-    visual: {
-      viewport: { width: 760, height: 460 },
-      target: '[data-step="next"]',
-      motion: [{ name: "arrive", click: '[data-step="next"]', frames: 8 }],
-    },
-  },
-  render: () => <Arriving arrive="lines" />,
+  render: () => <Arriving />,
 };
 
 /** The answer arriving on its own, as from a model; „Noch einmal abspielen“ starts it over. */
-function Played({ arrive }: { arrive: ArriveBy }) {
+function Played() {
   const { count, done, run } = useArrivingAnswer();
   return (
     <div className="flex flex-col items-start gap-6">
@@ -156,7 +131,7 @@ function Played({ arrive }: { arrive: ArriveBy }) {
         Noch einmal abspielen
       </Button>
       <Message from="assistant" streaming={!done}>
-        <MessageContent arrive={arrive}>{answerUpTo(count)}</MessageContent>
+        <MessageContent>{answerUpTo(count)}</MessageContent>
         <Actions />
       </Message>
     </div>
@@ -166,13 +141,7 @@ function Played({ arrive }: { arrive: ArriveBy }) {
 /** Played by a clock, to watch: not for the pictures. */
 export const Playing: Story = {
   tags: ["visual-skip"],
-  render: () => <Played arrive="words" />,
-};
-
-/** To compare, played: a line at a time. */
-export const PlayingByLines: Story = {
-  tags: ["visual-skip"],
-  render: () => <Played arrive="lines" />,
+  render: () => <Played />,
 };
 
 /** An answer that failed says what happened, and offers the next step in words. */

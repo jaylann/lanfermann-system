@@ -3,7 +3,7 @@ import { expect, waitFor } from "storybook/test";
 
 import { Message, MessageContent } from "@/components/message/message";
 
-import { SourceList, type SourceReferenceLook, Sources } from "./sources";
+import { SourceList, Sources } from "./sources";
 import { SourcedAnswer, SOURCES } from "./story-sources";
 
 const meta = {
@@ -21,10 +21,10 @@ const meta = {
 export default meta;
 type Story = StoryObj;
 
-function Answer({ look, open }: { look?: SourceReferenceLook; open?: number }) {
+function Answer({ open }: { open?: number }) {
   return (
     <Message from="assistant">
-      <Sources items={SOURCES} look={look} defaultOpen={open}>
+      <Sources items={SOURCES} defaultOpen={open}>
         <MessageContent>
           <SourcedAnswer />
         </MessageContent>
@@ -40,11 +40,6 @@ function Answer({ look, open }: { look?: SourceReferenceLook; open?: number }) {
  */
 export const InAnAnswer: Story = {
   render: () => <Answer />,
-};
-
-/** To compare: `look="plug"`, the number in a small raised plug standing on the line. */
-export const Plugs: Story = {
-  render: () => <Answer look="plug" />,
 };
 
 /** Under the pointer or with the keyboard on a number: the card with the site, title and text. */

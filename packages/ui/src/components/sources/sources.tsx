@@ -21,16 +21,9 @@ import { entryId, siteOf, type Source, sourceAt } from "./source-list";
 
 export type { Source } from "./source-list";
 
-/**
- * How a reference stands in the line: `number`, a small raised digit, as a footnote is set;
- * `plug`, the digit in a small raised plug on the line.
- */
-export type SourceReferenceLook = "number" | "plug";
-
 type SourcesContextValue = {
   items: readonly Source[];
   base: string;
-  look: SourceReferenceLook;
   card: PreviewCardPrimitive.Handle<number>;
 };
 
@@ -45,7 +38,6 @@ function useSources(part: string) {
 export type SourcesProps = {
   /** The sources of the answer, in the order of their numbers: the first is 1. */
   items: readonly Source[];
-  look?: SourceReferenceLook;
   /** The number whose card is open at first, on its first reference: for a still picture. */
   defaultOpen?: number;
   /** The answer with its `SourceReference`s, and the `SourceList` under it. */
@@ -60,7 +52,7 @@ export type SourcesProps = {
  * One card serves every reference of the answer. It opens on the first after a moment, so a
  * pointer passing over the text does not open it, and then moves to a neighbour at once.
  */
-export function Sources({ items, look = "number", defaultOpen, children }: SourcesProps) {
+export function Sources({ items, defaultOpen, children }: SourcesProps) {
   const base = useId().replace(/:/g, "");
   const [card] = useState(() => PreviewCardPrimitive.createHandle<number>());
   useEffect(() => {
@@ -73,7 +65,7 @@ export function Sources({ items, look = "number", defaultOpen, children }: Sourc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <SourcesContext value={{ items, base, look, card }}>
+    <SourcesContext value={{ items, base, card }}>
       {children}
       <HoverCard handle={card}>
         {({ payload }) => {
@@ -101,13 +93,12 @@ function SourceCard({ source }: { source: Source }) {
   );
 }
 
-const referenceLook: Record<SourceReferenceLook, string> = {
-  // A footnote's digit: small, raised, in the accent, tight after the word or the stop.
-  number:
-    "relative -top-[0.45em] rounded-xs px-[0.12em] text-[0.72em] leading-none font-semibold text-accent hover:text-accent-hover hover:underline",
-  // A small plug standing on the line, the digit in it.
-  plug: "relative -top-px mx-0.5 inline-flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-[5px] bg-raised px-1 align-text-bottom text-xs leading-none font-semibold text-fg depth-plug transition-[box-shadow,background-color] spring-snap hover:bg-surface-quiet",
-};
+/**
+ * A footnote's digit: small, raised, in the accent, tight after the word or the stop. Chosen
+ * over the digit in a small raised plug on the line (Justin, 2026-11-19).
+ */
+const referenceLook =
+  "relative -top-[0.45em] rounded-xs px-[0.12em] text-[0.72em] leading-none font-semibold text-accent hover:text-accent-hover hover:underline";
 
 export type SourceReferenceProps = Omit<ComponentProps<"a">, "href" | "children"> & {
   /** The source's number: its place in `Sources`' items, from 1. */
@@ -129,7 +120,7 @@ export function SourceReference({
   className,
   ...props
 }: SourceReferenceProps) {
-  const { items, base, look, card } = useSources("SourceReference");
+  const { items, base, card } = useSources("SourceReference");
   const id = useId();
   const source = items[n - 1];
   useEffect(() => {
@@ -137,7 +128,7 @@ export function SourceReference({
   }, [source, items, n]);
   if (!source) {
     return (
-      <span data-slot="source-reference" data-missing="" className={cn(referenceLook[look])}>
+      <span data-slot="source-reference" data-missing="" className={referenceLook}>
         {n}
       </span>
     );
@@ -150,7 +141,6 @@ export function SourceReference({
       closeDelay={150}
       id={id}
       data-slot="source-reference"
-      data-look={look}
       data-sources={base}
       data-n={n}
       href={`#${entryId(base, n)}`}
@@ -159,7 +149,7 @@ export function SourceReference({
         // Smaller than a finger: an invisible target of 44px around it (touch.css).
         "touch-target tabular-nums no-underline select-none",
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
-        referenceLook[look],
+        referenceLook,
         className,
       )}
       {...props}

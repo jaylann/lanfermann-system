@@ -10,7 +10,6 @@ import {
   PromptInputActions,
   PromptInputAttach,
   PromptInputAttachments,
-  type PromptInputLayout,
   PromptInputSubmit,
   PromptInputTextarea,
 } from "./prompt-input";
@@ -40,13 +39,11 @@ const PLACEHOLDER = "z. B. Fasse das Angebot für die Bäckerei Kornprobst zusam
 
 /** A prompt as a product holds it: its files, whether an answer runs. Nothing is sent. */
 function Prompt({
-  layout = "stacked",
   text = "",
   files: initialFiles = [],
   running: initialRunning = false,
   disabled,
 }: {
-  layout?: PromptInputLayout;
   text?: string;
   files?: PromptFile[];
   running?: boolean;
@@ -57,7 +54,6 @@ function Prompt({
   const count = useRef(0);
   return (
     <PromptInput
-      layout={layout}
       defaultValue={text}
       running={running}
       disabled={disabled}
@@ -183,17 +179,6 @@ export const Growing: Story = {
   render: () => (
     <div className="w-[26rem]">
       <Prompt text="Fasse das Angebot für die Bäckerei Kornprobst zusammen. Was kostet es," />
-    </div>
-  ),
-};
-
-/** To compare: `layout="inline"`, the send key at the right of the last line, attach at the left. */
-export const Inline: Story = {
-  parameters: { visual: { viewport: { width: 720, height: 240 } } },
-  render: () => (
-    <div className="flex flex-col gap-6">
-      <Prompt layout="inline" />
-      <Prompt layout="inline" text={`${TEXT}\nUnd sind die Preise netto?`} files={WITH_FILES} />
     </div>
   ),
 };

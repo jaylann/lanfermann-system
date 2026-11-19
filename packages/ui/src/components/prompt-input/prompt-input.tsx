@@ -34,12 +34,6 @@ import { cn } from "@/lib/cn";
 
 import { promptKey, TOUCH_ONLY } from "./keys";
 
-/**
- * Where the send key stands: `inline`, at the right of the text's last line, the attach key
- * at the left; `stacked`, in a row of its own under the text, attach left and send right.
- */
-export type PromptInputLayout = "inline" | "stacked";
-
 type PromptContextValue = {
   value: string;
   setValue: (value: string) => void;
@@ -107,7 +101,6 @@ export type PromptInputProps = Omit<
   accept?: string;
   /** The largest size a file may have, in bytes. */
   maxSize?: number;
-  layout?: PromptInputLayout;
   disabled?: boolean;
 };
 
@@ -116,6 +109,9 @@ export type PromptInputProps = Omit<
  * attached to it, the attach key and the send key, so the halo goes around all of it. Put a
  * `PromptInputAttachments`, a `PromptInputTextarea` and `PromptInputActions` (with a
  * `PromptInputAttach` and a `PromptInputSubmit`) inside.
+ *
+ * The text stands on top and the keys in a row of their own under it, the paper clip at the
+ * left and send at the right, where there is room for more keys (Justin, 2026-11-19).
  *
  * Enter sends and Shift+Enter breaks the line; on a screen that is only touched, Enter breaks
  * the line and the key sends. A word being composed (Japanese, Chinese) is never sent. While
@@ -138,7 +134,6 @@ export function PromptInput({
   onReject,
   accept,
   maxSize,
-  layout = "stacked",
   disabled = false,
   className,
   children,
@@ -215,7 +210,6 @@ export function PromptInput({
     <PromptContext value={context}>
       <form
         data-slot="prompt-input"
-        data-layout={layout}
         data-running={running ? "" : undefined}
         data-dragging={dragging ? "" : undefined}
         className={cn("w-full min-w-0", className)}
