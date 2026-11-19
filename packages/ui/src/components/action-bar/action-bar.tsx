@@ -4,9 +4,9 @@ import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar";
 import { type ComponentProps, type ReactNode, useRef, useState } from "react";
 
 import { Button, type ButtonProps } from "@/components/button/button";
+import { RollingNumber } from "@/components/rolling-number/rolling-number";
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { CloseGlyph } from "@/internal/glyphs";
-import { RollingNumber } from "@/internal/rolling-number";
 import { cn } from "@/lib/cn";
 
 export type ActionBarProps = Omit<ComponentProps<"div">, "children"> & {

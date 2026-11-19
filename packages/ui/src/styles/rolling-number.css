@@ -1,0 +1,102 @@
+/*
+ * The places of a `RollingNumber`. A digit is a column of the ten digits (and a second 0 under
+ * the 9) behind a window one line tall. Its position is `--roll`, a registered number that
+ * only grows while the number grows and only shrinks while it shrinks; the digit shown is the
+ * position modulo ten. So every column rolls the way the number moves, 9 goes forward into 0
+ * like an odometer, and a change that arrives mid-roll is a new target for the same transition.
+ *
+ * The window fades at its top and bottom edge, in the empty space above and below the digits, so
+ * a digit rolls out softly instead of being cut. At rest the fade touches nothing.
+ *
+ * A place that joins (999 becomes 1.000) opens from nothing as it fades in; one that leaves
+ * fades first, then closes, so what stands beside the number is pushed aside instead of jumping.
+ * This is the one width that moves in the kit besides a chip's place (`ChipGroup`): it moves
+ * the text after the number, which a transform could not.
+ */
+@property --roll {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@layer components {
+  [data-slot="rolling-number"] {
+    --rolling-duration: var(--transition-duration-spring-settle);
+    --rolling-ease: var(--ease-spring-settle);
+
+    &[data-spring="seat"] {
+      --rolling-duration: var(--transition-duration-spring-seat);
+      --rolling-ease: var(--ease-spring-seat);
+    }
+  }
+
+  [data-slot="rolling-number-place"] {
+    display: inline-grid;
+    grid-template-columns: 1fr;
+    transition:
+      grid-template-columns var(--transition-duration-spring-settle) var(--ease-spring-settle),
+      opacity var(--transition-duration-spring-settle) var(--ease-spring-settle);
+
+    [data-live] & {
+      @starting-style {
+        grid-template-columns: 0fr;
+        opacity: 0;
+      }
+    }
+
+    /* Faded before its place closes, so it is never seen under a neighbour. */
+    &[data-leaving] {
+      grid-template-columns: 0fr;
+      opacity: 0;
+      transition:
+        opacity var(--transition-duration-spring-leave) var(--ease-spring-leave),
+        grid-template-columns var(--transition-duration-spring-settle) var(--ease-spring-settle)
+          75ms;
+    }
+  }
+
+  /* What stands in a place keeps its size; only the place changes, and clips it sideways. */
+  [data-slot="rolling-number-symbol"] {
+    min-width: 0;
+    overflow: clip;
+    white-space: pre;
+  }
+
+  [data-slot="rolling-number-window"] {
+    min-width: 0;
+    height: 1lh;
+    /* `clip`, not `hidden`: a box that scrolls would sit on its bottom edge, not its baseline. */
+    overflow: clip;
+    /* A quarter of the room the line leaves around a digit: Sofia Sans sits its digits high in
+       the line, and a deeper fade touched their tops at rest (measured at 3x in three engines). */
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 calc((1lh - 1cap) / 4),
+      #000 calc(100% - (1lh - 1cap) / 4),
+      transparent
+    );
+  }
+
+  [data-slot="rolling-number-column"] {
+    display: block;
+    white-space: pre;
+    translate: 0 calc(mod(var(--roll), 10) * -100% / 11);
+    transition: --roll var(--rolling-duration) var(--rolling-ease);
+
+    &::before {
+      content: var(--rolling-digits, "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0");
+    }
+  }
+
+  /* Under reduced motion a digit changes at once and nothing beside it slides; places fade. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="rolling-number-column"] {
+      transition: none;
+    }
+    [data-slot="rolling-number-place"],
+    [data-slot="rolling-number-place"][data-leaving] {
+      transition: opacity var(--transition-duration-spring-leave) var(--ease-spring-leave);
+    }
+  }
+}
