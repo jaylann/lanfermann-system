@@ -59,7 +59,7 @@ function Option({
 }
 
 function Board({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap gap-x-12 gap-y-10">{children}</div>;
+  return <div className="flex w-full flex-wrap gap-x-12 gap-y-10">{children}</div>;
 }
 
 function Exchange({ variant }: { variant: MessageVariant }) {
@@ -69,7 +69,8 @@ function Exchange({ variant }: { variant: MessageVariant }) {
         <MessageContent>{QUESTION}</MessageContent>
       </Message>
       <Message from="assistant">
-        <MessageContent>{answerUpTo(150)}</MessageContent>
+        {/* The first paragraph, whole. */}
+        <MessageContent>{answerUpTo(145)}</MessageContent>
       </Message>
     </div>
   );
