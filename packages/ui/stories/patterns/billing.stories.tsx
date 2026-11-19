@@ -120,7 +120,7 @@ function Board() {
         <Text tone="muted">Ihr Tarif, was Sie davon nutzen, und Ihre Rechnungen.</Text>
       </div>
 
-      <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
         <section aria-labelledby="tarif" className="flex min-w-0 flex-col gap-3">
           <Heading level={2} size="label" id="tarif">
             Ihr Tarif
@@ -184,8 +184,8 @@ function Board() {
           <TableBody>
             {INVOICES.map(([id, date, amount, status, tone]) => (
               <TableRow key={id}>
-                <TableCell className="font-medium text-fg">{id}</TableCell>
-                <TableCell>{date}</TableCell>
+                <TableCell className="font-medium whitespace-nowrap text-fg">{id}</TableCell>
+                <TableCell className="whitespace-nowrap">{date}</TableCell>
                 <TableCell>
                   <Badge tone={id === "R-2026-0011" && !failed ? "success" : tone}>
                     {id === "R-2026-0011" && !failed ? "Bezahlt" : status}

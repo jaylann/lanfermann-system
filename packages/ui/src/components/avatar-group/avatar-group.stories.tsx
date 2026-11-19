@@ -87,7 +87,7 @@ export const Presence: Story = {
 export const OnRow: Story = {
   parameters: { visual: { viewport: { width: 640, height: 300 } } },
   render: () => (
-    <div className="flex w-[560px] flex-col gap-6">
+    <div className="flex w-[min(560px,calc(100vw-2rem))] flex-col gap-6">
       <Table aria-label="Angebote">
         <TableHeader>
           <TableRow>

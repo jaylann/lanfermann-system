@@ -198,7 +198,7 @@ function Board() {
         </Dialog>
       </div>
 
-      <div className="grid gap-x-10 gap-y-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
         <Table aria-label="Mitglieder">
           <TableHeader>
             <TableRow>

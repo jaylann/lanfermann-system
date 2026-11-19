@@ -132,7 +132,7 @@ function Board() {
         </Stat>
       </StatGroup>
 
-      <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         {/* Not a region of its own: the table is one, named by the heading. */}
         <div className="flex min-w-0 flex-col gap-3">
           <Heading level={2} size="label" id="neueste">
