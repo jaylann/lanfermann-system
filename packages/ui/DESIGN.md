@@ -120,6 +120,7 @@ story `Patterns/Specimen`.
 | Pages of a list           | `Pagination` is numbered by default, the current page on a tint that glides to the next. The compact form („Seite 3 von 12“ and two keys) stays as the variant for a narrow place.                                                                                                                                                                                                                                                                                                                                                                                                                                              | Justin, 2026-11-18                  |
 | Selection bar             | An `ActionBar` is a dark sheet by default, on Ink like a toast, and a light one with `ground="paper"`: "it should have both dark and light mode available". Dark on a dark page it was set off by its edge alone.                                                                                                                                                                                                                                                                                                                                                                                                               | Justin, 2026-11-18                  |
 | List strings              | The German defaults of the list parts stand as built: „ausgewählt“ and „Auswahl aufheben“ in an `ActionBar`, „Seiten“, „Seite 3“, „Seite 3 von 12“, „Vorherige Seite“ and „Nächste Seite“ in a `Pagination`, „Entfernen“ for a chip's key.                                                                                                                                                                                                                                                                                                                                                                                      | Justin, 2026-11-18                  |
+| Code field in a dialog    | An `OtpField` keeps its own width by default and shares the width of its place with `fill`. In a dialog or a narrow card it is filled: at their own size six slots kept half the line empty, and centred they broke the dialog's left edge. Label and hint stay left.                                                                                                                                                                                                                                                                                                                                                           | Justin, 2026-11-19                  |
 
 ## Colour
 
@@ -567,7 +568,9 @@ Every component belongs to one of the four matters, and takes its treatment from
   wait. A digit is drawn over its input, so it can seat into the slot, and is readable from
   its first frame. A pasted code, or one the phone offers from a message, fills every slot, the
   digits seating one after the other. A wrong code is said in words under the field; every
-  slot takes the danger edge and only the one being typed opens the halo. Nothing shakes.
+  slot takes the danger edge and only the one being typed opens the halo. Nothing shakes. The
+  slots keep their own size; with `fill` they share the width of their place, which is how
+  the field stands in a dialog.
 - **FileUpload** takes files and does not upload them: it sorts them by kind and size,
   reports them, and shows the progress it is given. Its zone is a socket, cut like a field;
   while a file hangs over it, it takes the halo, the sign that it will take what is let go.

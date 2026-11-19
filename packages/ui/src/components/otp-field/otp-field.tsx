@@ -28,6 +28,11 @@ export type OtpFieldProps = Omit<
    * group share one socket, divided by hairlines.
    */
   variant?: "separate" | "joined";
+  /**
+   * The slots share the width of the field's place instead of keeping their own: for a dialog
+   * or a narrow card, where six small slots would leave half the line empty.
+   */
+  fill?: boolean;
   /** What a slot after the first is called for assistive tech: "Ziffer 2 von 6". */
   slotLabel?: (position: number, length: number) => string;
   className?: string;
@@ -76,6 +81,7 @@ export function OtpField({
   length = 6,
   groupSize = 3,
   variant = "separate",
+  fill = false,
   mask = false,
   slotLabel = (position, total) => `Ziffer ${position} von ${total}`,
   className,
@@ -121,7 +127,12 @@ export function OtpField({
       data-burst={burst ? "" : undefined}
       length={length}
       mask={mask}
-      className={cn("group/otp inline-flex w-fit items-center gap-2", className)}
+      data-fill={fill ? "" : undefined}
+      className={cn(
+        "group/otp items-center gap-2",
+        fill ? "flex w-full" : "inline-flex w-fit",
+        className,
+      )}
       onValueChange={(value, details) => {
         if (value.length - lastLength.current > 1) {
           clearTimeout(bursting.current);
@@ -156,7 +167,11 @@ export function OtpField({
           )}
           <span
             data-slot="otp-field-group"
-            className={cn("flex", variant === "joined" ? joinedGroup : "gap-1.5")}
+            className={cn(
+              "flex",
+              variant === "joined" ? joinedGroup : "gap-1.5",
+              fill && "min-w-0 flex-1",
+            )}
           >
             {slots.map((index) => (
               <OTPFieldPrimitive.Input
@@ -169,7 +184,8 @@ export function OtpField({
                     data-filled={state.filled ? "" : undefined}
                     style={{ "--slot": index } as CSSProperties}
                     className={cn(
-                      "relative inline-grid size-(--control-lg) place-items-center",
+                      "relative inline-grid h-(--control-lg) place-items-center",
+                      fill ? "min-w-0 flex-1" : "w-(--control-lg)",
                       variant === "joined" ? joinedSlot : separateSlot,
                       "group-data-entered/otp:transition-none",
                     )}

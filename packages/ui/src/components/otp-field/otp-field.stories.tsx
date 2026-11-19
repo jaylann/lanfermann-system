@@ -64,6 +64,20 @@ export const Joined: Story = {
   render: () => <Code variant="joined" />,
 };
 
+/**
+ * `fill`: the slots share the width of the field's place, for a dialog or a narrow card. The
+ * label and the hint stay where they are.
+ */
+export const Fill: Story = {
+  parameters: { visual: { viewport: { width: 440, height: 330 } } },
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <Code fill defaultValue="482" />
+      <Code fill variant="joined" defaultValue="482" />
+    </div>
+  ),
+};
+
 /** A code that is all there. It stands still when the page loads. */
 export const Filled: Story = {
   render: () => (

@@ -211,7 +211,7 @@ function Keys({ show = "list" }: { show?: Shown }) {
               <DialogBody>
                 <Field>
                   <FieldLabel>Bestätigungscode</FieldLabel>
-                  <OtpField onValueComplete={() => setStep("created")} />
+                  <OtpField fill onValueComplete={() => setStep("created")} />
                   <FieldDescription>Sechs Ziffern, 30 Sekunden gültig.</FieldDescription>
                 </Field>
               </DialogBody>
@@ -276,7 +276,10 @@ function Keys({ show = "list" }: { show?: Shown }) {
  */
 export const List: Story = { render: () => <Keys /> };
 
-/** Before a key is made: the code that proves who asks. The last digit moves on by itself. */
+/**
+ * Before a key is made: the code that proves who asks. Its slots share the dialog's width
+ * (`fill`), so the field ends where the text above it does. The last digit moves on by itself.
+ */
 export const Confirm: Story = { render: () => <Keys show="confirm" /> };
 
 /** The new key, shown once: hidden but for its prefix, with a key to show and one to copy it. */
