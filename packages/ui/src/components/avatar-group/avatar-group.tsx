@@ -43,7 +43,7 @@ export type AvatarGroupProps = Omit<ComponentProps<"div">, "children"> & {
 /**
  * Several people at once, as one stack of overlapping `Avatar`s: who is in a team, who works on
  * a record, who has seen it. The first stands in front. Between two the gap is cut out of the
- * one underneath, following its rounded corners at a constant distance, so the stack is right on
+ * one underneath, following the one in front at a constant distance, so the stack is right on
  * every ground, on a washed table row and over a picture. More people than fit become a „+3“
  * tile of the same shape.
  *
@@ -72,13 +72,18 @@ export function AvatarGroup({
   const geometry = avatarGeometry[size];
   const over = avatarOverlap[overlap][size];
   const step = geometry.size - over;
-  const cut = (first: boolean, dot: boolean) => {
+  /**
+   * The mask of a tile: cut by the one in front (and by its dot, which stands half outside it,
+   * over this one), and around its own dot.
+   */
+  const cut = (index: number, dot: boolean) => {
+    const before = index > 0 ? front[index - 1] : undefined;
     const options = {
       size: geometry.size,
-      radius: geometry.radius,
       gap,
-      step: first ? undefined : step,
+      step: index > 0 ? step : undefined,
       dot: dot ? geometry.dot : undefined,
+      frontDot: before?.presence ? geometry.dot : undefined,
     };
     const mask = cutMask(options);
     if (!mask) return undefined;
@@ -104,7 +109,7 @@ export function AvatarGroup({
       tip: personLabel(person, words),
       content: (
         <>
-          <Avatar size={size} {...cut(index === 0, person.presence !== undefined)}>
+          <Avatar size={size} {...cut(index, person.presence !== undefined)}>
             {person.src && <AvatarImage src={person.src} />}
             <AvatarFallback className={centred(index === 0)}>
               {person.initials ?? initialsOf(person.name)}
@@ -131,15 +136,15 @@ export function AvatarGroup({
       content: (
         <span
           data-slot="avatar-group-more"
-          {...cut(tiles.length === 0, false)}
+          {...cut(tiles.length, false)}
           // The same shape as an avatar, quieter: it stands for people, it is not one.
           className={cn(
-            "inline-flex shrink-0 items-center justify-center bg-trough font-semibold text-fg tabular-nums select-none forced-colors:outline",
+            "inline-flex shrink-0 items-center justify-center rounded-full bg-trough font-semibold text-fg tabular-nums select-none forced-colors:outline",
             centred(tiles.length === 0),
-            size === "sm" && "size-6 rounded-xs text-xs",
-            size === "md" && "size-7 rounded-sm text-xs",
-            size === "lg" && "size-9 rounded-md text-sm",
-            size === "xl" && "size-12 rounded-lg text-base",
+            size === "sm" && "size-6 text-[0.625rem]",
+            size === "md" && "size-7 text-xs",
+            size === "lg" && "size-9 text-sm",
+            size === "xl" && "size-12 text-base",
           )}
         >
           +{rest.length}

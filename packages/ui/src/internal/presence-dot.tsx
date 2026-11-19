@@ -13,7 +13,7 @@ const look: Record<Presence, string> = {
 };
 
 /**
- * The dot in the bottom corner of an avatar that says whether the person is there. It stands
+ * The dot on the edge of an avatar, at the bottom end, that says whether the person is there. It stands
  * beside the avatar, not in it (the avatar is masked, and a dot inside would be cut out with
  * it), and the avatar has a hole cut for it the gap larger (`avatar-cut.ts`). Its words are
  * said elsewhere: the dot alone never carries the status. Server-safe.

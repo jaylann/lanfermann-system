@@ -10,15 +10,15 @@ import { PresenceDot } from "@/internal/presence-dot";
 import { mergeClassName } from "@/lib/cn";
 
 const avatarVariants = cva(
-  // A rounded square, never a circle: the kit's shapes are milled, not turned.
-  "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-fg font-semibold text-ground select-none forced-colors:outline",
+  // Round: a person is not a part of the machine (Justin, 2026-11-19; before, a rounded square).
+  "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-fg font-semibold text-ground select-none forced-colors:outline",
   {
     variants: {
       size: {
-        sm: "size-6 rounded-xs text-xs",
-        md: "size-7 rounded-sm text-xs",
-        lg: "size-9 rounded-md text-sm",
-        xl: "size-12 rounded-lg text-base",
+        sm: "size-6 text-[0.625rem]",
+        md: "size-7 text-xs",
+        lg: "size-9 text-sm",
+        xl: "size-12 text-base",
       },
     },
     defaultVariants: { size: "md" },
@@ -31,8 +31,8 @@ const DOT_GAP = 2;
 export type AvatarProps = AvatarPrimitive.Root.Props &
   VariantProps<typeof avatarVariants> & {
     /**
-     * Whether the person is there: a dot in the bottom corner, cut out of the avatar with a
-     * gap, so it reads on every ground. It is said in words as well (`presenceLabel`).
+     * Whether the person is there: a dot on the edge at the bottom end, cut out of the avatar
+     * with a gap, so it reads on every ground. It is said in words as well (`presenceLabel`).
      */
     presence?: Presence;
     /** The word assistive tech hears for the presence. „Online“, „Abwesend“, „Offline“. */
@@ -40,8 +40,8 @@ export type AvatarProps = AvatarPrimitive.Root.Props &
   };
 
 /**
- * A person or a business, as a rounded square. Put an `AvatarImage` and an `AvatarFallback` with
- * one or two initials inside; the initials show until the picture has loaded, or if there is none.
+ * A person or a business, as a circle. Put an `AvatarImage` and an `AvatarFallback` with one or
+ * two initials inside; the initials show until the picture has loaded, or if there is none.
  * Several people at once are an `AvatarGroup`.
  */
 export function Avatar({ className, size, presence, presenceLabel, style, ...props }: AvatarProps) {
@@ -66,7 +66,7 @@ export function Avatar({ className, size, presence, presenceLabel, style, ...pro
   if (!presence) return root();
 
   const geometry = avatarGeometry[size ?? "md"];
-  const cut = { size: geometry.size, radius: geometry.radius, gap: DOT_GAP, dot: geometry.dot };
+  const cut = { size: geometry.size, gap: DOT_GAP, dot: geometry.dot };
   return (
     <span data-slot="avatar-place" className="relative inline-flex shrink-0">
       {root(cutMask(cut), cutMask({ ...cut, rtl: true }))}

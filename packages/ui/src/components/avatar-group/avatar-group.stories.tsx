@@ -61,7 +61,7 @@ export const Few: Story = {
 };
 
 /**
- * Whether someone is there: a dot cut out of the corner, the ring alone when they are away from
+ * Whether someone is there: a dot cut out of the edge, the ring alone when they are away from
  * their desk for good. The words are in the tooltip and in what assistive tech hears.
  */
 export const Presence: Story = {
