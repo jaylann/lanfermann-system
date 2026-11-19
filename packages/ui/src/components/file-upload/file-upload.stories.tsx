@@ -153,22 +153,20 @@ function Board({ initial = [], autoRun = false, controls = false, onAdded, ...pr
           variant={props.variant}
           description="PDF, Bild, ZIP oder Excel, höchstens 10 MB je Datei"
         />
-        {uploads.length > 0 && (
-          <FileUploadList aria-label="Dateien">
-            {uploads.map((upload) => (
-              <FileUploadItem
-                key={upload.id}
-                name={upload.name}
-                size={upload.size}
-                status={upload.status}
-                progress={upload.progress}
-                error={upload.error}
-                onRetry={upload.status === "error" ? () => retry(upload.id) : undefined}
-                onRemove={props.disabled ? undefined : () => remove(upload.id)}
-              />
-            ))}
-          </FileUploadList>
-        )}
+        <FileUploadList aria-label="Dateien">
+          {uploads.map((upload) => (
+            <FileUploadItem
+              key={upload.id}
+              name={upload.name}
+              size={upload.size}
+              status={upload.status}
+              progress={upload.progress}
+              error={upload.error}
+              onRetry={upload.status === "error" ? () => retry(upload.id) : undefined}
+              onRemove={props.disabled ? undefined : () => remove(upload.id)}
+            />
+          ))}
+        </FileUploadList>
       </FileUpload>
       {controls && (
         <div className="flex gap-2">
@@ -194,7 +192,10 @@ export const Default: Story = {
   render: () => <Board autoRun />,
 };
 
-/** `variant="plain"`: the words and the button alone. */
+/**
+ * `variant="plain"`: the words and the button alone, for a lower zone where the tile would
+ * stand out too much: one of several in a form, or in a narrow card.
+ */
 export const Plain: Story = {
   parameters: { visual: { viewport: { width: 520, height: 210 } } },
   render: () => <Board variant="plain" autoRun />,
@@ -265,6 +266,12 @@ export const Phone: Story = {
 const added = fn();
 
 /**
+ * Lets what a step has set moving come to rest before the next one starts. The test runs in
+ * the open workshop too, where its steps piled up into one burst of motion.
+ */
+const settle = () => new Promise((done) => setTimeout(done, 600));
+
+/**
  * As a test: the button is reached with Tab, a chosen file joins the list and arrives, a file
  * that is too large is turned away with its reason, a failed one can be tried again, and
  * removing a row hands the focus to the next.
@@ -293,6 +300,7 @@ export const Keyboard: Story = {
       await waitFor(() => expect(rows()).toContain("Hochgeladen: Lageplan.pdf"), {
         timeout: 4000,
       });
+      await settle();
     });
 
     await step("a file that is too large is turned away, in words", async () => {
@@ -304,12 +312,14 @@ export const Keyboard: Story = {
         expect(canvas.getByText("Die Datei ist größer als 10 MB.")).toBeVisible(),
       );
       await expect(added).toHaveBeenCalledTimes(1);
+      await settle();
     });
 
     await step("a failed file can be tried again", async () => {
       const retry = canvas.getAllByRole("button", { name: "Noch einmal versuchen" })[0]!;
       await userEvent.click(retry);
       await waitFor(() => expect(rows()).toContain("Wird hochgeladen: Leistungsverzeichnis.xlsx"));
+      await settle();
     });
 
     await step("removing a row hands the focus to the one beside it", async () => {

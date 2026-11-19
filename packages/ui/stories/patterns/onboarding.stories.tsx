@@ -155,16 +155,16 @@ function StepBody({ step }: { step: number }) {
         description="PNG, JPG oder SVG, höchstens 2 MB"
         buttonLabel="Datei auswählen"
       />
-      {logo && (
-        <FileUploadList aria-label="Logo">
+      <FileUploadList aria-label="Logo">
+        {logo && (
           <FileUploadItem
             key={logo.name}
             name={logo.name}
             size={logo.size}
             onRemove={() => setLogo(undefined)}
           />
-        </FileUploadList>
-      )}
+        )}
+      </FileUploadList>
     </FileUpload>
   );
 }

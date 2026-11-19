@@ -29,6 +29,11 @@ type Leaver<Item> = { item: Item; key: string; index: number };
  *
  * Draw every place with `placeProps`, inside the box of `boxRef`: a place says when its
  * transition has ended, and the hook finds the places that never started one.
+ *
+ * Hand it the same array for as long as nothing changed: memoise a list made from `children`
+ * on `children`. The hook keeps the list as it was last drawn, so what leaves goes as it last
+ * looked (a file removed mid-upload, not as it stood when the list last gained or lost one),
+ * and a new array every render would never let it settle.
  */
 export function usePresence<Item>(
   items: readonly Item[],
@@ -40,13 +45,15 @@ export function usePresence<Item>(
 
   // Compared while rendering, as React asks for state that follows a prop.
   const keys = items.map(keyOf);
-  if (before.map(keyOf).join("\n") !== keys.join("\n")) {
-    const stays = new Set(keys);
-    const gone = before
-      .map((item, index) => ({ item, key: keyOf(item), index }))
-      .filter(({ key }) => !stays.has(key));
-    // What comes back while it is leaving is simply there again.
-    setLeavers((old) => [...old.filter(({ key }) => !stays.has(key)), ...gone]);
+  if (before !== items) {
+    if (before.map(keyOf).join("\n") !== keys.join("\n")) {
+      const stays = new Set(keys);
+      const gone = before
+        .map((item, index) => ({ item, key: keyOf(item), index }))
+        .filter(({ key }) => !stays.has(key));
+      // What comes back while it is leaving is simply there again.
+      setLeavers((old) => [...old.filter(({ key }) => !stays.has(key)), ...gone]);
+    }
     setBefore(items);
   }
 
@@ -109,14 +116,4 @@ export const placeInRow = [
   "inline-grid grid-cols-[1fr] transition-[grid-template-columns,margin] spring-settle",
   "in-data-live:starting:-mr-(--chip-gap) in-data-live:starting:grid-cols-[0fr]",
   "data-leaving:-mr-(--chip-gap) data-leaving:grid-cols-[0fr] data-leaving:delay-75",
-].join(" ");
-
-/**
- * A place in a list of rows, which only closes: a row that joins a list is uncovered by the
- * list growing (`Grow`), one that leaves fades and its place folds shut, so the rows below
- * glide up. It clips only while it closes; give what stands inside `min-h-0`.
- */
-export const placeInList = [
-  "grid grid-rows-[1fr] transition-[grid-template-rows] spring-settle",
-  "data-leaving:grid-rows-[0fr] data-leaving:overflow-clip data-leaving:delay-75",
 ].join(" ");

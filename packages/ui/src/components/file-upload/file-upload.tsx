@@ -16,12 +16,11 @@ import {
 } from "react";
 
 import { Button } from "@/components/button/button";
-import { Grow } from "@/components/grow/grow";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { Progress, ProgressTrack } from "@/components/progress/progress";
 import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
-import { placeInList, placeProps, useLive, usePresence } from "@/internal/presence";
+import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 
 import {
@@ -38,12 +37,18 @@ type FileUploadContextValue = {
   /** Takes files from a drop or a paste, sorts them by the rules and reports them. */
   add: (files: readonly File[]) => void;
   disabled: boolean;
+  /**
+   * Whether the upload has stood for a frame. A list that is put in later (with its first
+   * file) then opens its rows as one that was there all along does.
+   */
+  live: boolean;
 };
 
 const FileUploadContext = createContext<FileUploadContextValue>({
   open: () => {},
   add: () => {},
   disabled: false,
+  live: false,
 });
 
 export type FileUploadProps = Omit<ComponentProps<"div">, "onChange"> &
@@ -85,9 +90,11 @@ export function FileUpload({
   ...props
 }: FileUploadProps) {
   const input = useRef<HTMLInputElement>(null);
+  const live = useLive();
   const context = useMemo<FileUploadContextValue>(
     () => ({
       disabled,
+      live,
       open: () => input.current?.click(),
       add: (files) => {
         if (disabled || files.length === 0) return;
@@ -96,11 +103,16 @@ export function FileUpload({
         if (rejected.length > 0) onReject?.(rejected);
       },
     }),
-    [accept, maxSize, multiple, disabled, onFilesAdded, onReject],
+    [accept, maxSize, multiple, disabled, live, onFilesAdded, onReject],
   );
   return (
     <FileUploadContext value={context}>
-      <div data-slot="file-upload" className={cn("flex flex-col gap-3", className)} {...props}>
+      <div
+        data-slot="file-upload"
+        data-live={live ? "" : undefined}
+        className={cn("flex flex-col gap-3", className)}
+        {...props}
+      >
         {/* The real control. It is opened by the zone's button and never takes the focus. */}
         <input
           ref={input}
@@ -135,7 +147,7 @@ export type FileUploadZoneProps = Omit<ComponentProps<"div">, "title"> & {
   buttonLabel?: ReactNode;
   /**
    * `tile` (the default): a symbol in a small tile above the words. `plain`: the words and the
-   * button alone.
+   * button alone, for a lower zone: one of several in a form, or in a narrow card.
    */
   variant?: "tile" | "plain";
   /** The symbol in the tile. */
@@ -250,43 +262,70 @@ const keyOf = (element: ReactElement) => element.key ?? "";
 export type FileUploadListProps = ComponentProps<"ul">;
 
 /**
- * The files that were added, one row each, under the zone. A row that joins fades in while the
- * list grows and pushes what stands below; one that is removed fades and its place folds shut.
- * The rows that are there when the list first shows stand still. Name it (`aria-label`:
- * "Dateien") and give each `FileUploadItem` a `key` that stays its own.
+ * A row's place in the list. It opens from nothing when a file joins and folds shut when one is
+ * removed, so the rows below glide. Every change of height in the list is one of these folds,
+ * or the fold of a bar or an error inside a row: each eases by itself and the list adds them
+ * up, so a file that arrives while another is removed does not make the list chase its own
+ * height. The place clips only up and down: the focus ring of a key stays whole.
+ */
+const placeOfFile = [
+  "group/place grid grid-rows-[1fr] overflow-y-clip transition-[grid-template-rows] spring-settle",
+  "in-data-live:starting:grid-rows-[0fr]",
+  // What leaves has faded (`leave`) before its place closes, so its text is never cut through.
+  "data-leaving:grid-rows-[0fr] data-leaving:delay-[120ms]",
+].join(" ");
+
+/**
+ * The files that were added, one row each, under the zone. A row that joins opens its place and
+ * fades in, and what stands below is pushed; one that is removed fades and its place folds shut.
+ * The rows that are there when the list first shows stand still.
+ *
+ * Keep it in the upload while there are no files: an empty list takes no room, the first file
+ * opens it like any other, and a screen reader hears it join (a live region has to be there
+ * before what it announces). Name it (`aria-label`: "Dateien") and give each `FileUploadItem` a
+ * `key` that stays its own.
  */
 export function FileUploadList({ className, children, ...props }: FileUploadListProps) {
-  const live = useLive();
+  const { live: uploadLive } = useContext(FileUploadContext);
+  const ownLive = useLive();
+  const live = ownLive || uploadLive;
   const box = useRef<HTMLUListElement>(null);
-  const { places, left } = usePresence(
-    Children.toArray(children).filter(isValidElement),
-    keyOf,
-    box,
-  );
+  // One array for as long as the children are the same (`usePresence`).
+  const files = useMemo(() => Children.toArray(children).filter(isValidElement), [children]);
+  const { places, left } = usePresence(files, keyOf, box);
+  const empty = places.every((place) => place.leaving);
   return (
-    <Grow data-slot="file-upload-grow">
-      <ul
-        ref={box}
-        data-slot="file-upload-list"
-        data-live={live ? "" : undefined}
-        // A new file is said once, when it joins; its progress is not read out step by step.
-        aria-live="polite"
-        aria-relevant="additions"
-        className={cn("flex flex-col", className)}
-        {...props}
-      >
-        {places.map((place) => (
-          <li
-            key={place.key}
-            data-slot="file-upload-place"
-            {...placeProps(place, left)}
-            className={cn(placeInList, "border-b border-hairline last:border-b-0")}
-          >
-            <div className="min-h-0">{place.item}</div>
-          </li>
-        ))}
-      </ul>
-    </Grow>
+    <ul
+      ref={box}
+      data-slot="file-upload-list"
+      data-live={live ? "" : undefined}
+      data-empty={empty ? "" : undefined}
+      // A new file is said once, when it joins; its progress is not read out step by step.
+      aria-live="polite"
+      aria-relevant="additions"
+      className={cn(
+        "flex flex-col empty:hidden",
+        // Without files it gives back the gap above it, easing as its last row folds and as
+        // the first one opens, so the zone's foot never jumps.
+        "transition-[margin-top] spring-settle data-empty:-mt-3 in-data-live:starting:-mt-3",
+        className,
+      )}
+      {...props}
+    >
+      {places.map((place) => (
+        <li
+          key={place.key}
+          data-slot="file-upload-place"
+          {...placeProps(place, left)}
+          className={placeOfFile}
+        >
+          {/* The hairline above a row folds with it. */}
+          <div className="min-h-0 border-t border-hairline group-first/place:border-t-0">
+            {place.item}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -341,6 +380,19 @@ function keyBeside(key: HTMLElement) {
 }
 
 /**
+ * A line under a file's name (its bar, or why it failed) that opens and folds. Opening, its
+ * place opens first and the line fades in behind; folding, the line fades out on `leave` first
+ * and its place folds after, so it is never cut through while it can still be read.
+ */
+const lineOpen =
+  "grid grid-rows-[1fr] [transition:grid-template-rows_var(--transition-duration-spring-settle)_var(--ease-spring-settle),opacity_var(--transition-duration-spring-settle)_var(--ease-spring-settle)_80ms]";
+const lineShut =
+  "grid grid-rows-[0fr] opacity-0 [transition:opacity_var(--transition-duration-spring-leave)_var(--ease-spring-leave),grid-template-rows_var(--transition-duration-spring-settle)_var(--ease-spring-settle)_100ms]";
+/** The bar of a file that arrived: seen full for a moment (its fill glides there), then gone. */
+const lineShutLater =
+  "grid grid-rows-[0fr] opacity-0 [transition:opacity_var(--transition-duration-spring-leave)_var(--ease-spring-leave)_200ms,grid-template-rows_var(--transition-duration-spring-settle)_var(--ease-spring-settle)_300ms]";
+
+/**
  * One file: the system's mark in front (the open ring waits, the arc works, the disc is done),
  * its name, its size in tabular digits, and under the name a thin bar while it is on its way.
  * The bar folds away once the file has arrived, and the mark closes where the arc was. A file
@@ -361,8 +413,14 @@ export function FileUploadItem({
   className,
   ...props
 }: FileUploadItemProps) {
-  const running = status === "uploading" || status === "waiting";
   const fraction = Math.min(1, Math.max(0, progress ?? 0));
+  const failed = status === "error";
+  // What a failure said, kept while its line folds away after the file is tried again.
+  // Compared while rendering, as React asks for state that follows a prop.
+  const [said, setSaid] = useState({ error, retry: onRetry !== undefined });
+  if (failed && (said.error !== error || said.retry !== (onRetry !== undefined))) {
+    setSaid({ error, retry: onRetry !== undefined });
+  }
   return (
     <div
       data-slot="file-upload-item"
@@ -405,43 +463,66 @@ export function FileUploadItem({
               : formatFileSize(size, locale)}
           </span>
         </div>
-        {/* The bar's row folds shut once the file has arrived or failed, and the row with it. */}
+        {/* The bar's row is open only while the file is on its way: it unfolds when the upload
+            begins and folds shut once the file has arrived or failed, and the row with it. A
+            row without a bar is as tall as an arrived one, whatever its state. */}
         <div
           data-slot="file-upload-progress"
-          className={cn(
-            "grid transition-[grid-template-rows,opacity] spring-settle",
-            running ? "grid-rows-[1fr]" : "grid-rows-[0fr] opacity-0",
-          )}
+          aria-hidden={status === "uploading" ? undefined : true}
+          className={
+            status === "uploading" ? lineOpen : status === "done" ? lineShutLater : lineShut
+          }
         >
           <div className="min-h-0 overflow-hidden">
             <Progress
               aria-label={name}
-              value={status === "uploading" && progress !== undefined ? fraction * 100 : null}
-              // Waiting, the bar stands empty; it only runs once the upload has begun.
-              className={cn("pt-1.5 pb-0.5", status === "waiting" && "invisible")}
+              // Folded away, the bar rests: full once the file is there, so it fills as it
+              // folds, and empty before it begins. Only an upload without a share runs through.
+              value={
+                status === "uploading"
+                  ? progress === undefined
+                    ? null
+                    : fraction * 100
+                  : status === "done"
+                    ? 100
+                    : fraction * 100
+              }
+              className="pt-1.5 pb-0.5"
             >
               <ProgressTrack className="h-1" />
             </Progress>
           </div>
         </div>
-        {status === "error" && (
-          <div
-            data-slot="file-upload-error"
-            className="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-danger"
-          >
-            {error !== undefined && <span>{error}</span>}
-            {onRetry && (
-              <button
-                type="button"
-                data-slot="file-upload-retry"
-                onClick={onRetry}
-                className="touch-target relative rounded-xs font-medium text-fg underline decoration-1 underline-offset-[0.25em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        {/* The reason folds like the bar: tried again, it closes while the bar opens, instead
+            of leaving in one frame. It keeps its words until it has folded. The 4px inside
+            and outside its box keep the retry key's focus ring whole. */}
+        <div
+          data-slot="file-upload-error-fold"
+          aria-hidden={failed ? undefined : true}
+          inert={!failed}
+          className={cn("-my-1", failed ? lineOpen : lineShut)}
+        >
+          <div className="min-h-0 overflow-y-clip py-1">
+            {(said.error !== undefined || said.retry) && (
+              <div
+                data-slot="file-upload-error"
+                className="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-danger"
               >
-                {retryLabel}
-              </button>
+                {said.error !== undefined && <span>{said.error}</span>}
+                {said.retry && (
+                  <button
+                    type="button"
+                    data-slot="file-upload-retry"
+                    onClick={onRetry}
+                    className="touch-target relative rounded-xs font-medium text-fg underline decoration-1 underline-offset-[0.25em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  >
+                    {retryLabel}
+                  </button>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
       {onRemove && (
         <Button
@@ -457,7 +538,8 @@ export function FileUploadItem({
             }
             onRemove();
           }}
-          className="-my-0.5 shrink-0 text-fg-muted hover:text-fg"
+          // Centred on the name's line: the 26px key reaches 2.5px over it at either side.
+          className="-my-[2.5px] shrink-0 text-fg-muted hover:text-fg"
         >
           <CloseGlyph width={10} height={10} />
         </Button>

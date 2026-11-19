@@ -1,6 +1,13 @@
 "use client";
 
-import { Children, type ComponentProps, isValidElement, type ReactElement, useRef } from "react";
+import {
+  Children,
+  type ComponentProps,
+  isValidElement,
+  type ReactElement,
+  useMemo,
+  useRef,
+} from "react";
 
 import { placeInRow, placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
@@ -25,11 +32,9 @@ export function ChipGroup({ className, children, ...props }: ChipGroupProps) {
   // Page load does not animate: only a chip that mounts after the row stands comes in.
   const live = useLive();
   const box = useRef<HTMLDivElement>(null);
-  const { places, left } = usePresence(
-    Children.toArray(children).filter(isValidElement),
-    keyOf,
-    box,
-  );
+  // One array for as long as the children are the same (`usePresence`).
+  const chips = useMemo(() => Children.toArray(children).filter(isValidElement), [children]);
+  const { places, left } = usePresence(chips, keyOf, box);
   return (
     <div
       ref={box}
