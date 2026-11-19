@@ -160,6 +160,16 @@ export {
   ContextMenuTrigger,
 } from "./components/context-menu/context-menu";
 export {
+  Conversation,
+  type ConversationApi,
+  ConversationContent,
+  type ConversationContentProps,
+  ConversationLatest,
+  type ConversationLatestProps,
+  type ConversationProps,
+  useConversation,
+} from "./components/conversation/conversation";
+export {
   CopyButton,
   type CopyButtonLabels,
   type CopyButtonProps,
@@ -300,6 +310,23 @@ export {
   MenuSubTrigger,
   MenuTrigger,
 } from "./components/menu/menu";
+export {
+  type ArriveBy,
+  Message,
+  MessageAction,
+  type MessageActionProps,
+  MessageActions,
+  MessageContent,
+  type MessageContentProps,
+  MessageError,
+  type MessageErrorProps,
+  MessageFeedback,
+  type MessageFeedbackProps,
+  type MessageFrom,
+  type MessageProps,
+  type MessageVariant,
+  type MessageVerdict,
+} from "./components/message/message";
 export {
   Meter,
   MeterLabel,
