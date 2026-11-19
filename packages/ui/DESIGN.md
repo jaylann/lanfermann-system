@@ -122,6 +122,14 @@ story `Patterns/Specimen`.
 | List strings              | The German defaults of the list parts stand as built: „ausgewählt“ and „Auswahl aufheben“ in an `ActionBar`, „Seiten“, „Seite 3“, „Seite 3 von 12“, „Vorherige Seite“ and „Nächste Seite“ in a `Pagination`, „Entfernen“ for a chip's key.                                                                                                                                                                                                                                                                                                                                                                                      | Justin, 2026-11-18                                     |
 | Code field in a dialog    | An `OtpField` keeps its own width by default and shares the width of its place with `fill`. In a dialog or a narrow card it is filled: at their own size six slots kept half the line empty, and centred they broke the dialog's left edge. Label and hint stay left.                                                                                                                                                                                                                                                                                                                                                           | Justin, 2026-11-19                                     |
 | Press on a choice card    | A `RadioCard` or `CheckboxCard` keeps its size and answers with its shadow: a little higher under the pointer, down on the page under a press, while its mark dips to 0.92 as a plain `Radio` or `Checkbox` does. The accent edge of the choice eases in on `settle` as the card comes back up, and leaves on `leave`. The whole card going down to the press scale was "way too heavy" and did not fit (0.98 of a wide sheet is ten pixels, with a bounce back), and an edge that changed at once was too hard: "the focus should appear a bit softly". The press scale is for parts the size of a button.                     | Justin, 2026-11-19; the form Claude's, to be looked at |
+| Chips in a field          | The chips of a multi-select are flat like a `Badge` by default, quiet in the socket. The raised plug of a `Chip` stays as `chipVariant="plug"`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Justin, 2026-11-19                                     |
+| Code slots                | The slots of an `OtpField` are joined by default: a group of three shares one socket, divided by hairlines. One socket per slot stays as `variant="separate"`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Justin, 2026-11-19                                     |
+| Chosen card               | A chosen `RadioCard` or `CheckboxCard` wears the accent as its edge and closes its mark, as built. The mark alone stays as `chosen="mark"`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Justin, 2026-11-19                                     |
+| Checkbox card mark        | A `CheckboxCard` carries the checkbox's own box and tick. The ring that closed to a disc, as on a `RadioCard`, was dropped.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Justin, 2026-11-19                                     |
+| Card radio                | A `RadioCard`'s mark is the radio's socket with the seated disc, as a `CheckboxCard`'s is the checkbox's: the flat 8px ring of a list looked cheaper beside the checkbox card.                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Claude, 2026-11-19; to be looked at                    |
+| Steps                     | Numbered by default; dots stay as `marks="dots"`. The marks are a checkbox's: "the kinda 3d bevel like the checkbox". A finished step is the accent plug with its tick, the current one the socket with the accent as its rim, one ahead the empty socket with its number. The names stand centred under their marks, the line between them has round ends, going on is one movement along the line, and where the steps first show they draw themselves in, nothing there at first.                                                                                                                                            | Justin, 2026-11-19                                     |
+| Upload zone               | A `FileUpload`'s zone shows its symbol in a small tile by default; the words alone stay as `variant="plain"`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Justin, 2026-11-19                                     |
+| Input strings             | The German defaults of the app inputs stand as built: „Dateien hierher ziehen“, „Loslassen, um sie hinzuzufügen“, „Dateien auswählen“, „Noch einmal versuchen“, „entfernen“, the states of a file (Wartet, Wird hochgeladen, Hochgeladen, Fehlgeschlagen) and of a step (Erledigt, Aktueller Schritt, Steht aus), „Anzeigen“ and „Verbergen“, „Kopieren“, „Kopiert“, „Markiert“ and „Nicht kopiert“ with their sentences, „Ziffer 2 von 6“, „Ausgewählt“ with the hint sentence of a multi-select, and „„Dringend“ anlegen“.                                                                                                    | Justin, 2026-11-19                                     |
 
 ## Colour
 
@@ -206,7 +214,8 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   a `CopyPill` fan back out into the gap before its key).
 - Popups grow out of their trigger (`--transform-origin`). Exits are shorter than entrances and
   do not travel.
-- Keyboard focus, menu highlight, error colours and page load do not animate.
+- Keyboard focus, menu highlight, error colours and page load do not animate. The one page load
+  that does is a `Steps`, which draws itself in where it first shows (Justin, 2026-11-19).
 - **Typing does not wait.** What the keyboard does many times in a row is not eased: the halo
   of an `OtpField` hops from slot to slot at once, and a digit is readable in its first frame;
   only its seating springs. How often a motion is seen decides how much of it there is: a
@@ -272,6 +281,8 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   indeterminate progress fill, the breathing of both under reduced motion, and the shimmer of a
   line of text that names work in progress. The shimmer is a paint, not a transform (the text is
   filled with a gradient that is pushed through it), so it is for one line, never for a block.
+  A fifth runs once: the draw-in of a `Steps` (`steps.css`). Every step carries it whatever its
+  state, so a step that is finished later is not drawn in again; its transitions do that.
 - **What joins a list later fades in; what is there on load does not.** A step that joins a
   `Trace` rises 4px into place on `settle`, and a mark that appears already done closes from the
   ring into the disc. The steps a list first shows stand still.
@@ -297,12 +308,12 @@ that sit inside controls at 10 to 12px (tick, dash, chevron, close) are drawn in
 
 Every component belongs to one of the four matters, and takes its treatment from it.
 
-| Matter  | Components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Panel   | `Text`, `Heading`, `Link`, `Separator`, `Badge`, `Alert`, `Avatar`, `Icon`, `Spinner`, `Field`, `Fieldset`, `Form`, `Table`, `Ground`, `Wordmark`, `Logomark`, `Code`, `CodeBlock`, `CodeBlockLive`, `CodeTabs`, `Container`, `Section`, `SiteFooter`, `Prose`, `AnchorHeading`, `Callout`, `Quote`, `Breadcrumbs`, `SideNav`, `TableOfContents`, `Pager`, `ParameterList`, `ReferenceEntry`, `Figure`, `DocsLayout`, `ScrollFade`, `Shimmer`, `Trace`, `Grow`, `Sidebar`, `AppShell`, `Empty`, `Skeleton`, `Pagination`, `Steps`, `Toolbar` (the tray its keys stand in), the rows of a `FileUpload`; `Accordion` and `Collapsible` are structure by line; `Seam` is the edge between two sections' plates, the one panel with a shadow |
-| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), `Toggle`, `ToggleGroup` (one fitting whose keys stay down), `CopyButton`, `RadioCard` and `CheckboxCard` (a softly raised sheet whose mark takes the press), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                     |
-| Socket  | `Input`, `InputGroup`, `Textarea`, `NumberField`, `Combobox`, `DateField`, `DateRangeField`, `TimeField`, `OtpField`, `SecretField`, `Checkbox`, `CheckboxGroup`, `Radio`, `Switch`, the zone of a `FileUpload`; the troughs of `Slider`, `Progress` and `Meter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Sheet   | `Menu`, `ContextMenu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `ActionBar`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Matter  | Components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Panel   | `Text`, `Heading`, `Link`, `Separator`, `Badge`, `Alert`, `Avatar`, `Icon`, `Spinner`, `Field`, `Fieldset`, `Form`, `Table`, `Ground`, `Wordmark`, `Logomark`, `Code`, `CodeBlock`, `CodeBlockLive`, `CodeTabs`, `Container`, `Section`, `SiteFooter`, `Prose`, `AnchorHeading`, `Callout`, `Quote`, `Breadcrumbs`, `SideNav`, `TableOfContents`, `Pager`, `ParameterList`, `ReferenceEntry`, `Figure`, `DocsLayout`, `ScrollFade`, `Shimmer`, `Trace`, `Grow`, `Sidebar`, `AppShell`, `Empty`, `Skeleton`, `Pagination`, `Steps` (its marks are a checkbox's sockets and plugs), `Toolbar` (the tray its keys stand in), the rows of a `FileUpload`; `Accordion` and `Collapsible` are structure by line; `Seam` is the edge between two sections' plates, the one panel with a shadow |
+| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), `Toggle`, `ToggleGroup` (one fitting whose keys stay down), `CopyButton`, `RadioCard` and `CheckboxCard` (a softly raised sheet whose mark takes the press), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                                                                    |
+| Socket  | `Input`, `InputGroup`, `Textarea`, `NumberField`, `Combobox`, `DateField`, `DateRangeField`, `TimeField`, `OtpField`, `SecretField`, `Checkbox`, `CheckboxGroup`, `Radio`, `Switch`, the zone of a `FileUpload`; the troughs of `Slider`, `Progress` and `Meter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Sheet   | `Menu`, `ContextMenu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `ActionBar`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 - **Select** has a raised trigger, not a field: it is pressed, not typed into. In its list only
   the chosen option carries the mark (a disc); the rings are left out to keep long lists calm.
@@ -556,20 +567,24 @@ Every component belongs to one of the four matters, and takes its treatment from
   Escape or its cross takes the selection back and returns the focus to where it came from.
   Beside a sidebar it stands in the page's own column (`position="sticky"`).
 - **A multi-select** is a `Combobox multiple` whose field is a `ComboboxChips`: every chosen
-  option is a `Chip` seated in the socket, with the input after the last one. Backspace in the
-  empty input takes the last chip and Arrow left walks into them. A chip that joins seats into
+  option is a chip in the socket, flat like a `Badge` (a raised plug with
+  `chipVariant="plug"`), with the input after the last one. Empty, the input asks only for the
+  caret's room, so it takes a line of its own once what is typed no longer fits. Backspace in
+  the empty input takes the last chip and Arrow left walks into them. A chip that joins seats into
   its place, one that leaves fades while its neighbours close up, and when the chips need
   another line the socket itself eases to its new height (`Grow`), so what stands below is
   pushed. The list stays open after a choice and the typed text goes, so several values are
   taken in a row. With `onCreate` a last row offers to make what was typed („Dringend“
   anlegen).
 - **OtpField** is a one-time code: a slot per character, in threes, the way a code is read
-  out, with a short line between the groups. The slot being typed wears the field's halo; it
+  out, with a short line between the groups. The slots of a group share one socket divided by
+  hairlines (`variant="separate"` gives each its own). The slot being typed wears the field's
+  halo; it
   opens with the field and then hops from slot to slot without easing, because typing must not
   wait. A digit is drawn over its input, so it can seat into the slot, and is readable from
   its first frame. A pasted code, or one the phone offers from a message, fills every slot, the
   digits seating one after the other. A wrong code is said in words under the field; every
-  slot takes the danger edge and only the one being typed opens the halo. Nothing shakes. The
+  socket takes the danger edge and only the slot being typed opens the halo. Nothing shakes. The
   slots keep their own size; with `fill` they share the width of their place, which is how
   the field stands in a dialog.
 - **FileUpload** takes files and does not upload them: it sorts them by kind and size,
@@ -577,24 +592,39 @@ Every component belongs to one of the four matters, and takes its treatment from
   while a file hangs over it, it takes the halo, the sign that it will take what is let go.
   There is no dashed border. A real file input stands behind its button. Each file is a row:
   the system's mark in front as a `Trace` draws it (the ring waits, the arc works, the disc is
-  done), the name, the size in tabular digits, and a thin bar that folds away once the file
-  has arrived. A failure says why in words, with the danger symbol and „Noch einmal
-  versuchen“. A row that joins fades in while the list grows; one that is removed folds shut.
+  done), the name, the size in tabular digits, and while it is on its way a thin bar under the
+  name. A row without a bar is as tall as an arrived one, whatever its state. A failure says
+  why in words, with the danger symbol and „Noch einmal versuchen“. Every change of a row's
+  height is a fold of its own, so changes that come together add up instead of the list
+  chasing its height: the bar opens when the upload begins and, once the file has arrived, is
+  seen full for a moment and then folds; tried again, the reason fades and folds while the bar
+  opens. What folds fades first and what opens is open before its words come in, so nothing
+  is cut through while it can be read. A row that joins opens its place and fades in; one that
+  is removed fades and its place folds shut, and it leaves as it last looked. The list stays in
+  the upload while it is empty: it takes no room then and opens with its first file.
 - **RadioCard** and **CheckboxCard** are a choice whose options need a sentence each: a plan,
   an answer in a set-up. The card is the control's label, so the whole of it is the target: a
-  softly raised sheet that keeps its size and answers with its shadow. Under the pointer it
-  stands a little higher and the ring of its mark darkens; under a press it goes down on the
+  softly raised sheet that keeps its size and answers with its shadow. Its mark is the plain
+  control's: the radio's socket that takes the disc, the checkbox's that takes the plug and
+  tick. Under the pointer the card stands a little higher; under a press it goes down on the
   page and its mark dips, as a plain `Radio` or `Checkbox` does. On release it comes back up
-  while the accent edge of the choice eases in and the mark closes from ring to disc, so the
-  three read as one move; the edge of the card that was given up fades faster. A sheet this
+  while the accent edge of the choice eases in and the mark seats, so the three read as one
+  move; the edge of the card that was given up fades faster. A sheet this
   wide is never scaled: at the press scale it moved by ten pixels. The title names the control
   and the sentence describes it.
-- **Steps** is where one stands in a set-up of a few steps. It is read, so it is flat: the
-  system's marks joined by a hairline. A ring is ahead, the heavier ring in the accent is
-  where one stands (`mark-now`: the ring half closed), the disc is done, and the line behind a
-  finished step is filled in the text colour, pushed out from its start by `scale`. In a row
-  that is too narrow for every name only the current step is written out, under the row. A
-  finished step may be a link back. It is plain markup and sends no script.
+- **Steps** is where one stands in a set-up of a few steps. Its marks are a checkbox's, with
+  each step's number: an empty socket is ahead, the socket with the accent as its rim (one 2px
+  outline, no larger than the socket) is where one stands, and a finished step is the accent
+  plug with its tick. Each name stands centred under its mark. A line 2px high with round ends
+  joins the marks, 8px clear of each; behind a finished step it is filled in the text colour,
+  a bar pushed out of its trough by `translate`. Going on is one movement along the line: the
+  plug seats and its tick draws, then the line draws on, and the next mark takes its rim as
+  the line arrives; going back runs it the other way. Where the steps first show they draw
+  themselves in: nothing at first, then step after step seats in with its name, its tick and
+  the line on to the next. `marks="dots"` keeps the system's flat marks (ring, the heavier
+  ring, disc) for a quieter place. In a row that is too narrow for every name only the current
+  step is written out, centred under its own mark. A finished step may be a link back. It is
+  plain markup and sends no script.
 - **SecretField** is a value machines read and people must not read over a shoulder: an API
   key, a webhook's secret. It stands in a field in mono behind discs until the key with the
   eye is pressed; hidden, the value is not in the page, and a prefix may stay readable. The
