@@ -170,6 +170,13 @@ export {
   type DateRangeFieldProps,
 } from "./components/date-range-field/date-range-field";
 export {
+  DescriptionDetails,
+  type DescriptionDetailsProps,
+  DescriptionList,
+  type DescriptionListProps,
+  DescriptionTerm,
+} from "./components/description-list/description-list";
+export {
   Dialog,
   DialogBody,
   DialogClose,
