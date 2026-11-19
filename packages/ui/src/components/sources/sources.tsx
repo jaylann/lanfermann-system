@@ -156,7 +156,8 @@ export function SourceReference({
       href={`#${entryId(base, n)}`}
       aria-label={label(n, source.title)}
       className={cn(
-        "tabular-nums no-underline select-none",
+        // Smaller than a finger: an invisible target of 44px around it (touch.css).
+        "touch-target tabular-nums no-underline select-none",
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
         referenceLook[look],
         className,
@@ -191,7 +192,7 @@ export function SourceList({
   return (
     <div
       data-slot="source-list"
-      className={cn("flex w-full max-w-[42rem] flex-col gap-1.5", className)}
+      className={cn("mt-1 flex w-full max-w-[42rem] flex-col gap-1.5", className)}
       {...props}
     >
       <p id={titleId} className="text-sm font-medium text-fg-muted">

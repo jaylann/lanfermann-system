@@ -84,15 +84,16 @@ export function Message({
         data-streaming={streaming ? "" : undefined}
         aria-label={label}
         className={cn(
-          "flex min-w-0 flex-col gap-2",
+          "flex min-w-0 flex-col",
           from === "user"
             ? [
-                "items-end",
+                "items-end gap-2",
                 // The person's words rise into place when they are sent; under reduced motion
                 // they only fade.
                 "transition-[opacity,translate] spring-settle in-data-live:starting:translate-y-(--motion-enter-offset) in-data-live:starting:opacity-0",
               ]
-            : "items-start",
+            : // The steps of the work, the answer, its sources and keys: a little more air.
+              "items-start gap-3",
           className,
         )}
         {...props}

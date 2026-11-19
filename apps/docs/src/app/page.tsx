@@ -177,6 +177,7 @@ import {
   Wordmark,
 } from "@lanfermann/ui";
 
+import { Assistant } from "./assistant";
 import { Inputs } from "./inputs";
 import { QuoteForm } from "./quote-form";
 import { Selection } from "./selection";
@@ -558,6 +559,9 @@ export default function Home() {
               {/* The inputs of an app. They hold state or take functions, so they stand in a
                   client component of their own. */}
               <Inputs ground={ground} />
+
+              {/* The parts of an assistant: a conversation and its prompt. */}
+              <Assistant ground={ground} />
 
               {/* The symbol stands apart from the wordmark above: the two are never side by side. */}
               <div className="flex items-center justify-between gap-6">

@@ -5,7 +5,10 @@
  */
 import { type ReactNode, useEffect, useState } from "react";
 
-type Run = string | { strong: string };
+import { SourceReference } from "@/components/sources/sources";
+
+/** A piece of text, bold text, or a reference to a source (which has no characters). */
+type Run = string | { strong: string } | { ref: number };
 type Block = { kind: "p"; runs: Run[] } | { kind: "ul"; items: Run[][] };
 
 export const QUESTION =
@@ -18,6 +21,7 @@ export const ANSWER: Block[] = [
       "Das Angebot an die ",
       { strong: "Bäckerei Kornprobst" },
       " umfasst eine neue Website mit einem Bestellformular für Torten und einer Seite für jede der drei Filialen.",
+      { ref: 1 },
     ],
   },
   { kind: "p", runs: ["Die Kosten im Überblick:"] },
@@ -34,12 +38,16 @@ export const ANSWER: Block[] = [
     runs: [
       "Zusammen sind das ",
       { strong: "5.180 € netto" },
-      ". Das Angebot gilt bis zum 15. Dezember 2026; danach werden die Preise neu berechnet. Den Entwurf der Startseite findest du im Anhang.",
+      ".",
+      { ref: 2 },
+      " Das Angebot gilt bis zum 15. Dezember 2026; danach werden die Preise neu berechnet.",
+      { ref: 1 },
+      " Den Entwurf der Startseite findest du im Anhang.",
     ],
   },
 ];
 
-const textOf = (run: Run) => (typeof run === "string" ? run : run.strong);
+const textOf = (run: Run) => (typeof run === "string" ? run : "strong" in run ? run.strong : "");
 
 /** The answer as plain text, for a copy. */
 export const ANSWER_TEXT = ANSWER.map((block) =>
@@ -58,11 +66,20 @@ export const ANSWER_LENGTH = ANSWER.reduce(
   0,
 );
 
-/** The answer as far as `count` of its characters have arrived. */
-export function answerUpTo(count: number): ReactNode {
+/**
+ * The answer as far as `count` of its characters have arrived. With `sources` its references
+ * stand after their sentences (inside `Sources`), once the sentence is there.
+ */
+export function answerUpTo(count: number, { sources = false } = {}): ReactNode {
   let left = count;
+  const complete = count >= ANSWER_LENGTH;
   const runs = (list: Run[]) =>
     list.map((run, index) => {
+      if (typeof run === "object" && "ref" in run) {
+        return sources && (left > 0 || complete) ? (
+          <SourceReference key={index} n={run.ref} />
+        ) : null;
+      }
       if (left <= 0) return null;
       const text = textOf(run).slice(0, left);
       left -= text.length;
