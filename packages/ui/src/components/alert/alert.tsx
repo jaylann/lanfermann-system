@@ -1,13 +1,8 @@
-import {
-  Alert02Icon,
-  AlertCircleIcon,
-  CheckmarkCircle02Icon,
-  InformationCircleIcon,
-} from "@hugeicons/core-free-icons";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
+import { statusIcons, statusIconTone } from "@/internal/status-icon";
 import { cn } from "@/lib/cn";
 
 const alertVariants = cva(
@@ -26,25 +21,6 @@ const alertVariants = cva(
     defaultVariants: { tone: "neutral" },
   },
 );
-
-type Tone = NonNullable<VariantProps<typeof alertVariants>["tone"]>;
-
-const icons: Record<Tone, IconSvgElement> = {
-  neutral: InformationCircleIcon,
-  info: InformationCircleIcon,
-  success: CheckmarkCircle02Icon,
-  warning: Alert02Icon,
-  danger: AlertCircleIcon,
-};
-
-// Indigo is never spent on an icon: the info icon stays in the text colour.
-const iconTone: Record<Tone, string> = {
-  neutral: "text-fg-muted",
-  info: "text-fg",
-  success: "text-success",
-  warning: "text-warning",
-  danger: "text-danger",
-};
 
 export type AlertProps = ComponentProps<"div"> &
   VariantProps<typeof alertVariants> & {
@@ -68,9 +44,9 @@ export function Alert({ className, tone, icon, children, ...props }: AlertProps)
       {...props}
     >
       <Icon
-        icon={icon ?? icons[resolved]}
+        icon={icon ?? statusIcons[resolved]}
         size={18}
-        className={cn("mt-[3px]", iconTone[resolved])}
+        className={cn("mt-[3px]", statusIconTone[resolved])}
       />
       <div className="flex min-w-0 flex-col gap-0.5">{children}</div>
     </div>
