@@ -120,6 +120,9 @@ story `Patterns/Specimen`.
 | Pages of a list           | `Pagination` is numbered by default, the current page on a tint that glides to the next. The compact form („Seite 3 von 12“ and two keys) stays as the variant for a narrow place.                                                                                                                                                                                                                                                                                                                                                                                                                                              | Justin, 2026-11-18                  |
 | Selection bar             | An `ActionBar` is a dark sheet by default, on Ink like a toast, and a light one with `ground="paper"`: "it should have both dark and light mode available". Dark on a dark page it was set off by its edge alone.                                                                                                                                                                                                                                                                                                                                                                                                               | Justin, 2026-11-18                  |
 | List strings              | The German defaults of the list parts stand as built: „ausgewählt“ and „Auswahl aufheben“ in an `ActionBar`, „Seiten“, „Seite 3“, „Seite 3 von 12“, „Vorherige Seite“ and „Nächste Seite“ in a `Pagination`, „Entfernen“ for a chip's key.                                                                                                                                                                                                                                                                                                                                                                                      | Justin, 2026-11-18                  |
+| Avatars                   | Round: "I would like avatars to be round". Before, a rounded square. In a stack the cut follows the circle in front, and a presence dot on the edge has its gap cut out of the avatar behind as well.                                                                                                                                                                                                                                                                                                                                                                                                                           | Justin, 2026-11-19                  |
+| Figures in a row          | Both stay: a `StatGroup` is a ruled row by default, and a card for each figure with `variant="cards"`: "both are important".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Justin, 2026-11-19                  |
+| A banner leaving          | A closed `Banner` leaves the way it came in: it rises into the top edge and fades on the spring its room closes on. Before, it faded faster than its room closed, and the page rose into an empty gap.                                                                                                                                                                                                                                                                                                                                                                                                                          | Justin, 2026-11-19                  |
 
 ## Colour
 
@@ -285,7 +288,9 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   on `seat`; its colour eases on `settle`.
 - **A notice for the page pushes it.** A `Banner` that arrives after load eases the page down
   through its own `Grow` and comes in 4px from the top edge; one that is there on load stands
-  still. Closed, it fades on `leave` while its room closes on `settle`, in the same motion.
+  still. Closed, it leaves the way it came: it rises 4px into the top edge and fades on `settle`,
+  the spring its room closes on. The one exit that travels, because the page travels with it: a
+  faster fade left the room empty while the page was still rising into it (Justin, 2026-11-19).
 - **What arrives pushes, it does not jump.** Where content below has to make room (a step that
   joins, an answer that arrives, the next tab's panel), the block around the change eases to its
   new height on `settle` (`Grow`), the one place besides an opening panel where height moves.
@@ -340,7 +345,7 @@ Every component belongs to one of the four matters, and takes its treatment from
   never moves; the third key turns into „Auswahl speichern“ where it stands. Answering in the
   settings flips the switches one after another before the card leaves, so the reader sees what
   was stored. The way back is a link among the legal links of every footer.
-- **Avatar** is a rounded square in the text colour, never a circle.
+- **Avatar** is a circle in the text colour: a person is not a part of the machine.
 - **Fields with something beside the text** (`InputGroup`, `NumberField`, `Combobox`, the date
   and time fields) are one socket: the wrapper wears the field and the input inside goes bare.
   A press anywhere on it lands in the input.
@@ -577,13 +582,14 @@ Every component belongs to one of the four matters, and takes its treatment from
 - **AvatarGroup** is several people as one stack, the first in front. The gap between two is
   cut out of the one underneath (an SVG mask made for the avatar's own box), never a ring in
   the ground's colour, so the stack is right on any ground, a washed row or a picture; the cut
-  follows the rounded corners at a constant distance (radius plus gap). The overlap is chosen
-  so the corner underneath never pokes out beside the cut. The initials of an avatar that lies
-  under another stand in the middle of what is seen of it. More people than fit are a „+3“ tile
-  of the same shape, quieter. One tooltip names each avatar and moves along the stack without
-  waiting again; the group has one name for assistive tech with everyone in it. A presence dot
-  (on an `Avatar` alone as well) is cut out the same way: a disc for there, the ring alone for
-  not there, and always said in words.
+  is the circle in front grown by the gap, so what is seen of the one underneath is a clean
+  crescent. The initials of an avatar that lies under another stand in the middle of what is
+  seen of it. More people than fit are a „+3“ disc, quieter. One tooltip names each avatar and
+  moves along the stack without waiting again; the group has one name for assistive tech with
+  everyone in it. A presence dot (on an `Avatar` alone as well) stands on the edge at the bottom
+  end and is cut out the same way: a disc for there, the ring alone for not there, and always
+  said in words. It stands half outside its avatar, so the one underneath has its gap cut out
+  as well.
 - **DescriptionList** is the facts of one record: a real `<dl>`, the label muted in a column of
   its own, hairlines between rows, the 2px rule above (left out inside a `Card`). It goes to two
   columns by its own width, not the window's, so it stacks in a narrow card as on a phone.
