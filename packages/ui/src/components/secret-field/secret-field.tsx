@@ -136,7 +136,10 @@ export function SecretField({
           autoComplete="off"
           data-revealed={revealed ? "" : undefined}
           data-swapping={swapping ? "" : undefined}
-          onFocus={(event) => event.currentTarget.select()}
+          // Shown, a press into the field takes the whole value. Discs are not worth selecting.
+          onFocus={(event) => {
+            if (revealed) event.currentTarget.select();
+          }}
           className={cn(
             "font-mono text-ellipsis",
             "transition-[opacity,filter] spring-snap data-swapping:opacity-0 data-swapping:blur-[2px] data-swapping:transition-none motion-reduce:data-swapping:blur-none",

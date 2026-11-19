@@ -88,6 +88,8 @@ export {
 } from "./components/collapsible/collapsible";
 export {
   Combobox,
+  ComboboxChips,
+  type ComboboxChipsProps,
   ComboboxCollection,
   ComboboxContent,
   type ComboboxContentProps,
@@ -237,6 +239,25 @@ export {
 export { Field, FieldDescription, FieldError, FieldLabel } from "./components/field/field";
 export { Fieldset, FieldsetLegend } from "./components/fieldset/fieldset";
 export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
+export {
+  FileUpload,
+  FileUploadItem,
+  type FileUploadItemProps,
+  FileUploadList,
+  type FileUploadListProps,
+  type FileUploadProps,
+  type FileUploadStatus,
+  FileUploadZone,
+  type FileUploadZoneProps,
+} from "./components/file-upload/file-upload";
+export {
+  acceptsFile,
+  type FileRejection,
+  type FileRules,
+  formatFileProgress,
+  formatFileSize,
+  sortFiles,
+} from "./components/file-upload/files";
 export { Form, type FormProps } from "./components/form/form";
 export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
 export { Grow, type GrowProps } from "./components/grow/grow";
@@ -309,6 +330,7 @@ export {
   NumberFieldInput,
   type NumberFieldProps,
 } from "./components/number-field/number-field";
+export { OtpField, type OtpFieldProps } from "./components/otp-field/otp-field";
 export { Pager, PagerLink, type PagerLinkProps, type PagerProps } from "./components/pager/pager";
 export { Pagination, type PaginationProps } from "./components/pagination/pagination";
 export {
@@ -347,6 +369,7 @@ export {
 export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
 export { useScrollEdges } from "./components/scroll-fade/use-scroll-edges";
 export { Seam, type SeamProps } from "./components/seam/seam";
+export { SecretField, type SecretFieldProps } from "./components/secret-field/secret-field";
 export { Section, type SectionProps } from "./components/section/section";
 export {
   Segment,
