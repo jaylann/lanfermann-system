@@ -207,7 +207,9 @@ export const AvatarGap: Story = {
 /** A page column for the banner to stand in. */
 function Column({ layout }: { layout: "bleed" | "inset" }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-ground inset-ring inset-ring-hairline">
+    // A border, not an inset ring: a ring is painted under what the frame holds, and a banner
+    // across the full width covered it, so the outline broke where the banner stood.
+    <div className="overflow-hidden rounded-xl border border-hairline bg-ground">
       <div className="flex h-11 items-center border-b border-hairline px-5 text-sm text-fg-muted">
         Schreinerei Mustermann · Übersicht
       </div>
