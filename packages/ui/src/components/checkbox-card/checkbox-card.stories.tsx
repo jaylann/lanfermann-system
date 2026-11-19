@@ -22,11 +22,11 @@ export default meta;
 // A card needs a group around it, which each story gives in its own markup: no shared `args`.
 type Story = StoryObj;
 
-type Options = Pick<CheckboxCardProps, "chosen" | "mark"> &
+type Options = Pick<CheckboxCardProps, "chosen"> &
   Pick<CheckboxGroupProps, "disabled" | "onValueChange">;
 
-function Uses({ chosen, mark, ...props }: Options) {
-  const look = { chosen, mark };
+function Uses({ chosen, ...props }: Options) {
+  const look = { chosen };
   return (
     <CheckboxGroup
       aria-label="Wofür nutzen Sie den Arbeitsbereich?"
@@ -64,18 +64,17 @@ function Uses({ chosen, mark, ...props }: Options) {
 
 /**
  * Several may be chosen: each card that is on wears the accent as its edge, and its box is
- * ticked. Press one: it goes down and seats back, and the tick draws itself.
+ * ticked. Press one: its shadow tightens and its box dips, then the accent edge eases in and
+ * the tick draws itself.
  */
 export const Default: Story = {
   render: () => <Uses />,
 };
 
-/** `mark="disc"`: the ring that closes to a disc, as on a `RadioCard`. */
-export const Disc: Story = {
-  render: () => <Uses mark="disc" />,
-};
-
-/** `chosen="mark"`: without the accent edge, the box alone says which ones are on. */
+/**
+ * `chosen="mark"`: without the accent edge, the box alone says which ones are on. For a place
+ * where several accent edges at once would be too much.
+ */
 export const MarkOnly: Story = {
   render: () => <Uses chosen="mark" />,
 };

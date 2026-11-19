@@ -9,7 +9,6 @@ import {
   choiceCardEdge,
   type ChoiceCardText,
   choiceControl,
-  ChoiceMark,
 } from "@/internal/choice-card";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
@@ -24,11 +23,6 @@ export type CheckboxCardProps = Omit<
      * mark. `mark`: the mark alone.
      */
     chosen?: "edge" | "mark";
-    /**
-     * `tick` (the default): the checkbox's own box and tick, which says that several may be
-     * chosen. `disc`: the ring that closes to a disc, as on a `RadioCard`.
-     */
-    mark?: "tick" | "disc";
     className?: string;
   };
 
@@ -48,7 +42,6 @@ export function CheckboxCard({
   detail,
   icon,
   chosen = "edge",
-  mark = "tick",
   className,
   children,
   ...props
@@ -67,26 +60,20 @@ export function CheckboxCard({
         className={cn(
           choiceControl,
           // The checkbox's socket and plug (checkbox.tsx); the press comes from the card.
-          mark === "tick" && [
-            "rounded-xs bg-surface text-on-accent depth-socket transition-[box-shadow,background-color,scale]",
-            "data-checked:bg-accent data-checked:depth-plug data-checked:depth-tone-accent",
-            "data-disabled:bg-disabled data-disabled:depth-flat data-disabled:text-on-disabled",
-          ],
+          "rounded-xs bg-surface text-on-accent depth-socket transition-[box-shadow,background-color,scale]",
+          "data-checked:bg-accent data-checked:depth-plug data-checked:depth-tone-accent",
+          "data-disabled:bg-disabled data-disabled:depth-flat data-disabled:text-on-disabled",
         )}
         {...props}
       >
-        {mark === "tick" ? (
-          <CheckboxPrimitive.Indicator
-            keepMounted
-            data-slot="checkbox-card-indicator"
-            className="flex items-center justify-center"
-          >
-            {/* The tick draws in (short leg first) and simply fades out: an exit never performs. */}
-            <TickGlyph className="opacity-0 transition-[stroke-dashoffset,opacity] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-checked/control:opacity-100 group-data-checked/control:[stroke-dashoffset:0]" />
-          </CheckboxPrimitive.Indicator>
-        ) : (
-          <ChoiceMark />
-        )}
+        <CheckboxPrimitive.Indicator
+          keepMounted
+          data-slot="checkbox-card-indicator"
+          className="flex items-center justify-center"
+        >
+          {/* The tick draws in (short leg first) and simply fades out: an exit never performs. */}
+          <TickGlyph className="opacity-0 transition-[stroke-dashoffset,opacity] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-checked/control:opacity-100 group-data-checked/control:[stroke-dashoffset:0]" />
+        </CheckboxPrimitive.Indicator>
       </CheckboxPrimitive.Root>
       <ChoiceCardBody
         slot="checkbox-card"
