@@ -190,8 +190,10 @@ function SetUp({ start = 0 }: { start?: number }) {
           <Heading level={2} size="sub">
             {STEPS[step]?.question}
           </Heading>
-          {/* The card follows the height of the step it shows. */}
-          <Grow>
+          {/* The card follows the height of the step it shows. The cards of a step cast shadows
+              and wear an edge outside their box: the block keeps room for them, so nothing is
+              cut while it moves. */}
+          <Grow className="-my-5" contentClassName="py-5">
             <StepBody step={step} />
           </Grow>
         </CardContent>

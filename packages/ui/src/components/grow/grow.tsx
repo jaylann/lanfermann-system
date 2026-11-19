@@ -53,7 +53,11 @@ function heightMoving(box: HTMLElement) {
  * then learns of it a frame late.
  *
  * At rest it is a plain block of the content's height that clips nothing. It clips only while
- * it moves, so a line that joins at its foot is uncovered as the block opens. From rest it does
+ * it moves, and only above and below, so a line that joins at its foot is uncovered as the
+ * block opens. What paints outside its content there (the shadow of a card, an accent edge, a
+ * halo) would be cut for the length of the move and come back at its end: give it room inside
+ * the block and take the room back outside, `className="-my-5" contentClassName="py-5"`. To
+ * the sides nothing is cut. From rest it does
  * not animate the first height, a resize of the window, or a height that something inside is
  * already animating (an opening `Collapsible`): then it simply follows.
  * Already on its way, it takes a new height as its goal from where it stands. Under reduced
@@ -145,7 +149,7 @@ export function Grow({ className, contentClassName, children, ref, ...props }: G
       // of its own (a field that grows keeps its halo's) can add them through `--grow-also`
       // instead of replacing this one.
       className={cn(
-        "[transition:height_var(--transition-duration-spring-settle)_var(--ease-spring-settle),var(--grow-also,visibility_0s)] data-moving:overflow-clip",
+        "[transition:height_var(--transition-duration-spring-settle)_var(--ease-spring-settle),var(--grow-also,visibility_0s)] data-moving:overflow-y-clip",
         className,
       )}
       {...props}
