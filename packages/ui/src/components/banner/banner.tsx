@@ -43,6 +43,14 @@ const edge: Record<"bleed" | "inset", Record<BannerTone, string>> = {
   },
 };
 
+/**
+ * A small control that takes the room of one line of the strip's text, standing out above and
+ * below it by the same amount, so its middle is the middle of the line. (`1lh` is read where
+ * this is set: on a box in the strip's text size, not on the button.) The action repeats it
+ * under a container query.
+ */
+const oneLine = "-my-[calc((var(--control-sm)-1lh)/2)]";
+
 const defaultToneLabels: Record<BannerTone, string> = {
   info: "Hinweis",
   success: "Erledigt",
@@ -181,13 +189,18 @@ export function Banner({
               "forced-colors:outline",
             )}
           >
-            <Icon
-              icon={statusIcons[tone]}
-              size={18}
-              className={cn("mt-px shrink-0", statusIconTone[tone])}
-            />
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2">
-              <p data-slot="banner-text" className="min-w-0 flex-[1_1_18rem] text-pretty">
+            {/* Symbol, first line, action and close key share one axis: the middle of the first
+                line. A sentence that wraps runs on below it; nothing is centred on the block. */}
+            <span className="flex h-lh shrink-0 items-center">
+              <Icon icon={statusIcons[tone]} size={18} className={statusIconTone[tone]} />
+            </span>
+            {/* Narrower than 32rem, the action goes under the sentence rather than beside one
+                that wraps into a column of its own. */}
+            <div className="@container/banner flex min-w-0 flex-1 flex-wrap items-start gap-x-4 gap-y-2.5">
+              <p
+                data-slot="banner-text"
+                className="min-w-0 flex-[1_1_18rem] text-pretty @max-lg/banner:basis-full"
+              >
                 <span className="sr-only">{labels[tone]}: </span>
                 <span data-slot="banner-title" className="font-semibold text-fg">
                   {title}
@@ -195,23 +208,30 @@ export function Banner({
                 {children !== undefined && <> {children}</>}
               </p>
               {action !== undefined && (
-                <div data-slot="banner-action" className="-my-0.5 shrink-0">
+                // Beside the sentence it keeps to the first line; under it, it takes its full
+                // height, so the strip's padding below it is as wide as above the sentence.
+                <div
+                  data-slot="banner-action"
+                  className="shrink-0 @lg/banner:-my-[calc((var(--control-sm)-1lh)/2)]"
+                >
                   {action}
                 </div>
               )}
             </div>
             {dismissible && (
-              <Button
-                data-slot="banner-close"
-                iconOnly
-                size="sm"
-                variant="quiet"
-                aria-label={closeLabel}
-                onClick={close}
-                className="-my-0.5 text-fg-muted"
-              >
-                <CloseGlyph />
-              </Button>
+              <div className={cn("shrink-0", oneLine)}>
+                <Button
+                  data-slot="banner-close"
+                  iconOnly
+                  size="sm"
+                  variant="quiet"
+                  aria-label={closeLabel}
+                  onClick={close}
+                  className="text-fg-muted"
+                >
+                  <CloseGlyph />
+                </Button>
+              </div>
             )}
           </div>
         </div>
