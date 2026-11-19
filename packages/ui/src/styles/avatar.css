@@ -1,0 +1,24 @@
+/*
+ * An avatar with something cut out of it: the avatar in front of it in an `AvatarGroup`, or its
+ * presence dot. The cut is an SVG made for the avatar's own box (`internal/avatar-cut.ts`),
+ * passed as `--avatar-cut` (and mirrored as `--avatar-cut-rtl`), so it moves and scales with it.
+ *
+ * A mask cuts everything the box paints, its outline too: in forced colours the outline is
+ * drawn just inside the edge, where the cut does not reach.
+ */
+@layer components {
+  [data-slot="avatar"][data-cut],
+  [data-slot="avatar-group-more"][data-cut] {
+    mask-image: var(--avatar-cut);
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+
+    &:dir(rtl) {
+      mask-image: var(--avatar-cut-rtl, var(--avatar-cut));
+    }
+
+    @media (forced-colors: active) {
+      outline-offset: -1px;
+    }
+  }
+}

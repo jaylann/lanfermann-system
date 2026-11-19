@@ -35,6 +35,8 @@ export {
   type AppShellProps,
 } from "./components/app-shell/app-shell";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
+export { AvatarGroup, type AvatarGroupProps } from "./components/avatar-group/avatar-group";
+export { type AvatarPerson, type Presence } from "./components/avatar-group/people";
 export { Badge, type BadgeProps } from "./components/badge/badge";
 export { Banner, type BannerProps, type BannerTone } from "./components/banner/banner";
 export {
