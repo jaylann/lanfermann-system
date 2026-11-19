@@ -24,9 +24,13 @@
 @import "./styles/motion.generated.css";
 @import "./styles/motion.css";
 @import "./styles/marks.css";
+@import "./styles/rail.css";
+@import "./styles/timeline.css";
+@import "./styles/avatar.css";
 @import "./styles/travel.css";
 @import "./styles/toast.css";
 @import "./styles/action-bar.css";
+@import "./styles/rolling-number.css";
 @import "./styles/slider.css";
 @import "./styles/steps.css";
 @import "./styles/segmented.css";

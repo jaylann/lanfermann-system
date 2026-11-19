@@ -11,6 +11,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
+import { Card } from "@/components/card/card";
 import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
 import { Kbd } from "@/components/kbd/kbd";
@@ -105,102 +106,109 @@ export const Quotes: Story = {
           </Button>
         </div>
 
-        <Table aria-label="Angebote" className="min-w-[38rem]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Kunde</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead numeric>Betrag</TableHead>
-              <TableHead>
-                <span className="sr-only">Aktionen</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {QUOTES.map((quote) => (
-              <TableRow key={quote.id}>
-                <TableCell>
-                  <div className="flex items-center gap-4">
-                    <Avatar size="lg">
-                      <AvatarFallback>{quote.initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate font-medium text-fg">{quote.customer}</span>
-                      <span className="truncate text-sm text-fg-muted">
-                        {quote.subject} · <span className="font-mono text-xs">{quote.id}</span>
-                      </span>
+        <Card>
+          <Table aria-label="Angebote" className="min-w-[38rem]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Kunde</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead numeric>Betrag</TableHead>
+                <TableHead>
+                  <span className="sr-only">Aktionen</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {QUOTES.map((quote) => (
+                <TableRow key={quote.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-4">
+                      <Avatar size="lg">
+                        <AvatarFallback>{quote.initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-medium text-fg">{quote.customer}</span>
+                        <span className="truncate text-sm text-fg-muted">
+                          {quote.subject} · <span className="font-mono text-xs">{quote.id}</span>
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge tone={quote.state[1]}>{quote.state[0]}</Badge>
-                </TableCell>
-                <TableCell numeric className="font-medium text-fg">
-                  {quote.amount}
-                </TableCell>
-                <TableCell className="w-0">
-                  <div className="flex items-center gap-1">
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Button iconOnly variant="quiet" aria-label="Bearbeiten">
-                            <Icon icon={PencilEdit02Icon} />
-                          </Button>
-                        }
-                      />
-                      <TooltipContent>Bearbeiten</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Button
-                            iconOnly
-                            variant="quiet"
-                            aria-label="Als PDF herunterladen"
+                  </TableCell>
+                  <TableCell>
+                    <Badge dot tone={quote.state[1]}>
+                      {quote.state[0]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell numeric className="font-medium text-fg">
+                    {quote.amount}
+                  </TableCell>
+                  <TableCell className="w-0">
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button iconOnly variant="quiet" aria-label="Bearbeiten">
+                              <Icon icon={PencilEdit02Icon} />
+                            </Button>
+                          }
+                        />
+                        <TooltipContent>Bearbeiten</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              iconOnly
+                              variant="quiet"
+                              aria-label="Als PDF herunterladen"
+                              onClick={() =>
+                                toast({
+                                  title: "PDF erstellt.",
+                                  description: `Angebot ${quote.id}`,
+                                })
+                              }
+                            >
+                              <Icon icon={Download01Icon} />
+                            </Button>
+                          }
+                        />
+                        <TooltipContent>Als PDF herunterladen</TooltipContent>
+                      </Tooltip>
+                      <Menu>
+                        <MenuTrigger
+                          render={
+                            <Button iconOnly variant="quiet" aria-label="Weitere Aktionen">
+                              <Icon icon={MoreHorizontalIcon} />
+                            </Button>
+                          }
+                        />
+                        <MenuContent align="end">
+                          <MenuItem
                             onClick={() =>
-                              toast({ title: "PDF erstellt.", description: `Angebot ${quote.id}` })
+                              toast({
+                                title: "Angebot dupliziert.",
+                                tone: "success",
+                                action: { label: "Rückgängig", onClick: () => undefined },
+                              })
                             }
                           >
-                            <Icon icon={Download01Icon} />
-                          </Button>
-                        }
-                      />
-                      <TooltipContent>Als PDF herunterladen</TooltipContent>
-                    </Tooltip>
-                    <Menu>
-                      <MenuTrigger
-                        render={
-                          <Button iconOnly variant="quiet" aria-label="Weitere Aktionen">
-                            <Icon icon={MoreHorizontalIcon} />
-                          </Button>
-                        }
-                      />
-                      <MenuContent align="end">
-                        <MenuItem
-                          onClick={() =>
-                            toast({
-                              title: "Angebot dupliziert.",
-                              tone: "success",
-                              action: { label: "Rückgängig", onClick: () => undefined },
-                            })
-                          }
-                        >
-                          <Icon icon={Copy01Icon} className="text-fg-muted" />
-                          Duplizieren
-                        </MenuItem>
-                        <MenuSeparator />
-                        <MenuItem className="text-danger">
-                          <Icon icon={Delete02Icon} />
-                          Löschen
-                        </MenuItem>
-                      </MenuContent>
-                    </Menu>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                            <Icon icon={Copy01Icon} className="text-fg-muted" />
+                            Duplizieren
+                          </MenuItem>
+                          <MenuSeparator />
+                          <MenuItem className="text-danger">
+                            <Icon icon={Delete02Icon} />
+                            Löschen
+                          </MenuItem>
+                        </MenuContent>
+                      </Menu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
         <Toaster />
       </div>
     </TooltipProvider>

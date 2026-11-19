@@ -1,0 +1,49 @@
+/*
+ * The rail: the hairline that joins the marks of a list read from top to bottom, a `Trace` and a
+ * `Timeline`. Each entry draws the piece below its own mark, from just under the mark to just
+ * above the next one, so the line never touches a mark and an entry that joins brings its piece
+ * with it.
+ *
+ * The piece is placed from the geometry of the first line of an entry:
+ *   --rail-line   height of that line (default 28px, a `Trace` step)
+ *   --rail-lead   width of the box in front that holds the mark (16px)
+ *   --rail-mark   height of what is drawn in that box: the 8px disc, or an avatar (8px)
+ *   --rail-clear  room left between the line and the mark above and below it (5px)
+ *   --rail-gap    space between two entries (0)
+ *   --rail-next   height of the mark of the entry below, where it differs (an avatar after a
+ *                 disc); by default the entry's own
+ * Set them on the list or on an entry; the defaults are a `Trace`.
+ *
+ * The last entry keeps its piece, invisible: when an entry joins below it, the piece fades in
+ * with the newcomer instead of appearing in one frame.
+ */
+@utility rail-item {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: calc(
+      (var(--rail-line, 1.75rem) + var(--rail-mark, 0.5rem)) / 2 + var(--rail-clear, 0.3125rem)
+    );
+    bottom: calc(
+      var(--rail-clear, 0.3125rem) - var(--rail-gap, 0px) -
+        (var(--rail-line, 1.75rem) - var(--rail-next, var(--rail-mark, 0.5rem))) / 2
+    );
+    left: calc((var(--rail-lead, 1rem) - 1px) / 2);
+    width: 1px;
+    background-color: var(--lf-hairline);
+    transition: opacity var(--transition-duration-spring-settle) var(--ease-spring-settle);
+  }
+
+  &:last-child::before {
+    opacity: 0;
+    transition-duration: 0s;
+  }
+
+  @media (forced-colors: active) {
+    &::before {
+      background-color: CanvasText;
+    }
+  }
+}

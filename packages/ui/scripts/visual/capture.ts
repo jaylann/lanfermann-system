@@ -36,9 +36,11 @@
  *   viewport  { width, height }       the iframe size (default 720 by 480)
  *   clip      "content" | "viewport"  crop to the rendered content (default) or keep the viewport
  *   target    CSS selector            the control used for `states` (default: first control)
- *   motion    [{ name, click | hover | press | context: selector, type?, paste?, frames? }]
+ *   motion    [{ name, click | hover | press | context: selector, type?, paste?, frames?, then? }]
  *             `context` is a right click. `type` and `paste` go to whatever has the focus after
  *             the pointer step: text typed key by key, or one paste of the whole text.
+ *             `then: { click, at }` clicks a second selector `at` ms into the first change, while
+ *             it is still moving: the strip shows the change retargeted from where it stood
  *   skip      true                    leave the story out
  *
  * Stories with a `play` function (Storybook tags them `play-fn`) are interaction tests, not
@@ -77,6 +79,8 @@ type MotionSpec = {
   /** Pasted in one go into what has the focus after the pointer step. */
   paste?: string;
   frames?: number;
+  /** A second click `at` ms into the first change, while it still moves (a retarget). */
+  then?: { click: string; at: number };
 };
 type VisualParams = {
   viewport?: { width: number; height: number };
@@ -506,6 +510,13 @@ async function captureStates(page: Page, visual: VisualParams, clip: Clip | unde
  * Frame strip of one transition. CSS transitions and Motion's WAAPI animations are paused and
  * scrubbed by `currentTime`, so frames are exact and repeatable. Values Motion drives from
  * JavaScript (layout projection, drag) do not appear in `getAnimations()` and are not covered.
+ *
+ * Finished animations are left alone: one that fills forwards (a gate that flips a custom
+ * property once after mount) stays in `getAnimations()` for good and is not part of the change.
+ *
+ * With `then`, the strip is scrubbed to `then.at`, the second selector is clicked while every
+ * animation is held there, and what that click starts (from the values held at that moment) is
+ * scrubbed on from the same clock: the labels count from the first trigger.
  */
 async function captureMotion(page: Page, spec: MotionSpec, visual: VisualParams, frames: number) {
   if (spec.hover) await page.locator(spec.hover).first().hover();
@@ -526,51 +537,86 @@ async function captureMotion(page: Page, spec: MotionSpec, visual: VisualParams,
     }, spec.paste);
   }
 
-  const duration = await page.evaluate(async () => {
-    const deadline = performance.now() + 600;
-    while (document.getAnimations().length === 0 && performance.now() < deadline) {
-      await new Promise((done) => requestAnimationFrame(done));
-    }
-    // A few more frames: Base UI removes `data-starting-style` a frame after mount, and a popup
-    // that opens on click mounts after the press has already started a transition of its own.
-    for (let frame = 0; frame < 3; frame++) {
-      await new Promise((done) => requestAnimationFrame(done));
-    }
-    let end = 0;
-    for (const animation of document.getAnimations()) {
-      animation.pause();
-      const ends = Number(animation.effect?.getComputedTiming().endTime ?? 0);
-      // What runs without end (a spinner beside the part that moves) is held where it stands.
-      if (Number.isFinite(ends)) end = Math.max(end, ends);
-    }
-    return end;
-  });
-  if (duration === 0) return undefined;
+  /**
+   * Waits for what the trigger started, holds it, and returns when the last held animation
+   * ends on the strip's clock. Each animation is stored with the clock time it started at.
+   */
+  const hold = (offset: number) =>
+    page.evaluate(async (start) => {
+      const scope = window as unknown as { __held?: Map<Animation, number> };
+      const held = (scope.__held ??= new Map<Animation, number>());
+      const fresh = () =>
+        document.getAnimations().filter((each) => each.playState !== "finished" && !held.has(each));
+      const deadline = performance.now() + 600;
+      while (fresh().length === 0 && performance.now() < deadline) {
+        await new Promise((done) => requestAnimationFrame(done));
+      }
+      // A few more frames: Base UI removes `data-starting-style` a frame after mount, and a popup
+      // that opens on click mounts after the press has already started a transition of its own.
+      for (let frame = 0; frame < 3; frame++) {
+        await new Promise((done) => requestAnimationFrame(done));
+      }
+      for (const animation of fresh()) {
+        animation.pause();
+        held.set(animation, start);
+      }
+      let end = 0;
+      for (const [animation, at] of held) {
+        // A transition that was retargeted is cancelled: it no longer draws anything.
+        if (animation.playState === "idle") continue;
+        const length = Number(animation.effect?.getComputedTiming().endTime ?? 0);
+        // What runs by itself (a spinner, the shimmer) never ends: it is scrubbed along, but
+        // the strip is as long as the change.
+        if (Number.isFinite(length)) end = Math.max(end, at + length);
+      }
+      return end;
+    }, offset);
 
   const scrub = (time: number) =>
     page.evaluate(async (t) => {
+      const scope = window as unknown as { __held?: Map<Animation, number> };
+      const held = (scope.__held ??= new Map<Animation, number>());
       for (const animation of document.getAnimations()) {
-        // Whatever started since the first pause is held as well.
+        if (animation.playState === "finished" && !held.has(animation)) continue;
+        // Whatever started since the last hold is held as well, from the latest start.
         animation.pause();
+        const start = held.get(animation) ?? Math.max(0, ...held.values());
         const end = Number(animation.effect?.getComputedTiming().endTime ?? 0);
         if (!Number.isFinite(end)) continue;
         // Stay just short of the end, or the transition finishes and Base UI unmounts the popup.
-        animation.currentTime = Math.min(t, Math.max(0, end - 0.5));
+        animation.currentTime = Math.min(Math.max(0, t - start), Math.max(0, end - 0.5));
       }
       await new Promise((done) => requestAnimationFrame(done));
     }, time);
 
-  await scrub(duration);
+  const first = await hold(0);
+  if (first === 0) return undefined;
+  // The crop is taken at the end state, where a popup or a grown block is largest.
+  await scrub(first);
   const clip = await contentClip(page, visual);
   const count = spec.frames ?? frames;
   const tiles: { label: string; png: Buffer }[] = [];
-  for (let index = 0; index < count; index++) {
-    const time = (duration * index) / (count - 1);
+  const shoot = async (time: number, note = "") => {
     await scrub(time);
     tiles.push({
-      label: `${Math.round(time)}ms`,
+      label: `${Math.round(time)}ms${note}`,
       png: await page.screenshot({ clip, fullPage: options.fullPage }),
     });
+  };
+
+  if (!spec.then) {
+    for (let index = 0; index < count; index++) await shoot((first * index) / (count - 1));
+  } else {
+    const at = Math.min(spec.then.at, first);
+    const before = Math.max(2, Math.round(count / 3));
+    for (let index = 0; index < before; index++) await shoot((at * index) / (before - 1));
+    await scrub(at);
+    await page.locator(spec.then.click).first().click();
+    const end = await hold(at);
+    const after = Math.max(2, count - before);
+    for (let index = 1; index <= after; index++) {
+      await shoot(at + ((end - at) * index) / after, index === 1 ? " · then" : "");
+    }
   }
   if (spec.press) await page.mouse.up();
   return tiles;

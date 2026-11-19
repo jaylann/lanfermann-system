@@ -1,18 +1,14 @@
 "use client";
 
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
-import {
-  Alert02Icon,
-  AlertCircleIcon,
-  CheckmarkCircle02Icon,
-  InformationCircleIcon,
-} from "@hugeicons/core-free-icons";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/button/button";
 import { Icon } from "@/components/icon/icon";
 import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
+import { statusIcons, statusIconTone, type StatusTone } from "@/internal/status-icon";
+import { cn } from "@/lib/cn";
 
 /** The one stack of the app. `toast()` adds to it from anywhere, also from outside React. */
 export const toastManager = ToastPrimitive.createToastManager();
@@ -68,21 +64,11 @@ export const toast = Object.assign(show, {
 
 // Base UI's `promise` reports "loading", "success" and "error"; "error" is our "danger".
 function ToneIcon({ type }: { type: string | undefined }) {
-  switch (type) {
-    case "loading":
-      return <Spinner className="mt-[3px] text-fg-muted" />;
-    case "success":
-      return <Icon icon={CheckmarkCircle02Icon} size={18} className="mt-0.5 text-success" />;
-    case "warning":
-      return <Icon icon={Alert02Icon} size={18} className="mt-0.5 text-warning" />;
-    case "danger":
-    case "error":
-      return <Icon icon={AlertCircleIcon} size={18} className="mt-0.5 text-danger" />;
-    case "info":
-      return <Icon icon={InformationCircleIcon} size={18} className="mt-0.5 text-fg" />;
-    default:
-      return null;
-  }
+  if (type === "loading") return <Spinner className="mt-[3px] text-fg-muted" />;
+  const tone: StatusTone | undefined =
+    type === "error" ? "danger" : type === "neutral" ? undefined : (type as StatusTone);
+  if (!tone || !(tone in statusIcons)) return null;
+  return <Icon icon={statusIcons[tone]} size={18} className={cn("mt-0.5", statusIconTone[tone])} />;
 }
 
 function ToastList({ closeLabel }: { closeLabel: string }) {

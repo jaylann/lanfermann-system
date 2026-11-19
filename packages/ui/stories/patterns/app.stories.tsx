@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
 import { Badge } from "@/components/badge/badge";
 import { BreadcrumbItem, BreadcrumbPage, Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
 import { Button } from "@/components/button/button";
+import { Card } from "@/components/card/card";
 import { Checkbox } from "@/components/checkbox/checkbox";
 import { Chip } from "@/components/chip/chip";
 import { ChipGroup } from "@/components/chip/chip-group";
@@ -159,43 +160,45 @@ type BoardProps = {
 function RowsOnTheirWay({ narrow }: { narrow: boolean }) {
   return (
     <SkeletonGroup label="Die Angebote werden gerade geladen.">
-      <Table aria-label="Angebote">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-0">
-              {/* A column head has a name, also while its box is only a shape. */}
-              <span className="sr-only">Auswahl</span>
-              <Skeleton shape="block" className="size-(--check-size) rounded-xs" />
-            </TableHead>
-            <TableHead>Kunde</TableHead>
-            {!narrow && <TableHead>Status</TableHead>}
-            <TableHead numeric>Betrag</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {["w-44", "w-36", "w-48", "w-40", "w-44", "w-32"].map((name, index) => (
-            <TableRow key={index}>
-              <TableCell className="w-0">
+      <Card>
+        <Table aria-label="Angebote">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-0">
+                {/* A column head has a name, also while its box is only a shape. */}
+                <span className="sr-only">Auswahl</span>
                 <Skeleton shape="block" className="size-(--check-size) rounded-xs" />
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col">
-                  <Skeleton className={name} />
-                  <Skeleton className="w-52 text-sm" />
-                </div>
-              </TableCell>
-              {!narrow && (
-                <TableCell>
-                  <Skeleton shape="block" className="h-[1.375rem] w-20 rounded-sm" />
-                </TableCell>
-              )}
-              <TableCell numeric>
-                <Skeleton className="w-20" />
-              </TableCell>
+              </TableHead>
+              <TableHead>Kunde</TableHead>
+              {!narrow && <TableHead>Status</TableHead>}
+              <TableHead numeric>Betrag</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {["w-44", "w-36", "w-48", "w-40", "w-44", "w-32"].map((name, index) => (
+              <TableRow key={index}>
+                <TableCell className="w-0">
+                  <Skeleton shape="block" className="size-(--check-size) rounded-xs" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <Skeleton className={name} />
+                    <Skeleton className="w-52 text-sm" />
+                  </div>
+                </TableCell>
+                {!narrow && (
+                  <TableCell>
+                    <Skeleton shape="block" className="h-[1.375rem] w-20 rounded-sm" />
+                  </TableCell>
+                )}
+                <TableCell numeric>
+                  <Skeleton className="w-20" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </SkeletonGroup>
   );
 }
@@ -455,50 +458,54 @@ function Board({ state = "list", ticked = [], narrow = false }: BoardProps) {
               </Empty>
             ) : (
               <div className="flex flex-col gap-4">
-                <Table aria-label="Angebote">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-0">
-                        <Checkbox
-                          aria-label="Alle Angebote auswählen"
-                          checked={all}
-                          indeterminate={selected.length > 0 && !all}
-                          onCheckedChange={(checked) =>
-                            setSelected(checked ? rows.map(([id]) => id) : [])
-                          }
-                        />
-                      </TableHead>
-                      <TableHead>Kunde</TableHead>
-                      {!narrow && <TableHead>Status</TableHead>}
-                      <TableHead numeric>Betrag</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map(([id, customer, subject, amount, status, tone]) => (
-                      <TableRow key={id} selected={selected.includes(id)}>
-                        <TableCell className="w-0">
+                <Card>
+                  <Table aria-label="Angebote">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-0">
                           <Checkbox
-                            aria-label={`Angebot für ${customer} auswählen`}
-                            checked={selected.includes(id)}
-                            onCheckedChange={() => toggle(id)}
+                            aria-label="Alle Angebote auswählen"
+                            checked={all}
+                            indeterminate={selected.length > 0 && !all}
+                            onCheckedChange={(checked) =>
+                              setSelected(checked ? rows.map(([id]) => id) : [])
+                            }
                           />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex min-w-0 flex-col">
-                            <span className="truncate font-medium text-fg">{customer}</span>
-                            <span className="truncate text-sm text-fg-muted">{subject}</span>
-                          </div>
-                        </TableCell>
-                        {!narrow && (
-                          <TableCell>
-                            <Badge tone={tone}>{status}</Badge>
-                          </TableCell>
-                        )}
-                        <TableCell numeric>{euro.format(amount)}</TableCell>
+                        </TableHead>
+                        <TableHead>Kunde</TableHead>
+                        {!narrow && <TableHead>Status</TableHead>}
+                        <TableHead numeric>Betrag</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map(([id, customer, subject, amount, status, tone]) => (
+                        <TableRow key={id} selected={selected.includes(id)}>
+                          <TableCell className="w-0">
+                            <Checkbox
+                              aria-label={`Angebot für ${customer} auswählen`}
+                              checked={selected.includes(id)}
+                              onCheckedChange={() => toggle(id)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex min-w-0 flex-col">
+                              <span className="truncate font-medium text-fg">{customer}</span>
+                              <span className="truncate text-sm text-fg-muted">{subject}</span>
+                            </div>
+                          </TableCell>
+                          {!narrow && (
+                            <TableCell>
+                              <Badge dot tone={tone}>
+                                {status}
+                              </Badge>
+                            </TableCell>
+                          )}
+                          <TableCell numeric>{euro.format(amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
                 <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
                   <Text size="sm" tone="muted" numeric>
                     {(page - 1) * PER_PAGE + 1} bis {(page - 1) * PER_PAGE + rows.length} von{" "}

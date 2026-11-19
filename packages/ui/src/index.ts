@@ -44,7 +44,10 @@ export {
 } from "./components/attachment/attachment";
 export { type FileKind, kindOf } from "./components/attachment/kinds";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
+export { AvatarGroup, type AvatarGroupProps } from "./components/avatar-group/avatar-group";
+export { type AvatarPerson, type Presence } from "./components/avatar-group/people";
 export { Badge, type BadgeProps } from "./components/badge/badge";
+export { Banner, type BannerProps, type BannerTone } from "./components/banner/banner";
 export {
   BreadcrumbItem,
   BreadcrumbLink,
@@ -60,6 +63,7 @@ export { Calendar, type CalendarProps, type DateRange } from "./components/calen
 export { Callout, type CalloutProps, type CalloutTone } from "./components/callout/callout";
 export {
   Card,
+  CardBar,
   CardContent,
   CardDescription,
   CardFooter,
@@ -202,6 +206,13 @@ export {
   DateRangeField,
   type DateRangeFieldProps,
 } from "./components/date-range-field/date-range-field";
+export {
+  DescriptionDetails,
+  type DescriptionDetailsProps,
+  DescriptionList,
+  type DescriptionListProps,
+  DescriptionTerm,
+} from "./components/description-list/description-list";
 export {
   Dialog,
   DialogBody,
@@ -413,6 +424,7 @@ export {
   ReferenceEntryName,
   ReferenceEntryTitle,
 } from "./components/reference-entry/reference-entry";
+export { RollingNumber, type RollingNumberProps } from "./components/rolling-number/rolling-number";
 export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
 export { useScrollEdges } from "./components/scroll-fade/use-scroll-edges";
 export { Seam, type SeamProps } from "./components/seam/seam";
@@ -531,6 +543,16 @@ export {
 } from "./components/sources/sources";
 export { Spinner, type SpinnerProps } from "./components/spinner/spinner";
 export {
+  Stat,
+  StatChange,
+  type StatChangeProps,
+  StatGroup,
+  type StatGroupProps,
+  StatLabel,
+  type StatTrend,
+  StatValue,
+} from "./components/stat/stat";
+export {
   Step,
   type StepProps,
   Steps,
@@ -576,6 +598,13 @@ export {
   type ThemeSwitchProps,
 } from "./components/theme-switch/theme-switch";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
+export {
+  Timeline,
+  TimelineGroup,
+  type TimelineGroupProps,
+  TimelineItem,
+  type TimelineItemProps,
+} from "./components/timeline/timeline";
 export {
   toast,
   Toaster,

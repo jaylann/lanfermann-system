@@ -20,19 +20,50 @@ const badgeVariants = cva(
   },
 );
 
-export type BadgeProps = ComponentProps<"span"> & VariantProps<typeof badgeVariants>;
+/** The dot of each tone. A neutral state is a ring: open, not yet anything (a draft). */
+const dots = {
+  neutral: "border-[1.5px] border-fg-muted",
+  info: "bg-info forced-colors:bg-[CanvasText]",
+  success: "bg-success forced-colors:bg-[CanvasText]",
+  warning: "bg-warning forced-colors:bg-[CanvasText]",
+  danger: "bg-danger forced-colors:bg-[CanvasText]",
+} as const;
+
+export type BadgeProps = ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants> & {
+    /**
+     * The tone as a dot before the word, on a neutral badge. For a column of states in a table,
+     * where a tinted badge on every row is louder than what the row is about.
+     */
+    dot?: boolean;
+  };
 
 /**
  * A short state on a row or a card: "Entwurf", "Bezahlt", "Überfällig". One or two words, in
  * sentence case. Colour never carries the state alone: the word does, and a 12px icon may help.
  */
-export function Badge({ className, tone, ...props }: BadgeProps) {
+export function Badge({ className, tone, dot = false, children, ...props }: BadgeProps) {
+  const hue = tone ?? "neutral";
   return (
     <span
       data-slot="badge"
-      data-tone={tone ?? "neutral"}
-      className={cn(badgeVariants({ tone }), className)}
+      data-tone={hue}
+      data-dot={dot ? "" : undefined}
+      className={cn(
+        badgeVariants({ tone: dot ? "neutral" : tone }),
+        dot && "gap-1.5 ps-1.5",
+        className,
+      )}
       {...props}
-    />
+    >
+      {dot && (
+        <span
+          aria-hidden
+          data-slot="badge-dot"
+          className={cn("size-2 shrink-0 rounded-full", dots[hue])}
+        />
+      )}
+      {children}
+    </span>
   );
 }

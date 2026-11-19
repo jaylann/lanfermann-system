@@ -44,3 +44,5 @@ felds = "felds"
 # The words for kinds of file under an attachment's name.
 dokument = "dokument"
 archiv = "archiv"
+# "Offen", the name of a table look Justin was shown, recorded in DESIGN.md's decisions.
+offen = "offen"

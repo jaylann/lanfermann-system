@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, waitFor } from "storybook/test";
 
+import { Card } from "@/components/card/card";
 import { Checkbox } from "@/components/checkbox/checkbox";
 import { Icon } from "@/components/icon/icon";
 import {
@@ -65,39 +66,41 @@ function Selection({ start = [], narrow = false, ground }: SelectionProps) {
   return (
     // The bar stands at the foot of this box, as it stands at the foot of the window in an app.
     <div className="relative h-dvh overflow-hidden p-6">
-      <Table aria-label="Angebote">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-0">
-              <Checkbox
-                aria-label="Alle Angebote auswählen"
-                checked={all}
-                indeterminate={selected.length > 0 && !all}
-                onCheckedChange={(checked) => setSelected(checked ? QUOTES.map((q) => q.id) : [])}
-              />
-            </TableHead>
-            <TableHead>Kunde</TableHead>
-            {!narrow && <TableHead>Nummer</TableHead>}
-            <TableHead numeric>Betrag</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {QUOTES.map((quote) => (
-            <TableRow key={quote.id} selected={selected.includes(quote.id)}>
-              <TableCell className="w-0">
+      <Card>
+        <Table aria-label="Angebote">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-0">
                 <Checkbox
-                  aria-label={`Angebot für ${quote.customer} auswählen`}
-                  checked={selected.includes(quote.id)}
-                  onCheckedChange={() => toggle(quote.id)}
+                  aria-label="Alle Angebote auswählen"
+                  checked={all}
+                  indeterminate={selected.length > 0 && !all}
+                  onCheckedChange={(checked) => setSelected(checked ? QUOTES.map((q) => q.id) : [])}
                 />
-              </TableCell>
-              <TableCell className="font-medium text-fg">{quote.customer}</TableCell>
-              {!narrow && <TableCell className="font-mono text-sm">{quote.id}</TableCell>}
-              <TableCell numeric>{euro.format(quote.amount)}</TableCell>
+              </TableHead>
+              <TableHead>Kunde</TableHead>
+              {!narrow && <TableHead>Nummer</TableHead>}
+              <TableHead numeric>Betrag</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {QUOTES.map((quote) => (
+              <TableRow key={quote.id} selected={selected.includes(quote.id)}>
+                <TableCell className="w-0">
+                  <Checkbox
+                    aria-label={`Angebot für ${quote.customer} auswählen`}
+                    checked={selected.includes(quote.id)}
+                    onCheckedChange={() => toggle(quote.id)}
+                  />
+                </TableCell>
+                <TableCell className="font-medium text-fg">{quote.customer}</TableCell>
+                {!narrow && <TableCell className="font-mono text-sm">{quote.id}</TableCell>}
+                <TableCell numeric>{euro.format(quote.amount)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
       <ActionBar
         position="absolute"
         ground={ground}
