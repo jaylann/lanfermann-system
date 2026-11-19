@@ -35,8 +35,8 @@ export type CheckboxCardProps = Omit<
 /**
  * One of several things that may each be chosen, where every option needs a sentence: what a
  * workspace is for, which notices to get. The whole card is the control and the target, cut
- * like a `RadioCard`: a softly raised sheet that goes down under a press and takes the accent
- * as its edge when it is on.
+ * like a `RadioCard`: a softly raised sheet that stands still while its box dips under a press,
+ * and takes the accent as its edge when it is on.
  *
  * Put the cards into a `CheckboxGroup` (its value is the list of the chosen `value`s) and lay
  * them out with a class on it. A single card on its own is a setting with an explanation; a
@@ -66,9 +66,9 @@ export function CheckboxCard({
         aria-describedby={description === undefined ? undefined : descriptionId}
         className={cn(
           choiceControl,
-          // The checkbox's socket and plug (checkbox.tsx), without a press of its own.
+          // The checkbox's socket and plug (checkbox.tsx); the press comes from the card.
           mark === "tick" && [
-            "rounded-xs bg-surface text-on-accent depth-socket transition-[box-shadow,background-color] spring-seat",
+            "rounded-xs bg-surface text-on-accent depth-socket transition-[box-shadow,background-color,scale]",
             "data-checked:bg-accent data-checked:depth-plug data-checked:depth-tone-accent",
             "data-disabled:bg-disabled data-disabled:depth-flat data-disabled:text-on-disabled",
           ],

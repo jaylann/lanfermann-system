@@ -29,8 +29,9 @@ export type RadioCardProps = Omit<
 
 /**
  * One choice out of a few whose options need a sentence each: a plan, an answer in a set-up.
- * The whole card is the control and the target. It is a softly raised sheet that goes down
- * under a press; chosen, it takes the accent as its edge and its mark closes from ring to disc.
+ * The whole card is the control and the target. It is a softly raised sheet that stands still:
+ * a press anywhere on it dips its mark. Chosen, it takes the accent as its edge and its mark
+ * closes from ring to disc.
  *
  * Put the cards into a `RadioGroup` and lay them out with a class on it (`grid sm:grid-cols-3`
  * with `gap-3`). The title names the choice, the sentence says what it means; keep both the

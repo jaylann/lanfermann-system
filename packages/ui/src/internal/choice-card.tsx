@@ -19,19 +19,21 @@ export type ChoiceCardText = {
 
 /**
  * The card around a radio or a checkbox: a softly raised sheet that is the control's label, so
- * the whole of it is the target. It goes down under a press and seats back, takes the accent
- * outline when the keyboard is on its control, and lies flat when the control is disabled.
- * State is read from the control inside, which carries `data-slot="choice-control"`.
+ * the whole of it is the target. The sheet itself stands still: a press anywhere on it is
+ * answered by its mark, which dips and seats back as a plain `Radio` or `Checkbox` does. (The
+ * whole card going down to the press scale moved a wide sheet by ten pixels and was too heavy:
+ * Justin, 2026-11-19.) It takes the accent outline when the keyboard is on its control, and
+ * lies flat when the control is disabled. State is read from the control inside, which carries
+ * `data-slot="choice-control"`.
  */
 export const choiceCard = [
+  // The edge of the chosen card changes at once: the mark carries the motion, and a shadow
+  // this large is not eased.
   "group/card relative flex cursor-pointer items-start gap-3 rounded-xl bg-surface p-4 text-left depth-card select-none",
-  // Only the press moves. The edge of the chosen card changes at once: the mark carries the
-  // motion, and a shadow this large is not eased.
-  "transition-[scale] spring-seat active:scale-(--motion-press-scale) active:spring-snap",
   // Under the pointer the ring of its mark darkens: the card says it can be taken.
   "hover:[--mark-ring:var(--lf-text-muted)]",
   "has-[[data-slot=choice-control]:focus-visible]:outline-2 has-[[data-slot=choice-control]:focus-visible]:outline-offset-2 has-[[data-slot=choice-control]:focus-visible]:outline-accent",
-  "has-[[data-slot=choice-control][data-disabled]]:cursor-default has-[[data-slot=choice-control][data-disabled]]:bg-disabled has-[[data-slot=choice-control][data-disabled]]:depth-flat has-[[data-slot=choice-control][data-disabled]]:active:scale-100",
+  "has-[[data-slot=choice-control][data-disabled]]:cursor-default has-[[data-slot=choice-control][data-disabled]]:bg-disabled has-[[data-slot=choice-control][data-disabled]]:depth-flat",
 ].join(" ");
 
 /** The chosen card wears the accent as its edge. */
@@ -39,10 +41,14 @@ export const choiceCardEdge = "has-[[data-slot=choice-control][data-checked]]:de
 
 /**
  * The control inside the card: a box of the check size on the title's first line. The card
- * around it takes the presses and shows the focus, so the control gives both up.
+ * around it takes the presses and shows the focus, so the control gives both up; it dips
+ * while the card is pressed, by as much as a plain `Radio` does under its own press.
  */
-export const choiceControl =
-  "group/control pointer-events-none mt-0.5 flex size-(--check-size) shrink-0 items-center justify-center outline-hidden";
+export const choiceControl = [
+  "group/control pointer-events-none mt-0.5 flex size-(--check-size) shrink-0 items-center justify-center outline-hidden",
+  "transition-[scale] spring-seat group-active/card:scale-[0.92] group-active/card:spring-snap",
+  "data-disabled:scale-100",
+].join(" ");
 
 /** The system's mark for a card: an open ring that closes to the disc when it is chosen. */
 export function ChoiceMark() {
