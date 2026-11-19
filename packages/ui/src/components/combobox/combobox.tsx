@@ -348,7 +348,11 @@ function ChipsRow({
         placeholder={chosen.length > 0 ? undefined : placeholder}
         aria-description={chosen.length > 0 ? chipsHint(chosen.length) : undefined}
         className={cn(
-          "h-[1.375rem] min-w-16 flex-1 bg-transparent px-1.5 text-control text-fg focus:outline-hidden data-disabled:text-on-disabled",
+          "h-[1.375rem] bg-transparent px-1.5 text-control text-fg focus:outline-hidden data-disabled:text-on-disabled",
+          // It stands beside the last chip and takes the rest of the line. Where the browser
+          // can size a field by its text, it only takes a line of its own once what is typed
+          // no longer fits beside the chips; elsewhere it keeps its place and scrolls.
+          "w-12 max-w-full min-w-12 grow supports-[field-sizing:content]:[field-sizing:content] supports-[field-sizing:content]:w-auto",
           // Alone in the field its text starts where every field's text does.
           "first:pl-[calc(var(--field-pad)-(var(--field-height)-1.375rem)/2)]",
           fieldText,

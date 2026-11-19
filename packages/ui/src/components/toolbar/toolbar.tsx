@@ -29,7 +29,9 @@ export function Toolbar({ className, ...props }: ToolbarProps) {
       <ToolbarPrimitive.Root
         data-slot="toolbar"
         className={mergeClassName(
-          "flex items-center gap-1 data-[orientation=vertical]:flex-col",
+          // Too narrow for all of its keys, a row breaks onto a second line instead of running
+          // out of its place.
+          "flex flex-wrap items-center gap-1 data-[orientation=vertical]:flex-col data-[orientation=vertical]:flex-nowrap",
           className,
         )}
         {...props}
