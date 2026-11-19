@@ -5,6 +5,8 @@ import { expect } from "storybook/test";
 
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
+import { Card, CardBar } from "@/components/card/card";
+import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
 import { Link } from "@/components/link/link";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/menu/menu";
@@ -93,8 +95,64 @@ function RowActions({ id }: { id: string }) {
 }
 
 /**
- * Text, a status, an amount and an action per row. The rule opens the table, hairlines divide
- * the rows; amounts stand right in tabular digits under a right-aligned heading.
+ * In an app: the table straight in a `Card`, under a `CardBar` that names it. The card's edge
+ * holds it: the column names on the well, the outer cells 20px in, no line under the last row.
+ * The states are badges with a dot, quieter than the row.
+ */
+export const InCard: Story = {
+  parameters: { visual: { target: '[data-slot="table-row"][data-interactive]' } },
+  render: () => (
+    <Card className="w-full max-w-3xl">
+      <CardBar>
+        <Heading level={2} size="label" id="angebote-karte">
+          Neueste Angebote
+        </Heading>
+        <Link href="#angebote" variant="quiet" className="text-sm text-fg-muted">
+          Alle Angebote
+        </Link>
+      </CardBar>
+      <Table aria-labelledby="angebote-karte">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-full">Kunde</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead numeric>Betrag</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {QUOTES.map((quote) => (
+            <TableRow key={quote.id} interactive>
+              <TableCell className="w-full max-w-0">
+                <div className="flex min-w-0 flex-col">
+                  <a
+                    href={`#${quote.id}`}
+                    className="truncate rounded-xs font-medium text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  >
+                    {quote.customer}
+                  </a>
+                  <span className="truncate text-sm text-fg-muted">
+                    {quote.id} · {quote.subject}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge dot tone={quote.state[1]}>
+                  {quote.state[0]}
+                </Badge>
+              </TableCell>
+              <TableCell numeric>{euro.format(quote.amount)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
+  ),
+};
+
+/**
+ * Outside a card, in a reference or the docs: text, a status, an amount and an action per row.
+ * The rule opens the table, hairlines divide the rows; amounts stand right in tabular digits
+ * under a right-aligned heading.
  */
 export const Default: Story = {
   render: () => (

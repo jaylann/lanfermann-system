@@ -7,6 +7,7 @@ import { AvatarGroup } from "@/components/avatar-group/avatar-group";
 import type { AvatarPerson, Presence } from "@/components/avatar-group/people";
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
+import { Card, CardBar } from "@/components/card/card";
 import {
   Dialog,
   DialogBody,
@@ -198,93 +199,113 @@ function Board() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
-        <Table aria-label="Mitglieder">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Person</TableHead>
-              <TableHead>Rolle</TableHead>
-              <TableHead>Zuletzt aktiv</TableHead>
-              <TableHead className="w-0">
-                <span className="sr-only">Entfernen</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members.map((member) => (
-              <TableRow key={member.email}>
-                <TableCell>
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar size="md" presence={member.presence}>
-                      <AvatarFallback>{initials(member.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="flex items-center gap-2 font-medium text-fg">
-                        <span className="truncate">{member.name}</span>
-                        {member.invited && <Badge tone="info">Eingeladen</Badge>}
-                      </span>
-                      <span className="truncate text-sm text-fg-muted">{member.email}</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Select
-                    items={ROLES}
-                    value={member.role}
-                    onValueChange={(role) => {
-                      if (typeof role !== "string") return;
-                      setMembers((now) =>
-                        now.map((each) => (each.email === member.email ? { ...each, role } : each)),
-                      );
-                      toast({
-                        title: `${member.name} ist jetzt ${ROLES.find((each) => each.value === role)?.label}.`,
-                      });
-                    }}
-                    disabled={member.role === "inhaber"}
-                  >
-                    <SelectTrigger
-                      size="sm"
-                      aria-label={`Rolle von ${member.name}`}
-                      className="w-36"
-                    />
-                    <SelectContent>
-                      {ROLES.map((role) => (
-                        <SelectItem key={role.value} value={role.value}>
-                          {role.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-fg-muted">{member.seen}</TableCell>
-                <TableCell className="w-0">
-                  <Button
-                    size="sm"
-                    variant="quiet"
-                    iconOnly
-                    disabled={member.role === "inhaber"}
-                    aria-label={`${member.name} aus dem Team entfernen`}
-                    onClick={() => {
-                      setMembers((now) => now.filter((each) => each.email !== member.email));
-                      setChanges((now) => [
-                        { who: "Maria Huber", what: `hat ${member.name} entfernt.`, time: "15:14" },
-                        ...now,
-                      ]);
-                    }}
-                  >
-                    <Icon icon={UserRemove01Icon} size={16} />
-                  </Button>
-                </TableCell>
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+        {/* Not a region of its own: the table is one, named by the heading. */}
+        <Card className="min-w-0">
+          <CardBar>
+            <Heading level={2} size="label" id="mitglieder">
+              Mitglieder
+            </Heading>
+          </CardBar>
+          <Table aria-labelledby="mitglieder">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Person</TableHead>
+                <TableHead>Rolle</TableHead>
+                <TableHead>Zuletzt aktiv</TableHead>
+                <TableHead className="w-0">
+                  <span className="sr-only">Entfernen</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {members.map((member) => (
+                <TableRow key={member.email}>
+                  <TableCell>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar size="md" presence={member.presence}>
+                        <AvatarFallback>{initials(member.name)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="flex items-center gap-2 font-medium text-fg">
+                          <span className="truncate">{member.name}</span>
+                          {member.invited && (
+                            <Badge dot tone="info">
+                              Eingeladen
+                            </Badge>
+                          )}
+                        </span>
+                        <span className="truncate text-sm text-fg-muted">{member.email}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      items={ROLES}
+                      value={member.role}
+                      onValueChange={(role) => {
+                        if (typeof role !== "string") return;
+                        setMembers((now) =>
+                          now.map((each) =>
+                            each.email === member.email ? { ...each, role } : each,
+                          ),
+                        );
+                        toast({
+                          title: `${member.name} ist jetzt ${ROLES.find((each) => each.value === role)?.label}.`,
+                        });
+                      }}
+                      disabled={member.role === "inhaber"}
+                    >
+                      <SelectTrigger
+                        size="sm"
+                        aria-label={`Rolle von ${member.name}`}
+                        className="w-36"
+                      />
+                      <SelectContent>
+                        {ROLES.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-fg-muted">{member.seen}</TableCell>
+                  <TableCell className="w-0">
+                    <Button
+                      size="sm"
+                      variant="quiet"
+                      iconOnly
+                      disabled={member.role === "inhaber"}
+                      aria-label={`${member.name} aus dem Team entfernen`}
+                      onClick={() => {
+                        setMembers((now) => now.filter((each) => each.email !== member.email));
+                        setChanges((now) => [
+                          {
+                            who: "Maria Huber",
+                            what: `hat ${member.name} entfernt.`,
+                            time: "15:14",
+                          },
+                          ...now,
+                        ]);
+                      }}
+                    >
+                      <Icon icon={UserRemove01Icon} size={16} />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
 
-        <section aria-labelledby="aenderungen" className="flex min-w-0 flex-col gap-3">
-          <Heading level={2} size="label" id="aenderungen">
-            Änderungen
-          </Heading>
-          <Timeline>
+        <Card role="region" aria-labelledby="aenderungen" className="min-w-0">
+          <CardBar>
+            <Heading level={2} size="label" id="aenderungen">
+              Änderungen
+            </Heading>
+          </CardBar>
+          <Timeline className="px-5 pt-4 pb-5">
             <TimelineGroup label="Heute" dateTime="2026-11-19">
               {changes.map((change, index) => (
                 <TimelineItem
@@ -316,7 +337,7 @@ function Board() {
               </TimelineItem>
             </TimelineGroup>
           </Timeline>
-        </section>
+        </Card>
       </div>
     </AppFrame>
   );

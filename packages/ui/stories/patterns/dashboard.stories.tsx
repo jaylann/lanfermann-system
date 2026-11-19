@@ -5,8 +5,10 @@ import { type ReactNode, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
+import { Card, CardBar } from "@/components/card/card";
 import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
+import { Link } from "@/components/link/link";
 import { Meter, MeterTrack } from "@/components/meter/meter";
 import { RollingNumber } from "@/components/rolling-number/rolling-number";
 import { Stat, StatChange, StatGroup, StatLabel, StatValue } from "@/components/stat/stat";
@@ -132,49 +134,67 @@ function Board() {
         </Stat>
       </StatGroup>
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         {/* Not a region of its own: the table is one, named by the heading. */}
-        <div className="flex min-w-0 flex-col gap-3">
-          <Heading level={2} size="label" id="neueste">
-            Neueste Angebote
-          </Heading>
+        <Card className="min-w-0">
+          <CardBar>
+            <Heading level={2} size="label" id="neueste">
+              Neueste Angebote
+            </Heading>
+            <Link href="#angebote" variant="quiet" className="text-sm text-fg-muted">
+              Alle Angebote
+            </Link>
+          </CardBar>
           <Table aria-labelledby="neueste">
             <TableHeader>
               <TableRow>
-                <TableHead>Kunde</TableHead>
-                <TableHead>Stand</TableHead>
+                <TableHead className="w-full">Kunde</TableHead>
+                <TableHead className="max-sm:hidden">Stand</TableHead>
                 <TableHead numeric>Betrag</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {QUOTES.map(([id, customer, subject, amount, status, tone]) => {
                 const now = accepted && id === "A-2026-0418";
+                const state = (
+                  <Badge dot tone={now ? "success" : tone}>
+                    {now ? "Angenommen" : status}
+                  </Badge>
+                );
                 return (
                   <TableRow key={id} interactive>
-                    <TableCell>
+                    {/* The first column takes the room there is; the others keep to theirs. */}
+                    <TableCell className="w-full max-w-0">
                       <div className="flex min-w-0 flex-col">
-                        <span className="truncate font-medium text-fg">{customer}</span>
+                        <a
+                          href={`#angebot-${id}`}
+                          className="truncate rounded-xs font-medium text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                        >
+                          {customer}
+                        </a>
                         <span className="truncate text-sm text-fg-muted">
                           {id} · {subject}
                         </span>
+                        {/* On a phone the state's column gives way to the name: it stands here. */}
+                        <span className="pt-1 sm:hidden">{state}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge tone={now ? "success" : tone}>{now ? "Angenommen" : status}</Badge>
-                    </TableCell>
+                    <TableCell className="max-sm:hidden">{state}</TableCell>
                     <TableCell numeric>{euro.format(amount)}</TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
-        </div>
+        </Card>
 
-        <section aria-labelledby="zuletzt" className="flex min-w-0 flex-col gap-3">
-          <Heading level={2} size="label" id="zuletzt">
-            Zuletzt
-          </Heading>
-          <Timeline>
+        <Card role="region" aria-labelledby="zuletzt" className="min-w-0">
+          <CardBar>
+            <Heading level={2} size="label" id="zuletzt">
+              Zuletzt
+            </Heading>
+          </CardBar>
+          <Timeline className="px-5 pt-4 pb-5">
             <TimelineGroup label="Heute" dateTime="2026-11-19">
               {accepted > 0 && (
                 <TimelineItem time="15:02" avatar={<Person initials="BK" />}>
@@ -199,7 +219,7 @@ function Board() {
               </TimelineItem>
             </TimelineGroup>
           </Timeline>
-        </section>
+        </Card>
       </div>
     </AppFrame>
   );

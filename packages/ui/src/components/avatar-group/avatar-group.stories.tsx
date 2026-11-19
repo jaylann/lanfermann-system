@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
+import { Card } from "@/components/card/card";
 import {
   Table,
   TableBody,
@@ -88,28 +89,30 @@ export const OnRow: Story = {
   parameters: { visual: { viewport: { width: 640, height: 300 } } },
   render: () => (
     <div className="flex w-[min(560px,calc(100vw-2rem))] flex-col gap-6">
-      <Table aria-label="Angebote">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Angebot</TableHead>
-            <TableHead>Bearbeitet von</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow selected>
-            <TableCell>Einbauschrank Flur</TableCell>
-            <TableCell>
-              <AvatarGroup people={team.slice(0, 5)} size="sm" label="Bearbeitet von" />
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Küchenfronten Eiche</TableCell>
-            <TableCell>
-              <AvatarGroup people={team.slice(2, 4)} size="sm" label="Bearbeitet von" />
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <Card>
+        <Table aria-label="Angebote">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Angebot</TableHead>
+              <TableHead>Bearbeitet von</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow selected>
+              <TableCell>Einbauschrank Flur</TableCell>
+              <TableCell>
+                <AvatarGroup people={team.slice(0, 5)} size="sm" label="Bearbeitet von" />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Küchenfronten Eiche</TableCell>
+              <TableCell>
+                <AvatarGroup people={team.slice(2, 4)} size="sm" label="Bearbeitet von" />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Card>
       <div
         className="flex h-24 items-end rounded-xl p-4"
         style={{

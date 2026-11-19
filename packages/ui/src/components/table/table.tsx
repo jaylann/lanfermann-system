@@ -8,16 +8,17 @@ import { cn } from "@/lib/cn";
 /** A table scrolls sideways in its own region, and a region needs a name. */
 type Named =
   | { "aria-label": string; "aria-labelledby"?: undefined }
-  | { "aria-labelledby": string; "aria-label"?: undefined };
+  | { "aria-label"?: undefined; "aria-labelledby": string };
 
 export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labelledby"> &
   Named & {
     /** Classes for the box around the table (its rule and the scrolling region): its place. */
     containerClassName?: string;
     /**
-     * What the cells hold. `data` (the default): short values, centred on the row's line.
-     * `text`: sentences, as in a reference or the docs. Cells then start at the row's top, so a
-     * long cell does not push the short ones beside it down to its middle.
+     * What the cells hold. `data` (the default): short values on a close rhythm, centred on the
+     * row's line. `text`: sentences, as in a reference or the docs, on a looser one. Cells then
+     * start at the row's top, so a long cell does not push the short ones beside it down to its
+     * middle.
      */
     content?: "data" | "text";
     /**
@@ -27,42 +28,25 @@ export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labe
      * tech.
      */
     stack?: boolean;
-    /**
-     * How the table is set. Temporary: the refinements on the board `Lab/Table 2026-11-19`, to
-     * be compared until one is picked and the others go. All but `default` share the rhythm of
-     * `tight`, which Justin picked from the first round (2026-11-19).
-     * - `tight`: today's anatomy on a tighter rhythm. Rows of 15px text (`text-control`, it
-     *   follows the density) with 8px above and below, at least a large control high; a column
-     *   heading as high as a control; what stands inline in a cell (a badge, avatars, a
-     *   checkbox) is centred on the text; numbers in the text colour. A run of selected rows is
-     *   one wash. Still under the 2px rule.
-     * - `card`: for a table that stands in a `Card`, under the card's head. No rule: the card's
-     *   edge holds the rows. The column names stand in a quiet band (the well, a hairline under
-     *   it; a head above brings its own), the outer cells keep the card's 20px, and the last row
-     *   has no line under it: the card's edge closes the table. The card clips the last wash.
-     * - `open`: on the page's ground with no rule: the heading above opens the table, the column
-     *   names stand bare over a hairline. The table reaches 12px past its column on both sides,
-     *   so its text and its lines stand on the column's edges; the washes are rounded like a
-     *   sidebar's rows and run past the text, a run of selected rows is one shape, and the
-     *   hairlines next to a washed row step aside (`styles/table.css`).
-     * - `band`: like `open`, but the column names stand in a rounded band on the quiet surface
-     *   in place of a line, and the rows are divided by their rhythm alone.
-     */
-    look?: TableLook;
   };
-
-/** The looks a `Table` can take while the refinement is open (see `TableProps.look`). */
-export type TableLook = "default" | "tight" | "card" | "open" | "band";
 
 /**
  * Rows of the same kind of thing, compared column by column: quotes, invoice lines, members.
- * Real `<table>` markup, structured by line and not by box: a 2px rule with round ends opens it,
- * hairlines divide the rows, no stripes and no card around it.
+ * Real `<table>` markup, structured by line: hairlines divide the rows, no stripes.
+ *
+ * In an app a table stands in a `Card`, under a `CardBar` that names it: put it straight in the
+ * card, not in a `CardContent`. There the card's edge holds it: the column names stand on the
+ * well, the outer cells keep the card's 20px, and the last row has no line under it. Elsewhere
+ * (a reference, the docs) a 2px rule with round ends opens it.
+ *
+ * Rows of data are set close: 15px text (it follows the density) with 8px above and below, a row
+ * at least a large control high, and what stands inline in a cell (a badge, avatars, a checkbox)
+ * centred on the text. Rows selected one after another are one wash.
  *
  * On a narrow screen the table keeps its columns and scrolls sideways inside its own region,
- * which is focusable so the keyboard can scroll it too. Its edges fade where more columns wait;
- * the rule above stays whole. Name it with `aria-label` (or `aria-labelledby`, pointing at a
- * heading or the `TableCaption`). Give the table a `min-w-*` if its columns must not squeeze.
+ * which is focusable so the keyboard can scroll it too. Its edges fade where more columns wait.
+ * Name it with `aria-label` (or `aria-labelledby`, pointing at a heading or the
+ * `TableCaption`). Give the table a `min-w-*` if its columns must not squeeze.
  *
  * Sorting, filtering and paging are the caller's state; the table only provides the slots.
  */
@@ -71,34 +55,28 @@ export function Table({
   containerClassName,
   content = "data",
   stack = false,
-  look = "default",
   "aria-label": label,
   "aria-labelledby": labelledBy,
   ...props
 }: TableProps) {
-  // Only a refined look is named in the markup, so `in-data-look:` means "one of the refinements".
-  const refined = look === "default" ? undefined : look;
-  // The looks whose washes are rounded and run past the text, which stands on the column's edge.
-  const rounded = look === "open" || look === "band";
   return (
     <div
       data-slot="table-container"
-      data-look={refined}
       className={cn(
         // The rule and the focus outline are drawn here, outside the region's edge mask, which
         // would fade them with the columns.
-        (look === "default" || look === "tight") && ruleTop,
+        ruleTop,
         "rounded-xs",
         "has-[[data-slot=table-scroll]:focus-visible]:outline-2",
         "has-[[data-slot=table-scroll]:focus-visible]:outline-offset-2",
         "has-[[data-slot=table-scroll]:focus-visible]:outline-accent",
-        // A rounded look reaches past its column by a cell's padding, so its text stands on the
-        // column's edge and its washes run past the text.
-        rounded && "-mx-3",
-        // In a card the table ends at the card's rounded foot, and its focus ring stays inside
-        // the card's edge.
-        look === "card" &&
-          "rounded-b-xl has-[[data-slot=table-scroll]:focus-visible]:-outline-offset-2",
+        // In a card the card's edge opens and closes the table: no rule, the corners of the
+        // card clip the band of column names and the wash of the last row, and the focus ring
+        // stays inside the card's edge.
+        "in-data-[slot=card]:border-t-0 in-data-[slot=card]:before:hidden",
+        "in-data-[slot=card]:overflow-clip in-data-[slot=card]:rounded-none",
+        "in-data-[slot=card]:first:rounded-t-xl in-data-[slot=card]:last:rounded-b-xl",
+        "in-data-[slot=card]:has-[[data-slot=table-scroll]:focus-visible]:-outline-offset-2",
         containerClassName,
       )}
     >
@@ -115,26 +93,19 @@ export function Table({
           "relative w-full overflow-x-auto focus-visible:outline-hidden",
           // What takes the keyboard focus inside is scrolled clear of the fade.
           "scroll-px-10",
-          // In a card the region's rounded foot clips the wash of the last row.
-          look === "card" && "rounded-b-xl",
         )}
       >
         <table
           data-slot="table"
           data-content={content}
           data-stack={stack ? "" : undefined}
-          data-look={refined}
-          data-rounded={rounded ? "" : undefined}
           // The roles are written out because a stacked table is no longer laid out as one, and
           // some browsers then stop telling assistive tech that it is a table.
           role="table"
           className={cn(
-            "w-full caption-bottom border-collapse text-left text-base text-fg-body",
+            "w-full caption-bottom border-collapse text-left text-fg-body",
+            content === "data" ? "text-control" : "text-base",
             "data-stack:max-sm:block",
-            refined && "text-control",
-            // Separate cells can round their corners, which the rounded washes need; the lines are
-            // then drawn by the cells (`styles/table.css`), as rows have no border in this model.
-            rounded && "border-separate border-spacing-0",
             className,
           )}
           {...props}
@@ -162,7 +133,12 @@ export function TableCaption({ className, ...props }: ComponentProps<"caption">)
   return (
     <caption
       data-slot="table-caption"
-      className={cn("pt-3 text-left text-sm text-fg-muted", className)}
+      className={cn(
+        "pt-3 text-left text-sm text-fg-muted",
+        // In a card it stands under the card's own edge.
+        "in-data-[slot=card]:px-5 in-data-[slot=card]:pb-3",
+        className,
+      )}
       {...props}
     />
   );
@@ -187,7 +163,7 @@ export function TableBody({ className, ...props }: ComponentProps<"tbody">) {
       className={cn(
         stackedGroup,
         // In a card the card's edge closes the table: no line under the last row.
-        "in-data-[look=card]:[&>tr:last-child]:border-b-0",
+        "in-data-[slot=card]:[&>tr:last-child]:border-b-0",
         className,
       )}
       {...props}
@@ -231,11 +207,10 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
       aria-selected={selected}
       className={cn(
         "group/row border-b border-hairline",
-        // Instant, like the highlight of a menu: it follows the pointer without lag. In a rounded
-        // look the cells carry the wash instead, so its ends can be rounded.
-        "not-in-data-rounded:data-interactive:hover:bg-hover data-selected:text-fg not-in-data-rounded:data-selected:bg-tint",
-        // A refined look: rows selected one after another are one wash, without a line across it.
-        "in-data-look:data-selected:has-[+[data-selected]]:border-b-tint",
+        // Instant, like the highlight of a menu: it follows the pointer without lag.
+        "data-interactive:hover:bg-hover data-selected:bg-tint data-selected:text-fg",
+        // Rows selected one after another are one wash, without a line across it.
+        "data-selected:has-[+[data-selected]]:border-b-tint",
         stackedRow,
         className,
       )}
@@ -246,11 +221,11 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
 
 // Every cell keeps 12px to its sides, the outer ones too: the lines and a row's wash run a
 // little past the text, so a washed row does not have its text pressed against the edge.
+// In a card the outer cells keep the card's own 20px, so the text stands under its bar.
 // In a table of text the cells start at the row's top.
 const cell = [
   "px-3 text-left align-middle in-data-[content=text]:align-top",
-  // In a card the outer cells keep the card's own 20px, so the text stands under its head.
-  "in-data-[look=card]:first:pl-5 in-data-[look=card]:last:pr-5",
+  "in-data-[slot=card]:first:pl-5 in-data-[slot=card]:last:pr-5",
 ].join(" ");
 const numeric = "text-right tabular-nums whitespace-nowrap";
 
@@ -272,9 +247,9 @@ export function TableHead({ className, numeric: isNumeric, sort, ...props }: Tab
       className={cn(
         cell,
         "h-(--control-lg) text-sm font-normal whitespace-nowrap text-fg-muted",
-        // In a refined look the column names stand in a band as high as a control; in a card the
-        // band is the well.
-        "in-data-look:h-(--control-md) in-data-[look=card]:bg-well",
+        // Over rows of data the column names stand in a band as high as a control; in a card
+        // the band is the well.
+        "in-data-[content=data]:h-(--control-md) in-data-[slot=card]:bg-well",
         // A column name over sentences stands at the top as well, in its own small line.
         "in-data-[content=text]:pb-2 in-data-[content=text]:align-bottom",
         isNumeric && "text-right",
@@ -311,14 +286,13 @@ export function TableCell({
         // Only the style of wrapping: `text-pretty` would also switch wrapping back on, and a
         // `nowrap` cell would wrap again.
         "py-3 in-data-[content=text]:[text-wrap-style:pretty]",
-        // A refined look: 8px above and below. What stands inline in the cell (a badge, avatars,
-        // a checkbox) is centred on the text's x-height instead of standing on its baseline,
-        // which made a row with a picture taller than one with initials.
-        // A row is at least a large control high (the height of a cell is its least), and its
-        // cells are centred on it, as today.
-        "in-data-look:h-(--control-lg) in-data-look:py-2 in-data-look:*:align-middle",
+        // Rows of data: 8px above and below, at least a large control high. What stands inline in
+        // the cell (a badge, avatars, a checkbox) is centred on the text's x-height instead of
+        // standing on its baseline, which made a row with a picture taller than one with initials.
+        "in-data-[content=data]:h-(--control-lg) in-data-[content=data]:py-2 in-data-[content=data]:*:align-middle",
         isNumeric && numeric,
-        isNumeric && "in-data-look:text-fg",
+        // A figure is what is compared: in the text colour, not the body's grey.
+        isNumeric && "in-data-[content=data]:text-fg",
         nowrap && "whitespace-nowrap",
         stackedCell,
         className,

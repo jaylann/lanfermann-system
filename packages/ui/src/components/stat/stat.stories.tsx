@@ -70,18 +70,19 @@ function Figures({ variant }: { variant?: "ruled" | "cards" }) {
 }
 
 /**
- * Four figures in a ruled row: the 2px rule opens it, hairlines stand between the figures, and
- * nothing casts a shadow. One shows usage against the plan; one a change that is bad news.
+ * Four figures in a ruled row, the other form: the 2px rule opens it, hairlines stand between the
+ * figures, and nothing casts a shadow. One shows usage against the plan; one a change that is bad
+ * news.
  */
 export const Row: Story = {
   parameters: { layout: "padded", visual: { viewport: { width: 1000, height: 200 } } },
-  render: () => <Figures />,
+  render: () => <Figures variant="ruled" />,
 };
 
-/** Each figure on a card of its own: the other form of the row. */
+/** Each figure on a card of its own, as the other blocks of an app's page stand on cards. */
 export const Cards: Story = {
   parameters: { layout: "padded", visual: { viewport: { width: 1000, height: 220 } } },
-  render: () => <Figures variant="cards" />,
+  render: () => <Figures />,
 };
 
 /** On a phone the figures stand two by two. */
