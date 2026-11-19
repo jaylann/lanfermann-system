@@ -254,6 +254,8 @@ export const Keyboard: Story = {
       await userEvent.tab();
       await expect(region).toHaveFocus();
       await userEvent.keyboard("{Home}");
+      // The test's keyboard sends the key but does not scroll as the browser would.
+      region.scrollTo({ top: 0 });
       await waitFor(() => expect(latest).toHaveAttribute("data-shown"));
     });
     await step("the key leads back and gives the focus to the conversation", async () => {

@@ -1,7 +1,15 @@
 "use client";
 
 import { Alert02Icon } from "@hugeicons/core-free-icons";
-import { type ComponentProps, createContext, type ReactNode, useContext, useId } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useRef,
+} from "react";
 
 import { Chip } from "@/components/chip/chip";
 import { chipRemoveKey } from "@/components/chip/chip-variants";
@@ -57,10 +65,35 @@ export type AttachmentProps = Omit<ComponentProps<"div">, "children"> & {
 /** A name cut in its middle: the end of it, the extension, always stays. */
 function FileName({ name, className }: { name: string; className?: string }) {
   const { stem, end } = splitName(name);
+  const cut = useRef<HTMLSpanElement>(null);
+  // Where the name is cut, its first part fades out just before the extension, the way an edge
+  // fades where more waits. (An ellipsis left a gap of up to a letter before the extension.)
+  // Said straight on the element, so a resize never renders.
+  useLayoutEffect(() => {
+    const box = cut.current;
+    if (!box) return;
+    const measure = () => {
+      if (box.scrollWidth > box.clientWidth + 0.5) box.dataset.cut = "";
+      else delete box.dataset.cut;
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [name]);
   return (
     <span data-slot="attachment-name" className={cn("flex min-w-0", className)}>
-      <span className="truncate">{stem}</span>
-      {end && <span className="shrink-0">{end}</span>}
+      {/* Read out whole: drawn in two parts, the name would be heard with a gap in it. */}
+      <span className="sr-only">{name}</span>
+      <span aria-hidden className="flex min-w-0">
+        <span
+          ref={cut}
+          className="overflow-hidden whitespace-nowrap data-cut:[mask-image:linear-gradient(to_right,#000_calc(100%-1.25em),transparent)]"
+        >
+          {stem}
+        </span>
+        {end && <span className="shrink-0">{end}</span>}
+      </span>
     </span>
   );
 }
