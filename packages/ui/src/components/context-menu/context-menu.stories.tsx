@@ -210,6 +210,9 @@ export const Keyboard: Story = {
     });
 
     await step("the arrow keys move in it, and Escape closes it", async () => {
+      // The menu takes the focus a moment after it shows; a key pressed before that is lost.
+      const menu = screen.getByRole("menu");
+      await waitFor(() => expect(menu.contains(document.activeElement)).toBe(true));
       await userEvent.keyboard("{ArrowDown}");
       await waitFor(() =>
         expect(screen.getByRole("menuitem", { name: "Duplizieren" })).toHaveAttribute(

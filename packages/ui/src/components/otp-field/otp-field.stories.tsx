@@ -185,9 +185,10 @@ export const Keyboard: Story = {
       slots()[0]?.focus();
       const data = new DataTransfer();
       data.setData("text/plain", "731 905");
-      slots()[0]?.dispatchEvent(
-        new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }),
-      );
+      // Firefox drops `clipboardData` from the constructor's options, so the event is given it.
+      const paste = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+      Object.defineProperty(paste, "clipboardData", { value: data });
+      slots()[0]?.dispatchEvent(paste);
       await waitFor(() => expect(code()).toBe("731905"));
       await expect(completed).toHaveBeenLastCalledWith("731905", expect.anything());
       await expect(canvasElement.querySelector('input[name="code"]')).toHaveValue("731905");
