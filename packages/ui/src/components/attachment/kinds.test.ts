@@ -44,6 +44,6 @@ describe("extensionOf and splitName", () => {
 describe("typeWord", () => {
   it("names the extension, or the kind", () => {
     expect(typeWord({ name: "Angebot.pdf" })).toBe("PDF");
-    expect(typeWord({ name: "Foto", type: "image/png" })).toBe("Bild");
+    expect(typeWord({ name: "Backstube", type: "image/png" })).toBe("Bild");
   });
 });

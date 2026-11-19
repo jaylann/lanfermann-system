@@ -166,7 +166,13 @@ function Welcome({ onSuggest }: { onSuggest: (text: string) => void }) {
       </div>
       <div className="flex flex-wrap gap-2">
         {SUGGESTIONS.map((suggestion) => (
-          <Button key={suggestion} size="sm" onClick={() => onSuggest(suggestion)}>
+          <Button
+            key={suggestion}
+            size="sm"
+            onClick={() => onSuggest(suggestion)}
+            // A sentence may be longer than a phone is wide: it wraps inside its key.
+            className="h-auto min-h-(--control-sm) py-1 text-left whitespace-normal"
+          >
             {suggestion}
           </Button>
         ))}

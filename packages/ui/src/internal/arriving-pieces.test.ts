@@ -36,8 +36,8 @@ describe("advancePieces", () => {
   });
 
   it("adds nothing while only the word being written grows", () => {
-    const before = advancePieces([], "Hallo Wel", { complete: false });
-    const after = advancePieces(before.ends, "Hallo Welt", { complete: false });
+    const before = advancePieces([], "Hallo Bäck", { complete: false });
+    const after = advancePieces(before.ends, "Hallo Bäcker", { complete: false });
     expect(after.ends).toEqual(before.ends);
     expect(after.fresh).toBe(after.ends.length);
   });
