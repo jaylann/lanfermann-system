@@ -121,7 +121,7 @@ story `Patterns/Specimen`.
 | Selection bar             | An `ActionBar` is a dark sheet by default, on Ink like a toast, and a light one with `ground="paper"`: "it should have both dark and light mode available". Dark on a dark page it was set off by its edge alone.                                                                                                                                                                                                                                                                                                                                                                                                               | Justin, 2026-11-18                                     |
 | List strings              | The German defaults of the list parts stand as built: „ausgewählt“ and „Auswahl aufheben“ in an `ActionBar`, „Seiten“, „Seite 3“, „Seite 3 von 12“, „Vorherige Seite“ and „Nächste Seite“ in a `Pagination`, „Entfernen“ for a chip's key.                                                                                                                                                                                                                                                                                                                                                                                      | Justin, 2026-11-18                                     |
 | Code field in a dialog    | An `OtpField` keeps its own width by default and shares the width of its place with `fill`. In a dialog or a narrow card it is filled: at their own size six slots kept half the line empty, and centred they broke the dialog's left edge. Label and hint stay left.                                                                                                                                                                                                                                                                                                                                                           | Justin, 2026-11-19                                     |
-| Press on a choice card    | A `RadioCard` or `CheckboxCard` stands still under a press; its mark dips to 0.92 and seats back, as a plain `Radio` or `Checkbox` does. The whole card going down to the press scale was "way too heavy" and did not fit: 0.98 of a wide sheet is ten pixels, with a bounce on the way back. The press scale is for parts the size of a button.                                                                                                                                                                                                                                                                                | Justin, 2026-11-19; the form Claude's, to be looked at |
+| Press on a choice card    | A `RadioCard` or `CheckboxCard` keeps its size and answers with its shadow: a little higher under the pointer, down on the page under a press, while its mark dips to 0.92 as a plain `Radio` or `Checkbox` does. The accent edge of the choice eases in on `settle` as the card comes back up, and leaves on `leave`. The whole card going down to the press scale was "way too heavy" and did not fit (0.98 of a wide sheet is ten pixels, with a bounce back), and an edge that changed at once was too hard: "the focus should appear a bit softly". The press scale is for parts the size of a button.                     | Justin, 2026-11-19; the form Claude's, to be looked at |
 
 ## Colour
 
@@ -582,11 +582,13 @@ Every component belongs to one of the four matters, and takes its treatment from
   versuchen“. A row that joins fades in while the list grows; one that is removed folds shut.
 - **RadioCard** and **CheckboxCard** are a choice whose options need a sentence each: a plan,
   an answer in a set-up. The card is the control's label, so the whole of it is the target: a
-  softly raised sheet that stands still. A press anywhere on it is answered by its mark, which
-  dips and seats back as a plain `Radio` or `Checkbox` does; a sheet this wide going down to
-  the press scale moved by ten pixels. The edge of the chosen card changes at once and its
-  mark carries the motion, closing from ring to disc. Under the pointer the ring of the mark
-  darkens. The title names the control and the sentence describes it.
+  softly raised sheet that keeps its size and answers with its shadow. Under the pointer it
+  stands a little higher and the ring of its mark darkens; under a press it goes down on the
+  page and its mark dips, as a plain `Radio` or `Checkbox` does. On release it comes back up
+  while the accent edge of the choice eases in and the mark closes from ring to disc, so the
+  three read as one move; the edge of the card that was given up fades faster. A sheet this
+  wide is never scaled: at the press scale it moved by ten pixels. The title names the control
+  and the sentence describes it.
 - **Steps** is where one stands in a set-up of a few steps. It is read, so it is flat: the
   system's marks joined by a hairline. A ring is ahead, the heavier ring in the accent is
   where one stands (`mark-now`: the ring half closed), the disc is done, and the line behind a

@@ -9,7 +9,8 @@
  *   Fitting  what a hand presses                 depth-raised (+ -hover, depth-pressed)
  *   Plug     a fitting seated in a socket        depth-plug (a checked box)
  *   Socket   what receives a value or a part     depth-socket, depth-trough, depth-field
- *   Card     one object you act on               depth-card (-chosen: one of several, taken)
+ *   Card     one object you act on               depth-card (-chosen: one of several, taken;
+ *                                                shadow-card-hover / -pressed when it is a control)
  *   Sheet    what floats temporarily             depth-floating, depth-overlay
  *   Bar      the site's bar over the page        depth-bar
  *   Seam     where two sections of a site meet   depth-seam (components/seam)
@@ -59,6 +60,10 @@
   inherits: false;
 }
 @property --d-face {
+  syntax: "*";
+  inherits: false;
+}
+@property --d-card-edge {
   syntax: "*";
   inherits: false;
 }
@@ -352,14 +357,19 @@
 
   /* Cards: softly raised. */
   --shadow-card:
-    0 0 0 1px var(--depth-card-edge), 0 2px 4px 0 var(--depth-card-near),
+    0 0 0 1px var(--d-card-edge, var(--depth-card-edge)), 0 2px 4px 0 var(--depth-card-near),
     0 12px 28px -8px var(--depth-card-far);
+  /* A card that is a control (a `RadioCard`) answers with its shadow and keeps its size: a
+     little higher under the pointer, down on the page under a press. The layers match. */
+  --shadow-card-hover:
+    0 0 0 1px var(--d-card-edge, var(--depth-card-edge)), 0 3px 6px 0 var(--depth-card-near),
+    0 16px 32px -8px var(--depth-card-far);
+  --shadow-card-pressed:
+    0 0 0 1px var(--d-card-edge, var(--depth-card-edge)), 0 1px 2px 0 var(--depth-card-near),
+    0 4px 12px -6px var(--depth-card-far);
   --inset-shadow-card: inset 0 1px 0 0 var(--depth-card-hi);
-  /* A card that is the chosen one of several (a `RadioCard`): its edge is the accent, a pixel
-     outside and a pixel inside, on the same shadow. The layers match the card's. */
-  --shadow-card-chosen:
-    0 0 0 1px var(--lf-accent), 0 2px 4px 0 var(--depth-card-near),
-    0 12px 28px -8px var(--depth-card-far);
+  /* The chosen one of several wears the accent as its edge, a pixel outside (`--d-card-edge`,
+     in whatever state the card's shadow is) and a pixel inside. One layer, like the card's. */
   --inset-shadow-card-chosen: inset 0 0 0 1px var(--lf-accent);
 
   /* Sheets. */
@@ -462,8 +472,10 @@
     outline-offset: -1px;
   }
 }
+/* Worn over `depth-card`: it changes the edge and leaves the shadow to the card's state. */
 @utility depth-card-chosen {
-  @apply shadow-card-chosen inset-shadow-card-chosen;
+  --d-card-edge: var(--lf-accent);
+  @apply inset-shadow-card-chosen;
   @media (forced-colors: active) {
     outline: 2px solid Highlight;
     outline-offset: -2px;
