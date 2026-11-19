@@ -439,6 +439,16 @@ export {
   SliderValue,
 } from "./components/slider/slider";
 export { Spinner, type SpinnerProps } from "./components/spinner/spinner";
+export {
+  Stat,
+  StatChange,
+  type StatChangeProps,
+  StatGroup,
+  type StatGroupProps,
+  StatLabel,
+  type StatTrend,
+  StatValue,
+} from "./components/stat/stat";
 export { Switch, type SwitchProps } from "./components/switch/switch";
 export {
   Table,
