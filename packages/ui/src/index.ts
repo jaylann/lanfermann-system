@@ -36,6 +36,7 @@ export {
 } from "./components/app-shell/app-shell";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
 export { Badge, type BadgeProps } from "./components/badge/badge";
+export { Banner, type BannerProps, type BannerTone } from "./components/banner/banner";
 export {
   BreadcrumbItem,
   BreadcrumbLink,
