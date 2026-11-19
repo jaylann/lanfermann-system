@@ -5,14 +5,12 @@ import { type RefObject, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/button/button";
 import { Icon } from "@/components/icon/icon";
+import { Toggle } from "@/components/toggle/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
-import { TickGlyph } from "@/internal/glyphs";
+import { COPY_SHOWN_MS, CopyMarks } from "@/internal/copy";
 import { cn } from "@/lib/cn";
 
 import { CodeCopy, type CodeCopyLabels } from "./code-copy";
-
-/** How long the tick stands before the symbol comes back (as in `CodeCopy`). */
-const SHOWN_MS = 1600;
 
 /** The two keys a block of code may carry beside its copy, and their words. */
 export type CodeKeyOptions = CodeCopyLabels & {
@@ -75,19 +73,17 @@ export function CodeKeys({
         <Tooltip>
           <TooltipTrigger
             render={
-              <Button
+              <Toggle
                 iconOnly
                 size="sm"
                 variant="quiet"
                 aria-label={wrapLabel}
-                aria-pressed={wrapped}
                 data-slot="code-wrap"
-                onClick={() => onWrappedChange(!wrapped)}
-                // On, it keeps the wash a quiet button has under the pointer.
-                className="text-fg-muted hover:text-fg aria-pressed:bg-hover aria-pressed:text-fg"
+                pressed={wrapped}
+                onPressedChange={onWrappedChange}
               >
                 <Icon icon={TextWrapIcon} size={14} />
-              </Button>
+              </Toggle>
             }
           />
           <TooltipContent>{wrapLabel}</TooltipContent>
@@ -143,7 +139,7 @@ function CodeDownload({
     setTimeout(() => URL.revokeObjectURL(url), 0);
     clearTimeout(timer.current);
     setDone(true);
-    timer.current = setTimeout(() => setDone(false), SHOWN_MS);
+    timer.current = setTimeout(() => setDone(false), COPY_SHOWN_MS);
   }
 
   return (
@@ -160,13 +156,7 @@ function CodeDownload({
               onClick={save}
               className="text-fg-muted hover:text-fg"
             >
-              <span
-                data-copied={done ? "" : undefined}
-                className="grid place-items-center *:col-start-1 *:row-start-1"
-              >
-                <Icon data-slot="code-copy-symbol" icon={Download01Icon} size={14} />
-                <TickGlyph data-slot="code-copy-tick" width={14} height={14} strokeWidth={1.5} />
-              </span>
+              <CopyMarks copied={done} icon={Download01Icon} />
             </Button>
           }
         />

@@ -36,3 +36,5 @@ tage = "tage"
 adresse = "adresse"
 # The command palette's copy.
 suche = "suche"
+# The multi-select's hint for assistive tech ("Am Anfang des Felds …").
+felds = "felds"
