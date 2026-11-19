@@ -27,7 +27,27 @@ export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labe
      * tech.
      */
     stack?: boolean;
+    /**
+     * How the rows are set. Temporary: the refinements on the board `Lab/Table 2026-11-19`, to
+     * be compared with today's rows (`default`) until one is picked and the others go.
+     * - `tight`: today's anatomy on a tighter rhythm. Rows of 15px text (`text-control`, it
+     *   follows the density) with 8px above and below, at least a large control high; a column
+     *   heading as high as a control; what stands inline in a cell (a badge, avatars, a
+     *   checkbox) is centred on the text; numbers in the text colour. A run of selected rows is
+     *   one wash.
+     * - `list`: the same type as a list in the page's column. Every cell stands on the row's
+     *   first line (a name's muted second line hangs below it, the state and the amount are
+     *   read with the name). The table reaches 12px past its column on both sides, so its text
+     *   and its lines stand on the column's edges, under the heading above; the wash under the
+     *   pointer and the selection are rounded like a sidebar's rows and run past the text. A
+     *   run of selected rows is one shape, and the hairlines next to a washed row step aside
+     *   (`styles/table.css`).
+     */
+    look?: TableLook;
   };
+
+/** The looks a `Table` can take while the refinement is open (see `TableProps.look`). */
+export type TableLook = "default" | "tight" | "list";
 
 /**
  * Rows of the same kind of thing, compared column by column: quotes, invoice lines, members.
@@ -46,13 +66,17 @@ export function Table({
   containerClassName,
   content = "data",
   stack = false,
+  look = "default",
   "aria-label": label,
   "aria-labelledby": labelledBy,
   ...props
 }: TableProps) {
+  // Only a refined look is named in the markup, so `in-data-look:` means "one of the refinements".
+  const refined = look === "default" ? undefined : look;
   return (
     <div
       data-slot="table-container"
+      data-look={refined}
       className={cn(
         // The rule and the focus outline are drawn here, outside the region's edge mask, which
         // would fade them with the columns.
@@ -61,6 +85,8 @@ export function Table({
         "has-[[data-slot=table-scroll]:focus-visible]:outline-2",
         "has-[[data-slot=table-scroll]:focus-visible]:outline-offset-2",
         "has-[[data-slot=table-scroll]:focus-visible]:outline-accent",
+        // The list reaches past its column by a cell's padding; its rule stays on the column.
+        look === "list" && "-mx-3 before:inset-x-3",
         containerClassName,
       )}
     >
@@ -83,12 +109,17 @@ export function Table({
           data-slot="table"
           data-content={content}
           data-stack={stack ? "" : undefined}
+          data-look={refined}
           // The roles are written out because a stacked table is no longer laid out as one, and
           // some browsers then stop telling assistive tech that it is a table.
           role="table"
           className={cn(
             "w-full caption-bottom border-collapse text-left text-base text-fg-body",
             "data-stack:max-sm:block",
+            refined && "text-control",
+            // Separate cells can round their corners, which the list's washes need; its lines are
+            // then drawn by the cells (`styles/table.css`), as rows have no border in this model.
+            look === "list" && "border-separate border-spacing-0",
             className,
           )}
           {...props}
@@ -179,9 +210,12 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
       data-selected={selected ? "" : undefined}
       aria-selected={selected}
       className={cn(
-        "border-b border-hairline",
-        // Instant, like the highlight of a menu: it follows the pointer without lag.
-        "data-interactive:hover:bg-hover data-selected:bg-tint data-selected:text-fg",
+        "group/row border-b border-hairline",
+        // Instant, like the highlight of a menu: it follows the pointer without lag. In the list
+        // look the cells carry the wash instead, so its ends can be rounded.
+        "not-in-data-[look=list]:data-interactive:hover:bg-hover data-selected:text-fg not-in-data-[look=list]:data-selected:bg-tint",
+        // Tight: rows selected one after another are one wash, without a line across it.
+        "in-data-[look=tight]:data-selected:has-[+[data-selected]]:border-b-tint",
         stackedRow,
         className,
       )}
@@ -214,6 +248,8 @@ export function TableHead({ className, numeric: isNumeric, sort, ...props }: Tab
       className={cn(
         cell,
         "h-(--control-lg) text-sm font-normal whitespace-nowrap text-fg-muted",
+        // In a refined look the column names stand in a band as high as a control.
+        "in-data-look:h-(--control-md)",
         // A column name over sentences stands at the top as well, in its own small line.
         "in-data-[content=text]:pb-2 in-data-[content=text]:align-bottom",
         isNumeric && "text-right",
@@ -250,7 +286,19 @@ export function TableCell({
         // Only the style of wrapping: `text-pretty` would also switch wrapping back on, and a
         // `nowrap` cell would wrap again.
         "py-3 in-data-[content=text]:[text-wrap-style:pretty]",
+        // A refined look: 8px above and below. What stands inline in the cell (a badge, avatars,
+        // a checkbox) is centred on the text's x-height instead of standing on its baseline,
+        // which made a row with a picture taller than one with initials.
+        "in-data-look:py-2 in-data-look:*:align-middle",
+        // Tight: a row is at least a large control high (the height of a cell is its least), and
+        // its cells are centred on it, as today.
+        "in-data-[look=tight]:h-(--control-lg)",
+        // List: every cell stands on the first line of the row, so the state and the amount are
+        // read with the name and the muted line hangs below. No least height: with cells on a
+        // common line, the room a least height adds would gather under the text.
+        "in-data-[look=list]:align-baseline",
         isNumeric && numeric,
+        isNumeric && "in-data-look:text-fg",
         nowrap && "whitespace-nowrap",
         stackedCell,
         className,
