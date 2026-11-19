@@ -116,7 +116,7 @@ export const Arriving: Story = {
   },
 };
 
-/** Closed, it fades and the page follows it up in the same motion. */
+/** Closed, it leaves the way it came: it rises into the top edge as it fades, the page with it. */
 export const Closing: Story = {
   parameters: { visual: { motion: [{ name: "close", click: '[data-slot="banner-close"]' }] } },
   render: () => (

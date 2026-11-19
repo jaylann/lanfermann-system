@@ -88,7 +88,7 @@ export type BannerProps = Omit<ComponentProps<"div">, "title"> & {
  * A strip in the status wash with the status symbol, a sentence, an optional action and a close
  * key. The title says what is the case, the text what to do. A banner that is there when the
  * page loads stands still; one that arrives later pushes the page down and is announced. Closed,
- * it fades and the page follows it up in the same motion.
+ * it leaves the way it came: it rises into the top edge as it fades, and the page follows it up.
  */
 export function Banner({
   tone = "info",
@@ -172,10 +172,12 @@ export function Banner({
               wash[tone],
               edge[layout][tone],
               layout === "bleed" && "sm:ps-6 sm:pe-4",
-              // Arriving after load it comes down from the top edge as the page makes room.
+              // Arriving after load it comes down from the top edge as the page makes room, and it
+              // leaves the same way back, on the same spring as the room closing: a quicker fade
+              // left the room empty while the page was still rising into it (Justin, 2026-11-19).
               "transition-[opacity,translate] spring-settle",
               "in-data-live:starting:-translate-y-(--motion-enter-offset) in-data-live:starting:opacity-0",
-              "data-leaving:opacity-0 data-leaving:spring-leave",
+              "data-leaving:-translate-y-(--motion-enter-offset) data-leaving:opacity-0",
               "forced-colors:outline",
             )}
           >
