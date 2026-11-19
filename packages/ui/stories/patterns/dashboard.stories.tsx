@@ -95,44 +95,47 @@ function Board() {
         </Button>
       </div>
 
-      <StatGroup>
-        <Stat>
-          <StatLabel>Umsatz im November</StatLabel>
-          <StatValue>
-            <RollingNumber value={revenue} format={{ style: "currency", currency: "EUR" }} />
-          </StatValue>
-          <StatChange trend="up" tone="positive" context="zum Vormonat">
-            {accepted ? "+51 %" : "+12 %"}
-          </StatChange>
-        </Stat>
-        <Stat>
-          <StatLabel>Offene Angebote</StatLabel>
-          <StatValue>
-            <RollingNumber value={open} />
-          </StatValue>
-          <StatChange trend={accepted ? "down" : "flat"} context="zur Vorwoche">
-            {accepted ? "−1" : "±0"}
-          </StatChange>
-        </Stat>
-        <Stat>
-          <StatLabel>Angenommen im November</StatLabel>
-          <StatValue>
-            <RollingNumber value={won} />
-          </StatValue>
-          <StatChange trend="up" tone="positive" context="zum Vormonat">
-            {accepted ? "+4" : "+3"}
-          </StatChange>
-        </Stat>
-        <Stat>
-          <StatLabel>Angebote im Tarif</StatLabel>
-          <StatValue>
-            38 <span className="text-base font-normal text-fg-muted">von 50 im Monat</span>
-          </StatValue>
-          <Meter value={38} max={50} aria-label="Angebote im Tarif genutzt">
-            <MeterTrack />
-          </Meter>
-        </Stat>
-      </StatGroup>
+      {/* The figures share one card, hairlines between them. */}
+      <Card>
+        <StatGroup>
+          <Stat>
+            <StatLabel>Umsatz im November</StatLabel>
+            <StatValue>
+              <RollingNumber value={revenue} format={{ style: "currency", currency: "EUR" }} />
+            </StatValue>
+            <StatChange trend="up" tone="positive" context="zum Vormonat">
+              {accepted ? "+51 %" : "+12 %"}
+            </StatChange>
+          </Stat>
+          <Stat>
+            <StatLabel>Offene Angebote</StatLabel>
+            <StatValue>
+              <RollingNumber value={open} />
+            </StatValue>
+            <StatChange trend={accepted ? "down" : "flat"} context="zur Vorwoche">
+              {accepted ? "−1" : "±0"}
+            </StatChange>
+          </Stat>
+          <Stat>
+            <StatLabel>Angenommen im November</StatLabel>
+            <StatValue>
+              <RollingNumber value={won} />
+            </StatValue>
+            <StatChange trend="up" tone="positive" context="zum Vormonat">
+              {accepted ? "+4" : "+3"}
+            </StatChange>
+          </Stat>
+          <Stat>
+            <StatLabel>Angebote im Tarif</StatLabel>
+            <StatValue>
+              38 <span className="text-base font-normal text-fg-muted">von 50 im Monat</span>
+            </StatValue>
+            <Meter value={38} max={50} aria-label="Angebote im Tarif genutzt">
+              <MeterTrack />
+            </Meter>
+          </Stat>
+        </StatGroup>
+      </Card>
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         {/* Not a region of its own: the table is one, named by the heading. */}

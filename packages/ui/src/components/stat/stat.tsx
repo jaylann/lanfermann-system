@@ -7,9 +7,9 @@ import { cn } from "@/lib/cn";
 
 export type StatGroupProps = ComponentProps<"div"> & {
   /**
-   * `cards` (the default) puts each figure on a card of its own, as the other blocks of an app's
-   * page stand on cards. `ruled` stands them in one row on the ground: a 2px rule opens it and
-   * hairlines divide them, for a page that is not chopped into cards, or inside a card.
+   * `ruled` (the default) stands the figures in one row with hairlines between them. On an app's
+   * page put the row in a `Card`: the figures share the one card (Justin, 2026-11-19). On the
+   * ground a 2px rule opens it. `cards` puts each figure on a card of its own.
    */
   variant?: "ruled" | "cards";
 };
@@ -18,7 +18,7 @@ export type StatGroupProps = ComponentProps<"div"> & {
  * A row of figures: what a dashboard shows first. They take the width there is and wrap; on a
  * phone they stand two by two. Put `Stat`s inside.
  */
-export function StatGroup({ variant = "cards", className, children, ...props }: StatGroupProps) {
+export function StatGroup({ variant = "ruled", className, children, ...props }: StatGroupProps) {
   return (
     <div
       data-slot="stat-group"

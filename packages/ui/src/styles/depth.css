@@ -9,7 +9,8 @@
  *   Fitting  what a hand presses                 depth-raised (+ -hover, depth-pressed)
  *   Plug     a fitting seated in a socket        depth-plug (a checked box)
  *   Socket   what receives a value or a part     depth-socket, depth-trough, depth-field
- *   Card     one object you act on               depth-card
+ *   Card     one object you act on               depth-card (in an app's main area: a block of
+ *            the page, without the wide shadow)
  *   Sheet    what floats temporarily             depth-floating, depth-overlay
  *   Bar      the site's bar over the page        depth-bar
  *   Seam     where two sections of a site meet   depth-seam (components/seam)
@@ -451,6 +452,12 @@
 }
 @utility depth-card {
   @apply shadow-card inset-shadow-card;
+  /* On an app's page a card is a block of the page, not an object lifted off it: its edge and
+     its close shade stay, the wide soft shadow goes (Justin, 2026-11-19: "super airy"). Set on
+     the card itself, so a ground nested in between cannot bring the shadow back. */
+  [data-slot="app-shell-main"] & {
+    --depth-card-far: transparent;
+  }
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
     outline-offset: -1px;

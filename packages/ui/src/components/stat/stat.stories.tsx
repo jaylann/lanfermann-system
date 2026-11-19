@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
 import { Button } from "@/components/button/button";
+import { Card } from "@/components/card/card";
 import { Meter, MeterTrack } from "@/components/meter/meter";
 import { RollingNumber } from "@/components/rolling-number/rolling-number";
 
@@ -70,25 +71,38 @@ function Figures({ variant }: { variant?: "ruled" | "cards" }) {
 }
 
 /**
- * Four figures in a ruled row, the other form: the 2px rule opens it, hairlines stand between the
- * figures, and nothing casts a shadow. One shows usage against the plan; one a change that is bad
- * news.
+ * On an app's page: the row in one `Card`, hairlines between the figures. One shows usage against
+ * the plan; one a change that is bad news.
  */
-export const Row: Story = {
+export const InCard: Story = {
   parameters: { layout: "padded", visual: { viewport: { width: 1000, height: 200 } } },
-  render: () => <Figures variant="ruled" />,
+  render: () => (
+    <Card className="w-full max-w-4xl">
+      <Figures />
+    </Card>
+  ),
 };
 
-/** Each figure on a card of its own, as the other blocks of an app's page stand on cards. */
+/** On the ground, off an app's page: the 2px rule opens the row. */
+export const Row: Story = {
+  parameters: { layout: "padded", visual: { viewport: { width: 1000, height: 200 } } },
+  render: () => <Figures />,
+};
+
+/** Each figure on a card of its own: the other form. */
 export const Cards: Story = {
   parameters: { layout: "padded", visual: { viewport: { width: 1000, height: 220 } } },
-  render: () => <Figures />,
+  render: () => <Figures variant="cards" />,
 };
 
 /** On a phone the figures stand two by two. */
 export const Phone: Story = {
   parameters: { layout: "padded", visual: { viewport: { width: 390, height: 360 } } },
-  render: () => <Figures />,
+  render: () => (
+    <Card className="w-full">
+      <Figures />
+    </Card>
+  ),
 };
 
 /**
