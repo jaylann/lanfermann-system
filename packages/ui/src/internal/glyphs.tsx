@@ -105,6 +105,18 @@ export function GapGlyph(props: GlyphProps) {
   );
 }
 
+/**
+ * Stop, on the key that halts an answer being written: a filled square with the corner of a
+ * small key, so it reads as a solid mark where the send arrow stood.
+ */
+export function StopGlyph(props: GlyphProps) {
+  return (
+    <Glyph {...props}>
+      <rect x="2.5" y="2.5" width="7" height="7" rx="1.25" fill="currentColor" stroke="none" />
+    </Glyph>
+  );
+}
+
 /** The direction mark of a sortable column: up is ascending; turned, descending. */
 export function ArrowUpGlyph(props: GlyphProps) {
   return (
