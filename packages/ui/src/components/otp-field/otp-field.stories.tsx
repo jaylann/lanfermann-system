@@ -36,8 +36,8 @@ function Code({ invalid, disabled, ...props }: OtpFieldProps & { invalid?: boole
 }
 
 /**
- * Six slots in threes. Type a digit: it seats into its slot and the halo hops to the next.
- * Paste a code: every slot is filled, one digit after the other.
+ * Six slots in threes, each three sharing one socket. Type a digit: it seats into its slot and
+ * the halo hops to the next. Paste a code: every slot is filled, one digit after the other.
  */
 export const Default: Story = {
   parameters: {
@@ -51,8 +51,8 @@ export const Default: Story = {
   render: () => <Code />,
 };
 
-/** `variant="joined"`: the slots of a group share one socket, divided by hairlines. */
-export const Joined: Story = {
+/** `variant="separate"`: every slot is a socket of its own. */
+export const Separate: Story = {
   parameters: {
     visual: {
       motion: [
@@ -61,7 +61,7 @@ export const Joined: Story = {
       ],
     },
   },
-  render: () => <Code variant="joined" />,
+  render: () => <Code variant="separate" />,
 };
 
 /**
@@ -73,7 +73,7 @@ export const Fill: Story = {
   render: () => (
     <div className="flex flex-col gap-6">
       <Code fill defaultValue="482" />
-      <Code fill variant="joined" defaultValue="482" />
+      <Code fill variant="separate" defaultValue="482" />
     </div>
   ),
 };
@@ -83,7 +83,7 @@ export const Filled: Story = {
   render: () => (
     <div className="flex flex-col gap-6">
       <Code defaultValue="482913" />
-      <Code variant="joined" defaultValue="482913" />
+      <Code variant="separate" defaultValue="482913" />
     </div>
   ),
   parameters: { visual: { viewport: { width: 440, height: 330 } } },
@@ -94,7 +94,7 @@ export const Invalid: Story = {
   render: () => (
     <div className="flex flex-col gap-6">
       <Code invalid defaultValue="482913" />
-      <Code invalid variant="joined" defaultValue="482913" />
+      <Code invalid variant="separate" defaultValue="482913" />
     </div>
   ),
   parameters: { visual: { viewport: { width: 440, height: 400 } } },
@@ -110,7 +110,7 @@ export const Disabled: Story = {
   render: () => (
     <div className="flex flex-col gap-6">
       <Code disabled defaultValue="482" />
-      <Code disabled variant="joined" defaultValue="482" />
+      <Code disabled variant="separate" defaultValue="482" />
     </div>
   ),
   parameters: { visual: { viewport: { width: 440, height: 330 } } },

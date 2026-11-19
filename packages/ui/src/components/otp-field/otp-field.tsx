@@ -24,10 +24,10 @@ export type OtpFieldProps = Omit<
    */
   groupSize?: number;
   /**
-   * `separate` (the default): every slot is a socket of its own. `joined`: the slots of a
-   * group share one socket, divided by hairlines.
+   * `joined` (the default): the slots of a group share one socket, divided by hairlines.
+   * `separate`: every slot is a socket of its own.
    */
-  variant?: "separate" | "joined";
+  variant?: "joined" | "separate";
   /**
    * The slots share the width of the field's place instead of keeping their own: for a dialog
    * or a narrow card, where six small slots would leave half the line empty.
@@ -80,7 +80,7 @@ const joinedSlot = [
 export function OtpField({
   length = 6,
   groupSize = 3,
-  variant = "separate",
+  variant = "joined",
   fill = false,
   mask = false,
   slotLabel = (position, total) => `Ziffer ${position} von ${total}`,
