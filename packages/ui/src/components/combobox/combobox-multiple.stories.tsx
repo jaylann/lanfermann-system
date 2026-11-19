@@ -149,10 +149,13 @@ export const Wrapping: Story = {
   render: () => <LabelPicker chosen={many} below />,
 };
 
-/** `chipVariant="flat"`: the chips drawn like a `Badge`. */
-export const FlatChips: Story = {
+/**
+ * `chipVariant="plug"`: the chips as raised plugs, like a `Chip` on its own, for a field whose
+ * values are its point (the recipients of a message).
+ */
+export const PlugChips: Story = {
   parameters: { visual: { viewport: { width: 420, height: 230 } } },
-  render: () => <LabelPicker chosen={many} chipVariant="flat" />,
+  render: () => <LabelPicker chosen={many} chipVariant="plug" />,
 };
 
 /** Invalid and disabled: the field says so as every field does, and the chips lie flat. */

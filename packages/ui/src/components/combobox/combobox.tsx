@@ -320,6 +320,8 @@ function ChipsRow({
                   className={cn(
                     look,
                     chipDisabledLook,
+                    // Disabled, the key is gone and the chip's text keeps its own padding.
+                    "data-disabled:pr-2",
                     chipMotion,
                     // Arrow left walks into the chips: the one that has the keyboard shows it.
                     "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
@@ -351,8 +353,9 @@ function ChipsRow({
           "h-[1.375rem] bg-transparent px-1.5 text-control text-fg focus:outline-hidden data-disabled:text-on-disabled",
           // It stands beside the last chip and takes the rest of the line. Where the browser
           // can size a field by its text, it only takes a line of its own once what is typed
-          // no longer fits beside the chips; elsewhere it keeps its place and scrolls.
-          "w-12 max-w-full min-w-12 grow supports-[field-sizing:content]:[field-sizing:content] supports-[field-sizing:content]:w-auto",
+          // no longer fits beside the chips: empty, it asks for no more than the caret's room.
+          // Elsewhere it keeps a place of its own and scrolls.
+          "w-12 max-w-full min-w-12 grow supports-[field-sizing:content]:[field-sizing:content] supports-[field-sizing:content]:w-auto supports-[field-sizing:content]:min-w-6",
           // Alone in the field its text starts where every field's text does.
           "first:pl-[calc(var(--field-pad)-(var(--field-height)-1.375rem)/2)]",
           fieldText,
@@ -369,8 +372,9 @@ export type ComboboxChipsProps = Omit<ComboboxPrimitive.Input.Props, "className"
   /** Classes for the field as a whole, e.g. its width. */
   className?: string;
   /**
-   * `plug` (the default): the chips are raised plugs seated in the field. `flat`: drawn like a
-   * `Badge`, for a form where raised chips would be too much.
+   * `flat` (the default): the chips are drawn like a `Badge`, quiet in the field. `plug`: raised
+   * plugs seated in it, like a `Chip` on its own, where the values are the field's point (the
+   * recipients of a message).
    */
   chipVariant?: ChipVariant;
   /** The name of the row of chips, for assistive tech. */
@@ -398,7 +402,7 @@ export type ComboboxChipsProps = Omit<ComboboxPrimitive.Input.Props, "className"
 export function ComboboxChips({
   className,
   size = "md",
-  chipVariant = "plug",
+  chipVariant = "flat",
   chipsLabel = "Ausgewählt",
   removeLabel = "entfernen",
   chipsHint = (count) =>
