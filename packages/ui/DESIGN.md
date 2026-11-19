@@ -267,7 +267,25 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   filled with a gradient that is pushed through it), so it is for one line, never for a block.
 - **What joins a list later fades in; what is there on load does not.** A step that joins a
   `Trace` rises 4px into place on `settle`, and a mark that appears already done closes from the
-  ring into the disc. The steps a list first shows stand still.
+  ring into the disc. The steps a list first shows stand still. A `Timeline` stands newest
+  first, so an entry that joins it opens its room at the top and fades down into place; what
+  stands below moves down with it. A list revealed from `display: none` stands still like one
+  that loads (`LiveList`).
+- **A figure rolls.** A `RollingNumber` moves each digit as a column of the ten digits, and every
+  column rolls the way the number moves: 9 goes forward into 0 like an odometer, and a change
+  that arrives mid-roll is a new goal for the same transition. The column's position is a
+  registered number that only grows while the number grows (`--roll`, shown modulo ten), so no
+  column ever rolls back through the digits to wrap. The window fades at its top and bottom
+  edge in the empty room above and below the digits; a digit at rest is untouched (measured
+  pixel-identical in three engines). A digit or a grouping dot that joins opens its place as it
+  fades in, one that leaves fades and then closes: the one width that moves besides a chip's
+  place, because the words beside the number have to be pushed, which a transform cannot do.
+  Page load shows the plain number.
+- **A trend turns.** The arrow of a `StatChange` is one glyph turned per trend (up, flat, down)
+  on `seat`; its colour eases on `settle`.
+- **A notice for the page pushes it.** A `Banner` that arrives after load eases the page down
+  through its own `Grow` and comes in 4px from the top edge; one that is there on load stands
+  still. Closed, it fades on `leave` while its room closes on `settle`, in the same motion.
 - **What arrives pushes, it does not jump.** Where content below has to make room (a step that
   joins, an answer that arrives, the next tab's panel), the block around the change eases to its
   new height on `settle` (`Grow`), the one place besides an opening panel where height moves.
@@ -290,12 +308,12 @@ that sit inside controls at 10 to 12px (tick, dash, chevron, close) are drawn in
 
 Every component belongs to one of the four matters, and takes its treatment from it.
 
-| Matter  | Components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Panel   | `Text`, `Heading`, `Link`, `Separator`, `Badge`, `Alert`, `Avatar`, `Icon`, `Spinner`, `Field`, `Fieldset`, `Form`, `Table`, `Ground`, `Wordmark`, `Logomark`, `Code`, `CodeBlock`, `CodeBlockLive`, `CodeTabs`, `Container`, `Section`, `SiteFooter`, `Prose`, `AnchorHeading`, `Callout`, `Quote`, `Breadcrumbs`, `SideNav`, `TableOfContents`, `Pager`, `ParameterList`, `ReferenceEntry`, `Figure`, `DocsLayout`, `ScrollFade`, `Shimmer`, `Trace`, `Grow`, `Sidebar`, `AppShell`, `Empty`, `Skeleton`, `Pagination`; `Accordion` and `Collapsible` are structure by line; `Seam` is the edge between two sections' plates, the one panel with a shadow |
-| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                                                                                                     |
-| Socket  | `Input`, `InputGroup`, `Textarea`, `NumberField`, `Combobox`, `DateField`, `DateRangeField`, `TimeField`, `Checkbox`, `CheckboxGroup`, `Radio`, `Switch`; the troughs of `Slider`, `Progress` and `Meter`                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Sheet   | `Menu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `ActionBar`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                          |
+| Matter  | Components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Panel   | `Text`, `Heading`, `Link`, `Separator`, `Badge`, `Alert`, `Avatar`, `Icon`, `Spinner`, `Field`, `Fieldset`, `Form`, `Table`, `Ground`, `Wordmark`, `Logomark`, `Code`, `CodeBlock`, `CodeBlockLive`, `CodeTabs`, `Container`, `Section`, `SiteFooter`, `Prose`, `AnchorHeading`, `Callout`, `Quote`, `Breadcrumbs`, `SideNav`, `TableOfContents`, `Pager`, `ParameterList`, `ReferenceEntry`, `Figure`, `DocsLayout`, `ScrollFade`, `Shimmer`, `Trace`, `Grow`, `Sidebar`, `AppShell`, `Empty`, `Skeleton`, `Pagination`, `Stat`, `RollingNumber`, `AvatarGroup`, `DescriptionList`, `Banner`, `Timeline`; `Accordion` and `Collapsible` are structure by line; `Seam` is the edge between two sections' plates, the one panel with a shadow |
+| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                                                                                                                                                                                      |
+| Socket  | `Input`, `InputGroup`, `Textarea`, `NumberField`, `Combobox`, `DateField`, `DateRangeField`, `TimeField`, `Checkbox`, `CheckboxGroup`, `Radio`, `Switch`; the troughs of `Slider`, `Progress` and `Meter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Sheet   | `Menu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `ActionBar`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 - **Select** has a raised trigger, not a field: it is pressed, not typed into. In its list only
   the chosen option carries the mark (a disc); the rings are left out to keep long lists calm.
@@ -548,9 +566,42 @@ Every component belongs to one of the four matters, and takes its treatment from
   never takes the focus as it appears. It is one stop for Tab, the arrows move inside it, and
   Escape or its cross takes the selection back and returns the focus to where it came from.
   Beside a sidebar it stands in the page's own column (`position="sticky"`).
+- **Stat** is a figure: what it is (small, muted), the figure (24px, tabular digits, never
+  broken over two lines) and how it changed. A figure is read, so it is flat and casts no
+  shadow. Several stand in a **StatGroup**: one row on the ground that the 2px rule opens, with
+  hairlines only between the figures (the grid clips the ones before the first of each line),
+  two by two on a phone. The change (`StatChange`) is an arrow, the amount in the colour of its
+  tone and what it is compared with; whether up is good is the caller's `tone`, and assistive
+  tech hears „Gestiegen“ or „Gesunken“ first. A `Meter` after the figure is usage against a
+  limit.
+- **AvatarGroup** is several people as one stack, the first in front. The gap between two is
+  cut out of the one underneath (an SVG mask made for the avatar's own box), never a ring in
+  the ground's colour, so the stack is right on any ground, a washed row or a picture; the cut
+  follows the rounded corners at a constant distance (radius plus gap). The overlap is chosen
+  so the corner underneath never pokes out beside the cut. The initials of an avatar that lies
+  under another stand in the middle of what is seen of it. More people than fit are a „+3“ tile
+  of the same shape, quieter. One tooltip names each avatar and moves along the stack without
+  waiting again; the group has one name for assistive tech with everyone in it. A presence dot
+  (on an `Avatar` alone as well) is cut out the same way: a disc for there, the ring alone for
+  not there, and always said in words.
+- **DescriptionList** is the facts of one record: a real `<dl>`, the label muted in a column of
+  its own, hairlines between rows, the 2px rule above (left out inside a `Card`). It goes to two
+  columns by its own width, not the window's, so it stacks in a narrow card as on a phone.
+  `ParameterList` stays the parameters of an API.
+- **Banner** is a notice for the whole page (a trial that ends, a payment that failed,
+  maintenance tonight); `Alert` stays the message inside a page's content. A strip in the
+  status wash, its title what is the case and its text what to do, with one action and a close
+  key. However it closes, the focus that was in it goes to the page's `<main>`.
+- **Timeline** is what happened lately on `Trace`'s rail and marks, newest first, grouped by
+  day: a sentence and its `<time>`, with the system's mark, the symbol of the kind of event or
+  a small avatar in front. The lead is an avatar's width for every entry, so the rail runs
+  straight through a list that mixes them. Its list is markup with one small client part that
+  tells load from later (`LiveList`): a gate in CSS alone did not move in Chrome, which takes a
+  transition's length from a property's value before animations.
 
 Whole screens built from these are the `Patterns` stories (sign in, settings, quotes, specimen,
-site, docs, app): judge a change to a recipe there, not on a single component.
+site, docs, app, dashboard, billing, team): judge a change to a recipe there, not on a single
+component.
 
 ## Logo
 
