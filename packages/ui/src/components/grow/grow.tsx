@@ -141,7 +141,13 @@ export function Grow({ className, contentClassName, children, ref, ...props }: G
     <div
       ref={mergeRefs(box, ref)}
       data-slot="grow"
-      className={cn("transition-[height] spring-settle data-moving:overflow-clip", className)}
+      // The height on `settle`, written out as one declaration so that a box with transitions
+      // of its own (a field that grows keeps its halo's) can add them through `--grow-also`
+      // instead of replacing this one.
+      className={cn(
+        "[transition:height_var(--transition-duration-spring-settle)_var(--ease-spring-settle),var(--grow-also,visibility_0s)] data-moving:overflow-clip",
+        className,
+      )}
       {...props}
     >
       {/* A block of its own, so the margins of what it holds stay inside the measured height. */}

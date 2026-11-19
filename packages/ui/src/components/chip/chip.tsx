@@ -4,6 +4,15 @@ import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
+import {
+  chipDisabledLook,
+  chipFace,
+  chipMotion,
+  chipRemoveKey,
+  chipShape,
+  type ChipVariant,
+} from "./chip-variants";
+
 export type ChipProps = Omit<ComponentProps<"span">, "children"> & {
   /** What the chip stands for, in a word or two: "Bezahlt", "Schreinerei Huber". */
   children: ReactNode;
@@ -22,7 +31,7 @@ export type ChipProps = Omit<ComponentProps<"span">, "children"> & {
    * `plug` (the default): raised, a small fitting. `flat`: a quiet wash with a faint edge, the
    * way a `Badge` is drawn, for a row where raised chips would be too much.
    */
-  variant?: "plug" | "flat";
+  variant?: ChipVariant;
 };
 
 /** The key of the chip beside this one, the next if there is one, that can take the focus. */
@@ -69,17 +78,10 @@ export function Chip({
       data-variant={variant}
       data-disabled={disabled ? "" : undefined}
       className={cn(
-        // As wide as its text. Where a chip may be too long for its row, give it a `max-w-*`:
-        // the text then ends in an ellipsis.
-        "inline-flex h-[1.375rem] w-max items-center gap-1 rounded-sm px-2 align-middle text-sm font-medium whitespace-nowrap",
-        variant === "plug"
-          ? "bg-raised depth-plug text-fg"
-          : "bg-surface-quiet text-fg-body inset-ring inset-ring-current/15 forced-colors:outline",
-        "data-disabled:bg-disabled data-disabled:depth-flat data-disabled:text-on-disabled",
-        // In a row that is live (`ChipGroup`) it seats into its place once that has begun to
-        // open, and leaves by fading before the place closes: an exit does not scale back.
-        "transition-[opacity,scale] delay-75 spring-seat in-data-live:starting:scale-90 in-data-live:starting:opacity-0",
-        "in-data-leaving:opacity-0 in-data-leaving:delay-0 in-data-leaving:spring-leave",
+        chipShape,
+        chipFace[variant],
+        chipDisabledLook,
+        chipMotion,
         removable && "pr-0.5",
         className,
       )}
@@ -105,11 +107,7 @@ export function Chip({
             }
             onRemove();
           }}
-          className={cn(
-            "touch-target relative flex size-[1.125rem] shrink-0 items-center justify-center rounded-xs text-fg-muted select-none",
-            "hover:bg-hover hover:text-fg",
-            "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent",
-          )}
+          className={chipRemoveKey}
         >
           <CloseGlyph width={8} height={8} />
         </button>
