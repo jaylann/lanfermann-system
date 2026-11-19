@@ -17,23 +17,28 @@ const statusWords: Record<StepStatus, string> = {
 
 export type StepsProps = ComponentProps<"ol"> & {
   /**
-   * In a row (the default), with each step's name under its mark; in a place too narrow for
-   * the names only the current one is written out, under the row. Or one under the other, for
-   * a column beside a form.
+   * In a row (the default), with each step's name centred under its mark; in a place too narrow
+   * for the names only the current one is written out. Or one under the other, for a column
+   * beside a form.
    */
   orientation?: "horizontal" | "vertical";
   /**
-   * `dots` (the default): the system's marks, ring and disc. `numbers`: each step's number in
-   * its ring, and a tick once it is done, for a set-up whose length matters.
+   * `numbers` (the default): each step's number in a socket like a checkbox's, which takes the
+   * accent plug and a tick once the step is done. `dots`: the system's flat marks, ring and
+   * disc, as a `Trace` draws them, for a quieter place.
    */
-  marks?: "dots" | "numbers";
+  marks?: "numbers" | "dots";
 };
 
 /**
- * Where one stands in a set-up of a few steps: an order, an onboarding, a form in parts. It is
- * read, not operated, so it is flat: the system's marks joined by a hairline. An open ring is
- * ahead, the heavier ring is where one stands, the disc is done, and the line behind a finished
- * step is filled in the text colour.
+ * Where one stands in a set-up of a few steps: an order, an onboarding, a form in parts. Its
+ * marks are a checkbox's: an empty socket with the step's number is ahead, the socket with the
+ * accent ring is where one stands, and a finished step is the accent plug with its tick. A line
+ * with round ends joins them, filled in the text colour behind a finished step.
+ *
+ * Going on is one movement along the way: the plug seats and its tick draws, the line draws on
+ * to the next mark, and that mark takes the ring as the line arrives. Going back runs it in
+ * reverse. Where the steps first show, the finished ones draw themselves in (`steps.css`).
  *
  * Put `Step`s inside, each with its `status`; exactly one is `current`. Name the list
  * (`aria-label`: "Einrichtung"). It shows the way and does not walk it: the buttons that go on
@@ -42,7 +47,7 @@ export type StepsProps = ComponentProps<"ol"> & {
  */
 export function Steps({
   orientation = "horizontal",
-  marks = "dots",
+  marks = "numbers",
   className,
   ...props
 }: StepsProps) {
@@ -55,6 +60,8 @@ export function Steps({
         // A row is as wide as its place and asks that place how wide it is (a container query
         // gives an element no width of its own, so only the row is one).
         "group/steps relative flex [counter-reset:step] data-[orientation=horizontal]:@container/steps data-[orientation=horizontal]:w-full data-[orientation=vertical]:flex-col",
+        // How far a line keeps from the middle of a mark: half the mark and 8px.
+        "[--line-gap:1.125rem] data-[marks=dots]:[--line-gap:0.75rem]",
         className,
       )}
       {...props}
@@ -80,36 +87,66 @@ export type StepProps = Omit<ComponentProps<"li">, "title"> & {
   statusLabel?: string;
 };
 
-/** The piece of line from this mark to the next: a hairline, filled once the step is done. */
+/**
+ * The order of a step that changes. A transition takes the delay of the state it goes to, so
+ * going on and going back are both one movement along the line: a mark that becomes current
+ * waits until the line has reached it (or, going back, has left the mark after it), and a line
+ * fills once the plug behind it has seated.
+ */
+const timing =
+  "[--mark-delay:0ms] [--line-delay:0ms] data-[status=current]:[--mark-delay:350ms] data-[status=done]:[--line-delay:100ms]";
+
+/**
+ * The piece of line from this mark to the next: a trough 2px high with round ends, and in it a
+ * fill as long as the trough that is pushed out of it at the start (`translate`), so both ends
+ * stay round while it draws and nothing is laid out. In a row it lies between the middles of
+ * two marks, 8px clear of each.
+ */
 const line = [
-  "relative flex-1 bg-hairline [--fill:0] group-last/step:hidden group-data-[status=done]/step:[--fill:1] forced-colors:bg-[GrayText]",
-  // In a row: a pixel high, 8px clear of the marks.
-  "mx-2 h-px group-data-[orientation=vertical]/steps:mx-0 group-data-[orientation=vertical]/steps:my-1.5 group-data-[orientation=vertical]/steps:h-auto group-data-[orientation=vertical]/steps:min-h-3 group-data-[orientation=vertical]/steps:w-px",
-  // The fill is always there and is pushed out from the line's start by `scale`: nothing is
-  // laid out while it grows. Square ends, so the scale distorts nothing.
-  "after:absolute after:inset-0 after:origin-left after:[scale:var(--fill)_1] after:bg-fg after:transition-[scale] after:spring-settle rtl:after:origin-right forced-colors:after:bg-[CanvasText]",
-  "group-data-[orientation=vertical]/steps:after:origin-top group-data-[orientation=vertical]/steps:after:[scale:1_var(--fill)]",
+  "absolute start-[calc(50%+var(--line-gap))] top-[calc(50%-1px)] h-0.5 w-[calc(100%-2*var(--line-gap))] overflow-hidden rounded-full bg-hairline group-last/step:hidden forced-colors:bg-[GrayText]",
+  "group-data-[orientation=vertical]/steps:static group-data-[orientation=vertical]/steps:my-1.5 group-data-[orientation=vertical]/steps:h-auto group-data-[orientation=vertical]/steps:min-h-3 group-data-[orientation=vertical]/steps:w-0.5 group-data-[orientation=vertical]/steps:flex-1",
+].join(" ");
+
+// Empty, it stands 2px clear of the trough: exactly at its edge, the fill's soft end showed as
+// a fleck where the trough began between two pixels.
+const fill = [
+  "block size-full rounded-full bg-fg forced-colors:bg-[CanvasText]",
+  "translate-x-[calc((var(--fill)-1)*(100%+2px))] rtl:translate-x-[calc((1-var(--fill))*(100%+2px))]",
+  "group-data-[orientation=vertical]/steps:translate-x-0 group-data-[orientation=vertical]/steps:translate-y-[calc((var(--fill)-1)*(100%+2px))]",
+  "transition-[translate] spring-glide delay-(--line-delay) motion-reduce:transition-none",
 ].join(" ");
 
 /** The system's mark: ring ahead, the heavier ring in the accent now, the disc when done. */
 const dot = [
-  "mark hidden group-data-[marks=dots]/steps:block",
+  "mark hidden delay-(--mark-delay) group-data-[marks=dots]/steps:block",
   "group-data-[status=current]/step:mark-now group-data-[status=done]/step:mark-on",
 ].join(" ");
 
-/** The step's number in its ring; done, the ring is filled and a tick is drawn in it. */
+/**
+ * The step's number in a checkbox's socket (checkbox.tsx), so the three states are one part:
+ * ahead it is the empty socket, where one stands its rim is the accent, and done the accent plug
+ * seats into it with the tick.
+ */
 const number = [
-  "relative hidden size-5 items-center justify-center rounded-full text-xs font-medium text-fg-muted tabular-nums inset-ring-[1.5px] inset-ring-line group-data-[marks=numbers]/steps:flex",
-  "transition-[background-color,box-shadow,color] spring-settle before:content-[counter(step)]",
-  "group-data-[status=current]/step:text-fg group-data-[status=current]/step:inset-ring-accent",
-  "group-data-[status=done]/step:bg-accent group-data-[status=done]/step:text-on-accent group-data-[status=done]/step:inset-ring-accent group-data-[status=done]/step:before:hidden",
-  "forced-colors:outline forced-colors:outline-[CanvasText]",
+  "relative hidden size-5 items-center justify-center rounded-full bg-surface text-xs font-medium text-fg-muted tabular-nums depth-socket group-data-[marks=numbers]/steps:flex",
+  "transition-[background-color,box-shadow,color,outline-color] spring-settle delay-(--mark-delay)",
+  // The line box of the digits sets them a pixel above the middle of the socket. The digit
+  // fades with the mark's state, so it never stands beside the tick.
+  "before:translate-y-px before:transition-opacity before:duration-150 before:ease-out before:delay-(--mark-delay) before:content-[counter(step)]",
+  // Where one stands, the socket's rim is the accent and twice as heavy: one 2px outline over
+  // the rim's pixel and the pixel inside it, so the mark keeps its size. (Two rings, one out
+  // and one in, left a light seam between them in Firefox.) It is always there, clear, so its
+  // colour can ease.
+  "outline-2 -outline-offset-1 outline-transparent",
+  "group-data-[status=current]/step:text-fg group-data-[status=current]/step:outline-accent",
+  "group-data-[status=done]/step:bg-accent group-data-[status=done]/step:text-on-accent group-data-[status=done]/step:depth-plug group-data-[status=done]/step:depth-tone-accent group-data-[status=done]/step:before:opacity-0",
+  "forced-colors:outline-1 forced-colors:outline-offset-0 forced-colors:outline-[CanvasText] forced-colors:group-data-[status=current]/step:outline-2",
 ].join(" ");
 
 /**
- * One step. Its mark stands on the line, its name under it (beside it when the steps stand one
- * under the other). The current step says so to assistive tech (`aria-current="step"`) and has
- * its name in the strong text colour.
+ * One step. Its mark stands on the line and its name is centred under it (beside it when the
+ * steps stand one under the other). The current step says so to assistive tech
+ * (`aria-current="step"`) and has its name in the strong text colour.
  */
 export function Step({
   status = "upcoming",
@@ -135,10 +172,12 @@ export function Step({
       data-status={status}
       aria-current={status === "current" ? "step" : undefined}
       className={cn(
-        "group/step flex min-w-0 flex-1 basis-0 flex-col gap-2 [counter-increment:step]",
-        "group-data-[orientation=vertical]/steps:flex-none group-data-[orientation=vertical]/steps:basis-auto group-data-[orientation=vertical]/steps:flex-row group-data-[orientation=vertical]/steps:gap-3",
-        // Room under the row for the one name that is written out where the row is narrow.
-        "group-data-[orientation=horizontal]/steps:@max-md/steps:pb-8",
+        "group/step relative flex min-w-0 flex-1 basis-0 flex-col items-center gap-2 [--fill:0] [counter-increment:step] data-[status=done]:[--fill:1]",
+        timing,
+        "group-data-[orientation=vertical]/steps:flex-none group-data-[orientation=vertical]/steps:basis-auto group-data-[orientation=vertical]/steps:flex-row group-data-[orientation=vertical]/steps:items-stretch group-data-[orientation=vertical]/steps:gap-3",
+        // Room under the row for the one name that is written out where the row is narrow, and
+        // how wide it may be: as far as the marks beside, and inside the row at either end.
+        "[--name-room:200%] first:[--name-room:100%] last:[--name-room:100%] group-data-[orientation=horizontal]/steps:@max-md/steps:pb-8",
         className,
       )}
       {...props}
@@ -146,7 +185,7 @@ export function Step({
       <span
         aria-hidden
         data-slot="step-rail"
-        className="flex h-5 items-center group-data-[orientation=vertical]/steps:h-auto group-data-[orientation=vertical]/steps:w-5 group-data-[orientation=vertical]/steps:flex-col"
+        className="relative flex h-5 w-full items-center justify-center group-data-[orientation=vertical]/steps:h-auto group-data-[orientation=vertical]/steps:w-5 group-data-[orientation=vertical]/steps:flex-col group-data-[orientation=vertical]/steps:justify-start"
       >
         <span
           data-slot="step-mark"
@@ -154,21 +193,28 @@ export function Step({
         >
           <span className={dot} />
           <span className={number}>
-            {/* Always there, like a checkbox's tick: it draws in when the step is done. */}
-            <TickGlyph className="absolute opacity-0 transition-[stroke-dashoffset,opacity] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-[status=done]/step:opacity-100 group-data-[status=done]/step:[stroke-dashoffset:0]" />
+            {/* Always there, like a checkbox's tick: it draws in when the step is done. Its
+                drawing sits half a pixel low in its box; in a round plug that shows. */}
+            <TickGlyph
+              data-slot="step-tick"
+              className="absolute -translate-y-[0.5px] opacity-0 transition-[stroke-dashoffset,opacity] delay-[calc(var(--mark-delay)+60ms)] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-[status=done]/step:opacity-100 group-data-[status=done]/step:[stroke-dashoffset:0]"
+            />
           </span>
         </span>
-        <span data-slot="step-line" className={line} />
+        <span data-slot="step-line" className={line}>
+          <span data-slot="step-fill" className={fill} />
+        </span>
       </span>
       <span
         data-slot="step-text"
         className={cn(
-          "flex min-w-0 flex-col gap-0.5 pr-4 group-last/step:pr-0",
-          "group-data-[orientation=vertical]/steps:pr-0 group-data-[orientation=vertical]/steps:pb-5 group-data-[orientation=vertical]/steps:group-last/step:pb-0",
-          // Too narrow for every name: only the current one is written out, under the row, from
-          // the row's start. The others stay for assistive tech.
+          "flex max-w-full min-w-0 flex-col items-center gap-0.5 px-2 text-center",
+          "group-data-[orientation=vertical]/steps:items-start group-data-[orientation=vertical]/steps:px-0 group-data-[orientation=vertical]/steps:pb-5 group-data-[orientation=vertical]/steps:text-start group-data-[orientation=vertical]/steps:group-last/step:pb-0",
+          // Too narrow for every name: only the current one is written out, centred under its
+          // own mark. The others stay for assistive tech.
           "group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=done]/step:sr-only group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=upcoming]/step:sr-only",
-          "group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:absolute group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:top-7 group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:left-0",
+          "group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:absolute group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:top-7 group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:left-1/2 group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:-translate-x-1/2",
+          "group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:w-max group-data-[orientation=horizontal]/steps:@max-md/steps:group-data-[status=current]/step:max-w-(--name-room)",
         )}
       >
         {linked ? (
@@ -185,7 +231,9 @@ export function Step({
           <span
             data-slot="step-title"
             className={cn(
-              "truncate text-control leading-5 text-fg-muted transition-colors duration-150 ease-out",
+              "max-w-full truncate text-control leading-5 text-fg-muted",
+              // The name takes its state with its mark; the weight changes at once, then.
+              "[transition:color_150ms_ease-out_var(--mark-delay),font-weight_0s_linear_var(--mark-delay)]",
               "group-data-[status=current]/step:font-medium group-data-[status=current]/step:text-fg group-data-[status=done]/step:text-fg-body",
             )}
           >

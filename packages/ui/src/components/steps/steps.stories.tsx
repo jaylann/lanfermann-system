@@ -50,14 +50,18 @@ function Setup({ current = 1, descriptions = false, links = false, ...props }: O
   );
 }
 
-/** Four steps, the second being worked on: disc, heavier ring, rings; the line behind is filled. */
+/**
+ * Four steps, the third being worked on: two finished ones are the accent plug with a tick,
+ * the current one holds the accent ring, the last waits as an empty socket with its number.
+ * The line behind a finished step is filled.
+ */
 export const Default: Story = {
-  render: () => <Setup />,
+  render: () => <Setup current={2} />,
 };
 
-/** `marks="numbers"`: each step's number in its ring, and a tick once it is done. */
-export const Numbers: Story = {
-  render: () => <Setup marks="numbers" current={2} />,
+/** `marks="dots"`: the system's flat marks, ring and disc, as a `Trace` draws them. */
+export const Dots: Story = {
+  render: () => <Setup marks="dots" current={2} />,
 };
 
 /** With a second line under each name. */
@@ -77,14 +81,15 @@ export const Vertical: Story = {
   render: () => (
     <div className="flex gap-12">
       <Setup orientation="vertical" descriptions current={2} />
-      <Setup orientation="vertical" marks="numbers" descriptions current={2} />
+      <Setup orientation="vertical" marks="dots" descriptions current={2} />
     </div>
   ),
 };
 
 /**
- * Press "Weiter": the mark of the step that is left closes into the disc, the line behind it
- * fills from its start, and the next mark takes the accent.
+ * Press "Weiter": the accent plug seats into the socket of the step that is left and its tick
+ * draws itself, then the line draws on to the next mark, which takes the accent ring as the
+ * line arrives. "Zurück" runs the same way backwards.
  */
 export const Next: Story = {
   parameters: {
@@ -99,7 +104,7 @@ export const Next: Story = {
     return (
       <div className="flex flex-col gap-8">
         <Setup current={current} />
-        <Setup current={current} marks="numbers" />
+        <Setup current={current} marks="dots" />
         <div className="flex gap-2">
           <Button variant="quiet" disabled={current === 0} onClick={() => setCurrent(current - 1)}>
             Zurück
@@ -113,13 +118,47 @@ export const Next: Story = {
   },
 };
 
-/** Too narrow for every name: the marks keep their row, and only the current step is named. */
+/**
+ * Where the steps first show, the finished ones draw themselves in, one after the other: the
+ * tick, then the line on to the next mark. Press "Noch einmal zeichnen" to see it again.
+ */
+export const DrawIn: Story = {
+  parameters: {
+    visual: {
+      viewport: { width: 720, height: 220 },
+      motion: [{ name: "draw", click: '[data-step="redraw"]', frames: 10 }],
+    },
+  },
+  render: function Render() {
+    const [round, setRound] = useState(0);
+    return (
+      <div className="flex flex-col gap-8">
+        <Setup key={round} current={3} />
+        <Button
+          variant="quiet"
+          data-step="redraw"
+          className="self-start"
+          onClick={() => setRound(round + 1)}
+        >
+          Noch einmal zeichnen
+        </Button>
+      </div>
+    );
+  },
+};
+
+/**
+ * Too narrow for every name: the marks keep their row, and only the current step is named,
+ * centred under its own mark. At either end of the row the name keeps inside it.
+ */
 export const Phone: Story = {
-  parameters: { visual: { viewport: { width: 390, height: 200 } } },
+  parameters: { visual: { viewport: { width: 390, height: 380 } } },
   render: () => (
     <div className="flex flex-col gap-6">
       <Setup current={2} />
-      <Setup current={2} marks="numbers" />
+      <Setup current={2} marks="dots" />
+      <Setup current={0} />
+      <Setup current={3} />
     </div>
   ),
 };

@@ -1,0 +1,98 @@
+/*
+ * Steps draw themselves in where they first show (Justin, 2026-11-19): nothing stands there at
+ * first, then step after step arrives. Its mark seats in and its name fades up, a finished
+ * step's tick draws itself, and the line draws on towards the next mark, which seats in as the
+ * line reaches it. It is the one place where a page load animates.
+ *
+ * Every step carries these animations, whatever its state, and they run once, when the step is
+ * first drawn. Because they never change, a step that is finished later does not run them
+ * again: its own transitions do that (`steps.tsx`). `backwards` holds the start through the
+ * delay and lets go at the end, so the transitions own the parts again.
+ */
+
+[data-slot="step"]:nth-child(2) {
+  --step-index: 1;
+}
+[data-slot="step"]:nth-child(3) {
+  --step-index: 2;
+}
+[data-slot="step"]:nth-child(4) {
+  --step-index: 3;
+}
+[data-slot="step"]:nth-child(5) {
+  --step-index: 4;
+}
+[data-slot="step"]:nth-child(6) {
+  --step-index: 5;
+}
+[data-slot="step"]:nth-child(7) {
+  --step-index: 6;
+}
+[data-slot="step"]:nth-child(n + 8) {
+  --step-index: 7;
+}
+
+/* The line is drawn by uncovering it from its start: the trough and its fill together. */
+[data-slot="step-line"] {
+  --line-from: inset(0 100% 0 0);
+  clip-path: inset(0);
+}
+[data-slot="step-line"]:dir(rtl) {
+  --line-from: inset(0 0 0 100%);
+}
+[data-slot="steps"][data-orientation="vertical"] [data-slot="step-line"] {
+  --line-from: inset(0 0 100% 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot="step"] {
+    /* When this step arrives: one after the other, as the line before it comes in. */
+    --step-arrives: calc(var(--step-index, 0) * 200ms + 80ms);
+  }
+  [data-slot="step-mark"] {
+    animation: steps-mark var(--transition-duration-spring-seat) var(--ease-spring-seat) backwards;
+    animation-delay: var(--step-arrives);
+  }
+  [data-slot="step-text"] {
+    animation: steps-text var(--transition-duration-spring-settle) var(--ease-spring-settle)
+      backwards;
+    animation-delay: calc(var(--step-arrives) + 40ms);
+  }
+  [data-slot="step-tick"] {
+    animation: steps-tick 150ms ease-out backwards;
+    animation-delay: calc(var(--step-arrives) + 140ms);
+  }
+  [data-slot="step-line"] {
+    animation: steps-line var(--transition-duration-spring-settle) var(--ease-spring-settle)
+      backwards;
+    animation-delay: calc(var(--step-arrives) + 60ms);
+  }
+}
+
+@keyframes steps-mark {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+/* By `transform`, beside the `translate` that centres the one name of a narrow row. */
+@keyframes steps-text {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-enter-offset));
+  }
+}
+
+@keyframes steps-tick {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes steps-line {
+  from {
+    clip-path: var(--line-from);
+  }
+}
