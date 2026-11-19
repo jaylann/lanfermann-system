@@ -1,0 +1,83 @@
+/*
+ * The assistant's parts where CSS says more than a class list could: the key „Neueste“, the
+ * layout of a prompt, and its send key that becomes stop.
+ */
+@layer components {
+  /*
+   * A prompt is a grid inside its field: the files, the text, and a row of keys with send at
+   * its end. (Send at the right of the text's last line was dropped, Justin, 2026-11-19.)
+   */
+  [data-slot="prompt-input-field"] > [data-slot="grow-content"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "files" "text" "actions";
+    align-items: end;
+  }
+  [data-slot="prompt-input-attachments"] {
+    grid-area: files;
+  }
+  [data-slot="prompt-input-actions"] {
+    grid-area: actions;
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+  [data-slot="prompt-input-submit"] {
+    margin-inline-start: auto;
+  }
+
+  /*
+   * Send and stop share one cell of the key, so it never changes size. Turning into stop, the
+   * arrow shrinks away on `leave` and the square seats on `seat`; back, the other way round.
+   * Under reduced motion the two only cross-fade.
+   */
+  :is([data-slot="prompt-input-send-symbol"], [data-slot="prompt-input-stop-symbol"]) {
+    transition-property: scale, opacity;
+    transition-duration: var(--transition-duration-spring-seat);
+    transition-timing-function: var(--ease-spring-seat);
+  }
+  [data-slot="prompt-input-stop-symbol"],
+  [data-running] [data-slot="prompt-input-send-symbol"] {
+    scale: 0.5;
+    opacity: 0;
+    transition-duration: var(--transition-duration-spring-leave);
+    transition-timing-function: var(--ease-spring-leave);
+  }
+  [data-running] [data-slot="prompt-input-stop-symbol"] {
+    scale: 1;
+    opacity: 1;
+    transition-duration: var(--transition-duration-spring-seat);
+    transition-timing-function: var(--ease-spring-seat);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="prompt-input-stop-symbol"],
+    [data-running] [data-slot="prompt-input-send-symbol"] {
+      scale: 1;
+    }
+  }
+
+  /*
+   * „Neueste“ rises in from a little below and a little smaller on `settle`, and leaves by
+   * fading on `leave`: its transform is put back only once it can no longer be seen, so the
+   * exit does not travel. Under reduced motion the offset and the scale are nothing (motion.css).
+   */
+  [data-slot="conversation-latest"] {
+    display: inline-flex;
+    opacity: 0;
+    translate: 0 var(--motion-enter-offset);
+    scale: var(--motion-enter-scale);
+    transform-origin: 50% 100%;
+    transition:
+      opacity var(--transition-duration-spring-leave) var(--ease-spring-leave),
+      translate 0s linear var(--transition-duration-spring-leave),
+      scale 0s linear var(--transition-duration-spring-leave);
+  }
+  [data-slot="conversation-latest"][data-shown] {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+    transition-property: opacity, translate, scale;
+    transition-duration: var(--transition-duration-spring-settle);
+    transition-timing-function: var(--ease-spring-settle);
+    transition-delay: 0s;
+  }
+}
