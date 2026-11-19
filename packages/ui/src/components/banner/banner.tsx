@@ -14,7 +14,7 @@ import { Button } from "@/components/button/button";
 import { Grow } from "@/components/grow/grow";
 import { Icon } from "@/components/icon/icon";
 import { CloseGlyph } from "@/internal/glyphs";
-import { useLive } from "@/internal/live";
+import { useLive } from "@/internal/presence";
 import { statusIcons, statusIconTone } from "@/internal/status-icon";
 import { cn } from "@/lib/cn";
 

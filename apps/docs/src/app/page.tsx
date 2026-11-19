@@ -191,6 +191,7 @@ import {
 } from "@lanfermann/ui";
 
 import { Figures } from "./figures";
+import { Inputs } from "./inputs";
 import { QuoteForm } from "./quote-form";
 import { Selection } from "./selection";
 
@@ -636,6 +637,10 @@ export default function Home() {
                   </TimelineGroup>
                 </Timeline>
               </div>
+
+              {/* The inputs of an app. They hold state or take functions, so they stand in a
+                  client component of their own. */}
+              <Inputs ground={ground} />
 
               {/* The symbol stands apart from the wordmark above: the two are never side by side. */}
               <div className="flex items-center justify-between gap-6">

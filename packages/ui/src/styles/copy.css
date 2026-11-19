@@ -1,25 +1,26 @@
 /*
- * The confirmation of a copy, the same in every control that copies (a code block's key, the
- * page copy): the copy symbol shrinks away and a tick is drawn in its place, short leg first, as
- * in a checkbox. When the moment has passed the tick fades where it is (it is not undrawn) and
- * the copy symbol seats back with a little bounce.
+ * The confirmation of a copy, the same in every control that copies (a `CopyButton`, the keys of
+ * a code block, the page copy): the copy symbol shrinks away and a tick is drawn in its place,
+ * short leg first, as in a checkbox. When the moment has passed the tick fades where it is (it is
+ * not undrawn) and the copy symbol seats back with a little bounce.
  *
  * The control sets `data-copied` while the moment lasts; the symbol and the tick are found inside
- * it by their slots. Under reduced motion nothing scales or draws: the two only cross-fade.
+ * it by their slots (`CopyMarks` in internal/copy.tsx draws both). Under reduced motion nothing
+ * scales or draws: the two only cross-fade.
  */
 @layer components {
-  :is([data-slot="code-copy-symbol"], [data-slot="copy-page-symbol"]) {
+  :is([data-slot="copy-symbol"], [data-slot="copy-page-symbol"]) {
     transition-property: scale, opacity;
     transition-duration: var(--transition-duration-spring-seat);
     transition-timing-function: var(--ease-spring-seat);
   }
-  [data-copied] :is([data-slot="code-copy-symbol"], [data-slot="copy-page-symbol"]) {
+  [data-copied] :is([data-slot="copy-symbol"], [data-slot="copy-page-symbol"]) {
     scale: 0.5;
     opacity: 0;
     transition-duration: var(--transition-duration-spring-leave);
     transition-timing-function: var(--ease-spring-leave);
   }
-  :is([data-slot="code-copy-tick"], [data-slot="copy-page-tick"]) {
+  :is([data-slot="copy-tick"], [data-slot="copy-page-tick"]) {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
     opacity: 0;
@@ -27,7 +28,7 @@
       opacity var(--transition-duration-spring-leave) var(--ease-spring-leave),
       stroke-dashoffset 0s var(--transition-duration-spring-leave);
   }
-  [data-copied] :is([data-slot="code-copy-tick"], [data-slot="copy-page-tick"]) {
+  [data-copied] :is([data-slot="copy-tick"], [data-slot="copy-page-tick"]) {
     stroke-dashoffset: 0;
     opacity: 1;
     transition:
@@ -36,10 +37,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-copied] :is([data-slot="code-copy-symbol"], [data-slot="copy-page-symbol"]) {
+    [data-copied] :is([data-slot="copy-symbol"], [data-slot="copy-page-symbol"]) {
       scale: 1;
     }
-    :is([data-slot="code-copy-tick"], [data-slot="copy-page-tick"]) {
+    :is([data-slot="copy-tick"], [data-slot="copy-page-tick"]) {
       stroke-dashoffset: 0;
     }
   }

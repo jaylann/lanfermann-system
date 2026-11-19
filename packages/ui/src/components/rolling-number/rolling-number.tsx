@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 
-import { useLive } from "@/internal/live";
 import {
   mergePlaces,
   nextRolls,
@@ -17,6 +16,7 @@ import {
   type ShownPlace,
   toPlaces,
 } from "@/internal/number-places";
+import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
 

@@ -27,13 +27,36 @@ export const fieldText = [
  * The wrapper that wears the field. The halo follows the control only: a button inside the shell
  * shows its own focus outline, and the field stays quiet. Invalid beats focus, as on `Input`.
  */
-export const fieldShell = [
-  "group/field relative flex w-full min-w-0 cursor-text items-center pointer-coarse:text-base",
-  fieldFace,
+const fieldShellStates = [
   "has-[[data-field-control]:focus]:depth-field-focus",
   "has-[[data-field-control][data-invalid]]:depth-field-invalid has-[[data-field-control][data-invalid]:focus]:depth-field-invalid",
   "has-[[data-field-control][data-disabled]]:cursor-default has-[[data-field-control][data-disabled]]:bg-disabled has-[[data-field-control][data-disabled]]:depth-flat has-[[data-field-control][data-disabled]]:text-on-disabled",
 ].join(" ");
+
+export const fieldShell = [
+  "group/field relative flex w-full min-w-0 cursor-text items-center pointer-coarse:text-base",
+  fieldFace,
+  fieldShellStates,
+].join(" ");
+
+/**
+ * The shell of a field that grows by a line (a multi-select whose chips wrap), for the box of a
+ * `Grow`: the face and the states, no height and no layout. What the field holds is laid out on
+ * the `Grow`'s inner box, which is the one that is measured. The halo keeps its own transition
+ * beside the height's (`--grow-also`).
+ */
+export const fieldShellGrowing = [
+  "group/field relative block w-full min-w-0 cursor-text bg-surface text-control text-fg depth-field pointer-coarse:text-base",
+  "[--grow-also:box-shadow_var(--transition-duration-spring-snap)_var(--ease-spring-snap),background-color_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
+  fieldShellStates,
+].join(" ");
+
+/** Corner and the field's variables by size, without the fixed height of `fieldShellSize`. */
+export const fieldShellGrowingSize = {
+  sm: "rounded-sm [--field-height:var(--control-sm)] [--field-pad:var(--field-pad-sm)] [--field-radius:var(--radius-sm)]",
+  md: "rounded-md [--field-height:var(--control-md)] [--field-pad:var(--field-pad-md)] [--field-radius:var(--radius-md)]",
+  lg: "rounded-lg [--field-height:var(--control-lg)] [--field-pad:var(--field-pad-lg)] [--field-radius:var(--radius-lg)]",
+} as const;
 
 /**
  * Height, corner and inline padding by size, handed to the parts inside as variables:
