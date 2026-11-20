@@ -200,6 +200,14 @@ export function SegmentedControl({
     if (!wasDropped) delete track.dataset.following;
     const box = place();
     const now = box?.left;
+    // A choice takes back what the thumb reached for (`reach`) and drops a reach still waiting
+    // for its frame: that one was measured from the segment chosen before. Also before the first
+    // frame, when the thumb does not travel yet: a test's pointer events, which come at x = 0,
+    // left it leaning towards the page's edge for good. A trip below sets its own shape.
+    cancelAnimationFrame(leanFrame.current);
+    track.style.setProperty("--thumb-lean", "0");
+    track.style.setProperty("--thumb-s", "1");
+    delete track.dataset.moving;
     if (
       inertia &&
       box &&
@@ -209,7 +217,6 @@ export function SegmentedControl({
       track.hasAttribute("data-placed") &&
       !reduced
     ) {
-      track.style.setProperty("--thumb-lean", "0");
       busyUntil.current = performance.now() + TRAVEL_BUSY_MS;
       if (!wasDropped) {
         // Set off: stretched along the way, its leading edge holding, and let go so that the
