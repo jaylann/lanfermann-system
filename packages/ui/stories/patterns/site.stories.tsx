@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 
 import {
   Accordion,
@@ -7,6 +8,10 @@ import {
   AccordionTrigger,
 } from "@/components/accordion/accordion";
 import { buttonVariants } from "@/components/button/button-variants";
+import { ConsentProvider, ConsentSettingsTrigger } from "@/components/consent/consent";
+import { encodeConsent } from "@/components/consent/consent-record";
+import { sampleConsentConfig as config } from "@/components/consent/consent-sample";
+import { createMemoryJar } from "@/components/consent/consent-store";
 import { Container } from "@/components/container/container";
 import { Ground } from "@/components/ground/ground";
 import { Heading } from "@/components/heading/heading";
@@ -30,6 +35,7 @@ import {
   SiteFooterGroup,
   SiteFooterLegal,
   SiteFooterLink,
+  siteFooterLinkClass,
   SiteFooterMain,
   SiteFooterNav,
 } from "@/components/site-footer/site-footer";
@@ -252,6 +258,9 @@ function Page() {
             <SiteFooterGroup title="Rechtliches">
               <SiteFooterLink href="#impressum">Impressum</SiteFooterLink>
               <SiteFooterLink href="#datenschutz">Datenschutz</SiteFooterLink>
+              <li data-slot="site-footer-item">
+                <ConsentSettingsTrigger className={siteFooterLinkClass} />
+              </li>
             </SiteFooterGroup>
           </SiteFooterNav>
         </SiteFooterMain>
@@ -273,5 +282,43 @@ function Page() {
  * is compared with the last one.
  */
 export const WholePage: Story = {
-  render: () => <Page />,
+  render: () => {
+    // Answered, so the page's picture stays the page's.
+    const [jar] = useState(() =>
+      createMemoryJar({
+        "lf-consent": encodeConsent(
+          { revision: config.revision, decidedAt: Date.now() - 86_400_000, granted: [] },
+          config,
+        ),
+      }),
+    );
+    return (
+      <ConsentProvider
+        config={config}
+        privacyHref="#datenschutz"
+        imprintHref="#impressum"
+        jar={jar}
+      >
+        <Page />
+      </ConsentProvider>
+    );
+  },
+};
+
+/** The first visit to this page: the consent banner in the corner, the page still usable. */
+export const FirstVisit: Story = {
+  parameters: { visual: { viewport: { width: 1290, height: 900 }, clip: "viewport" } },
+  render: () => {
+    const [jar] = useState(() => createMemoryJar());
+    return (
+      <ConsentProvider
+        config={config}
+        privacyHref="#datenschutz"
+        imprintHref="#impressum"
+        jar={jar}
+      >
+        <Page />
+      </ConsentProvider>
+    );
+  },
 };

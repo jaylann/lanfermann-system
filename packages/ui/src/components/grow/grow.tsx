@@ -5,7 +5,15 @@ import { type ComponentProps, useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
 
-export type GrowProps = ComponentProps<"div">;
+export type GrowProps = ComponentProps<"div"> & {
+  /**
+   * Classes for the box inside, which holds the content and is the one that is measured. The
+   * layout of what the block holds (a flex row, a padding) goes here: on the block itself a
+   * padding or a minimum height would be added to the measured height and the block would
+   * never come to rest at it.
+   */
+  contentClassName?: string;
+};
 
 /** The transitions of a part inside that already move the content's height by themselves. */
 const heightProperties = new Set(["height", "max-height", "grid-template-rows"]);
@@ -45,13 +53,17 @@ function heightMoving(box: HTMLElement) {
  * then learns of it a frame late.
  *
  * At rest it is a plain block of the content's height that clips nothing. It clips only while
- * it moves, so a line that joins at its foot is uncovered as the block opens. From rest it does
+ * it moves, and only above and below, so a line that joins at its foot is uncovered as the
+ * block opens. What paints outside its content there (the shadow of a card, an accent edge, a
+ * halo) would be cut for the length of the move and come back at its end: give it room inside
+ * the block and take the room back outside, `className="-my-5" contentClassName="py-5"`. To
+ * the sides nothing is cut. From rest it does
  * not animate the first height, a resize of the window, or a height that something inside is
  * already animating (an opening `Collapsible`): then it simply follows.
  * Already on its way, it takes a new height as its goal from where it stands. Under reduced
  * motion it always follows.
  */
-export function Grow({ className, children, ref, ...props }: GrowProps) {
+export function Grow({ className, contentClassName, children, ref, ...props }: GrowProps) {
   const box = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
 
@@ -60,9 +72,20 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     const inner = content.current;
     if (!outer || !inner) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    /** The content's height when it was last measured, and the window's width then. */
+    /** The content's height when it was last measured. */
     let height = inner.offsetHeight;
-    let width = window.innerWidth;
+    /**
+     * The frame in which the window last changed its size. The browser runs the resize event and
+     * then the size observers in the same frame, so a measure in that frame was caused by the
+     * resize. (A width remembered from the last measure went stale when the window was resized
+     * without this content changing, and the next real change was then taken for a resize.)
+     */
+    const frame = () => Number(document.timeline.currentTime ?? performance.now());
+    let resizedIn = Number.NaN;
+    const resized = () => {
+      resizedIn = frame();
+    };
+    window.addEventListener("resize", resized);
 
     const rest = () => {
       delete outer.dataset.moving;
@@ -73,14 +96,13 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     // is set back to where it stood before anyone sees it.
     const observer = new ResizeObserver(() => {
       const nextHeight = inner.offsetHeight;
-      // A window being resized reflows everything at once; easing each step would lag behind.
-      const nextWidth = window.innerWidth;
       const moving = outer.dataset.moving !== undefined;
       // Mid-move the box stands where its transition has brought it.
       const from = moving ? outer.getBoundingClientRect().height : height;
-      const follow = reduced.matches || nextWidth !== width || movingInside(inner);
+      // A window being resized reflows everything at once; easing each step would lag behind.
+      const resizing = frame() === resizedIn;
+      const follow = reduced.matches || resizing || movingInside(inner);
       height = nextHeight;
-      width = nextWidth;
       if (Math.abs(nextHeight - from) < 0.5) {
         if (moving) rest();
         return;
@@ -112,6 +134,7 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     outer.addEventListener("transitioncancel", arrived);
     return () => {
       observer.disconnect();
+      window.removeEventListener("resize", resized);
       outer.removeEventListener("transitionend", arrived);
       outer.removeEventListener("transitioncancel", arrived);
       rest();
@@ -122,11 +145,17 @@ export function Grow({ className, children, ref, ...props }: GrowProps) {
     <div
       ref={mergeRefs(box, ref)}
       data-slot="grow"
-      className={cn("transition-[height] spring-settle data-moving:overflow-clip", className)}
+      // The height on `settle`, written out as one declaration so that a box with transitions
+      // of its own (a field that grows keeps its halo's) can add them through `--grow-also`
+      // instead of replacing this one.
+      className={cn(
+        "[transition:height_var(--transition-duration-spring-settle)_var(--ease-spring-settle),var(--grow-also,visibility_0s)] data-moving:overflow-y-clip",
+        className,
+      )}
       {...props}
     >
       {/* A block of its own, so the margins of what it holds stay inside the measured height. */}
-      <div ref={content} data-slot="grow-content" className="flow-root">
+      <div ref={content} data-slot="grow-content" className={cn("flow-root", contentClassName)}>
         {children}
       </div>
     </div>

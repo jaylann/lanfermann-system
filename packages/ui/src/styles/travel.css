@@ -1,0 +1,36 @@
+/*
+ * A mark that travels: one piece that stands on the current entry of a list and moves to the
+ * next when another becomes current (the tint of a `Sidebar`, the tint under a page number).
+ * `useTravellingMark` (internal/travelling-mark.ts) measures the entry and writes the mark's
+ * place onto the piece as four lengths; this utility turns them into a box moved by `translate`.
+ *
+ *   --mark-x, --mark-y   where the mark stands inside the list
+ *   --mark-w, --mark-h   how large it is
+ *
+ * The lengths are not eased here. The hook steps a spring by hand and writes every frame of the
+ * way, because the place the mark travels to may be moving itself; a transition on top of that
+ * would lag behind each frame it is given.
+ *
+ * The piece only carries the place. What it looks like (a tint, a rule) and its corners are
+ * the part's own classes.
+ */
+@utility travels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--mark-w, 0px);
+  height: var(--mark-h, 0px);
+  translate: var(--mark-x, 0px) var(--mark-y, 0px);
+  opacity: 0;
+  pointer-events: none;
+
+  /* An entry is current and laid out. Without one the piece is gone. */
+  &[data-shown] {
+    opacity: 1;
+  }
+
+  /* Forced colours drop backgrounds: the current entry is outlined by its own part instead. */
+  @media (forced-colors: active) {
+    display: none;
+  }
+}

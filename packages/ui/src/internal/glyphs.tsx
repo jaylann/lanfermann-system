@@ -96,6 +96,27 @@ export function MinusGlyph(props: GlyphProps) {
   );
 }
 
+/** Three square dots on the middle line: something was left out here (pages, in a `Pagination`). */
+export function GapGlyph(props: GlyphProps) {
+  return (
+    <Glyph {...props}>
+      <path d="M1.5 6h1.75M5.125 6h1.75M8.75 6h1.75" />
+    </Glyph>
+  );
+}
+
+/**
+ * Stop, on the key that halts an answer being written: a filled square with the corner of a
+ * small key, so it reads as a solid mark where the send arrow stood.
+ */
+export function StopGlyph(props: GlyphProps) {
+  return (
+    <Glyph {...props}>
+      <rect x="2.5" y="2.5" width="7" height="7" rx="1.25" fill="currentColor" stroke="none" />
+    </Glyph>
+  );
+}
+
 /** The direction mark of a sortable column: up is ascending; turned, descending. */
 export function ArrowUpGlyph(props: GlyphProps) {
   return (

@@ -11,6 +11,9 @@ extend-exclude = [
   "*.generated.css",
   # German sample copy: the checker knows English only.
   "*.stories.tsx",
+  # The sample content stories share (an answer, its sources, files).
+  "story-*.ts",
+  "story-*.tsx",
   "apps/docs/src/app/",
   # Pictures.
   "packages/ui/visual-baseline/",
@@ -29,3 +32,17 @@ produkt = "produkt"
 titel = "titel"
 als = "als"
 fase = "fase"
+# The consent banner's copy.
+oder = "oder"
+unter = "unter"
+tage = "tage"
+adresse = "adresse"
+# The command palette's copy.
+suche = "suche"
+# The multi-select's hint for assistive tech ("Am Anfang des Felds …").
+felds = "felds"
+# The words for kinds of file under an attachment's name.
+dokument = "dokument"
+archiv = "archiv"
+# "Offen", the name of a table look Justin was shown, recorded in DESIGN.md's decisions.
+offen = "offen"

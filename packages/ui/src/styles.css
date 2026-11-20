@@ -24,14 +24,23 @@
 @import "./styles/motion.generated.css";
 @import "./styles/motion.css";
 @import "./styles/marks.css";
+@import "./styles/rail.css";
+@import "./styles/timeline.css";
+@import "./styles/avatar.css";
+@import "./styles/travel.css";
 @import "./styles/toast.css";
+@import "./styles/action-bar.css";
+@import "./styles/rolling-number.css";
 @import "./styles/slider.css";
+@import "./styles/steps.css";
 @import "./styles/segmented.css";
 @import "./styles/button-group.css";
 @import "./styles/scroll-fade.css";
+@import "./styles/consent.css";
 @import "./styles/shimmer.css";
 @import "./styles/calendar.css";
 @import "./styles/prose.css";
+@import "./styles/assistant.css";
 @import "./styles/base.css";
 
 /* Let the consumer's Tailwind see the class names used in the compiled components. */

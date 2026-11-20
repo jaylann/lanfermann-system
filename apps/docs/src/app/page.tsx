@@ -15,9 +15,14 @@ import {
   AlertDialogTrigger,
   AlertTitle,
   AnchorHeading,
+  AppShell,
+  AppShellBar,
+  AppShellPage,
   Avatar,
   AvatarFallback,
+  AvatarGroup,
   Badge,
+  Banner,
   BreadcrumbItem,
   BreadcrumbLink,
   Breadcrumbs,
@@ -32,6 +37,8 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Chip,
+  ChipGroup,
   Code,
   CodeBlock,
   type CodeTab,
@@ -39,11 +46,23 @@ import {
   Collapsible,
   CollapsiblePanel,
   CollapsibleTrigger,
+  Command,
+  CommandContent,
+  CommandFooter,
+  CommandInput,
+  CommandList,
+  type CommandSection,
+  CommandTrigger,
+  ConsentEmbed,
+  ConsentSettingsTrigger,
   Cta,
   CtaAction,
   CtaActions,
   CtaText,
   CtaTitle,
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
   Dialog,
   DialogBody,
   DialogClose,
@@ -64,6 +83,8 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
+  Empty,
+  EmptyTitle,
   Field,
   FieldDescription,
   FieldLabel,
@@ -80,11 +101,13 @@ import {
   InputGroupAddon,
   Kbd,
   Link,
+  Loaded,
   Logomark,
   Menu,
   MenuCheckboxItem,
   MenuContent,
   MenuItem,
+  MenuLinkItem,
   MenuSeparator,
   MenuTrigger,
   Meter,
@@ -94,6 +117,7 @@ import {
   NumberFieldInput,
   Pager,
   PagerLink,
+  Pagination,
   Parameter,
   ParameterList,
   Popover,
@@ -119,13 +143,28 @@ import {
   SelectItem,
   SelectTrigger,
   Separator,
+  Shortcut,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarItem,
+  SidebarMenu,
+  SidebarSubItem,
+  SidebarTrigger,
   SideNav,
   SideNavGroup,
   SideNavLink,
   SideNavSubLink,
+  Skeleton,
+  SkeletonGroup,
   Slider,
   SliderControl,
   Spinner,
+  Stat,
+  StatChange,
+  StatGroup,
+  StatLabel,
+  StatValue,
   Switch,
   Tab,
   Table,
@@ -140,6 +179,9 @@ import {
   TabsPanel,
   Text,
   Textarea,
+  Timeline,
+  TimelineGroup,
+  TimelineItem,
   Toaster,
   Tooltip,
   TooltipContent,
@@ -148,7 +190,11 @@ import {
   Wordmark,
 } from "@lanfermann/ui";
 
+import { Assistant } from "./assistant";
+import { Figures } from "./figures";
+import { Inputs } from "./inputs";
 import { QuoteForm } from "./quote-form";
+import { Selection } from "./selection";
 
 const GROUNDS: GroundName[] = ["paper", "tint", "ink", "indigo"];
 
@@ -162,6 +208,18 @@ const INSTALL: CodeTab[] = [
   { label: "bun", code: "bun add @lanfermann/ui", language: "sh" },
   { label: "npm", code: "npm install @lanfermann/ui", language: "sh" },
   { label: "pnpm", code: "pnpm add @lanfermann/ui", language: "sh" },
+];
+
+// Plain data, so it can cross from this Server Component into the palette.
+const COMMANDS: CommandSection[] = [
+  {
+    value: "Seiten",
+    items: [
+      { value: "angebote", label: "Angebote", detail: "12 offen" },
+      { value: "rechnungen", label: "Rechnungen" },
+      { value: "kunden", label: "Kunden", shortcut: "mod+shift+k" },
+    ],
+  },
 ];
 
 const GLOBALS = `@import "tailwindcss";
@@ -207,6 +265,61 @@ export default function Home() {
                   Als Link
                 </a>
               </div>
+
+              {/* The frame of an app, small: the sidebar beside a bar that holds the palette. */}
+              <AppShell
+                sidebarShortcut={false}
+                className="min-h-0 overflow-hidden rounded-xl border border-hairline"
+              >
+                <Sidebar aria-label={`Navigation (${ground})`} className="static h-64">
+                  <SidebarContent>
+                    <SidebarGroup title="Arbeit">
+                      <SidebarItem
+                        href="#angebote"
+                        open
+                        detail="12"
+                        sub={
+                          <>
+                            <SidebarSubItem href="#entwuerfe" current>
+                              Entwürfe
+                            </SidebarSubItem>
+                            <SidebarSubItem href="#gesendet">Gesendet</SidebarSubItem>
+                          </>
+                        }
+                      >
+                        Angebote
+                      </SidebarItem>
+                      <SidebarItem href="#rechnungen">Rechnungen</SidebarItem>
+                      <SidebarItem href="#kunden">Kunden</SidebarItem>
+                      <SidebarMenu
+                        items={
+                          <>
+                            <MenuLinkItem href="#vorlagen">Vorlagen</MenuLinkItem>
+                            <MenuLinkItem href="#artikel">Artikel</MenuLinkItem>
+                          </>
+                        }
+                      >
+                        Mehr
+                      </SidebarMenu>
+                    </SidebarGroup>
+                  </SidebarContent>
+                </Sidebar>
+                <AppShellPage>
+                  <AppShellBar className="static">
+                    <SidebarTrigger />
+                    <Command items={COMMANDS} shortcut={false} label={`Befehle (${ground})`}>
+                      <CommandTrigger render={<Button size="sm" className="ml-auto" />}>
+                        Suchen <Shortcut keys="mod+k" />
+                      </CommandTrigger>
+                      <CommandContent>
+                        <CommandInput placeholder="z. B. Angebote" />
+                        <CommandList empty="Zu dieser Suche wurde keine Seite gefunden." />
+                        <CommandFooter />
+                      </CommandContent>
+                    </Command>
+                  </AppShellBar>
+                </AppShellPage>
+              </AppShell>
 
               <Tabs defaultValue="formular">
                 <TabsList>
@@ -424,6 +537,115 @@ export default function Home() {
                 </TableBody>
               </Table>
 
+              {/* What stands around a list of records. The pages take their address as a
+                  pattern: a function could not be handed in from this Server Component. */}
+              <div className="flex flex-col gap-4">
+                <ChipGroup aria-label={`Filter (${ground})`}>
+                  <Chip>Offen</Chip>
+                  <Chip>Seit Oktober</Chip>
+                </ChipGroup>
+                <Loaded
+                  ready
+                  skeleton={
+                    <SkeletonGroup label="Die Angebote werden gerade geladen.">
+                      <Skeleton className="w-40" />
+                    </SkeletonGroup>
+                  }
+                >
+                  <Empty size="inline">
+                    <EmptyTitle level={3}>
+                      Zu diesen Filtern wurde kein Angebot gefunden.
+                    </EmptyTitle>
+                  </Empty>
+                </Loaded>
+                <SkeletonGroup label="Die Rechnungen werden gerade geladen." light="still">
+                  <Skeleton className="w-48" />
+                </SkeletonGroup>
+                <Pagination
+                  page={3}
+                  pages={12}
+                  href="#seite-{page}"
+                  aria-label={`Seiten (${ground})`}
+                />
+                <Selection />
+              </div>
+
+              {/* The first page after sign-in. Stat, DescriptionList and Timeline are written
+                  here, on the server; the stack, the banner and the rolling figure are client
+                  parts handed plain data. */}
+              <div className="flex flex-col gap-6">
+                <Banner
+                  tone="warning"
+                  title="Ihre Testphase endet in drei Tagen."
+                  action={
+                    <a href="#tarife" className={buttonVariants({ size: "sm" })}>
+                      Tarif wählen
+                    </a>
+                  }
+                >
+                  Wählen Sie einen Tarif, damit Ihre Angebote erhalten bleiben.
+                </Banner>
+                <StatGroup>
+                  <Stat>
+                    <StatLabel>Offene Angebote</StatLabel>
+                    <StatValue>23</StatValue>
+                    <StatChange trend="flat" context="zur Vorwoche">
+                      ±0
+                    </StatChange>
+                  </Stat>
+                  <Stat>
+                    <StatLabel>Stornierungen</StatLabel>
+                    <StatValue>4</StatValue>
+                    <StatChange trend="up" tone="negative" context="zum Vormonat">
+                      +2
+                    </StatChange>
+                  </Stat>
+                </StatGroup>
+                <Figures />
+                <AvatarGroup
+                  label={`Im Team (${ground})`}
+                  people={[
+                    { name: "Maria Huber", presence: "online" },
+                    { name: "Jonas Klein" },
+                    { name: "Anna Weber" },
+                    { name: "Paul Wagner" },
+                    { name: "Mia Becker" },
+                  ]}
+                />
+                <DescriptionList>
+                  <DescriptionTerm>Kunde</DescriptionTerm>
+                  <DescriptionDetails>Bäckerei Kornprobst, Rosenheim</DescriptionDetails>
+                  <DescriptionTerm>Gültig bis</DescriptionTerm>
+                  <DescriptionDetails>15. Dezember 2026</DescriptionDetails>
+                  <DescriptionTerm>Summe</DescriptionTerm>
+                  <DescriptionDetails>4.860,00 € netto</DescriptionDetails>
+                </DescriptionList>
+                <Timeline>
+                  <TimelineGroup label="Heute" dateTime="2026-11-19">
+                    <TimelineItem
+                      time="14:32"
+                      avatar={
+                        <Avatar size="sm">
+                          <AvatarFallback>AW</AvatarFallback>
+                        </Avatar>
+                      }
+                    >
+                      <strong>Anna Weber</strong> hat ein Angebot angenommen.
+                    </TimelineItem>
+                    <TimelineItem time="11:05" tone="danger">
+                      Eine Zahlung ist fehlgeschlagen.
+                    </TimelineItem>
+                  </TimelineGroup>
+                </Timeline>
+              </div>
+
+              {/* The inputs of an app. They hold state or take functions, so they stand in a
+                  client component of their own. */}
+              <Inputs ground={ground} />
+
+              {/* The parts of an assistant: a conversation and its prompt. */}
+              <Assistant ground={ground} />
+
               {/* The symbol stands apart from the wordmark above: the two are never side by side. */}
               <div className="flex items-center justify-between gap-6">
                 <Drawer>
@@ -547,6 +769,24 @@ export default function Home() {
           </Ground>
         ))}
       </main>
+      {/* Consent: a video that loads only with consent, and the way back to the settings. */}
+      <footer className="flex flex-col gap-6 border-t border-line px-6 py-10">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+          <ConsentEmbed service="youtube">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ"
+              title="Big Buck Bunny"
+              allow="encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          </ConsentEmbed>
+          <p className="flex gap-6 text-sm text-fg-muted">
+            <a href="#impressum">Impressum</a>
+            <a href="#datenschutz">Datenschutzerklärung</a>
+            <ConsentSettingsTrigger />
+          </p>
+        </div>
+      </footer>
       <Toaster />
     </TooltipProvider>
   );

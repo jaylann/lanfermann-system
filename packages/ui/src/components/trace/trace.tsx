@@ -1,7 +1,6 @@
 "use client";
 
 import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible";
-import { Alert02Icon } from "@hugeicons/core-free-icons";
 import {
   type ComponentProps,
   createContext,
@@ -12,14 +11,14 @@ import {
   useState,
 } from "react";
 
-import { Icon, type IconSvgElement } from "@/components/icon/icon";
-import { Spinner } from "@/components/spinner/spinner";
+import type { IconSvgElement } from "@/components/icon/icon";
 import { disclosureChevron, disclosurePanel } from "@/internal/disclosure";
 import { ChevronRightGlyph } from "@/internal/glyphs";
+import { RailMark, type RailStatus } from "@/internal/rail-mark";
 import { cn } from "@/lib/cn";
 
 /** Where a step stands: not begun, being worked on, finished, or failed. */
-export type TraceStatus = "pending" | "running" | "done" | "error";
+export type TraceStatus = RailStatus;
 
 const defaultStatusLabels: Record<TraceStatus, string> = {
   pending: "Steht aus",
@@ -108,33 +107,11 @@ type RowProps = {
   onOpenChange?: (open: boolean) => void;
 };
 
-/** The mark in front of a line: ring, arc, disc, or the danger symbol. */
-function TraceMark({ status, icon }: { status: TraceStatus; icon?: IconSvgElement }) {
-  return (
-    <span
-      aria-hidden
-      data-slot="trace-mark"
-      className="flex size-4 shrink-0 items-center justify-center"
-    >
-      {status === "running" ? (
-        <Spinner size={14} className="text-fg" />
-      ) : status === "error" ? (
-        <Icon icon={Alert02Icon} size={14} className="text-danger" />
-      ) : icon && status === "done" ? (
-        // A step that has just finished: its symbol comes in where the arc was, as the disc
-        // closes in the other form.
-        <Icon
-          icon={icon}
-          size={14}
-          className="text-fg-muted transition-opacity spring-settle in-data-live:starting:opacity-0"
-        />
-      ) : (
-        // A step that has just finished closes from the ring into the disc (marks.css).
-        <span className={cn("mark", status === "done" && "mark-on in-data-live:mark-closes")} />
-      )}
-    </span>
-  );
-}
+/**
+ * A step that has just finished: its symbol comes in where the arc was, or its ring closes into
+ * the disc (marks.css). On load both stand still.
+ */
+const markEnter = { icon: "in-data-live:starting:opacity-0", disc: "in-data-live:mark-closes" };
 
 const titleTone: Record<TraceStatus, string> = {
   pending: "text-fg-muted",
@@ -156,7 +133,12 @@ function TraceLine({
   const { labels, marks } = useContext(TraceContext);
   return (
     <>
-      <TraceMark status={status} icon={marks === "symbols" ? icon : undefined} />
+      <RailMark
+        slot="trace-mark"
+        status={status}
+        icon={marks === "symbols" ? icon : undefined}
+        enter={markEnter}
+      />
       <span data-slot="trace-title" className={cn("min-w-0 truncate", titleTone[status])}>
         <span className="sr-only">{labels[status]}: </span>
         {title}
@@ -232,11 +214,11 @@ export function TraceStep({
       data-slot="trace-step"
       data-status={status}
       className={cn(
-        "relative flex flex-col",
+        // The rail (rail.css): a hairline from under this mark to above the next, 5px clear of
+        // a disc. Its geometry is the rail's default, which is a step's.
+        "rail-item flex flex-col",
         // A step that joins later rises into place; under reduced motion it only fades.
         "transition-[opacity,translate] spring-settle in-data-live:starting:translate-y-(--motion-enter-offset) in-data-live:starting:opacity-0",
-        // The rail: a hairline from under this mark to above the next, 5px clear of a disc.
-        "before:absolute before:top-[1.4375rem] before:-bottom-[0.3125rem] before:left-[0.46875rem] before:w-px before:bg-hairline last:before:hidden forced-colors:before:bg-[CanvasText]",
         className,
       )}
       {...props}

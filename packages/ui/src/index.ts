@@ -9,6 +9,12 @@ export {
   AccordionTrigger,
   type AccordionTriggerProps,
 } from "./components/accordion/accordion";
+export {
+  ActionBar,
+  ActionBarButton,
+  type ActionBarButtonProps,
+  type ActionBarProps,
+} from "./components/action-bar/action-bar";
 export { Alert, AlertDescription, type AlertProps, AlertTitle } from "./components/alert/alert";
 export {
   AlertDialog,
@@ -21,8 +27,27 @@ export {
   AlertDialogTrigger,
 } from "./components/alert-dialog/alert-dialog";
 export { AnchorHeading, type AnchorHeadingProps } from "./components/anchor-heading/anchor-heading";
+export {
+  AppShell,
+  AppShellBar,
+  AppShellMain,
+  AppShellPage,
+  type AppShellProps,
+} from "./components/app-shell/app-shell";
+export {
+  Attachment,
+  type AttachmentProps,
+  type AttachmentStatus,
+  type AttachmentVariant,
+  MessageAttachments,
+  type MessageAttachmentsProps,
+} from "./components/attachment/attachment";
+export { type FileKind, kindOf } from "./components/attachment/kinds";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
+export { AvatarGroup, type AvatarGroupProps } from "./components/avatar-group/avatar-group";
+export { type AvatarPerson, type Presence } from "./components/avatar-group/people";
 export { Badge, type BadgeProps } from "./components/badge/badge";
+export { Banner, type BannerProps, type BannerTone } from "./components/banner/banner";
 export {
   BreadcrumbItem,
   BreadcrumbLink,
@@ -38,6 +63,7 @@ export { Calendar, type CalendarProps, type DateRange } from "./components/calen
 export { Callout, type CalloutProps, type CalloutTone } from "./components/callout/callout";
 export {
   Card,
+  CardBar,
   CardContent,
   CardDescription,
   CardFooter,
@@ -45,11 +71,14 @@ export {
   CardTitle,
 } from "./components/card/card";
 export { Checkbox, type CheckboxProps } from "./components/checkbox/checkbox";
+export { CheckboxCard, type CheckboxCardProps } from "./components/checkbox-card/checkbox-card";
 export {
   CheckboxGroup,
   CheckboxGroupItems,
   type CheckboxGroupProps,
 } from "./components/checkbox-group/checkbox-group";
+export { Chip, type ChipProps } from "./components/chip/chip";
+export { ChipGroup, type ChipGroupProps } from "./components/chip/chip-group";
 export { Code } from "./components/code/code";
 export { CodeBlock, type CodeBlockProps } from "./components/code-block/code-block";
 export {
@@ -72,6 +101,8 @@ export {
 } from "./components/collapsible/collapsible";
 export {
   Combobox,
+  ComboboxChips,
+  type ComboboxChipsProps,
   ComboboxCollection,
   ComboboxContent,
   type ComboboxContentProps,
@@ -87,10 +118,75 @@ export {
   ComboboxSeparator,
 } from "./components/combobox/combobox";
 export {
+  Command,
+  CommandContent,
+  type CommandContentProps,
+  type CommandEntry,
+  CommandFooter,
+  type CommandFooterProps,
+  CommandInput,
+  type CommandInputProps,
+  type CommandItems,
+  CommandList,
+  type CommandListProps,
+  type CommandProps,
+  type CommandSection,
+  CommandTrigger,
+} from "./components/command/command";
+export {
+  ConsentGate,
+  type ConsentGateProps,
+  ConsentProvider,
+  type ConsentProviderProps,
+  ConsentSettingsTrigger,
+  type ConsentSettingsTriggerProps,
+  useConsent,
+  type UseConsentResult,
+} from "./components/consent/consent";
+export { ConsentEmbed, type ConsentEmbedProps } from "./components/consent/consent-embed";
+export { type ConsentLabels, consentLabels } from "./components/consent/consent-labels";
+export {
+  consentAllows,
+  type ConsentCategory,
+  type ConsentConfig,
+  type ConsentRecord,
+  type ConsentService,
+  type ConsentStorage,
+  type ConsentStorageKind,
+  parseConsent,
+} from "./components/consent/consent-record";
+export {
+  type ConsentChange,
+  type ConsentJar,
+  type ConsentStatus,
+  createMemoryJar,
+} from "./components/consent/consent-store";
+export {
   Container,
   type ContainerProps,
   containerVariants,
 } from "./components/container/container";
+export {
+  ContextMenu,
+  ContextMenuContent,
+  type ContextMenuContentProps,
+  ContextMenuTrigger,
+} from "./components/context-menu/context-menu";
+export {
+  Conversation,
+  type ConversationApi,
+  ConversationContent,
+  type ConversationContentProps,
+  ConversationLatest,
+  type ConversationLatestProps,
+  type ConversationProps,
+  useConversation,
+} from "./components/conversation/conversation";
+export {
+  CopyButton,
+  type CopyButtonLabels,
+  type CopyButtonProps,
+} from "./components/copy-button/copy-button";
 export { CopyPage, type CopyPageProps } from "./components/copy-page/copy-page";
 export { CopyPill, CopyPillMark, type CopyPillProps } from "./components/copy-pill/copy-pill";
 export {
@@ -110,6 +206,13 @@ export {
   DateRangeField,
   type DateRangeFieldProps,
 } from "./components/date-range-field/date-range-field";
+export {
+  DescriptionDetails,
+  type DescriptionDetailsProps,
+  DescriptionList,
+  type DescriptionListProps,
+  DescriptionTerm,
+} from "./components/description-list/description-list";
 export {
   Dialog,
   DialogBody,
@@ -153,9 +256,38 @@ export {
   DrawerTitle,
   DrawerTrigger,
 } from "./components/drawer/drawer";
+export {
+  Empty,
+  EmptyActions,
+  EmptyMedia,
+  type EmptyMediaProps,
+  type EmptyProps,
+  EmptyText,
+  EmptyTitle,
+  type EmptyTitleProps,
+} from "./components/empty/empty";
 export { Field, FieldDescription, FieldError, FieldLabel } from "./components/field/field";
 export { Fieldset, FieldsetLegend } from "./components/fieldset/fieldset";
 export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
+export {
+  FileUpload,
+  FileUploadItem,
+  type FileUploadItemProps,
+  FileUploadList,
+  type FileUploadListProps,
+  type FileUploadProps,
+  type FileUploadStatus,
+  FileUploadZone,
+  type FileUploadZoneProps,
+} from "./components/file-upload/file-upload";
+export {
+  acceptsFile,
+  type FileRejection,
+  type FileRules,
+  formatFileProgress,
+  formatFileSize,
+  sortFiles,
+} from "./components/file-upload/files";
 export { Form, type FormProps } from "./components/form/form";
 export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
 export { Grow, type GrowProps } from "./components/grow/grow";
@@ -199,6 +331,21 @@ export {
   MenuTrigger,
 } from "./components/menu/menu";
 export {
+  Message,
+  MessageAction,
+  type MessageActionProps,
+  MessageActions,
+  MessageContent,
+  type MessageContentProps,
+  MessageError,
+  type MessageErrorProps,
+  MessageFeedback,
+  type MessageFeedbackProps,
+  type MessageFrom,
+  type MessageProps,
+  type MessageVerdict,
+} from "./components/message/message";
+export {
   Meter,
   MeterLabel,
   type MeterProps,
@@ -228,7 +375,9 @@ export {
   NumberFieldInput,
   type NumberFieldProps,
 } from "./components/number-field/number-field";
+export { OtpField, type OtpFieldProps } from "./components/otp-field/otp-field";
 export { Pager, PagerLink, type PagerLinkProps, type PagerProps } from "./components/pager/pager";
+export { Pagination, type PaginationProps } from "./components/pagination/pagination";
 export {
   Parameter,
   ParameterList,
@@ -250,9 +399,23 @@ export {
   ProgressTrack,
   ProgressValue,
 } from "./components/progress/progress";
+export {
+  PromptInput,
+  PromptInputActions,
+  PromptInputAttach,
+  PromptInputAttachments,
+  type PromptInputAttachmentsProps,
+  type PromptInputAttachProps,
+  type PromptInputProps,
+  PromptInputSubmit,
+  type PromptInputSubmitProps,
+  PromptInputTextarea,
+  type PromptInputTextareaProps,
+} from "./components/prompt-input/prompt-input";
 export { Prose } from "./components/prose/prose";
 export { Quote, type QuoteProps } from "./components/quote/quote";
 export { Radio, RadioGroup, type RadioGroupProps, type RadioProps } from "./components/radio/radio";
+export { RadioCard, type RadioCardProps } from "./components/radio-card/radio-card";
 export {
   ReferenceEntry,
   ReferenceEntryBody,
@@ -261,9 +424,11 @@ export {
   ReferenceEntryName,
   ReferenceEntryTitle,
 } from "./components/reference-entry/reference-entry";
+export { RollingNumber, type RollingNumberProps } from "./components/rolling-number/rolling-number";
 export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
 export { useScrollEdges } from "./components/scroll-fade/use-scroll-edges";
 export { Seam, type SeamProps } from "./components/seam/seam";
+export { SecretField, type SecretFieldProps } from "./components/secret-field/secret-field";
 export { Section, type SectionProps } from "./components/section/section";
 export {
   Segment,
@@ -289,6 +454,15 @@ export {
 export { Separator, type SeparatorProps } from "./components/separator/separator";
 export { Shimmer, type ShimmerProps } from "./components/shimmer/shimmer";
 export {
+  Shortcut,
+  type ShortcutProps,
+  ShortcutProvider,
+  type ShortcutProviderProps,
+  usePlatform,
+  useShortcut,
+  type UseShortcutOptions,
+} from "./components/shortcut/shortcut";
+export {
   SideNav,
   SideNavGroup,
   type SideNavGroupProps,
@@ -298,6 +472,25 @@ export {
   SideNavSubLink,
   type SideNavSubLinkProps,
 } from "./components/side-nav/side-nav";
+export {
+  Sidebar,
+  SidebarButton,
+  type SidebarButtonProps,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  type SidebarGroupProps,
+  SidebarHeader,
+  SidebarItem,
+  type SidebarItemProps,
+  SidebarMenu,
+  type SidebarMenuProps,
+  type SidebarProps,
+  SidebarSubItem,
+  type SidebarSubItemProps,
+  SidebarTrigger,
+  type SidebarTriggerProps,
+} from "./components/sidebar/sidebar";
 export {
   SiteFooter,
   SiteFooterBrand,
@@ -322,6 +515,13 @@ export {
   type SiteHeaderMenuProps,
   type SiteHeaderProps,
 } from "./components/site-header/site-header";
+export { Loaded, type LoadedProps } from "./components/skeleton/loaded";
+export {
+  Skeleton,
+  SkeletonGroup,
+  type SkeletonGroupProps,
+  type SkeletonProps,
+} from "./components/skeleton/skeleton";
 export {
   Slider,
   SliderControl,
@@ -332,7 +532,33 @@ export {
   type SliderThumbProps,
   SliderValue,
 } from "./components/slider/slider";
+export { siteOf, type Source } from "./components/sources/source-list";
+export {
+  SourceList,
+  type SourceListProps,
+  SourceReference,
+  type SourceReferenceProps,
+  Sources,
+  type SourcesProps,
+} from "./components/sources/sources";
 export { Spinner, type SpinnerProps } from "./components/spinner/spinner";
+export {
+  Stat,
+  StatChange,
+  type StatChangeProps,
+  StatGroup,
+  type StatGroupProps,
+  StatLabel,
+  type StatTrend,
+  StatValue,
+} from "./components/stat/stat";
+export {
+  Step,
+  type StepProps,
+  Steps,
+  type StepsProps,
+  type StepStatus,
+} from "./components/steps/steps";
 export { Switch, type SwitchProps } from "./components/switch/switch";
 export {
   Table,
@@ -373,6 +599,13 @@ export {
 } from "./components/theme-switch/theme-switch";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
 export {
+  Timeline,
+  TimelineGroup,
+  type TimelineGroupProps,
+  TimelineItem,
+  type TimelineItemProps,
+} from "./components/timeline/timeline";
+export {
   toast,
   Toaster,
   type ToasterProps,
@@ -380,6 +613,19 @@ export {
   type ToastOptions,
   type ToastTone,
 } from "./components/toast/toast";
+export { Toggle, type ToggleProps } from "./components/toggle/toggle";
+export { ToggleGroup, type ToggleGroupProps } from "./components/toggle-group/toggle-group";
+export {
+  Toolbar,
+  ToolbarButton,
+  type ToolbarButtonProps,
+  ToolbarGroup,
+  ToolbarInput,
+  type ToolbarInputProps,
+  ToolbarLink,
+  type ToolbarProps,
+  ToolbarSeparator,
+} from "./components/toolbar/toolbar";
 export {
   Tooltip,
   TooltipContent,
@@ -398,4 +644,5 @@ export {
   type TraceSummaryProps,
 } from "./components/trace/trace";
 export { cn, mergeClassName } from "./lib/cn";
+export { type Platform } from "./lib/shortcut";
 export { type SpringName, springs, transitions } from "./motion/springs";

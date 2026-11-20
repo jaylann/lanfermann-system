@@ -8,16 +8,17 @@ import { cn } from "@/lib/cn";
 /** A table scrolls sideways in its own region, and a region needs a name. */
 type Named =
   | { "aria-label": string; "aria-labelledby"?: undefined }
-  | { "aria-labelledby": string; "aria-label"?: undefined };
+  | { "aria-label"?: undefined; "aria-labelledby": string };
 
 export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labelledby"> &
   Named & {
     /** Classes for the box around the table (its rule and the scrolling region): its place. */
     containerClassName?: string;
     /**
-     * What the cells hold. `data` (the default): short values, centred on the row's line.
-     * `text`: sentences, as in a reference or the docs. Cells then start at the row's top, so a
-     * long cell does not push the short ones beside it down to its middle.
+     * What the cells hold. `data` (the default): short values on a close rhythm, centred on the
+     * row's line. `text`: sentences, as in a reference or the docs, on a looser one. Cells then
+     * start at the row's top, so a long cell does not push the short ones beside it down to its
+     * middle.
      */
     content?: "data" | "text";
     /**
@@ -31,13 +32,21 @@ export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labe
 
 /**
  * Rows of the same kind of thing, compared column by column: quotes, invoice lines, members.
- * Real `<table>` markup, structured by line and not by box: a 2px rule with round ends opens it,
- * hairlines divide the rows, no stripes and no card around it.
+ * Real `<table>` markup, structured by line: hairlines divide the rows, no stripes.
+ *
+ * In an app a table stands in a `Card`, under a `CardBar` that names it: put it straight in the
+ * card, not in a `CardContent`. There the card's edge holds it: the column names stand on the
+ * well, the outer cells keep the card's 20px, and the last row has no line under it. Elsewhere
+ * (a reference, the docs) a 2px rule with round ends opens it.
+ *
+ * Rows of data are set close: 15px text (it follows the density) with 8px above and below, a row
+ * at least a large control high, and what stands inline in a cell (a badge, avatars, a checkbox)
+ * centred on the text. Rows selected one after another are one wash.
  *
  * On a narrow screen the table keeps its columns and scrolls sideways inside its own region,
- * which is focusable so the keyboard can scroll it too. Its edges fade where more columns wait;
- * the rule above stays whole. Name it with `aria-label` (or `aria-labelledby`, pointing at a
- * heading or the `TableCaption`). Give the table a `min-w-*` if its columns must not squeeze.
+ * which is focusable so the keyboard can scroll it too. Its edges fade where more columns wait.
+ * Name it with `aria-label` (or `aria-labelledby`, pointing at a heading or the
+ * `TableCaption`). Give the table a `min-w-*` if its columns must not squeeze.
  *
  * Sorting, filtering and paging are the caller's state; the table only provides the slots.
  */
@@ -61,6 +70,13 @@ export function Table({
         "has-[[data-slot=table-scroll]:focus-visible]:outline-2",
         "has-[[data-slot=table-scroll]:focus-visible]:outline-offset-2",
         "has-[[data-slot=table-scroll]:focus-visible]:outline-accent",
+        // In a card the card's edge opens and closes the table: no rule, the corners of the
+        // card clip the band of column names and the wash of the last row, and the focus ring
+        // stays inside the card's edge.
+        "in-data-[slot=card]:border-t-0 in-data-[slot=card]:before:hidden",
+        "in-data-[slot=card]:overflow-clip in-data-[slot=card]:rounded-none",
+        "in-data-[slot=card]:first:rounded-t-xl in-data-[slot=card]:last:rounded-b-xl",
+        "in-data-[slot=card]:has-[[data-slot=table-scroll]:focus-visible]:-outline-offset-2",
         containerClassName,
       )}
     >
@@ -87,7 +103,8 @@ export function Table({
           // some browsers then stop telling assistive tech that it is a table.
           role="table"
           className={cn(
-            "w-full caption-bottom border-collapse text-left text-base text-fg-body",
+            "w-full caption-bottom border-collapse text-left text-fg-body",
+            content === "data" ? "text-control" : "text-base",
             "data-stack:max-sm:block",
             className,
           )}
@@ -116,7 +133,12 @@ export function TableCaption({ className, ...props }: ComponentProps<"caption">)
   return (
     <caption
       data-slot="table-caption"
-      className={cn("pt-3 text-left text-sm text-fg-muted", className)}
+      className={cn(
+        "pt-3 text-left text-sm text-fg-muted",
+        // In a card it stands under the card's own edge.
+        "in-data-[slot=card]:px-5 in-data-[slot=card]:pb-3",
+        className,
+      )}
       {...props}
     />
   );
@@ -138,7 +160,12 @@ export function TableBody({ className, ...props }: ComponentProps<"tbody">) {
     <tbody
       data-slot="table-body"
       role="rowgroup"
-      className={cn(stackedGroup, className)}
+      className={cn(
+        stackedGroup,
+        // In a card the card's edge closes the table: no line under the last row.
+        "in-data-[slot=card]:[&>tr:last-child]:border-b-0",
+        className,
+      )}
       {...props}
     />
   );
@@ -179,9 +206,11 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
       data-selected={selected ? "" : undefined}
       aria-selected={selected}
       className={cn(
-        "border-b border-hairline",
+        "group/row border-b border-hairline",
         // Instant, like the highlight of a menu: it follows the pointer without lag.
         "data-interactive:hover:bg-hover data-selected:bg-tint data-selected:text-fg",
+        // Rows selected one after another are one wash, without a line across it.
+        "data-selected:has-[+[data-selected]]:border-b-tint",
         stackedRow,
         className,
       )}
@@ -192,8 +221,12 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
 
 // Every cell keeps 12px to its sides, the outer ones too: the lines and a row's wash run a
 // little past the text, so a washed row does not have its text pressed against the edge.
+// In a card the outer cells keep the card's own 20px, so the text stands under its bar.
 // In a table of text the cells start at the row's top.
-const cell = "px-3 text-left align-middle in-data-[content=text]:align-top";
+const cell = [
+  "px-3 text-left align-middle in-data-[content=text]:align-top",
+  "in-data-[slot=card]:first:pl-5 in-data-[slot=card]:last:pr-5",
+].join(" ");
 const numeric = "text-right tabular-nums whitespace-nowrap";
 
 export type TableHeadProps = ComponentProps<"th"> & {
@@ -214,6 +247,9 @@ export function TableHead({ className, numeric: isNumeric, sort, ...props }: Tab
       className={cn(
         cell,
         "h-(--control-lg) text-sm font-normal whitespace-nowrap text-fg-muted",
+        // Over rows of data the column names stand in a band as high as a control; in a card
+        // the band is the well.
+        "in-data-[content=data]:h-(--control-md) in-data-[slot=card]:bg-well",
         // A column name over sentences stands at the top as well, in its own small line.
         "in-data-[content=text]:pb-2 in-data-[content=text]:align-bottom",
         isNumeric && "text-right",
@@ -250,7 +286,13 @@ export function TableCell({
         // Only the style of wrapping: `text-pretty` would also switch wrapping back on, and a
         // `nowrap` cell would wrap again.
         "py-3 in-data-[content=text]:[text-wrap-style:pretty]",
+        // Rows of data: 8px above and below, at least a large control high. What stands inline in
+        // the cell (a badge, avatars, a checkbox) is centred on the text's x-height instead of
+        // standing on its baseline, which made a row with a picture taller than one with initials.
+        "in-data-[content=data]:h-(--control-lg) in-data-[content=data]:py-2 in-data-[content=data]:*:align-middle",
         isNumeric && numeric,
+        // A figure is what is compared: in the text colour, not the body's grey.
+        isNumeric && "in-data-[content=data]:text-fg",
         nowrap && "whitespace-nowrap",
         stackedCell,
         className,

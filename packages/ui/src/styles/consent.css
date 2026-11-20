@@ -1,0 +1,65 @@
+/*
+ * The consent card (`ConsentCard`). Its two views stand in one place: the one shown is in the
+ * flow and gives the card its height (a `Grow` eases it there); the other is out of the flow,
+ * faded, and waits on the side it comes back from. A view leaves by fading where it is, as every
+ * exit does, and only then steps to its side; the one that arrives slides in from there on
+ * `settle`. Under reduced motion the offset is zero and only the fade is left.
+ */
+[data-slot="consent-view"] {
+  transition-property: opacity, translate, visibility;
+  transition-timing-function: var(--ease-spring-settle);
+  /* The arriving view is visible at once: focus is moved into it in the same moment, and a
+     hidden view cannot take it. */
+  transition-duration:
+    var(--transition-duration-spring-settle), var(--transition-duration-spring-settle), 0s;
+  /* Its fade and slide wait until the leaving one has mostly faded: two texts over each other
+     for a moment read as a smudge, not as a change. */
+  transition-delay: var(--consent-swap-delay), var(--consent-swap-delay), 0s;
+}
+[data-slot="consent-card"] {
+  --consent-swap-delay: 70ms;
+}
+[data-slot="consent-view"][data-active="false"] {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition-timing-function: var(--ease-spring-leave);
+  transition-duration: var(--transition-duration-spring-leave), 0s, 0s;
+  transition-delay:
+    0s, var(--transition-duration-spring-leave), var(--transition-duration-spring-leave);
+}
+[data-slot="consent-view"][data-active="false"][data-side="start"] {
+  translate: calc(var(--motion-enter-offset) * -6) 0;
+}
+[data-slot="consent-view"][data-active="false"][data-side="end"] {
+  translate: calc(var(--motion-enter-offset) * 6) 0;
+}
+
+/*
+ * The third button's label: „Einstellungen“ turns into „Auswahl speichern“ in place. Both stand
+ * in one grid cell; the new one rises a little into place, the old one fades.
+ */
+[data-slot="consent-third-label"] {
+  grid-area: 1 / 1;
+  transition-property: opacity, translate;
+  transition-timing-function: var(--ease-spring-settle);
+  transition-duration: var(--transition-duration-spring-settle);
+  transition-delay: var(--consent-swap-delay);
+}
+[data-slot="consent-third-label"][data-active="false"] {
+  opacity: 0;
+  translate: 0 var(--motion-enter-offset);
+  transition-timing-function: var(--ease-spring-leave);
+  transition-duration: var(--transition-duration-spring-leave), 0s;
+  transition-delay: 0s, var(--transition-duration-spring-leave);
+}
+
+/*
+ * „Alle akzeptieren“ or „Alle ablehnen“ in the settings: the switches flip one after another
+ * before the card leaves, so the reader sees what was stored.
+ */
+[data-slot="consent-card"][data-flipping] :is([data-slot="switch"], [data-slot="switch-thumb"]) {
+  transition-delay: calc(var(--flip-index, 0) * 25ms);
+}

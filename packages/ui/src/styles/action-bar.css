@@ -1,0 +1,28 @@
+/*
+ * How an `ActionBar` comes and goes. It is always in the page, unseen while nothing is
+ * selected, so both ways are plain transitions that can be turned around half-way: selecting
+ * and deselecting quickly never leaves it stuck.
+ *
+ * It rises into place on `sheet`, by twice what a popup travels, and it leaves by fading, as
+ * every exit does: it is set back down only once it is no longer seen. Under reduced motion it
+ * does not travel at all (`--motion-enter-offset` is 0).
+ */
+@utility action-bar-motion {
+  opacity: 0;
+  translate: 0 calc(var(--motion-enter-offset) * 2);
+  visibility: hidden;
+  transition:
+    opacity var(--transition-duration-spring-leave) var(--ease-spring-leave),
+    translate 0s var(--transition-duration-spring-leave),
+    visibility 0s var(--transition-duration-spring-leave);
+
+  &[data-open] {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+    transition:
+      opacity var(--transition-duration-spring-sheet) var(--ease-spring-sheet),
+      translate var(--transition-duration-spring-sheet) var(--ease-spring-sheet),
+      visibility 0s;
+  }
+}
