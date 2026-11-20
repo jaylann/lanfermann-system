@@ -6,7 +6,13 @@ import {
   Csv01Icon,
   Doc01Icon,
   File01Icon,
+  FileArchiveIcon,
   FileAudioIcon,
+  FileEmpty02Icon,
+  FileImageIcon,
+  FilePenLineIcon,
+  FileSpreadsheetIcon,
+  FileTextIcon,
   FileVideoIcon,
   Image01Icon,
   Pdf01Icon,
@@ -19,6 +25,7 @@ import type { IconSvgElement } from "@/components/icon/icon";
 export type FileKind =
   "pdf" | "image" | "sheet" | "csv" | "document" | "archive" | "audio" | "video" | "file";
 
+/** The symbol of a kind at a tile's size (18px), where the letters of a type stay readable. */
 export const kindSymbols: Record<FileKind, IconSvgElement> = {
   pdf: Pdf01Icon,
   image: Image01Icon,
@@ -29,6 +36,25 @@ export const kindSymbols: Record<FileKind, IconSvgElement> = {
   audio: FileAudioIcon,
   video: FileVideoIcon,
   file: File01Icon,
+};
+
+/**
+ * The symbol of a kind in a chip (14px): a sheet with what it holds, without letters. At 14px
+ * the stroke is pinned to 1.5px, and the letters of „PDF“ or „XLS“ ran together into blots
+ * (Justin, 2026-11-20: "the icons look too thick, they kinda explode"). The extension stands in
+ * the name beside it anyway.
+ */
+export const kindSymbolsSmall: Record<FileKind, IconSvgElement> = {
+  pdf: FileTextIcon,
+  image: FileImageIcon,
+  sheet: FileSpreadsheetIcon,
+  csv: FileSpreadsheetIcon,
+  document: FilePenLineIcon,
+  archive: FileArchiveIcon,
+  audio: FileAudioIcon,
+  video: FileVideoIcon,
+  // The same sheet as the others, its corner folded at the top: `File01Icon` folds at its foot.
+  file: FileEmpty02Icon,
 };
 
 /** The word for a kind where the name has no extension to show. */

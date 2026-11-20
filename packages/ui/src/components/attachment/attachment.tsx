@@ -20,7 +20,7 @@ import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
-import { fitName, kindOf, kindSymbols, splitName, typeWord } from "./kinds";
+import { fitName, kindOf, kindSymbols, kindSymbolsSmall, splitName, typeWord } from "./kinds";
 
 /** Where a file stands: on its way, arrived, or failed. */
 export type AttachmentStatus = "uploading" | "done" | "error";
@@ -233,7 +233,7 @@ export function Attachment({
     ) : (
       // Arrived: the symbol comes in softly where the arc was.
       <Icon
-        icon={kindSymbols[kind]}
+        icon={small ? kindSymbolsSmall[kind] : kindSymbols[kind]}
         size={small ? 14 : 18}
         className="text-fg-muted transition-opacity spring-settle in-data-live:starting:opacity-0"
       />
