@@ -12,6 +12,7 @@ import {
 import { useGround } from "@/components/ground/ground";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
+import { listChosen, ListMark, useListMarking } from "@/internal/list-mark";
 import {
   listGroupLabel,
   listItem,
@@ -278,29 +279,34 @@ export type SelectItemProps = SelectPrimitive.Item.Props & {
 };
 
 /**
- * One option. The chosen one carries the mark: a disc, where the others have nothing (ring to
- * disc, with the ring left out to keep a long list calm). An icon, if the option has one, stands
- * between the mark and the label; a detail stands at the right edge. Both are muted.
+ * One option. Its label starts at the row's left edge, where the group's label does; the chosen
+ * one carries the mark at the right end, after its detail (`ListMark`). An icon, if the option
+ * has one, stands before the label; a detail stands at the right edge. Both are muted.
  */
 export function SelectItem({ className, children, icon, detail, ...props }: SelectItemProps) {
   const options = useContext(OptionsContext);
   const option = options?.find((candidate) => Object.is(candidate.value, props.value));
   const resolvedIcon = icon ?? option?.icon;
   const resolvedDetail = detail ?? option?.detail;
+  const { marking } = useListMarking();
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
-      className={mergeClassName(["group", listItem], className)}
+      className={mergeClassName(["group", listItem, listChosen[marking]], className)}
       {...props}
     >
-      <span aria-hidden className="mark mark-quiet group-data-selected:mark-on" />
-      {resolvedIcon && <Icon icon={resolvedIcon} className="text-fg-muted" />}
-      <SelectPrimitive.ItemText data-slot="select-item-text">{children}</SelectPrimitive.ItemText>
+      {resolvedIcon && (
+        <Icon icon={resolvedIcon} className="text-fg-muted group-data-highlighted:text-fg" />
+      )}
+      <SelectPrimitive.ItemText data-slot="select-item-text" className="min-w-0 truncate">
+        {children}
+      </SelectPrimitive.ItemText>
       {resolvedDetail !== undefined && (
         <span data-slot="select-item-detail" className={listItemDetail}>
           {resolvedDetail}
         </span>
       )}
+      <ListMark className={resolvedDetail === undefined ? "ml-auto" : undefined} />
     </SelectPrimitive.Item>
   );
 }

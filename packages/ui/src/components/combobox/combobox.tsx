@@ -25,6 +25,7 @@ import {
   focusFieldControl,
 } from "@/internal/field";
 import { ChevronDownGlyph, CloseGlyph, PlusGlyph } from "@/internal/glyphs";
+import { listChosen, ListMark, useListMarking } from "@/internal/list-mark";
 import {
   listGroupLabel,
   listItem,
@@ -542,7 +543,8 @@ export type ComboboxItemProps = ComboboxPrimitive.Item.Props & {
 
 /**
  * One row. Pass the option as `value`; its label, icon and detail are shown unless you give
- * children or props of your own. The chosen row carries the disc, as in a `Select`.
+ * children or props of your own. The chosen row carries the mark at its right end, as in a
+ * `Select`.
  */
 export function ComboboxItem({
   className,
@@ -557,33 +559,37 @@ export function ComboboxItem({
   const option = isOption(itemValue) ? itemValue : undefined;
   const resolvedIcon = icon ?? option?.icon;
   const resolvedDetail = detail ?? option?.detail;
+  const { marking } = useListMarking();
+  const create = isCreateOption(itemValue);
   return (
     <ComboboxPrimitive.Item
       data-slot="combobox-item"
       value={itemValue}
-      className={mergeClassName(["group", listItem], className)}
+      className={mergeClassName(["group", listItem, listChosen[marking]], className)}
       {...props}
     >
-      {isCreateOption(itemValue) ? (
-        // The row that makes a new option: a plus where the others carry their mark.
+      {create ? (
+        // The row that makes a new option: a plus before its words, in a symbol's place.
         <span
           aria-hidden
-          className="flex size-2 shrink-0 items-center justify-center text-fg-muted"
+          className="flex size-4 shrink-0 items-center justify-center text-fg-muted"
         >
           <PlusGlyph width={10} height={10} />
         </span>
       ) : (
-        <span aria-hidden className="mark mark-quiet group-data-selected:mark-on" />
+        resolvedIcon && (
+          <Icon icon={resolvedIcon} className="text-fg-muted group-data-highlighted:text-fg" />
+        )
       )}
-      {resolvedIcon && <Icon icon={resolvedIcon} className="text-fg-muted" />}
       <span data-slot="combobox-item-text" className="min-w-0 truncate">
-        {children ?? (isCreateOption(itemValue) ? itemValue.create : option?.label)}
+        {children ?? (create ? itemValue.create : option?.label)}
       </span>
       {resolvedDetail !== undefined && (
         <span data-slot="combobox-item-detail" className={listItemDetail}>
           {resolvedDetail}
         </span>
       )}
+      {!create && <ListMark className={resolvedDetail === undefined ? "ml-auto" : undefined} />}
     </ComboboxPrimitive.Item>
   );
 }

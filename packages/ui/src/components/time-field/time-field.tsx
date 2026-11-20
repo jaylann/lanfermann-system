@@ -17,6 +17,7 @@ import {
   timeMatches,
   timesOfDay,
 } from "@/internal/iso-date";
+import { listChosen, ListMark, useListMarking } from "@/internal/list-mark";
 import { listItem, listSheet, popupMotion } from "@/internal/popup";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
 import { cn } from "@/lib/cn";
@@ -77,6 +78,7 @@ export function TimeField({
   ...props
 }: TimeFieldProps) {
   const ground = useGround();
+  const { marking } = useListMarking();
   const list = useRef<HTMLDivElement>(null);
   const written = (time: string) => formatTime(time, hourCycle);
   const typed = useTypedValue({
@@ -196,15 +198,12 @@ export function TimeField({
                   value={time}
                   data-slot="time-field-option"
                   data-time={time}
-                  className={cn(listItem, "tabular-nums")}
+                  data-chosen={time === typed.value ? "" : undefined}
+                  className={cn("group", listItem, listChosen[marking], "tabular-nums")}
                 >
-                  {/* As in a select: the time the field holds carries the disc. One or the other:
-                      the two are utilities of equal weight, and together the quiet one wins. */}
-                  <span
-                    aria-hidden
-                    className={cn("mark", time === typed.value ? "mark-on" : "mark-quiet")}
-                  />
                   {written(time)}
+                  {/* As in a select: the time the field holds carries the mark at the right. */}
+                  <ListMark on={time === typed.value} className="ml-auto" />
                 </Autocomplete.Item>
               )}
             </Autocomplete.List>
