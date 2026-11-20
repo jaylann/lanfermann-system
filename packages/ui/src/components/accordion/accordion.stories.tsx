@@ -43,14 +43,26 @@ function Questions() {
 }
 
 /**
- * One answer at a time. A rule opens the block and hairlines divide the rows, like a table; the
- * chevron turns, the answer grows to its height and fades in.
+ * One answer at a time. Hairlines open the block and divide the rows. The row under the pointer
+ * is washed and the lines beside it step aside. An open row rests unmarked; pointed at, its
+ * question's wash squares its lower corners and runs on, fainter, behind the answer. The chevron
+ * turns, the answer grows to its height and unfolds.
  */
 export const Default: Story = {
   parameters: {
     visual: {
       target: '[data-slot="accordion-item"]:nth-child(2) [data-slot="accordion-trigger"]',
       motion: [
+        {
+          name: "point",
+          hover: '[data-slot="accordion-item"]:nth-child(3) [data-slot="accordion-trigger"]',
+          frames: 4,
+        },
+        {
+          name: "point-open",
+          hover: '[data-slot="accordion-item"]:nth-child(1) [data-slot="accordion-trigger"]',
+          frames: 4,
+        },
         {
           name: "open",
           click: '[data-slot="accordion-item"]:nth-child(2) [data-slot="accordion-trigger"]',
@@ -68,6 +80,25 @@ export const Default: Story = {
     // A fixed height, so the block does not move on the page while its rows open and close.
     <div className="h-[260px] w-[520px] max-w-[calc(100vw-2rem)]">
       <Accordion defaultValue={["preis"]}>
+        <Questions />
+      </Accordion>
+    </div>
+  ),
+};
+
+/**
+ * `quiet`: no wash under the pointer. The lines stay and only the chevron answers, darkening and
+ * leaning the way it points. For a page where the accordion should recede.
+ */
+export const Quiet: Story = {
+  parameters: {
+    visual: {
+      target: '[data-slot="accordion-item"]:nth-child(2) [data-slot="accordion-trigger"]',
+    },
+  },
+  render: () => (
+    <div className="h-[260px] w-[520px] max-w-[calc(100vw-2rem)]">
+      <Accordion quiet defaultValue={["preis"]}>
         <Questions />
       </Accordion>
     </div>
