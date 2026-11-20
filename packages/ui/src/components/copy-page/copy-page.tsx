@@ -53,10 +53,10 @@ export type CopyPageProps = Omit<
  * menu repeats it with a line on what it is, and opens the Markdown in a new tab. Put it at the
  * end of the row above the page's title.
  *
- * It is a `ButtonGroup`, named by its `label`: one part with two keys, so it moves as one: under the pointer the whole fitting lifts,
- * and the key under it takes the hover wash. Pressed, the fitting goes down and drops its
- * ambient shadow, and only the pressed key takes the inner shade, so it rocks on that key and the
- * other keeps its gloss. A copy is confirmed in the key, as in a code block: the copy symbol
+ * It is a `ButtonGroup`, named by its `label`: one part with two keys. Under the pointer the whole
+ * fitting lifts and the key under it takes the hover wash; a press moves only the pressed key,
+ * which takes the inner shade and goes down while the fitting and the other key stay where they
+ * are. A copy is confirmed in the key, as in a code block: the copy symbol
  * shrinks away and the tick draws itself, short leg first, then fades where it stands while the
  * symbol seats back. There is no toast; a screen reader hears one sentence.
  *

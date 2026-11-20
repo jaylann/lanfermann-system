@@ -27,9 +27,9 @@ export type ButtonGroupProps = Omit<ComponentProps<"div">, "aria-label" | "aria-
  * Actions that belong together, as one fitting with several keys: an action and the menu of its
  * other forms ("Senden" and a chevron), two or three steps on the same thing ("Archivieren",
  * "Melden", "Später"), a pair of arrows. The keys share one face, one edge and one shadow, a
- * seam in the edge's colour divides them, and the fitting moves as one part: it lifts under the
- * pointer and goes down under a press, and only the pressed key takes the inner shade, so it
- * rocks on that key.
+ * seam in the edge's colour divides them. The fitting lifts under the pointer as one part; a
+ * press moves only the key that was pressed, which takes the inner shade and goes down while the
+ * fitting stays where it is.
  *
  * Put `Button`s inside, or a `SelectTrigger`. A key that opens a popup is its trigger rendered
  * as a button (`<MenuTrigger render={<Button iconOnly aria-label="…" />}>`). The keys take the
