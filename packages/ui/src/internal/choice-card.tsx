@@ -18,27 +18,28 @@ export type ChoiceCardText = {
 };
 
 /**
- * The card around a radio or a checkbox: a softly raised sheet that is the control's label, so
- * the whole of it is the target. The sheet keeps its size and answers with its shadow: a
- * little higher under the pointer, down on the page under a press, while its mark dips as a
- * plain `Radio` or `Checkbox` does. (The whole card going down to the press scale moved a wide
- * sheet by ten pixels and was too heavy: Justin, 2026-11-19.) It takes the accent outline when
- * the keyboard is on its control, and lies flat when the control is disabled. State is read
- * from the control inside, which carries `data-slot="choice-control"`.
+ * The card around a radio or a checkbox: a bevelled card (`depth-bevel`) that is the control's
+ * label, so the whole of it is the target. It keeps its size and place: under the pointer its
+ * edge firms up, under a press its shadow goes down to the page, while its mark dips as a plain
+ * `Radio` or `Checkbox` does. (The whole card going down to the press scale moved a wide sheet by
+ * ten pixels and was too heavy: Justin, 2026-11-19; a wide shadow rising under the pointer was
+ * "odd": Justin, 2026-11-20.) It takes the accent outline when the keyboard is on its control,
+ * and lies flat when the control is disabled. State is read from the control inside, which
+ * carries `data-slot="choice-control"`.
  */
 export const choiceCard = [
-  "group/card relative flex cursor-pointer items-start gap-3 rounded-xl bg-surface p-4 text-left depth-card select-none",
+  "group/card relative flex cursor-pointer items-start gap-3 rounded-xl bg-surface p-4 text-left depth-bevel select-none",
   // Everything the card does is one shadow easing: it goes down fast under the press, and
   // comes back up while the accent edge of the choice arrives (`settle`), so the two read as
   // one move. What is given up leaves faster.
-  "transition-[box-shadow] spring-leave not-active:has-[[data-slot=choice-control][data-checked]]:spring-settle active:spring-snap",
-  "not-has-[[data-slot=choice-control][data-disabled]]:hover:shadow-card-hover not-has-[[data-slot=choice-control][data-disabled]]:active:shadow-card-pressed",
+  "transition-[box-shadow] spring-leave hover:spring-snap not-active:has-[[data-slot=choice-control][data-checked]]:spring-settle active:spring-snap",
+  "not-has-[[data-slot=choice-control][data-disabled]]:hover:shadow-bevel-hover not-has-[[data-slot=choice-control][data-disabled]]:active:shadow-bevel-pressed",
   "has-[[data-slot=choice-control]:focus-visible]:outline-2 has-[[data-slot=choice-control]:focus-visible]:outline-offset-2 has-[[data-slot=choice-control]:focus-visible]:outline-accent",
   "has-[[data-slot=choice-control][data-disabled]]:cursor-default has-[[data-slot=choice-control][data-disabled]]:bg-disabled has-[[data-slot=choice-control][data-disabled]]:depth-flat",
 ].join(" ");
 
 /** The chosen card wears the accent as its edge; it eases in on the card's own transition. */
-export const choiceCardEdge = "has-[[data-slot=choice-control][data-checked]]:depth-card-chosen";
+export const choiceCardEdge = "has-[[data-slot=choice-control][data-checked]]:depth-bevel-chosen";
 
 /**
  * The control inside the card: a box of the check size on the title's first line. The card

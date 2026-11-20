@@ -10,12 +10,25 @@ type DivProps = ComponentProps<"div">;
  * the members of a team, each named by a `CardBar`, with its `Table` or list running to the
  * card's edges (Justin, 2026-11-19). The pages of a site and the docs are not chopped into
  * boxes: what is only read there stands on the ground under a rule (`Separator`).
+ *
+ * `variant="bevel"` cuts the card like a fitting: a crisp edge, light along its top, a lip along
+ * its foot and a short shadow, so it stands on the page as a machined part instead of floating
+ * over it. For a card that is handled (a choice, a prompt to copy, a tile to open).
  */
-export function Card({ className, ...props }: DivProps) {
+export function Card({
+  variant = "default",
+  className,
+  ...props
+}: DivProps & { variant?: "default" | "bevel" }) {
   return (
     <div
       data-slot="card"
-      className={cn("flex flex-col rounded-xl bg-surface depth-card", className)}
+      data-variant={variant}
+      className={cn(
+        "flex flex-col rounded-xl bg-surface",
+        variant === "bevel" ? "depth-bevel" : "depth-card",
+        className,
+      )}
       {...props}
     />
   );

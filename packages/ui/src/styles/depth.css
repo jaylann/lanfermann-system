@@ -137,6 +137,15 @@
   --depth-card-near: rgb(19 18 28 / 0.05);
   --depth-card-far: rgb(42 37 82 / 0.2);
 
+  /* the bevelled card: cut like a fitting, a crisp edge and a lip at its foot */
+  --depth-bevel-face: linear-gradient(rgb(42 37 82 / 0) 55%, rgb(42 37 82 / 0.035));
+  --depth-bevel-edge: rgb(19 18 28 / 0.11);
+  --depth-bevel-edge-hover: rgb(19 18 28 / 0.2);
+  --depth-bevel-hi: rgb(255 255 255 / 0);
+  --depth-bevel-lo: rgb(19 18 28 / 0.06);
+  --depth-bevel-contact: rgb(19 18 28 / 0.07);
+  --depth-bevel-ambient: rgb(42 37 82 / 0.1);
+
   --depth-sheet-edge: rgb(19 18 28 / 0.12);
   --depth-sheet-hi: rgb(255 255 255 / 0);
   --depth-sheet-near: rgb(19 18 28 / 0.08);
@@ -215,6 +224,14 @@
   --depth-card-hi: rgb(255 255 255 / 0.06);
   --depth-card-near: rgb(8 7 12 / 0.4);
   --depth-card-far: rgb(8 7 12 / 0.3);
+
+  --depth-bevel-face: linear-gradient(rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01));
+  --depth-bevel-edge: rgb(255 255 255 / 0.08);
+  --depth-bevel-edge-hover: rgb(255 255 255 / 0.16);
+  --depth-bevel-hi: rgb(255 255 255 / 0.09);
+  --depth-bevel-lo: rgb(0 0 0 / 0.3);
+  --depth-bevel-contact: rgb(8 7 12 / 0.55);
+  --depth-bevel-ambient: rgb(8 7 12 / 0.35);
 
   --depth-sheet-edge: rgb(8 7 12 / 0.8);
   --depth-sheet-hi: rgb(255 255 255 / 0.08);
@@ -296,6 +313,14 @@
   --depth-card-near: rgb(19 18 28 / 0.14);
   --depth-card-far: rgb(19 18 28 / 0.22);
 
+  --depth-bevel-face: linear-gradient(rgb(255 255 255 / 0.08), rgb(255 255 255 / 0));
+  --depth-bevel-edge: rgb(255 255 255 / 0.16);
+  --depth-bevel-edge-hover: rgb(255 255 255 / 0.3);
+  --depth-bevel-hi: rgb(255 255 255 / 0.14);
+  --depth-bevel-lo: rgb(19 18 28 / 0.16);
+  --depth-bevel-contact: rgb(19 18 28 / 0.16);
+  --depth-bevel-ambient: rgb(19 18 28 / 0.2);
+
   --depth-sheet-edge: rgb(19 18 28 / 0.2);
   --depth-sheet-hi: rgb(255 255 255 / 0);
   --depth-sheet-near: rgb(19 18 28 / 0.14);
@@ -357,10 +382,12 @@
   --shadow-field-invalid: 0 0 0 1px var(--lf-danger), 0 0 0 4px var(--depth-field-halo-danger);
   --inset-shadow-field: inset 0 1px 2px 0 var(--depth-field-shade);
 
-  /* Cards: softly raised. */
+  /* Cards: softly raised. The wide layer's reach is a set of variables while its length is being
+     chosen on the lab board (Justin, 2026-11-20: "a bit too spreaded shadow"). */
   --shadow-card:
     0 0 0 1px var(--d-card-edge, var(--depth-card-edge)), 0 2px 4px 0 var(--depth-card-near),
-    0 12px 28px -8px var(--depth-card-far);
+    0 var(--card-far-y, 12px) var(--card-far-blur, 28px) var(--card-far-spread, -8px)
+      var(--depth-card-far);
   /* A card that is a control (a `RadioCard`) answers with its shadow and keeps its size: a
      little higher under the pointer, down on the page under a press. The layers match. */
   --shadow-card-hover:
@@ -373,6 +400,38 @@
   /* The chosen one of several wears the accent as its edge, a pixel outside (`--d-card-edge`,
      in whatever state the card's shadow is) and a pixel inside. One layer, like the card's. */
   --inset-shadow-card-chosen: inset 0 0 0 1px var(--lf-accent);
+
+  /* The bevelled card: a card cut like a fitting. Its edge is crisp, light runs along its top
+     and a lip along its foot, and its shadow is short: it stands on the page, it does not hover
+     over it. The lip and the contact are variables while their cut is chosen on the lab board.
+     Hover and press keep the layers, so a choice card on it can ease between them. */
+  --shadow-bevel:
+    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge)),
+    0 var(--bevel-contact-y, 1px) var(--bevel-contact-blur, 2px) 0 var(--depth-bevel-contact),
+    0 4px 12px -4px var(--depth-bevel-ambient);
+  --shadow-bevel-hover:
+    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge-hover)),
+    0 var(--bevel-contact-y, 1px) var(--bevel-contact-blur, 2px) 0 var(--depth-bevel-contact),
+    0 4px 12px -4px var(--depth-bevel-ambient);
+  --shadow-bevel-pressed:
+    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge-hover)), 0 0 0 0 transparent,
+    0 1px 3px -1px var(--depth-bevel-ambient);
+  --inset-shadow-bevel:
+    inset 0 1px 0 0 var(--depth-bevel-hi),
+    inset 0 calc(-1 * var(--bevel-lip, 1px)) 0 0 var(--depth-bevel-lo);
+  /* Chosen: the accent inside the edge takes the place of the top light; the lip stays. */
+  --inset-shadow-bevel-chosen:
+    inset 0 0 0 1px var(--lf-accent),
+    inset 0 calc(-1 * var(--bevel-lip, 1px)) 0 0 var(--depth-bevel-lo);
+
+  /* The dock: a fitting's face that floats over the page for as long as a selection lasts (the
+     `ActionBar`). The edge, light and lip of a key, and a long, wide float under it. */
+  --shadow-dock:
+    0 0 0 1px var(--depth-surface-edge), 0 1px 2px 0 var(--depth-surface-contact),
+    0 var(--dock-near-y, 12px) var(--dock-near-blur, 28px) var(--dock-near-spread, -10px)
+      var(--depth-sheet-mid),
+    0 var(--dock-far-y, 28px) var(--dock-far-blur, 60px) var(--dock-far-spread, -20px)
+      var(--depth-sheet-far);
 
   /* Sheets. */
   --shadow-floating:
@@ -475,17 +534,33 @@
   [data-slot="app-shell-main"] & {
     --depth-card-far: transparent;
   }
-  /* A choice card rests the same way, wherever it stands, and lifts only under the pointer,
-     where its hover and press move the wide shadow (Justin, 2026-11-19: "too shadowy").
-     `inherit` takes the ground's value back from the card's parent. */
-  &:is([data-slot="checkbox-card"], [data-slot="radio-card"]) {
-    --depth-card-far: transparent;
-    @media (hover: hover) {
-      &:hover:not(:has([data-slot="choice-control"][data-disabled])) {
-        --depth-card-far: inherit;
-      }
-    }
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
   }
+}
+/* A card cut like a fitting (`Card variant="bevel"`, the choice cards). */
+@utility depth-bevel {
+  @apply shadow-bevel inset-shadow-bevel;
+  background-image: var(--depth-bevel-face);
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+/* Worn over `depth-bevel`: the accent as its edge, outside and in; the shadow is the card's. */
+@utility depth-bevel-chosen {
+  --d-card-edge: var(--lf-accent);
+  @apply inset-shadow-bevel-chosen;
+  @media (forced-colors: active) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+/* A fitting that floats: the `ActionBar`. Its face, light and lip are a key's. */
+@utility depth-dock {
+  @apply shadow-dock inset-shadow-raised;
+  background-image: var(--d-face, var(--depth-surface-face));
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
     outline-offset: -1px;
