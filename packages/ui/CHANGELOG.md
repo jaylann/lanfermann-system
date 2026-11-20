@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.7.0](https://github.com/jaylann/lanfermann-system/compare/v0.6.0...v0.7.0) (2026-11-20)
+
+
+### Features
+
+* **ui:** cut a card like a fitting and the action bar like a floating key ([d03402a](https://github.com/jaylann/lanfermann-system/commit/d03402ae54bcb9cd5b7201947f7f8e751dad05e3))
+* **ui:** cut a long file name exactly and let attachment chips lie flat ([8cd266e](https://github.com/jaylann/lanfermann-system/commit/8cd266e90010c0bd3ce67a8ca6309c7d2be5f2c1))
+* **ui:** fix and settle the 2026-11-20 workshop review ([c64257e](https://github.com/jaylann/lanfermann-system/commit/c64257ef095c6738ffde4dc7720551267d7efcf2))
+* **ui:** give the pages of a navigation panel a symbol in a tile ([9f19eb9](https://github.com/jaylann/lanfermann-system/commit/9f19eb96a53b1f583ef82a05a40b9e4e016f805d))
+* **ui:** let an accordion row's wash replace its lines ([849c551](https://github.com/jaylann/lanfermann-system/commit/849c5510e9fbe3806ee21eae3e583a4667cf5df7))
+* **ui:** let an accordion row's wash replace its lines ([b87eede](https://github.com/jaylann/lanfermann-system/commit/b87eede499eca74b325f03a4302af129d2840910))
+* **ui:** let one rounded halo travel through a code field ([4e8eb00](https://github.com/jaylann/lanfermann-system/commit/4e8eb0066aed974144abe245de668fc559851ce1))
+* **ui:** mark a chosen row at its right end and give menu rows symbols ([6bf340c](https://github.com/jaylann/lanfermann-system/commit/6bf340c7f4f72999fc2fb3cb80289f85f7b6872d))
+* **ui:** mark a chosen row by what stands at its right, tints joined ([5ebeab8](https://github.com/jaylann/lanfermann-system/commit/5ebeab85f13ee8d0483a363a2f5c1029f5f0e2bb))
+* **ui:** name the symbol keys of a toolbar in tooltips ([0407fb3](https://github.com/jaylann/lanfermann-system/commit/0407fb39b840f6786810073713e6d5434bc30a39))
+* **ui:** refine the accordion and settle the 2026-11-20 workshop review ([bb2604c](https://github.com/jaylann/lanfermann-system/commit/bb2604c9caa262404d911e5391bdbea87d2aeaf3))
+* **ui:** roll the change beside a figure, across zero too ([216dce0](https://github.com/jaylann/lanfermann-system/commit/216dce088eea04c134aa7fa46143e89d2585c3d0))
+* **ui:** settle the card shadow, the glossy card and the light on choice cards ([f8ebc20](https://github.com/jaylann/lanfermann-system/commit/f8ebc2008a0c6de4ee73fe80d5c7b7ce2644b772))
+* **ui:** settle the tile, the thumbs, the code halo and the name cut as picked ([411e13c](https://github.com/jaylann/lanfermann-system/commit/411e13ce0bba3cda04676a3f2d07b7aef4014eed))
+* **ui:** turn the retry arrow and let a taken-back thumb settle ([4c0453c](https://github.com/jaylann/lanfermann-system/commit/4c0453c605bad93f704edfeb7c820d420c29b9e4))
+
+
+### Bug Fixes
+
+* **ui:** cut a step's linked name only sideways ([9d40744](https://github.com/jaylann/lanfermann-system/commit/9d40744c055b61cca4f89c0edf1f195788b6edaa))
+* **ui:** give attachment chips letterless kind symbols ([c59592a](https://github.com/jaylann/lanfermann-system/commit/c59592a21262bd011a1fdb608ce39029dd7829a6))
+* **ui:** keep the segmented thumb on its segment under zoom ([8342e53](https://github.com/jaylann/lanfermann-system/commit/8342e5382e47add8ccd3c1c916d643baad627669))
+* **ui:** keep the underline of a step's link whole ([1954e01](https://github.com/jaylann/lanfermann-system/commit/1954e01577071cabd9855d96a71f39823f5ced1a))
+* **ui:** move only the pressed key of a button group ([b365c7f](https://github.com/jaylann/lanfermann-system/commit/b365c7fc1d6308a27c938f63082818d267a9ff9d))
+* **ui:** take back the thumb's lean on a choice before the first frame ([f6dd673](https://github.com/jaylann/lanfermann-system/commit/f6dd673daa9243c2871f4d2c307e5b805e230707))
+
 ## [0.6.0](https://github.com/jaylann/lanfermann-system/compare/v0.5.0...v0.6.0) (2026-11-20)
 
 
