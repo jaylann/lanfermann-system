@@ -19,6 +19,11 @@ extend-exclude = [
   "packages/ui/visual-baseline/",
 ]
 
+[default]
+# The commit links release-please writes into a changelog: a short and a full hash, read as
+# words ("e61ba3c" holds "ba"). Only the link is skipped; the entry's words are still checked.
+extend-ignore-re = ["\\[[0-9a-f]{7,}\\]\\(https://github\\.com/[^)]*/commit/[0-9a-f]{40}\\)"]
+
 [default.extend-words]
 # German words in the library's own copy (labels, error messages, the forms a typed date and
 # time are read in), and "Fase", the name of the design direction.
