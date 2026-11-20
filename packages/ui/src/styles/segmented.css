@@ -4,6 +4,13 @@
  * Everything that moves here is a transform, so nothing is laid out while it travels; only a
  * change of width between two segments is, on the thumb alone.
  *
+ * What is measured (`--thumb-left`, `--thumb-width`, `--thumb-lean`, `--track-width`,
+ * `--track-height`) is written as a plain number of layout pixels and made a length only where
+ * it is used (`* 1px`). Under CSS `zoom` every engine treated a length in a custom property in
+ * its own way: Firefox zoomed the registered width twice, so the thumb came out 1.4 times too
+ * wide past the trough's end, and WebKit placed the resting thumb off its segment. A number is
+ * not zoomed, and the `1px` it is multiplied by is zoomed once, where it is used.
+ *
  * Three parts, the first two as in a slider (slider.css):
  *
  *   rider  `segment-thumb`: the place. It travels to the chosen segment on `--segment-pace`
@@ -51,9 +58,9 @@
   initial-value: 1;
 }
 @property --thumb-width {
-  syntax: "<length>";
+  syntax: "<number>";
   inherits: true;
-  initial-value: 0px;
+  initial-value: 0;
 }
 
 @layer components {
@@ -103,8 +110,8 @@
   }
 
   [data-slot="segment-thumb"] {
-    width: var(--thumb-width);
-    translate: calc(var(--thumb-left, 0px) + var(--thumb-lean, 0px)) 0;
+    width: calc(var(--thumb-width) * 1px);
+    translate: calc((var(--thumb-left, 0) + var(--thumb-lean, 0)) * 1px) 0;
   }
   /* Until it is placed, the chosen segment's own seat stands in for it (segmented-control.tsx):
      the two change places in one frame, so a page that came from a server has a thumb at once. */
@@ -116,18 +123,18 @@
      px, not in percent of the box. */
   [data-slot="segment-thumb-face"] {
     scale: var(--thumb-long) var(--thumb-tall);
-    translate: calc(var(--thumb-off) * var(--thumb-width)) 0;
+    translate: calc(var(--thumb-off) * var(--thumb-width) * 1px) 0;
   }
 
   /* The inverse: T(c) S(l) is undone by T(-c/l) S(1/l). The press is left in, so a held label
      goes down with its thumb. */
   [data-slot="segment-lens"] {
     scale: calc(1 / var(--thumb-s)) calc(1 / (1 - (var(--thumb-s) - 1) * var(--thumb-thin)));
-    translate: calc(-1 * var(--thumb-off) * var(--thumb-width) / var(--thumb-long)) 0;
+    translate: calc(-1 * var(--thumb-off) * var(--thumb-width) * 1px / var(--thumb-long)) 0;
   }
   /* And the rider's way taken back: the labels stand where the track's labels stand. */
   [data-slot="segment-lens-labels"] {
-    translate: calc(-1 * (var(--thumb-left, 0px) + var(--thumb-lean, 0px))) 0;
+    translate: calc(-1 * (var(--thumb-left, 0) + var(--thumb-lean, 0)) * 1px) 0;
   }
 
   /* What eases. On the track, the numbers the face and the lens are worked out from; on the
