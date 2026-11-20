@@ -9,11 +9,13 @@
  *   Fitting  what a hand presses                 depth-raised (+ -hover, depth-pressed)
  *   Plug     a fitting seated in a socket        depth-plug (a checked box)
  *   Socket   what receives a value or a part     depth-socket, depth-trough, depth-field
- *   Card     one object you act on               depth-card (-chosen: one of several, taken;
- *                                                shadow-card-hover / -pressed when it is a control;
- *                                                in an app's main area a block of the page,
- *                                                without the wide shadow)
- *   Sheet    what floats temporarily             depth-floating, depth-overlay
+ *   Card     one object you act on               depth-card (in an app's main area a block of
+ *                                                the page, without the wide shadow); depth-bevel
+ *                                                and depth-gloss, a card cut like a fitting for
+ *                                                what is handled (-chosen: one of several, taken;
+ *                                                shadow-bevel-pressed under a press)
+ *   Sheet    what floats temporarily             depth-floating, depth-overlay; depth-dock, a
+ *                                                fitting that floats (the action bar)
  *   Bar      the site's bar over the page        depth-bar
  *   Seam     where two sections of a site meet   depth-seam (components/seam)
  *
@@ -140,11 +142,16 @@
   /* the bevelled card: cut like a fitting, a crisp edge and a lip at its foot */
   --depth-bevel-face: linear-gradient(rgb(42 37 82 / 0) 55%, rgb(42 37 82 / 0.035));
   --depth-bevel-edge: rgb(19 18 28 / 0.11);
-  --depth-bevel-edge-hover: rgb(19 18 28 / 0.2);
   --depth-bevel-hi: rgb(255 255 255 / 0);
   --depth-bevel-lo: rgb(19 18 28 / 0.06);
   --depth-bevel-contact: rgb(19 18 28 / 0.07);
   --depth-bevel-ambient: rgb(42 37 82 / 0.1);
+  /* Glanz: the same cut with a face that visibly shines and darkens toward its foot */
+  --depth-gloss-face: linear-gradient(rgb(255 255 255 / 0), rgb(42 37 82 / 0.075));
+  --depth-gloss-hi: rgb(255 255 255 / 0);
+  --depth-gloss-lo: rgb(19 18 28 / 0.08);
+  /* the light that follows the pointer over a choice card */
+  --depth-bevel-light: rgb(95 80 208 / 0.07);
 
   --depth-sheet-edge: rgb(19 18 28 / 0.12);
   --depth-sheet-hi: rgb(255 255 255 / 0);
@@ -227,11 +234,14 @@
 
   --depth-bevel-face: linear-gradient(rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01));
   --depth-bevel-edge: rgb(255 255 255 / 0.08);
-  --depth-bevel-edge-hover: rgb(255 255 255 / 0.16);
   --depth-bevel-hi: rgb(255 255 255 / 0.09);
   --depth-bevel-lo: rgb(0 0 0 / 0.3);
   --depth-bevel-contact: rgb(8 7 12 / 0.55);
   --depth-bevel-ambient: rgb(8 7 12 / 0.35);
+  --depth-gloss-face: linear-gradient(rgb(255 255 255 / 0.085), rgb(255 255 255 / 0.015));
+  --depth-gloss-hi: rgb(255 255 255 / 0.14);
+  --depth-gloss-lo: rgb(0 0 0 / 0.35);
+  --depth-bevel-light: rgb(255 255 255 / 0.06);
 
   --depth-sheet-edge: rgb(8 7 12 / 0.8);
   --depth-sheet-hi: rgb(255 255 255 / 0.08);
@@ -315,11 +325,14 @@
 
   --depth-bevel-face: linear-gradient(rgb(255 255 255 / 0.08), rgb(255 255 255 / 0));
   --depth-bevel-edge: rgb(255 255 255 / 0.16);
-  --depth-bevel-edge-hover: rgb(255 255 255 / 0.3);
   --depth-bevel-hi: rgb(255 255 255 / 0.14);
   --depth-bevel-lo: rgb(19 18 28 / 0.16);
   --depth-bevel-contact: rgb(19 18 28 / 0.16);
   --depth-bevel-ambient: rgb(19 18 28 / 0.2);
+  --depth-gloss-face: linear-gradient(rgb(255 255 255 / 0.14), rgb(255 255 255 / 0));
+  --depth-gloss-hi: rgb(255 255 255 / 0.2);
+  --depth-gloss-lo: rgb(19 18 28 / 0.2);
+  --depth-bevel-light: rgb(255 255 255 / 0.08);
 
   --depth-sheet-edge: rgb(19 18 28 / 0.2);
   --depth-sheet-hi: rgb(255 255 255 / 0);
@@ -382,56 +395,39 @@
   --shadow-field-invalid: 0 0 0 1px var(--lf-danger), 0 0 0 4px var(--depth-field-halo-danger);
   --inset-shadow-field: inset 0 1px 2px 0 var(--depth-field-shade);
 
-  /* Cards: softly raised. The wide layer's reach is a set of variables while its length is being
-     chosen on the lab board (Justin, 2026-11-20: "a bit too spreaded shadow"). */
+  /* Cards: softly raised. The wide layer reaches 6px down with a 16px blur: at 12px and 28px it
+     spread too far (Justin, 2026-11-20, chosen over that and over 3px and 8px). */
   --shadow-card:
-    0 0 0 1px var(--d-card-edge, var(--depth-card-edge)), 0 2px 4px 0 var(--depth-card-near),
-    0 var(--card-far-y, 12px) var(--card-far-blur, 28px) var(--card-far-spread, -8px)
-      var(--depth-card-far);
-  /* A card that is a control (a `RadioCard`) answers with its shadow and keeps its size: a
-     little higher under the pointer, down on the page under a press. The layers match. */
-  --shadow-card-hover:
-    0 0 0 1px var(--d-card-edge, var(--depth-card-edge)), 0 3px 6px 0 var(--depth-card-near),
-    0 16px 32px -8px var(--depth-card-far);
-  --shadow-card-pressed:
-    0 0 0 1px var(--d-card-edge, var(--depth-card-edge)), 0 1px 2px 0 var(--depth-card-near),
-    0 4px 12px -6px var(--depth-card-far);
+    0 0 0 1px var(--depth-card-edge), 0 2px 4px 0 var(--depth-card-near),
+    0 6px 16px -6px var(--depth-card-far);
   --inset-shadow-card: inset 0 1px 0 0 var(--depth-card-hi);
-  /* The chosen one of several wears the accent as its edge, a pixel outside (`--d-card-edge`,
-     in whatever state the card's shadow is) and a pixel inside. One layer, like the card's. */
-  --inset-shadow-card-chosen: inset 0 0 0 1px var(--lf-accent);
 
-  /* The bevelled card: a card cut like a fitting. Its edge is crisp, light runs along its top
-     and a lip along its foot, and its shadow is short: it stands on the page, it does not hover
-     over it. The lip and the contact are variables while their cut is chosen on the lab board.
-     Hover and press keep the layers, so a choice card on it can ease between them. */
+  /* The bevelled card (Fase): a card cut like a fitting. Its edge is crisp, light runs along its
+     top and a 1px lip along its foot, and its shadow is short: it stands on the page, it does
+     not hover over it. A choice card on it goes down to the page under a press; the layers
+     match, so it eases between the two. */
   --shadow-bevel:
-    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge)),
-    0 var(--bevel-contact-y, 1px) var(--bevel-contact-blur, 2px) 0 var(--depth-bevel-contact),
-    0 4px 12px -4px var(--depth-bevel-ambient);
-  --shadow-bevel-hover:
-    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge-hover)),
-    0 var(--bevel-contact-y, 1px) var(--bevel-contact-blur, 2px) 0 var(--depth-bevel-contact),
+    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge)), 0 1px 2px 0 var(--depth-bevel-contact),
     0 4px 12px -4px var(--depth-bevel-ambient);
   --shadow-bevel-pressed:
-    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge-hover)), 0 0 0 0 transparent,
+    0 0 0 1px var(--d-card-edge, var(--depth-bevel-edge)), 0 0 0 0 transparent,
     0 1px 3px -1px var(--depth-bevel-ambient);
   --inset-shadow-bevel:
-    inset 0 1px 0 0 var(--depth-bevel-hi),
-    inset 0 calc(-1 * var(--bevel-lip, 1px)) 0 0 var(--depth-bevel-lo);
-  /* Chosen: the accent inside the edge takes the place of the top light; the lip stays. */
+    inset 0 1px 0 0 var(--depth-bevel-hi), inset 0 -1px 0 0 var(--depth-bevel-lo);
+  /* Chosen, the one of several wears the accent as its edge: a pixel outside (`--d-card-edge`,
+     in whatever state the card's shadow is) and a pixel inside, in place of the top light. */
   --inset-shadow-bevel-chosen:
-    inset 0 0 0 1px var(--lf-accent),
-    inset 0 calc(-1 * var(--bevel-lip, 1px)) 0 0 var(--depth-bevel-lo);
+    inset 0 0 0 1px var(--lf-accent), inset 0 -1px 0 0 var(--depth-bevel-lo);
+  /* Glanz: the bevelled card with a face that visibly shines, Clerk's prompt cards on dark. */
+  --inset-shadow-gloss:
+    inset 0 1px 0 0 var(--depth-gloss-hi), inset 0 -1px 0 0 var(--depth-gloss-lo);
 
   /* The dock: a fitting's face that floats over the page for as long as a selection lasts (the
-     `ActionBar`). The edge, light and lip of a key, and a long, wide float under it. */
+     `ActionBar`). The edge, light and lip of a key, and a long, wide float under it (Justin,
+     2026-11-20, chosen over a shorter and a wider one). */
   --shadow-dock:
     0 0 0 1px var(--depth-surface-edge), 0 1px 2px 0 var(--depth-surface-contact),
-    0 var(--dock-near-y, 12px) var(--dock-near-blur, 28px) var(--dock-near-spread, -10px)
-      var(--depth-sheet-mid),
-    0 var(--dock-far-y, 28px) var(--dock-far-blur, 60px) var(--dock-far-spread, -20px)
-      var(--depth-sheet-far);
+    0 12px 28px -10px var(--depth-sheet-mid), 0 28px 60px -20px var(--depth-sheet-far);
 
   /* Sheets. */
   --shadow-floating:
@@ -548,6 +544,15 @@
     outline-offset: -1px;
   }
 }
+/* The same cut with a shining face (`Card variant="gloss"`). */
+@utility depth-gloss {
+  @apply shadow-bevel inset-shadow-gloss;
+  background-image: var(--depth-gloss-face);
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
 /* Worn over `depth-bevel`: the accent as its edge, outside and in; the shadow is the card's. */
 @utility depth-bevel-chosen {
   --d-card-edge: var(--lf-accent);
@@ -567,14 +572,6 @@
   }
 }
 /* Worn over `depth-card`: it changes the edge and leaves the shadow to the card's state. */
-@utility depth-card-chosen {
-  --d-card-edge: var(--lf-accent);
-  @apply inset-shadow-card-chosen;
-  @media (forced-colors: active) {
-    outline: 2px solid Highlight;
-    outline-offset: -2px;
-  }
-}
 @utility depth-floating {
   @apply shadow-floating inset-shadow-sheet;
   @media (forced-colors: active) {

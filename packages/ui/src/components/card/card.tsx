@@ -11,28 +11,28 @@ type DivProps = ComponentProps<"div">;
  * card's edges (Justin, 2026-11-19). The pages of a site and the docs are not chopped into
  * boxes: what is only read there stands on the ground under a rule (`Separator`).
  *
- * `variant="bevel"` cuts the card like a fitting: a crisp edge, light along its top, a lip along
- * its foot and a short shadow, so it stands on the page as a machined part instead of floating
- * over it. For a card that is handled (a choice, a prompt to copy, a tile to open).
+ * `variant="bevel"` (Fase) cuts the card like a fitting: a crisp edge, light along its top, a
+ * lip along its foot and a short shadow, so it stands on the page as a machined part instead of
+ * floating over it. For a card that is handled (a choice, a prompt to copy, a tile to open).
+ * `variant="gloss"` (Glanz) is the same cut with a face that visibly shines and darkens toward
+ * its foot, as Clerk's cards on a dark page. Both stay (Justin, 2026-11-20).
  */
 export function Card({
   variant = "default",
   className,
   ...props
-}: DivProps & { variant?: "default" | "bevel" }) {
+}: DivProps & { variant?: "default" | "bevel" | "gloss" }) {
   return (
     <div
       data-slot="card"
       data-variant={variant}
-      className={cn(
-        "flex flex-col rounded-xl bg-surface",
-        variant === "bevel" ? "depth-bevel" : "depth-card",
-        className,
-      )}
+      className={cn("flex flex-col rounded-xl bg-surface", depthOf[variant], className)}
       {...props}
     />
   );
 }
+
+const depthOf = { default: "depth-card", bevel: "depth-bevel", gloss: "depth-gloss" } as const;
 
 export function CardHeader({ className, ...props }: DivProps) {
   return (
