@@ -17,7 +17,7 @@ import {
   timeMatches,
   timesOfDay,
 } from "@/internal/iso-date";
-import { listChosen, ListMark, useListMarking } from "@/internal/list-mark";
+import { ListMark } from "@/internal/list-mark";
 import { listItem, listSheet, popupMotion } from "@/internal/popup";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
 import { cn } from "@/lib/cn";
@@ -78,7 +78,6 @@ export function TimeField({
   ...props
 }: TimeFieldProps) {
   const ground = useGround();
-  const { marking } = useListMarking();
   const list = useRef<HTMLDivElement>(null);
   const written = (time: string) => formatTime(time, hourCycle);
   const typed = useTypedValue({
@@ -198,8 +197,7 @@ export function TimeField({
                   value={time}
                   data-slot="time-field-option"
                   data-time={time}
-                  data-chosen={time === typed.value ? "" : undefined}
-                  className={cn("group", listItem, listChosen[marking], "tabular-nums")}
+                  className={cn("group", listItem, "tabular-nums")}
                 >
                   {written(time)}
                   {/* As in a select: the time the field holds carries the mark at the right. */}

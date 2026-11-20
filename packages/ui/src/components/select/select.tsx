@@ -12,7 +12,7 @@ import {
 import { useGround } from "@/components/ground/ground";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
-import { listChosen, ListMark, useListMarking } from "@/internal/list-mark";
+import { ListMark, listTint } from "@/internal/list-mark";
 import {
   listGroupLabel,
   listItem,
@@ -279,20 +279,21 @@ export type SelectItemProps = SelectPrimitive.Item.Props & {
 };
 
 /**
- * One option. Its label starts at the row's left edge, where the group's label does; the chosen
- * one carries the mark at the right end, after its detail (`ListMark`). An icon, if the option
- * has one, stands before the label; a detail stands at the right edge. Both are muted.
+ * One option. Its label starts at the row's left edge, where the group's label does. An icon,
+ * if the option has one, stands before the label; a detail stands at the right edge. Both are
+ * muted. The chosen one carries the disc at the right end; where the options have a detail, it
+ * stands on the tint instead (`listTint`).
  */
 export function SelectItem({ className, children, icon, detail, ...props }: SelectItemProps) {
   const options = useContext(OptionsContext);
   const option = options?.find((candidate) => Object.is(candidate.value, props.value));
   const resolvedIcon = icon ?? option?.icon;
   const resolvedDetail = detail ?? option?.detail;
-  const { marking } = useListMarking();
+  const tinted = resolvedDetail !== undefined;
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
-      className={mergeClassName(["group", listItem, listChosen[marking]], className)}
+      className={mergeClassName(["group", listItem, tinted && listTint], className)}
       {...props}
     >
       {resolvedIcon && (
@@ -306,7 +307,7 @@ export function SelectItem({ className, children, icon, detail, ...props }: Sele
           {resolvedDetail}
         </span>
       )}
-      <ListMark className={resolvedDetail === undefined ? "ml-auto" : undefined} />
+      {!tinted && <ListMark className="ml-auto" />}
     </SelectPrimitive.Item>
   );
 }

@@ -5,7 +5,7 @@ import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { useGround } from "@/components/ground/ground";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronRightGlyph } from "@/internal/glyphs";
-import { listChosen, ListMark, useListMarking } from "@/internal/list-mark";
+import { ListMark } from "@/internal/list-mark";
 import { listGroupLabel, listItem, listSeparator, listSheet, popupMotion } from "@/internal/popup";
 import { mergeClassName } from "@/lib/cn";
 
@@ -116,11 +116,10 @@ export function MenuCheckboxItem({
   children,
   ...props
 }: MenuPrimitive.CheckboxItem.Props & WithIcon) {
-  const { marking } = useListMarking();
   return (
     <MenuPrimitive.CheckboxItem
       data-slot="menu-checkbox-item"
-      className={mergeClassName(["group", listItem, listChosen[marking]], className)}
+      className={mergeClassName(["group", listItem], className)}
       {...props}
     >
       <RowIcon icon={icon} />
@@ -132,18 +131,17 @@ export function MenuCheckboxItem({
 
 export const MenuRadioGroup = MenuPrimitive.RadioGroup;
 
-/** One of several: the chosen one carries the mark at the right. */
+/** One of several: the chosen one carries the disc at the right. */
 export function MenuRadioItem({
   className,
   icon,
   children,
   ...props
 }: MenuPrimitive.RadioItem.Props & WithIcon) {
-  const { marking } = useListMarking();
   return (
     <MenuPrimitive.RadioItem
       data-slot="menu-radio-item"
-      className={mergeClassName(["group", listItem, listChosen[marking]], className)}
+      className={mergeClassName(["group", listItem], className)}
       {...props}
     >
       <RowIcon icon={icon} />
