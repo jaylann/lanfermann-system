@@ -30,6 +30,7 @@ import {
 import { KINDS } from "@/components/attachment/story-files";
 import { Button } from "@/components/button/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/card/card";
+import { Checkbox } from "@/components/checkbox/checkbox";
 import { CheckboxCard } from "@/components/checkbox-card/checkbox-card";
 import { CheckboxGroup } from "@/components/checkbox-group/checkbox-group";
 import {
@@ -87,6 +88,14 @@ import {
   SelectSeparator,
   SelectTrigger,
 } from "@/components/select/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/table/table";
 import { ChevronDownGlyph } from "@/internal/glyphs";
 import { type ListMarking, ListMarkingContext } from "@/internal/list-mark";
 import { type TileLook, TileLookContext } from "@/internal/tile";
@@ -443,14 +452,52 @@ const docks = [
   },
 ] as const;
 
+const QUOTES = [
+  { id: "2026-0421", customer: "Schreinerei Mustermann", amount: 2780, ticked: true },
+  { id: "2026-0418", customer: "Bäckerei Kornprobst", amount: 4280, ticked: true },
+  { id: "2026-0412", customer: "Friseursalon Haarscharf", amount: 1950, ticked: false },
+  { id: "2026-0397", customer: "Elektro Wagner", amount: 3120, ticked: false },
+  { id: "2026-0391", customer: "Gärtnerei Weiß", amount: 860, ticked: false },
+] as const;
+
+const euro = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
+
+/**
+ * A list of quotes with two rows ticked, and the bar floating over its last rows as it floats
+ * over a page in an app. Nothing clips it, and there is room under the list, so its shadow
+ * falls all the way out over the rows and the ground (the first board cut it off).
+ */
 function Bar({ ground, today }: { ground: "ink" | "paper"; today: boolean }) {
+  const label = ground === "ink" ? "dunkel" : "hell";
   return (
-    <div className="relative h-36 overflow-hidden rounded-lg">
-      <div className="flex flex-col gap-2 p-4" aria-hidden>
-        <div className="h-2 w-3/4 rounded-full bg-hairline" />
-        <div className="h-2 w-2/3 rounded-full bg-hairline" />
-        <div className="h-2 w-1/2 rounded-full bg-hairline" />
-      </div>
+    <div className="relative mb-16">
+      <Card>
+        <Table aria-label={`Angebote (${label})`}>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-0">
+                <Checkbox aria-label={`Alle Angebote auswählen (${label})`} indeterminate />
+              </TableHead>
+              <TableHead>Kunde</TableHead>
+              <TableHead numeric>Betrag</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {QUOTES.map((quote) => (
+              <TableRow key={quote.id} selected={quote.ticked}>
+                <TableCell className="w-0">
+                  <Checkbox
+                    aria-label={`Angebot für ${quote.customer} auswählen (${label})`}
+                    defaultChecked={quote.ticked}
+                  />
+                </TableCell>
+                <TableCell className="font-medium text-fg">{quote.customer}</TableCell>
+                <TableCell numeric>{euro.format(quote.amount)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
       <ActionBar
         position="absolute"
         ground={ground}
