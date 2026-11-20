@@ -19,6 +19,7 @@ import { ActionArrow } from "@/internal/arrow";
 import { writeClipboard } from "@/internal/clipboard";
 import { COPY_SHOWN_MS } from "@/internal/copy";
 import { ChevronDownGlyph, TickGlyph } from "@/internal/glyphs";
+import { Tile } from "@/internal/tile";
 import { cn } from "@/lib/cn";
 
 export type CopyPageProps = Omit<
@@ -174,9 +175,7 @@ export function CopyPage({
         </MenuPrimitive.Trigger>
         <MenuContent align="end" className="w-76 p-1.5">
           <MenuItem onClick={() => void copy()} className={row}>
-            <Tile>
-              <Icon icon={Copy01Icon} size={16} />
-            </Tile>
+            <Tile icon={Copy01Icon} />
             <RowText title={label} description={description} />
           </MenuItem>
           <MenuLinkItem href={href} target="_blank" rel="noopener" className={row}>
@@ -205,18 +204,6 @@ export function CopyPage({
 
 /** A row of the menu: a tile, then two lines. It keeps the list's instant highlight. */
 const row = "group/row items-center gap-3 px-2 py-2";
-
-function Tile({ children }: { children: ReactNode }) {
-  return (
-    <span
-      aria-hidden
-      data-slot="copy-page-tile"
-      className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface text-fg-muted inset-ring inset-ring-hairline group-data-highlighted/row:text-fg forced-colors:inset-ring-[CanvasText]"
-    >
-      {children}
-    </span>
-  );
-}
 
 function RowText({ title, description }: { title: ReactNode; description: string }) {
   return (

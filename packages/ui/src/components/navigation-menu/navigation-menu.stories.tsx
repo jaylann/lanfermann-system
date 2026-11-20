@@ -1,3 +1,15 @@
+import {
+  AiIdeaIcon,
+  CodeIcon,
+  Hammer01Icon,
+  Mail01Icon,
+  Mortarboard01Icon,
+  News01Icon,
+  SmartPhone01Icon,
+  Store01Icon,
+  WebDesign01Icon,
+  WorkflowSquare03Icon,
+} from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, waitFor } from "storybook/test";
 
@@ -110,6 +122,79 @@ export const Open: Story = {
 /** A short panel takes the width of its list. The sheet is the same one, at another size. */
 export const OpenList: Story = {
   render: () => <Example open="arbeiten" />,
+};
+
+const servicesWithSymbols = [
+  { ...services[0], icon: WebDesign01Icon },
+  { ...services[1], icon: SmartPhone01Icon },
+  { ...services[2], icon: WorkflowSquare03Icon },
+  { ...services[3], icon: AiIdeaIcon },
+] as const;
+
+const places = [
+  { href: "#open-source", title: "Open Source", icon: CodeIcon },
+  { href: "#artikel", title: "Artikel", icon: News01Icon },
+  { href: "#kunden", title: "Kunden", icon: Store01Icon },
+  { href: "#vortraege", title: "Vorträge", icon: Mortarboard01Icon },
+  { href: "#werkzeuge", title: "Werkzeuge", icon: Hammer01Icon },
+  { href: "#kontakt", title: "Kontakt", icon: Mail01Icon },
+] as const;
+
+function WithSymbols({ open }: { open: string }) {
+  return (
+    <div className="flex min-h-[460px] items-start p-6">
+      <NavigationMenu aria-label="Hauptnavigation" defaultValue={open}>
+        <NavigationMenuList>
+          <NavigationMenuItem value="leistungen">
+            <NavigationMenuTrigger>Leistungen</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="w-[26rem]">
+                {servicesWithSymbols.map((page) => (
+                  <li key={page.href}>
+                    <NavigationMenuLink href={page.href} icon={page.icon}>
+                      <NavigationMenuLinkTitle>{page.title}</NavigationMenuLinkTitle>
+                      <NavigationMenuLinkDescription>{page.text}</NavigationMenuLinkDescription>
+                    </NavigationMenuLink>
+                  </li>
+                ))}
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem value="arbeiten">
+            <NavigationMenuTrigger>Arbeiten</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid w-[26rem] grid-cols-2">
+                {places.map((page) => (
+                  <li key={page.href}>
+                    <NavigationMenuLink href={page.href} icon={page.icon}>
+                      <NavigationMenuLinkTitle>{page.title}</NavigationMenuLinkTitle>
+                    </NavigationMenuLink>
+                  </li>
+                ))}
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuLink kind="entry" href="#preise">
+              Preise
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+    </div>
+  );
+}
+
+/** Pages with their symbols: each in a small tile before its title and line. */
+export const WithIcons: Story = {
+  parameters: { visual: { viewport: { width: 900, height: 460 } } },
+  render: () => <WithSymbols open="leistungen" />,
+};
+
+/** Without a line under the titles, the tiles make a compact grid of places. */
+export const IconGrid: Story = {
+  parameters: { visual: { viewport: { width: 900, height: 340 } } },
+  render: () => <WithSymbols open="arbeiten" />,
 };
 
 /**
