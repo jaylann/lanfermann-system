@@ -42,7 +42,9 @@ Fase is the Clerk recipe re-cut with the brand's violet light:
   with a 4px Indigo halo at about 18%. Invalid is the same in danger.
 - **Checkbox, radio and switch** are sockets (inner shade, visible edge) that fill with Indigo
   when checked or on.
-- **Cards** are softly raised white sheets with a tinted footer strip.
+- **Cards** are softly raised white sheets with a tinted footer strip. What is handled (a
+  choice, a prompt to copy) stands on a card cut like a fitting instead: `bevel` (Fase) or
+  `gloss` (Glanz).
 - **Tabs** are a row of labels with a dot each. A soft grey highlight glides to the current tab
   and its dot closes from ring to filled Indigo disc. A row wider than its place stays one row:
   it scrolls sideways and fades at the side that has more. `TabsPanels` stacks the panels in one
@@ -145,6 +147,17 @@ story `Patterns/Specimen`.
 | Dashboard strings         | The German defaults stand as built: „Hinweis schließen“, the banner's „Hinweis“, „Erledigt“, „Warnung“ and „Fehler“, the presence words „Online“, „Abwesend“ and „Offline“, and a trend's „Gestiegen“, „Gesunken“ and „Unverändert“.                                                                                                                                                                                                                                                                                                                                                                                                                                     | Justin, 2026-11-19                                     |
 | Tables in an app          | Karte: on an app's page every block stands on a raised `Card`, named by a `CardBar` (its heading and a way to all of it); a `Table` runs to the card's edges on the close rhythm of the first round's Straff, its column names on the well, no 2px rule, its states `Badge`s with a dot. The first round's list was "too spacey" and "feels off"; of the second, Straff under its rule was "best but ... i dont like the overall layout and feeling. Also with the black bar at the top." Chosen over Offen (on the ground, the heading opens the table) and Leiste (the column names in a rounded band). The pages of a site and the docs keep the ground and the rule. | Justin, 2026-11-19                                     |
 | Cards on an app's page    | Gebündelt: in an app's main area a card keeps its edge and its close shade but not the wide soft shadow (`depth-card` under `app-shell-main`), and the figures of a dashboard share one card with hairlines between them: three cards on the dashboard instead of six. Six lifted cards were "super cardy ... super airy ... soft shadows". A card standing alone (a sign-in form, the site, a plan to choose) keeps its lift. Chosen over the soft cards, the crisp edge alone with a card per figure, and only the list on a card.                                                                                                                                     | Justin, 2026-11-19                                     |
+| Card shadow               | A card's wide soft layer reaches 6px down with a 16px blur ("a bit too spreaded shadow" at 12px and 28px). Chosen over that and over 3px and 8px.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Justin, 2026-11-20                                     |
+| Bevelled card             | A card that is handled is cut like a fitting, the Clerk-like card: `variant="bevel"` (Fase: crisp edge, top light, 1px lip, short shadow) and `variant="gloss"` (Glanz: the same with a face that shines and darkens toward its foot). "Keep both fase and glanz"; Fase is the default bevel. A 2px lip (Lippe) was dropped.                                                                                                                                                                                                                                                                                                                                             | Justin, 2026-11-20; Fase as the default Claude's       |
+| Choice cards              | `RadioCard` and `CheckboxCard` stand on the bevel. Under the pointer a soft light follows the pointer across the face; nothing lifts and no shadow grows (a wide shadow rising was "odd"). Chosen over a firmer edge and a 1px lift.                                                                                                                                                                                                                                                                                                                                                                                                                                     | Justin, 2026-11-20                                     |
+| Action bar cut            | The `ActionBar` is a key that floats (`depth-dock`): a key's face, edge, light and lip over a long, wide shadow, "floating but still a machined piece". Chosen over a shorter and a wider float and over the flat sheet.                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Justin, 2026-11-20                                     |
+| Cut file names            | A long name is cut in its middle with an ellipsis, as a file manager does: „Angebot-Ko…bst.pdf“. Chosen over a cut at its end and over the fade before the extension, which "looks odd". Chips may be flat (`chipVariant="flat"`); the plug stays the default, also in a prompt. The kind symbols of a chip have no letters: at 14px „PDF“ and „XLS“ ran together ("too thick, they kinda explode").                                                                                                                                                                                                                                                                     | Justin, 2026-11-20                                     |
+| Chosen rows               | No list keeps a column on the left for its mark ("i find myself hating the left space"). His rule: where nothing stands at a row's right, the disc (one choice) or the tick (on or off) stands there; where a detail does, the chosen row stands on the tint, and chosen rows that touch join into one shape with only the outer corners round, easing as they join. Chosen over the tick after the detail in every row, the tint everywhere and the label in the accent.                                                                                                                                                                                                | Justin, 2026-11-20                                     |
+| Symbols in lists          | A menu row can carry a 16px symbol (`icon`) that darkens with the row; a page of a `NavigationMenu` panel its symbol in a raised 36px tile with an 18px symbol, as in Clerk's menus, and the `CopyPage` menu the same tile. Chosen over a flat tile and over 32px.                                                                                                                                                                                                                                                                                                                                                                                                       | Justin, 2026-11-20                                     |
+| Keys under an answer      | The chosen thumb has no grey square, it is drawn in the text colour; a thumb taken back tilts back and settles; the retry arrow turns a little under the pointer and once round when pressed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Justin, 2026-11-20                                     |
+| Code halo                 | The halo of an `OtpField` is one rounded piece that glides to the next slot on `snap` ("any way to make the focus on the otp more smooth?"). Chosen over `glide` and over standing on the next slot at once.                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Justin, 2026-11-20                                     |
+| Toolbar names             | A symbol key in a `Toolbar` says its name and its shortcut in a tooltip, and its neighbours open at once after the first ("toolbar should have tooltips"). The keys under an answer share one wait the same way.                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Justin, 2026-11-20                                     |
+| Rolling change            | The amount of a `StatChange` rolls like its figure, across zero too ("maybe here should the percentage also animate?").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Justin, 2026-11-20                                     |
 
 ## Colour
 
@@ -231,14 +244,19 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   do not travel.
 - Keyboard focus, menu highlight, error colours and page load do not animate. The one page load
   that does is a `Steps`, which draws itself in where it first shows (Justin, 2026-11-19).
-- **Typing does not wait.** What the keyboard does many times in a row is not eased: the halo
-  of an `OtpField` hops from slot to slot at once, and a digit is readable in its first frame;
-  only its seating springs. How often a motion is seen decides how much of it there is: a
+- **Typing does not wait.** What the keyboard does many times in a row is never waited for: a
+  digit of an `OtpField` is readable in its first frame and only its seating springs. Its one
+  halo glides to the next slot on `snap`, the fastest spring, so it is there before the next
+  digit is (Justin, 2026-11-20: hopping looked hard; chosen over the slower `glide`). How often
+  a motion is seen decides how much of it there is: a
   `ContextMenu`, opened all day and under the hand, only fades in on `snap`; a step that is
   finished or a file that arrives is rare and may take `settle`.
 - `box-shadow` transitions only on small controls. Under reduced motion only opacity changes.
 - Travelling parts are placed from measured offsets and moved with a CSS spring, not with a
-  scale-based layout animation: that distorts shadows and breaks under CSS `zoom`.
+  scale-based layout animation: that distorts shadows and breaks under CSS `zoom`. The offsets
+  are written as plain numbers of layout pixels and made lengths where they are used
+  (`calc(var(--thumb-left) * 1px)`): under `zoom` every engine treated a length in a custom
+  property its own way, and Firefox drew the segmented thumb 1.4 times too wide.
 - **What moves is a transform.** `translate` and `scale` are animated without laying the page
   out again; a width, an inset or a padding is laid out on every frame, which showed as a stutter
   on a 120Hz phone. A slider's thumb, fill and caps, and the fills of `Progress` and `Meter`, are
@@ -316,7 +334,9 @@ One spring table (`src/motion/springs.ts`) feeds CSS (`spring-*` utilities, gene
   A digit comes to rest on `settle`: one that bounced would show its neighbour for a moment.
   Page load shows the plain number.
 - **A trend turns.** The arrow of a `StatChange` is one glyph turned per trend (up, flat, down)
-  on `seat`; its colour eases on `settle`.
+  on `seat`; its colour eases on `settle`. Its amount rolls like the figure above it (a
+  `RollingNumber` in percent), across zero too: the sign is a place of its own, so „+12 %“
+  becoming „−3 %“ rolls instead of being swapped (Justin, 2026-11-20).
 - **A notice for the page pushes it.** A `Banner` that arrives after load eases the page down
   through its own `Grow` and comes in 4px from the top edge; one that is there on load stands
   still. Closed, it leaves the way it came: it rises 4px into the top edge and fades on `settle`,
@@ -350,16 +370,27 @@ Every component belongs to one of the four matters, and takes its treatment from
 | Matter  | Components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Panel   | `Text`, `Heading`, `Link`, `Separator`, `Badge`, `Alert`, `Avatar`, `Icon`, `Spinner`, `Field`, `Fieldset`, `Form`, `Table`, `Ground`, `Wordmark`, `Logomark`, `Code`, `CodeBlock`, `CodeBlockLive`, `CodeTabs`, `Container`, `Section`, `SiteFooter`, `Prose`, `AnchorHeading`, `Callout`, `Quote`, `Breadcrumbs`, `SideNav`, `TableOfContents`, `Pager`, `ParameterList`, `ReferenceEntry`, `Figure`, `DocsLayout`, `ScrollFade`, `Shimmer`, `Trace`, `Grow`, `Sidebar`, `AppShell`, `Empty`, `Skeleton`, `Pagination`, `Stat`, `RollingNumber`, `AvatarGroup`, `DescriptionList`, `Banner`, `Timeline`, `Steps` (its marks are a checkbox's sockets and plugs), `Toolbar` (the tray its keys stand in), the rows of a `FileUpload`, `Message`, `Conversation`, `Sources` (its card is a sheet), an `Attachment` in a message; `Accordion` and `Collapsible` are structure by line; `Seam` is the edge between two sections' plates, the one panel with a shadow |
-| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), `Toggle`, `ToggleGroup` (one fitting whose keys stay down), `CopyButton`, `RadioCard` and `CheckboxCard` (a softly raised sheet whose mark takes the press), an `Attachment` in a prompt (a chip), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                                                                                                                                                                                                         |
+| Fitting | `Button`, `ButtonGroup` (one fitting, several keys), `CopyPill` (its key and its marks), `CopyPage` (a `ButtonGroup` of two keys; its menu is a sheet), `SegmentedControl`, `ThemeSwitch`, `Tabs`, `Select` (its trigger), `Kbd`, `Shortcut` (its keys), `Chip` (a plug), `Toggle`, `ToggleGroup` (one fitting whose keys stay down), `CopyButton`, `RadioCard` and `CheckboxCard` (a bevelled card whose mark takes the press), a `Card` with `variant="bevel"` or `"gloss"`, the `ActionBar` (a fitting that floats, `depth-dock`), an `Attachment` in a prompt (a chip), the thumbs of a `Switch` and a `Slider`, what is chosen in a `Calendar`, the block of a `Cta`                                                                                                                                                                                                                                                                                          |
 | Socket  | `Input`, `InputGroup`, `Textarea`, `NumberField`, `Combobox`, `DateField`, `DateRangeField`, `TimeField`, `OtpField`, `SecretField`, `PromptInput`, `Checkbox`, `CheckboxGroup`, `Radio`, `Switch`, the zone of a `FileUpload`; the troughs of `Slider`, `Progress` and `Meter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Sheet   | `Menu`, `ContextMenu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `ActionBar`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Sheet   | `Menu`, `ContextMenu`, `Select` (its list), `Popover`, `HoverCard`, `Tooltip`, `Dialog`, `AlertDialog`, `Drawer`, `Toast`, `Command`, `NavigationMenu` (its panel), the consent banner, the bar of a `SiteHeader` (frosted, `depth-bar`); `Card` and `CtaMessage` are resting sheets                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
-- **Select** has a raised trigger, not a field: it is pressed, not typed into. In its list only
-  the chosen option carries the mark (a disc); the rings are left out to keep long lists calm.
+- **Select** has a raised trigger, not a field: it is pressed, not typed into. In its list no
+  column is kept on the left for a mark: an option's words start where its group's label does.
+  The chosen option carries the disc at the right end, the rings left out to keep long lists
+  calm; where the options have a detail at the right, the chosen one stands on the tint instead
+  (see "Chosen rows" below; a `Combobox`, a `Menu` and the times of a `TimeField` do the same).
   Options may carry an `icon` and a `detail` (`items: [{ value, label, icon, detail }]`). The
   icon stands before the label; the detail is a quieter second fact at the right edge, with
   tabular digits (a price, a unit, a code). Both are muted, and both show in the trigger as well.
   Every option has an icon, or none does. When space runs out the label gives way, not the detail.
+- **Chosen rows** of every list (a `Select`, a `Combobox`, a `Menu`, the times of a
+  `TimeField`) follow one rule, by what stands at a row's right end. Nothing: the mark stands
+  there, the disc for one choice, the tick for what is on or off. A detail (a price, a place):
+  the chosen row stands on the tint instead, as the current page of a `Sidebar` does, because a
+  mark after the detail would be a third column. The tint fades in and out on `settle` while
+  the highlight under the pointer stays instant, and chosen rows that touch are one shape: only
+  the block's outer corners are round, and a corner eases square or round as a neighbour is
+  taken or given up. A row of a menu may carry a 16px symbol (`icon`) that darkens with it.
 - **Textarea** keeps its resize grip clear of the rounded corner: its right and bottom padding
   are transparent borders, and browsers draw the grip (and the scrollbar) inside the border. In
   Chromium and Safari the grip itself is ours, two short strokes; elsewhere it is the browser's.
@@ -448,7 +479,9 @@ Every component belongs to one of the four matters, and takes its treatment from
   entry with pages behind it carries a chevron and opens a panel when it is pointed at or pressed.
   One sheet serves the whole row: it glides to the next entry and takes its size, and the content
   arrives from the side it was approached from. Each page in a panel is a title and one line that
-  says what is there. The sheet's size is the one place where width and height are animated: it
+  says what is there; with an `icon` its symbol stands before them in a small raised tile (36px,
+  an 18px symbol, as in Clerk's menus), and without the line the tiles make a compact grid of
+  places. The `CopyPage` menu's rows wear the same tile. The sheet's size is the one place where width and height are animated: it
   has to take the measure of what it holds.
 - **SiteFooter** is the floor of the page: a quiet strip one step off the ground, under a
   hairline. What the site is about stands beside columns of links, each under its name, and who
@@ -612,7 +645,9 @@ Every component belongs to one of the four matters, and takes its treatment from
   foot with the first row and leaves with the last, counts them with digits that roll, and
   never takes the focus as it appears. It is one stop for Tab, the arrows move inside it, and
   Escape or its cross takes the selection back and returns the focus to where it came from.
-  Beside a sidebar it stands in the page's own column (`position="sticky"`).
+  Beside a sidebar it stands in the page's own column (`position="sticky"`). It is cut like a
+  key that floats (`depth-dock`): a key's glossy face, edge, top light and lip, over a long, wide
+  shadow, so it reads as a machined part above the list rather than a sheet.
 - **Stat** is a figure: what it is (small, muted), the figure (24px, tabular digits, never
   broken over two lines) and how it changed. Several stand in a **StatGroup**: one row with
   hairlines only between the figures (the grid clips the ones before the first of each line),
@@ -663,9 +698,9 @@ Every component belongs to one of the four matters, and takes its treatment from
 - **OtpField** is a one-time code: a slot per character, in threes, the way a code is read
   out, with a short line between the groups. The slots of a group share one socket divided by
   hairlines (`variant="separate"` gives each its own). The slot being typed wears the field's
-  halo; it
-  opens with the field and then hops from slot to slot without easing, because typing must not
-  wait. A digit is drawn over its input, so it can seat into the slot, and is readable from
+  halo: one rounded piece that glides from slot to slot on `snap`, across the line between the
+  groups, so it is there before the next digit is (separate sockets each open their own). A
+  digit is drawn over its input, so it can seat into the slot, and is readable from
   its first frame. A pasted code, or one the phone offers from a message, fills every slot, the
   digits seating one after the other. A wrong code is said in words under the field; every
   socket takes the danger edge and only the slot being typed opens the halo. Nothing shakes. The
@@ -688,10 +723,11 @@ Every component belongs to one of the four matters, and takes its treatment from
   the upload while it is empty: it takes no room then and opens with its first file.
 - **RadioCard** and **CheckboxCard** are a choice whose options need a sentence each: a plan,
   an answer in a set-up. The card is the control's label, so the whole of it is the target: a
-  softly raised sheet that keeps its size and answers with its shadow. Its mark is the plain
+  bevelled card (`depth-bevel`) that keeps its size and place. Its mark is the plain
   control's: the radio's socket that takes the disc, the checkbox's that takes the plug and
-  tick. Under the pointer the card stands a little higher; under a press it goes down on the
-  page and its mark dips, as a plain `Radio` or `Checkbox` does. On release it comes back up
+  tick. Under the pointer a soft light follows the pointer across its face; edge and shadow
+  stay. Under a press it goes down on the page and its mark dips, as a plain `Radio` or
+  `Checkbox` does. On release it comes back up
   while the accent edge of the choice eases in and the mark seats, so the three read as one
   move; the edge of the card that was given up fades faster. A sheet this
   wide is never scaled: at the press scale it moved by ten pixels. The title names the control
@@ -726,14 +762,19 @@ Every component belongs to one of the four matters, and takes its treatment from
   fitting like a `ButtonGroup`, and every key that is on keeps the inner shade of a press. It
   is for keys that are on each by itself (bold, italic) or for a choice that may be none; one
   choice out of a few views stays a `SegmentedControl`. A **Toolbar** is a flat tray of such
-  keys: one stop for Tab, the arrows between its controls.
+  keys: one stop for Tab, the arrows between its controls. A key in it that shows only a
+  symbol says its name in a tooltip, with its shortcut after it („Fett ⌘ B“); once one has
+  shown, its neighbours open at once.
 
 - **Message** is one message of a conversation with an assistant. The answer is read, so it is
   prose on the page: no bubble, no avatar, about 42rem wide. The person's own words are set off
   at the right, as wide as they are, in the bubble of a `Quote` with its tight corner towards
   the person. Under a finished answer stand its keys, always and not only under the pointer:
-  copy, the verdict (thumbs up and down, at most one on; the symbol of the one turned on nods
-  into its key on `seat`), „Noch einmal“. While the answer is written they wait unseen in their
+  copy, the verdict (thumbs up and down, at most one on, drawn in the text colour without the
+  grey square of a key that is down; the symbol of the one turned on nods into its key on
+  `seat`, and one taken back tilts back and settles), „Noch einmal“ (its arrow turns a little
+  under the pointer and once round when pressed, `iconMotion="turn"`). While the answer is
+  written they wait unseen in their
   room and come in together once it is complete, so nothing moves. A failed answer says what
   happened and offers the next step as a key; nothing shakes and no colour flashes.
 - **Text that arrives** fades in a few words at a time while it is written: what is new since
@@ -767,12 +808,14 @@ Every component belongs to one of the four matters, and takes its treatment from
   same in every browser. Files come by the paper clip, a drop (the field wears the halo while
   one hangs over it) and a paste; Backspace in the empty field takes the last one away.
 - **Attachment** is a file attached to a prompt or shown in a message. In a prompt it is a chip
-  (a plug): the symbol of its kind (a picture shows itself, small), the name, the size in
-  tabular digits, the remove key. In a message it is a flat tile, read, and a picture is the
-  picture itself with a hairline inside its edge. On its way it carries the system's arc where
-  its symbol stands, and the symbol comes back where the arc was. A long name is cut in its
-  middle: its first part fades out just before the extension, which always stays. A failure is
-  said in words, in a tile with the reason.
+  (a plug, or flat with `chipVariant="flat"`): the symbol of its kind (a sheet with what it
+  holds, without the letters of a type, which ran together at 14px; a picture shows itself,
+  small), the name, the size in tabular digits, the remove key. In a message it is a flat tile,
+  read, and a picture is the picture itself with a hairline inside its edge. On its way it
+  carries the system's arc where its symbol stands, and the symbol comes back where the arc
+  was. A long name is cut in its middle as a file manager cuts it, exactly, with an ellipsis:
+  „Angebot-Ko…bst.pdf“, the extension and the last three letters kept. A failure is said in
+  words, in a tile with the reason.
 - **Sources** keeps an answer's numbered references and their list together, so every number
   leads somewhere. A reference is a small link in tabular digits after its sentence, leading to
   its entry in the list under the answer; one card serves every reference of the answer, opens
