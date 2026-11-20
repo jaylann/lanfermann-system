@@ -256,17 +256,11 @@ export type MessageFeedbackProps = Omit<ComponentProps<"div">, "defaultValue" | 
 };
 
 /**
- * How a thumb that is on shows it, on the lab board until Justin picks (2026-11-20: "could use
- * better animations"): `wash`, the grey square of a quiet key that is down, or `bare`, no square,
- * the chosen thumb drawn in the text colour while the other stays muted.
- */
-export const MessageFeedbackLookContext = createContext<"wash" | "bare">("wash");
-
-/**
  * Two keys that stay down, thumbs up and thumbs down: at most one is on, and pressed again it
- * is taken back. The symbol of the key that is turned on nods into it, tilted and small at
- * first; one that is taken back, or gives way to the other, tilts back the other way and
- * settles. A verdict that is there on load does not move.
+ * is taken back. The thumb that is on is drawn in the text colour, without the grey square of a
+ * quiet key that is down; the other stays muted (Justin, 2026-11-20). Its symbol nods into it,
+ * tilted and small at first; one that is taken back, or gives way to the other, tilts back the
+ * other way and settles. A verdict that is there on load does not move.
  */
 export function MessageFeedback({
   value: valueProp,
@@ -280,7 +274,6 @@ export function MessageFeedback({
   const [own, setOwn] = useState<MessageVerdict>(defaultValue);
   const value = valueProp === undefined ? own : valueProp;
   const live = useLive();
-  const look = useContext(MessageFeedbackLookContext);
   const choose = (next: MessageVerdict) => {
     setOwn(next);
     onValueChange?.(next);
@@ -300,11 +293,7 @@ export function MessageFeedback({
               aria-label={label}
               pressed={on}
               onPressedChange={(pressed) => choose(pressed ? verdict : null)}
-              className={
-                look === "bare"
-                  ? "data-pressed:bg-transparent data-pressed:hover:bg-hover"
-                  : undefined
-              }
+              className="data-pressed:bg-transparent data-pressed:hover:bg-hover"
             >
               {/*
                 A new symbol on every change, so it can seat: turned on, it nods in from tilted

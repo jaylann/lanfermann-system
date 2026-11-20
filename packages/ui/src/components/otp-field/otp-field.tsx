@@ -1,21 +1,16 @@
 "use client";
 
 import { OTPField as OTPFieldPrimitive } from "@base-ui/react/otp-field";
-import {
-  createContext,
-  type CSSProperties,
-  Fragment,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type CSSProperties, Fragment, useEffect, useRef, useState } from "react";
 
 import { fieldFace } from "@/internal/field";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 
-/** How long a halo takes to open (`snap`), after which it hops between slots at once. */
+/**
+ * In separate slots, how long a slot's own halo takes to open (`snap`), after which it hops
+ * between them at once. A joined field's one halo glides instead (`otp-field-halo`).
+ */
 const ENTERED_MS = 140;
 /** How long the slots count as filled in one go, so the digits of a paste seat one by one. */
 const BURST_MS = 480;
@@ -68,25 +63,8 @@ const joinedGroup = [
   "has-[input[data-disabled]]:bg-disabled has-[input[data-disabled]]:depth-flat",
 ].join(" ");
 
-/** A slot inside that socket: a hairline to its left. The halo is the field's (`OtpHalo`). */
+/** A slot inside that socket: a hairline to its left. The halo is the field's own piece. */
 const joinedSlot = "border-hairline not-first:border-l first:rounded-l-md last:rounded-r-md";
-
-/**
- * How the halo of a joined field goes from slot to slot, on the lab board until Justin picks
- * (2026-11-20: "any way to make the focus on the otp more smooth?"): `snap`, it glides on the
- * fastest spring, so it is there before the next digit is; `glide`, on the travelling spring;
- * `none`, it stands on the next slot at once. In every form it is one rounded halo, and a digit
- * is readable in its first frame.
- */
-export type OtpHaloPace = "snap" | "glide" | "none";
-export const OtpHaloPaceContext = createContext<OtpHaloPace>("snap");
-
-const haloPace: Record<OtpHaloPace, string> = {
-  snap: "[--halo-pace:var(--transition-duration-spring-snap)] [--halo-ease:var(--ease-spring-snap)]",
-  glide:
-    "[--halo-pace:var(--transition-duration-spring-glide)] [--halo-ease:var(--ease-spring-glide)]",
-  none: "[--halo-pace:0s] [--halo-ease:linear]",
-};
 
 /**
  * A one-time code: the six digits from a text message or an authenticator app. Every character
@@ -117,8 +95,8 @@ export function OtpField({
   // Page load does not animate: a code that is there when the field first shows stands still.
   const live = useLive();
 
-  // The halo opens with the field and then hops from slot to slot at once: typing does not
-  // wait for a transition.
+  // Separate slots: the halo opens with the field and then hops from slot to slot at once, as
+  // each slot draws its own.
   const [entered, setEntered] = useState(false);
   const entering = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -136,10 +114,11 @@ export function OtpField({
     [],
   );
 
-  // The halo of a joined field: one piece that stands on the slot being typed and travels to
-  // the next. Placed from the slot's measured offsets, written as numbers of layout pixels (made
-  // lengths where they are used, so zoom cannot set them off), and moved by `translate`.
-  const pace = useContext(OtpHaloPaceContext);
+  // The halo of a joined field: one rounded piece that stands on the slot being typed and
+  // glides to the next on `snap`, so it is there before the next digit is (Justin, 2026-11-20,
+  // over the slower `glide` and over standing on the next slot at once). Placed from the slot's
+  // measured offsets, written as numbers of layout pixels (made lengths where they are used, so
+  // zoom cannot set them off), and moved by `translate`.
   const halo = useRef<HTMLSpanElement>(null);
   const joined = variant === "joined";
   const placeHalo = (slot: HTMLElement | null, arriving: boolean) => {
@@ -301,9 +280,8 @@ export function OtpField({
             "h-[calc(var(--halo-h,0)*1px)] w-[calc(var(--halo-w,0)*1px)]",
             "[translate:calc(var(--halo-x,0)*1px)_calc(var(--halo-y,0)*1px)]",
             "group-has-[input[data-invalid]]/otp:shadow-field-invalid",
-            // The way between slots on its pace; it comes and goes with the focus on `snap`.
-            haloPace[pace],
-            "[transition:translate_var(--halo-pace)_var(--halo-ease),opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
+            // The way between slots, and coming and going with the focus, on `snap`.
+            "[transition:translate_var(--transition-duration-spring-snap)_var(--ease-spring-snap),opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
             "data-instant:[transition:opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
             "motion-reduce:[transition:opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
             "data-shown:opacity-100",

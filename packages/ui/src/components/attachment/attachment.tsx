@@ -20,7 +20,7 @@ import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
-import { fitName, kindOf, kindSymbols, kindSymbolsSmall, splitName, typeWord } from "./kinds";
+import { fitName, kindOf, kindSymbols, kindSymbolsSmall, typeWord } from "./kinds";
 
 /** Where a file stands: on its way, arrived, or failed. */
 export type AttachmentStatus = "uploading" | "done" | "error";
@@ -68,30 +68,18 @@ export type AttachmentProps = Omit<ComponentProps<"div">, "children"> & {
   locale?: string;
 };
 
-/**
- * How a name too long for its place is cut. `middle`: „Angebot-Ko…bst.pdf“, as a file manager
- * does. `end`: „Angebot-Kornp….pdf“. `fade`: the name fades out before its extension. On the lab
- * board until Justin picks one (2026-11-20: "the fade looks odd").
- */
-export type AttachmentNameCut = "middle" | "end" | "fade";
-export const AttachmentNameCutContext = createContext<AttachmentNameCut>("middle");
-
-function FileName({ name, className }: { name: string; className?: string }) {
-  const cut = useContext(AttachmentNameCutContext);
-  return cut === "fade" ? (
-    <FadedName name={name} className={className} />
-  ) : (
-    <FittedName name={name} keep={cut === "middle" ? 3 : 0} className={className} />
-  );
-}
+/** How many letters before the extension stay where a name is cut: „Angebot-Ko…bst.pdf“. */
+const KEPT_LETTERS = 3;
 
 /**
- * A name cut with an ellipsis to the room it has, its extension and the last `keep` letters
- * before it kept (`fitName`). The room is the width the whole name would take, or less where
+ * A name too long for its place, cut in its middle with an ellipsis as a file manager cuts it:
+ * the extension and the last three letters before it stay (`fitName`), „Angebot-Ko…bst.pdf“.
+ * Chosen by Justin (2026-11-20) over a cut at the end of the name and over the fade before the
+ * extension, which "looks odd". The room is the width the whole name would take, or less where
  * the chip runs out: an unseen copy of the whole name sets it, and the cut is worked out again
  * when the room changes.
  */
-function FittedName({ name, keep, className }: { name: string; keep: number; className?: string }) {
+function FileName({ name, className }: { name: string; className?: string }) {
   const room = useRef<HTMLSpanElement>(null);
   const probe = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(name);
@@ -112,7 +100,7 @@ function FittedName({ name, keep, className }: { name: string; keep: number; cla
       // The room is the whole name's width where it fits, so the whole name is checked against
       // it as it is; a cut keeps a pixel to spare, since a width is read rounded.
       const room = box.clientWidth;
-      setShown(measure(name) <= room ? name : fitName(name, room - 1, measure, keep));
+      setShown(measure(name) <= room ? name : fitName(name, room - 1, measure, KEPT_LETTERS));
     };
     fit();
     // A new room is fitted in the next frame, not while the observer reports it: the cut it
@@ -129,7 +117,7 @@ function FittedName({ name, keep, className }: { name: string; keep: number; cla
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [name, keep]);
+  }, [name]);
   return (
     <span
       ref={room}
@@ -151,42 +139,6 @@ function FittedName({ name, keep, className }: { name: string; keep: number; cla
       </span>
       {/* Read out whole: the cut name would be heard with its ellipsis. */}
       <span className="sr-only">{name}</span>
-    </span>
-  );
-}
-
-/** The name fades out just before its extension where it is cut (as built on 2026-11-19). */
-function FadedName({ name, className }: { name: string; className?: string }) {
-  const { stem, end } = splitName(name);
-  const cut = useRef<HTMLSpanElement>(null);
-  // Where the name is cut, its first part fades out just before the extension, the way an edge
-  // fades where more waits. (An ellipsis left a gap of up to a letter before the extension.)
-  // Said straight on the element, so a resize never renders.
-  useLayoutEffect(() => {
-    const box = cut.current;
-    if (!box) return;
-    const measure = () => {
-      if (box.scrollWidth > box.clientWidth + 0.5) box.dataset.cut = "";
-      else delete box.dataset.cut;
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(box);
-    return () => observer.disconnect();
-  }, [name]);
-  return (
-    <span data-slot="attachment-name" className={cn("flex min-w-0", className)}>
-      {/* Read out whole: drawn in two parts, the name would be heard with a gap in it. */}
-      <span className="sr-only">{name}</span>
-      <span aria-hidden className="flex min-w-0">
-        <span
-          ref={cut}
-          className="overflow-hidden whitespace-nowrap data-cut:[mask-image:linear-gradient(to_right,#000_calc(100%-1.25em),transparent)]"
-        >
-          {stem}
-        </span>
-        {end && <span className="shrink-0">{end}</span>}
-      </span>
     </span>
   );
 }

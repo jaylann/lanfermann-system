@@ -219,12 +219,13 @@ function MarkdownGlyph(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       aria-hidden
-      width={16}
-      height={16}
+      width={18}
+      height={18}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.5}
+      // 1.5px drawn at 18px, as `Icon` pins every symbol's stroke.
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
       {...props}
