@@ -1,0 +1,176 @@
+/*
+ * Accordion: rows divided by hairlines, and the shape a row takes while it is pointed at.
+ * Chosen by Justin on 2026-11-20 (DESIGN.md, Accordion).
+ *
+ * One edge per boundary. Where a wash marks a row, the lines on its two sides step aside (fade),
+ * so the wash is the row's only edge and never stands a pixel short of a line that runs on past
+ * its corners. A wash stands `--accordion-inset` inside its row.
+ *
+ * An open row rests unmarked. Pointed at, its question's wash is a lid: its lower corners go
+ * square and the wash runs on at half strength behind the answer, so the pointer shows what the
+ * row holds. The corners turn as the row opens (`settle`) and closes (`leave`).
+ *
+ * The lines and washes are pseudo-elements, so they can fade and take corners of their own:
+ *   root    ::before   the hairline that opens the block
+ *   item    ::after    the hairline under the row
+ *   item    ::before   the tail of an open row's wash, behind its answer
+ *   trigger ::before   the wash under the pointer
+ * (The trigger's `::after` is its touch target.)
+ *
+ * Pointed at means `:hover` on a device that can hover, and `:active` everywhere, so a finger
+ * gets the wash while it is down, as a cell does on iOS. `data-quiet` (the `quiet` prop) takes no
+ * wash: the lines stay and only the chevron answers.
+ */
+
+[data-slot="accordion"] {
+  --accordion-inset: 2px;
+  position: relative;
+  padding-top: 1px;
+}
+
+/* ---- Lines ---- */
+
+[data-slot="accordion-item"] {
+  position: relative;
+  isolation: isolate;
+  padding-bottom: 1px;
+}
+
+[data-slot="accordion"]::before,
+[data-slot="accordion-item"]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background-color: var(--lf-hairline);
+  pointer-events: none;
+  transition: opacity var(--transition-duration-spring-snap) var(--ease-spring-snap);
+}
+
+[data-slot="accordion"]::before {
+  top: 0;
+}
+
+[data-slot="accordion-item"]::after {
+  bottom: 0;
+}
+
+/* ---- Washes ---- */
+
+[data-slot="accordion-trigger"] {
+  isolation: isolate;
+}
+
+[data-slot="accordion-trigger"]::before {
+  content: "";
+  position: absolute;
+  inset: var(--accordion-inset) 0;
+  z-index: -1;
+  border-radius: var(--radius-base);
+  background-color: var(--lf-hover);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--transition-duration-spring-snap) var(--ease-spring-snap),
+    border-radius var(--transition-duration-spring-leave) var(--ease-spring-leave);
+}
+
+/* Open, the wash is a lid: the tail's corners on top, square below where the answer goes on. */
+[data-slot="accordion-trigger"][data-panel-open]::before {
+  border-radius: calc(var(--radius-base) * 1.5) calc(var(--radius-base) * 1.5) 0 0;
+  transition:
+    opacity var(--transition-duration-spring-snap) var(--ease-spring-snap),
+    border-radius var(--transition-duration-spring-settle) var(--ease-spring-settle);
+}
+
+/* The tail: the whole open row, inside its lines by the inset, under the lid. */
+[data-slot="accordion-item"]::before {
+  content: "";
+  position: absolute;
+  inset: var(--accordion-inset) 0 calc(var(--accordion-inset) + 1px);
+  z-index: -1;
+  border-radius: calc(var(--radius-base) * 1.5);
+  background-color: var(--lf-hover);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-duration-spring-snap) var(--ease-spring-snap);
+}
+
+/* ---- Pointed at ---- */
+
+@media (hover: hover) {
+  [data-slot="accordion"]:not([data-quiet]) {
+    & [data-slot="accordion-trigger"]:hover::before {
+      opacity: 1;
+    }
+
+    &
+      [data-slot="accordion-item"][data-open]:has(
+        > [data-slot="accordion-header"] > [data-slot="accordion-trigger"]:hover
+      )::before {
+      opacity: 0.5;
+    }
+
+    &
+      [data-slot="accordion-item"]:is(
+        :has(> [data-slot="accordion-header"] > [data-slot="accordion-trigger"]:hover),
+        :has(
+          + [data-slot="accordion-item"]
+            > [data-slot="accordion-header"]
+            > [data-slot="accordion-trigger"]:hover
+        )
+      )::after {
+      opacity: 0;
+    }
+
+    &:has(
+        > [data-slot="accordion-item"]:first-child
+          > [data-slot="accordion-header"]
+          > [data-slot="accordion-trigger"]:hover
+      )::before {
+      opacity: 0;
+    }
+  }
+}
+
+[data-slot="accordion"]:not([data-quiet]) {
+  & [data-slot="accordion-trigger"]:active::before {
+    opacity: 1;
+  }
+
+  &
+    [data-slot="accordion-item"][data-open]:has(
+      > [data-slot="accordion-header"] > [data-slot="accordion-trigger"]:active
+    )::before {
+    opacity: 0.5;
+  }
+
+  &
+    [data-slot="accordion-item"]:is(
+      :has(> [data-slot="accordion-header"] > [data-slot="accordion-trigger"]:active),
+      :has(
+        + [data-slot="accordion-item"]
+          > [data-slot="accordion-header"]
+          > [data-slot="accordion-trigger"]:active
+      )
+    )::after {
+    opacity: 0;
+  }
+
+  &:has(
+      > [data-slot="accordion-item"]:first-child
+        > [data-slot="accordion-header"]
+        > [data-slot="accordion-trigger"]:active
+    )::before {
+    opacity: 0;
+  }
+}
+
+/* Forced colours drop the washes; the lines are drawn in the text colour and always stay. */
+@media (forced-colors: active) {
+  [data-slot="accordion"]::before,
+  [data-slot="accordion-item"]::after {
+    background-color: CanvasText;
+    opacity: 1 !important;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible";
 
-import { disclosureChevron, disclosurePanel } from "@/internal/disclosure";
+import { disclosureChevron, disclosurePanel, disclosureUnfold } from "@/internal/disclosure";
 import { ChevronRightGlyph } from "@/internal/glyphs";
 import { cn, mergeClassName } from "@/lib/cn";
 
@@ -49,8 +49,12 @@ export function CollapsibleTrigger({ className, children, ...props }: Collapsibl
     >
       <ChevronRightGlyph
         data-slot="collapsible-chevron"
-        // The glyph's stroke starts 4px inside its box: pulled out, it stands on the edge.
-        className={cn(disclosureChevron, "-ml-1 group-data-panel-open:rotate-90")}
+        // The glyph's stroke starts 4px inside its box: pulled out, it stands on the edge. It
+        // points right, and down once it has turned: it leans that way.
+        className={cn(
+          disclosureChevron,
+          "-ml-1 [--lean:var(--motion-lean)_0] group-data-panel-open:rotate-90 group-data-panel-open:[--lean:0_var(--motion-lean)]",
+        )}
       />
       {children}
     </CollapsiblePrimitive.Trigger>
@@ -67,7 +71,7 @@ export function CollapsiblePanel({ className, children, ...props }: CollapsibleP
       className={mergeClassName(
         // The panel clips, so it is a little wider than its content: a field at the edge keeps
         // its focus halo.
-        ["-mx-1 h-(--collapsible-panel-height) self-stretch", disclosurePanel],
+        ["-mx-1 h-(--collapsible-panel-height) self-stretch", disclosurePanel, disclosureUnfold],
         className,
       )}
       {...props}
