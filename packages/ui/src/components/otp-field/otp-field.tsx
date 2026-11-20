@@ -1,7 +1,15 @@
 "use client";
 
 import { OTPField as OTPFieldPrimitive } from "@base-ui/react/otp-field";
-import { type CSSProperties, Fragment, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  type CSSProperties,
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { fieldFace } from "@/internal/field";
 import { useLive } from "@/internal/presence";
@@ -60,12 +68,25 @@ const joinedGroup = [
   "has-[input[data-disabled]]:bg-disabled has-[input[data-disabled]]:depth-flat",
 ].join(" ");
 
-/** A slot inside that socket: a hairline to its left, and the halo is its own. */
-const joinedSlot = [
-  "border-hairline not-first:border-l first:rounded-l-md last:rounded-r-md",
-  "transition-[box-shadow] spring-snap has-[input:focus]:z-1 has-[input:focus]:shadow-field-focus",
-  "has-[input[data-invalid]:focus]:shadow-field-invalid",
-].join(" ");
+/** A slot inside that socket: a hairline to its left. The halo is the field's (`OtpHalo`). */
+const joinedSlot = "border-hairline not-first:border-l first:rounded-l-md last:rounded-r-md";
+
+/**
+ * How the halo of a joined field goes from slot to slot, on the lab board until Justin picks
+ * (2026-11-20: "any way to make the focus on the otp more smooth?"): `snap`, it glides on the
+ * fastest spring, so it is there before the next digit is; `glide`, on the travelling spring;
+ * `none`, it stands on the next slot at once. In every form it is one rounded halo, and a digit
+ * is readable in its first frame.
+ */
+export type OtpHaloPace = "snap" | "glide" | "none";
+export const OtpHaloPaceContext = createContext<OtpHaloPace>("snap");
+
+const haloPace: Record<OtpHaloPace, string> = {
+  snap: "[--halo-pace:var(--transition-duration-spring-snap)] [--halo-ease:var(--ease-spring-snap)]",
+  glide:
+    "[--halo-pace:var(--transition-duration-spring-glide)] [--halo-ease:var(--ease-spring-glide)]",
+  none: "[--halo-pace:0s] [--halo-ease:linear]",
+};
 
 /**
  * A one-time code: the six digits from a text message or an authenticator app. Every character
@@ -115,6 +136,42 @@ export function OtpField({
     [],
   );
 
+  // The halo of a joined field: one piece that stands on the slot being typed and travels to
+  // the next. Placed from the slot's measured offsets, written as numbers of layout pixels (made
+  // lengths where they are used, so zoom cannot set them off), and moved by `translate`.
+  const pace = useContext(OtpHaloPaceContext);
+  const halo = useRef<HTMLSpanElement>(null);
+  const joined = variant === "joined";
+  const placeHalo = (slot: HTMLElement | null, arriving: boolean) => {
+    const piece = halo.current;
+    if (!piece || !slot) return;
+    // Coming from outside the field it stands on its slot at once; only a move between slots
+    // travels.
+    if (arriving) piece.dataset.instant = "";
+    piece.style.setProperty("--halo-x", String(slot.offsetLeft));
+    piece.style.setProperty("--halo-y", String(slot.offsetTop));
+    piece.style.setProperty("--halo-w", String(slot.offsetWidth));
+    piece.style.setProperty("--halo-h", String(slot.offsetHeight));
+    piece.dataset.shown = "";
+    if (arriving) requestAnimationFrame(() => delete piece.dataset.instant);
+  };
+  const slotOf = (target: EventTarget | null) =>
+    target instanceof HTMLElement
+      ? target.closest<HTMLElement>('[data-slot="otp-field-slot"]')
+      : null;
+  // A layout that changes (a filled field resized with its dialog) takes the halo along.
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = root.current;
+    if (!joined || !box) return;
+    const observer = new ResizeObserver(() => {
+      if (halo.current?.dataset.shown === undefined) return;
+      placeHalo(slotOf(document.activeElement), true);
+    });
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [joined]);
+
   const groups: number[][] = [];
   for (let index = 0; index < length; index++) {
     const group = groupSize > 0 ? Math.floor(index / groupSize) : 0;
@@ -123,6 +180,7 @@ export function OtpField({
 
   return (
     <OTPFieldPrimitive.Root
+      ref={root}
       data-slot="otp-field"
       data-variant={variant}
       data-live={live ? "" : undefined}
@@ -132,7 +190,7 @@ export function OtpField({
       mask={mask}
       data-fill={fill ? "" : undefined}
       className={cn(
-        "group/otp items-center gap-2",
+        "group/otp relative items-center gap-2",
         fill ? "flex w-full" : "inline-flex w-fit",
         className,
       )}
@@ -148,12 +206,20 @@ export function OtpField({
       onFocus={(event) => {
         clearTimeout(entering.current);
         entering.current = setTimeout(() => setEntered(true), ENTERED_MS);
+        if (joined) {
+          const from = event.relatedTarget;
+          placeHalo(
+            slotOf(event.target),
+            !(from instanceof Node && event.currentTarget.contains(from)),
+          );
+        }
         onFocus?.(event);
       }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
           clearTimeout(entering.current);
           setEntered(false);
+          if (halo.current) delete halo.current.dataset.shown;
         }
         onBlur?.(event);
       }}
@@ -225,6 +291,27 @@ export function OtpField({
           </span>
         </Fragment>
       ))}
+      {joined && (
+        <span
+          ref={halo}
+          aria-hidden
+          data-slot="otp-field-halo"
+          className={cn(
+            "pointer-events-none absolute top-0 left-0 z-1 rounded-md opacity-0 shadow-field-focus",
+            "h-[calc(var(--halo-h,0)*1px)] w-[calc(var(--halo-w,0)*1px)]",
+            "[translate:calc(var(--halo-x,0)*1px)_calc(var(--halo-y,0)*1px)]",
+            "group-has-[input[data-invalid]]/otp:shadow-field-invalid",
+            // The way between slots on its pace; it comes and goes with the focus on `snap`.
+            haloPace[pace],
+            "[transition:translate_var(--halo-pace)_var(--halo-ease),opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
+            "data-instant:[transition:opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
+            "motion-reduce:[transition:opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
+            "data-shown:opacity-100",
+            // Forced colours drop shadows: the slot being typed is outlined by its own input.
+            "forced-colors:hidden",
+          )}
+        />
+      )}
     </OTPFieldPrimitive.Root>
   );
 }
