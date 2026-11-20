@@ -66,29 +66,29 @@ function TextTools({ defaultOpen, ...props }: ToolbarProps & { defaultOpen?: boo
       </Menu>
       <ToolbarSeparator />
       <ToggleGroup multiple size="sm" aria-label="Auszeichnung" defaultValue={["bold"]}>
-        <Toggle iconOnly aria-label="Fett" value="bold">
+        <Toggle iconOnly aria-label="Fett" value="bold" shortcut="mod+b">
           <Icon icon={TextBoldIcon} size={14} />
         </Toggle>
-        <Toggle iconOnly aria-label="Kursiv" value="italic">
+        <Toggle iconOnly aria-label="Kursiv" value="italic" shortcut="mod+i">
           <Icon icon={TextItalicIcon} size={14} />
         </Toggle>
-        <Toggle iconOnly aria-label="Unterstrichen" value="underline">
+        <Toggle iconOnly aria-label="Unterstrichen" value="underline" shortcut="mod+u">
           <Icon icon={TextUnderlineIcon} size={14} />
         </Toggle>
       </ToggleGroup>
       <ToggleGroup size="sm" aria-label="Ausrichtung" defaultValue={["left"]}>
-        <Toggle iconOnly aria-label="Linksbündig" value="left">
+        <Toggle iconOnly aria-label="Linksbündig" value="left" shortcut="mod+shift+l">
           <Icon icon={TextAlignLeftIcon} size={14} />
         </Toggle>
-        <Toggle iconOnly aria-label="Zentriert" value="center">
+        <Toggle iconOnly aria-label="Zentriert" value="center" shortcut="mod+shift+e">
           <Icon icon={TextAlignCenterIcon} size={14} />
         </Toggle>
-        <Toggle iconOnly aria-label="Rechtsbündig" value="right">
+        <Toggle iconOnly aria-label="Rechtsbündig" value="right" shortcut="mod+shift+r">
           <Icon icon={TextAlignRightIcon} size={14} />
         </Toggle>
       </ToggleGroup>
       <ToolbarSeparator />
-      <ToolbarButton iconOnly aria-label="Link einfügen">
+      <ToolbarButton iconOnly aria-label="Link einfügen" shortcut="mod+k">
         <Icon icon={Link01Icon} size={14} />
       </ToolbarButton>
       <ToolbarButton iconOnly aria-label="Bild einfügen" disabled>
@@ -156,6 +156,45 @@ export const Vertical: Story = {
       </Toggle>
     </Toolbar>
   ),
+};
+
+/**
+ * The names of the symbol keys, as a test: each says its name and its shortcut in a tooltip,
+ * and once one has shown, the next opens as the pointer reaches it.
+ */
+export const Tooltips: Story = {
+  render: () => <TextTools />,
+  play: async ({ canvas, userEvent, step }) => {
+    // The tooltip that says this name (its shortcut follows the name in the same box).
+    const content = (name: string) =>
+      [...document.querySelectorAll<HTMLElement>('[data-slot="tooltip-content"]')].find((each) =>
+        each.textContent?.startsWith(name),
+      );
+    // The first waits out the tooltip's delay, which leaves little of `waitFor`'s own second.
+    const tip = (name: string) =>
+      waitFor(() => expect(content(name)).toBeVisible(), { timeout: 2500 });
+
+    await step("A toggle in a group says its name and its shortcut", async () => {
+      await userEvent.hover(canvas.getByRole("button", { name: "Fett" }));
+      await tip("Fett");
+      await expect(content("Fett")?.querySelector('[data-slot="shortcut"]')).not.toBeNull();
+    });
+
+    await step("Its neighbour, and a plain key, say theirs", async () => {
+      await userEvent.hover(canvas.getByRole("button", { name: "Kursiv" }));
+      await tip("Kursiv");
+      await userEvent.hover(canvas.getByRole("button", { name: "Link einfügen" }));
+      await tip("Link einfügen");
+    });
+
+    await step("A key with words needs no tooltip", async () => {
+      await userEvent.hover(canvas.getByRole("button", { name: "Absatz" }));
+      await waitFor(
+        () => expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull(),
+        { timeout: 2500 },
+      );
+    });
+  },
 };
 
 /**

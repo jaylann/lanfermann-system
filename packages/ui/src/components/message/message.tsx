@@ -16,7 +16,12 @@ import { Button, type ButtonProps } from "@/components/button/button";
 import { useConversation } from "@/components/conversation/conversation";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { Toggle } from "@/components/toggle/toggle";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/tooltip/tooltip";
 import { useArrivingText } from "@/internal/arriving";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
@@ -159,17 +164,20 @@ export function MessageContent({ className, children, ref, ...props }: MessageCo
 export function MessageActions({ className, ...props }: ComponentProps<"div">) {
   const { streaming } = useContext(MessageContext);
   return (
-    <div
-      data-slot="message-actions"
-      inert={streaming}
-      className={cn(
-        "-ml-1 flex items-center gap-0.5",
-        "transition-opacity spring-settle in-data-live:starting:opacity-0",
-        streaming && "opacity-0",
-        className,
-      )}
-      {...props}
-    />
+    // Once one key has said its name, its neighbours say theirs as the pointer reaches them.
+    <TooltipProvider>
+      <div
+        data-slot="message-actions"
+        inert={streaming}
+        className={cn(
+          "-ml-1 flex items-center gap-0.5",
+          "transition-opacity spring-settle in-data-live:starting:opacity-0",
+          streaming && "opacity-0",
+          className,
+        )}
+        {...props}
+      />
+    </TooltipProvider>
   );
 }
 
