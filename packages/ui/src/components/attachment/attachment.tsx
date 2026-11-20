@@ -9,6 +9,7 @@ import {
   useId,
   useLayoutEffect,
   useRef,
+  useState,
 } from "react";
 
 import { Chip } from "@/components/chip/chip";
@@ -19,7 +20,7 @@ import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
-import { kindOf, kindSymbols, splitName, typeWord } from "./kinds";
+import { fitName, kindOf, kindSymbols, splitName, typeWord } from "./kinds";
 
 /** Where a file stands: on its way, arrived, or failed. */
 export type AttachmentStatus = "uploading" | "done" | "error";
@@ -57,13 +58,105 @@ export type AttachmentProps = Omit<ComponentProps<"div">, "children"> & {
   href?: string;
   /** In a prompt's row a chip, elsewhere a tile. */
   variant?: AttachmentVariant;
+  /**
+   * The face of a chip: `plug` (the default), a small raised part, or `flat`, quiet like a
+   * `Badge`, for a row of many or a place that is already busy.
+   */
+  chipVariant?: "plug" | "flat";
   /** What each state is called. */
   statusLabels?: Partial<Record<AttachmentStatus, string>>;
   locale?: string;
 };
 
-/** A name cut in its middle: the end of it, the extension, always stays. */
+/**
+ * How a name too long for its place is cut. `middle`: „Angebot-Ko…bst.pdf“, as a file manager
+ * does. `end`: „Angebot-Kornp….pdf“. `fade`: the name fades out before its extension. On the lab
+ * board until Justin picks one (2026-11-20: "the fade looks odd").
+ */
+export type AttachmentNameCut = "middle" | "end" | "fade";
+export const AttachmentNameCutContext = createContext<AttachmentNameCut>("middle");
+
 function FileName({ name, className }: { name: string; className?: string }) {
+  const cut = useContext(AttachmentNameCutContext);
+  return cut === "fade" ? (
+    <FadedName name={name} className={className} />
+  ) : (
+    <FittedName name={name} keep={cut === "middle" ? 3 : 0} className={className} />
+  );
+}
+
+/**
+ * A name cut with an ellipsis to the room it has, its extension and the last `keep` letters
+ * before it kept (`fitName`). The room is the width the whole name would take, or less where
+ * the chip runs out: an unseen copy of the whole name sets it, and the cut is worked out again
+ * when the room changes.
+ */
+function FittedName({ name, keep, className }: { name: string; keep: number; className?: string }) {
+  const room = useRef<HTMLSpanElement>(null);
+  const probe = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(name);
+  useLayoutEffect(() => {
+    const box = room.current;
+    const measuring = probe.current;
+    if (!box || !measuring) return;
+    let live = true;
+    let frame = 0;
+    const fit = () => {
+      // Measured on the page by an unseen copy in the name's own font: measured on a canvas,
+      // the cuts left gaps of up to two letters. Layout pixels, so a chip that is still
+      // growing in measures at its real size.
+      const measure = (each: string) => {
+        measuring.textContent = each;
+        return measuring.offsetWidth;
+      };
+      // The room is the whole name's width where it fits, so the whole name is checked against
+      // it as it is; a cut keeps a pixel to spare, since a width is read rounded.
+      const room = box.clientWidth;
+      setShown(measure(name) <= room ? name : fitName(name, room - 1, measure, keep));
+    };
+    fit();
+    // A new room is fitted in the next frame, not while the observer reports it: the cut it
+    // renders would be a change of layout inside the report.
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fit);
+    });
+    observer.observe(box);
+    // The web font changes every width.
+    void document.fonts?.ready.then(() => live && fit());
+    return () => {
+      live = false;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [name, keep]);
+  return (
+    <span
+      ref={room}
+      data-slot="attachment-name"
+      className={cn("grid min-w-0 grid-cols-[minmax(0,max-content)]", className)}
+    >
+      <span aria-hidden className="col-start-1 row-start-1 overflow-hidden whitespace-nowrap">
+        {shown}
+      </span>
+      {/* Unseen and out of the layout: where a cut is measured. */}
+      <span ref={probe} aria-hidden className="invisible absolute whitespace-nowrap" />
+
+      {/* Unseen, the whole name: it gives the room its width. */}
+      <span
+        aria-hidden
+        className="invisible col-start-1 row-start-1 h-0 overflow-hidden whitespace-nowrap"
+      >
+        {name}
+      </span>
+      {/* Read out whole: the cut name would be heard with its ellipsis. */}
+      <span className="sr-only">{name}</span>
+    </span>
+  );
+}
+
+/** The name fades out just before its extension where it is cut (as built on 2026-11-19). */
+function FadedName({ name, className }: { name: string; className?: string }) {
   const { stem, end } = splitName(name);
   const cut = useRef<HTMLSpanElement>(null);
   // Where the name is cut, its first part fades out just before the extension, the way an edge
@@ -118,6 +211,7 @@ export function Attachment({
   removeLabel = "entfernen",
   href,
   variant: variantProp,
+  chipVariant = "plug",
   statusLabels,
   locale = "de-DE",
   className,
@@ -151,6 +245,7 @@ export function Attachment({
         data-slot="attachment"
         data-variant="chip"
         data-status={status}
+        variant={chipVariant}
         title={name}
         onRemove={onRemove}
         removeLabel={removeLabel}
