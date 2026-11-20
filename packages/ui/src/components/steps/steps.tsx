@@ -225,11 +225,12 @@ export function Step({
               linkVariants({ variant: "quiet" }),
               "w-fit max-w-full min-w-0 text-control leading-5 text-fg-body",
             ),
-            // The name is cut inside the link, not on it: the link's rounded corners (there for
-            // its focus ring) would clip the ends of the underline, which runs in the line's
-            // last pixels. The room below the text keeps the underline whole; the margin gives
-            // it back, so the line stays 20px.
-            children: <span className="-mb-1 block truncate pb-1">{name}</span>,
+            // The name is cut inside the link, not on it, and only sideways: clipped on the
+            // link's rounded box (there for its focus ring), the underline, which runs in the
+            // line's last pixels, lost both its ends.
+            children: (
+              <span className="block overflow-x-clip text-ellipsis whitespace-nowrap">{name}</span>
+            ),
           })
         ) : (
           <span
