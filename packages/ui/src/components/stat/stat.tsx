@@ -129,7 +129,9 @@ export type StatChangeProps = ComponentProps<"p"> & {
  * compared with („+12 %“ „gegenüber dem Vormonat“). The arrow and the colour never carry it
  * alone: assistive tech hears „Gestiegen“ or „Gesunken“ first, and the amount has its sign.
  *
- * When the trend turns, the arrow turns with it.
+ * When the trend turns, the arrow turns with it. Where the figure changes while it is on screen,
+ * give the amount as a `RollingNumber` (`{ style: "percent", signDisplay: "exceptZero" }`), as
+ * the `StatValue` takes one: it rolls to the new amount and its sign turns over.
  */
 export function StatChange({
   trend,

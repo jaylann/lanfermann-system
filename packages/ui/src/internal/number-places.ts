@@ -53,7 +53,9 @@ export function toPlaces(format: Intl.NumberFormat, value: number): NumberPlaces
   const places: Place[] = [];
   let unit = "";
 
-  // Before the digits: the minus is a place of its own (it comes and goes); the rest is a run.
+  // Before the digits: a sign is a place of its own (it comes and goes, and a change that
+  // crosses zero turns + into −, which must not make the figure a different kind); the rest is
+  // a run.
   let run = "";
   let runs = 0;
   const flush = () => {
@@ -62,9 +64,10 @@ export function toPlaces(format: Intl.NumberFormat, value: number): NumberPlaces
     run = "";
   };
   for (const part of parts.slice(0, first)) {
-    if (part.type === "minusSign") {
+    if (part.type === "minusSign" || part.type === "plusSign") {
       flush();
-      places.push({ key: "minus", kind: "symbol", text: part.value });
+      const key = part.type === "minusSign" ? "minus" : "plus";
+      places.push({ key, kind: "symbol", text: part.value });
     } else {
       run += part.value;
     }
@@ -150,7 +153,7 @@ export type ShownPlace = Place & { leaving: boolean };
 /** Left to right: what comes before, the integer places from the highest, the fraction. */
 function rank(key: string): number {
   if (key === "pre") return 0;
-  if (key === "minus") return 1;
+  if (key === "minus" || key === "plus") return 1;
   if (key === "pre2") return 2;
   if (key === "decimal") return 50_000;
   if (key === "post") return 90_000;

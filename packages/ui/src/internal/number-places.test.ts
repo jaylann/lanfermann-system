@@ -65,6 +65,21 @@ describe("toPlaces", () => {
     expect(toPlaces(numberFormat("de-DE", { maximumFractionDigits: 0 }), -0.2).text).toBe("0");
   });
 
+  it("gives a plus its own place, so a change across zero rolls instead of swapping", () => {
+    const change = numberFormat("de-DE", {
+      style: "percent",
+      maximumFractionDigits: 0,
+      signDisplay: "exceptZero",
+    });
+    const up = toPlaces(change, 0.12);
+    expect(up.text).toBe("+12 %");
+    expect(keys(up.places)).toEqual(["plus", "i1", "i0", "post"]);
+    const down = toPlaces(change, -0.03);
+    expect(keys(down.places)).toEqual(["minus", "i0", "post"]);
+    expect(down.unit).toBe(up.unit);
+    expect(toPlaces(change, 0).unit).toBe(up.unit);
+  });
+
   it("puts a compact unit after the digits and changes the unit with it", () => {
     const compact = numberFormat("de-DE", { notation: "compact" });
     expect(toPlaces(compact, 12_345).unit).toBe("|");
