@@ -18,6 +18,7 @@ export default meta;
 type Story = StoryObj;
 
 const euro = { style: "currency", currency: "EUR" } as const;
+const percent = { style: "percent", maximumFractionDigits: 0, signDisplay: "exceptZero" } as const;
 
 /** One figure: what it is, the figure, and how it moved against what. */
 export const Default: Story = {
@@ -106,8 +107,8 @@ export const Phone: Story = {
 };
 
 /**
- * A figure that changes while it is on screen rolls to its new value; when the trend turns, the
- * arrow turns with it.
+ * A figure that changes while it is on screen rolls to its new value, and so does the change
+ * beside it, across zero too; when the trend turns, the arrow turns with it.
  */
 export const Changing: Story = {
   parameters: {
@@ -136,11 +137,7 @@ export const Changing: Story = {
             tone={trend === "up" ? "positive" : trend === "down" ? "negative" : "neutral"}
             context="gegenüber dem Vormonat"
           >
-            {new Intl.NumberFormat("de-DE", {
-              style: "percent",
-              maximumFractionDigits: 0,
-              signDisplay: "exceptZero",
-            }).format(change)}
+            <RollingNumber value={change} format={percent} />
           </StatChange>
         </Stat>
         <div className="flex gap-2">

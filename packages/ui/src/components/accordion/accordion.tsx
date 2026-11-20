@@ -2,12 +2,17 @@
 
 import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
 
-import { disclosureChevron, disclosurePanel } from "@/internal/disclosure";
+import { disclosureChevron, disclosurePanel, disclosureUnfold } from "@/internal/disclosure";
 import { ChevronDownGlyph } from "@/internal/glyphs";
-import { ruleTop } from "@/internal/rule";
 import { cn, mergeClassName } from "@/lib/cn";
 
-export type AccordionProps = AccordionPrimitive.Root.Props;
+export type AccordionProps = AccordionPrimitive.Root.Props & {
+  /**
+   * No wash under the pointer: the lines stay and only the chevron answers. For a page where the
+   * accordion should recede, such as a docs page dense with other rows.
+   */
+  quiet?: boolean;
+};
 
 /**
  * Questions with their answers, or the sections of a long page that are read one at a time. One
@@ -17,12 +22,14 @@ export type AccordionProps = AccordionPrimitive.Root.Props;
  * what everybody needs behind a row: an accordion is for the second look. `hiddenUntilFound`
  * lets the browser's page search open the row that holds the match.
  */
-export function Accordion({ className, ...props }: AccordionProps) {
+export function Accordion({ className, quiet = false, ...props }: AccordionProps) {
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
-      // Structure by line, like a table: a rule opens the block, hairlines divide the rows.
-      className={mergeClassName(["flex w-full flex-col", ruleTop], className)}
+      data-quiet={quiet || undefined}
+      // Structure by line: hairlines open the block and divide the rows. The lines and the washes
+      // are drawn in styles/accordion.css.
+      className={mergeClassName("flex w-full flex-col", className)}
       {...props}
     />
   );
@@ -32,13 +39,7 @@ export type AccordionItemProps = AccordionPrimitive.Item.Props;
 
 /** One row with its panel. Give it a `value` to open it at first or to control it. */
 export function AccordionItem({ className, ...props }: AccordionItemProps) {
-  return (
-    <AccordionPrimitive.Item
-      data-slot="accordion-item"
-      className={mergeClassName("border-b border-hairline", className)}
-      {...props}
-    />
-  );
+  return <AccordionPrimitive.Item data-slot="accordion-item" className={className} {...props} />;
 }
 
 export type AccordionTriggerProps = AccordionPrimitive.Trigger.Props & {
@@ -63,8 +64,8 @@ export function AccordionTrigger({
         data-slot="accordion-trigger"
         className={mergeClassName(
           [
-            "group touch-target relative flex min-h-(--control-lg) w-full items-start gap-4 rounded-sm px-3 py-3 text-left text-base font-medium text-fg select-none",
-            "hover:bg-hover",
+            // The wash under the pointer is the trigger's ::before (styles/accordion.css).
+            "group touch-target relative flex min-h-(--control-lg) w-full items-start gap-4 rounded-md px-3 py-3 text-left text-base font-medium text-fg select-none",
             "focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
             "data-disabled:pointer-events-none data-disabled:text-on-disabled",
           ],
@@ -78,7 +79,11 @@ export function AccordionTrigger({
         <span aria-hidden className="flex h-lh shrink-0 items-center">
           <ChevronDownGlyph
             data-slot="accordion-chevron"
-            className={cn(disclosureChevron, "group-data-panel-open:rotate-180")}
+            // It points down, and up once it has turned: it leans that way.
+            className={cn(
+              disclosureChevron,
+              "[--lean:0_var(--motion-lean)] group-data-panel-open:rotate-180 group-data-panel-open:[--lean:0_calc(var(--motion-lean)*-1)]",
+            )}
           />
         </span>
       </AccordionPrimitive.Trigger>
@@ -88,13 +93,15 @@ export function AccordionTrigger({
 
 export type AccordionPanelProps = AccordionPrimitive.Panel.Props;
 
-/** The answer. It opens on `settle` to its own height and leaves faster than it came. */
+/**
+ * The answer. It opens on `settle` to its own height and unfolds, and leaves faster than it came.
+ */
 export function AccordionPanel({ className, children, ...props }: AccordionPanelProps) {
   return (
     <AccordionPrimitive.Panel
       data-slot="accordion-panel"
       className={mergeClassName(
-        ["h-(--accordion-panel-height) text-base text-fg-body", disclosurePanel],
+        ["h-(--accordion-panel-height) text-base text-fg-body", disclosurePanel, disclosureUnfold],
         className,
       )}
       {...props}

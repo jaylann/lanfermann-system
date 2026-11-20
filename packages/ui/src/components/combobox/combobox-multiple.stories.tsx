@@ -115,8 +115,9 @@ export const WithValues: Story = {
 };
 
 /**
- * Open, with two values: the chosen rows carry the disc, and the list stays open after a
- * choice. Choose a third: its chip seats in, and if it needs another line, the field grows.
+ * Open, with two values: the chosen rows carry the tick at their right end, and the list stays
+ * open after a choice. Choose a third: its chip seats in, and if it needs another line, the
+ * field grows.
  */
 export const Open: Story = {
   parameters: {
@@ -127,6 +128,49 @@ export const Open: Story = {
     },
   },
   render: () => <LabelPicker chosen={some} defaultOpen />,
+};
+
+type Customer = ComboboxOption & { detail: string };
+
+const CUSTOMERS: Customer[] = [
+  { value: "k-1042", label: "Schreinerei Mustermann", detail: "Rosenheim" },
+  { value: "k-1043", label: "Bäckerei Kornprobst", detail: "München" },
+  { value: "k-1044", label: "Friseursalon Haarscharf", detail: "Augsburg" },
+  { value: "k-1046", label: "Metzgerei Obermaier", detail: "Erding" },
+  { value: "k-1047", label: "Zimmerei Huber", detail: "Bad Tölz" },
+  { value: "k-1049", label: "Gärtnerei Blattwerk", detail: "Dachau" },
+];
+
+/**
+ * Rows with a place at their right: the chosen ones stand on the tint, and chosen rows that
+ * touch are one shape, round only at its outer corners. Choose the row between two chosen
+ * ones: the corners where they meet ease square and the three are one block.
+ */
+export const WithDetails: Story = {
+  parameters: {
+    visual: {
+      viewport: { width: 420, height: 440 },
+      clip: "viewport",
+      motion: [{ name: "join", click: '[data-slot="combobox-item"]:nth-of-type(3)', frames: 8 }],
+    },
+  },
+  render: () => (
+    <Field className="w-80">
+      <FieldLabel>Rundschreiben an</FieldLabel>
+      <Combobox
+        multiple
+        items={CUSTOMERS}
+        locale="de-DE"
+        defaultValue={[CUSTOMERS[0]!, CUSTOMERS[1]!, CUSTOMERS[3]!]}
+        defaultOpen
+      >
+        <ComboboxChips placeholder="z. B. Bäckerei Kornprobst" />
+        <ComboboxContent empty="Kein Kunde gefunden.">
+          {(customer: Customer) => <ComboboxItem key={customer.value} value={customer} />}
+        </ComboboxContent>
+      </Combobox>
+    </Field>
+  ),
 };
 
 /**

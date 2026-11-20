@@ -13,6 +13,8 @@
   --motion-enter-scale: 0.96;
   --motion-enter-offset: 4px;
   --motion-press-scale: 0.98;
+  /* How far a disclosure's chevron leans the way it points while its row is pointed at. */
+  --motion-lean: 1.5px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -20,6 +22,7 @@
     --motion-enter-scale: 1;
     --motion-enter-offset: 0px;
     --motion-press-scale: 1;
+    --motion-lean: 0px;
   }
 }
 

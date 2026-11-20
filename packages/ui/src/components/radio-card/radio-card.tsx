@@ -9,6 +9,7 @@ import {
   choiceCardEdge,
   type ChoiceCardText,
   choiceControl,
+  followPointer,
 } from "@/internal/choice-card";
 import { cn } from "@/lib/cn";
 
@@ -52,6 +53,7 @@ export function RadioCard({
   return (
     <label
       data-slot="radio-card"
+      onPointerMove={followPointer}
       className={cn(choiceCard, chosen === "edge" && choiceCardEdge, className)}
     >
       <RadioPrimitive.Root

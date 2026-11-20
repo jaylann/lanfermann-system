@@ -223,9 +223,14 @@ export function Step({
             "data-slot": "step-title",
             className: cn(
               linkVariants({ variant: "quiet" }),
-              "w-fit max-w-full truncate text-control leading-5 text-fg-body",
+              "w-fit max-w-full min-w-0 text-control leading-5 text-fg-body",
             ),
-            children: name,
+            // The name is cut inside the link, not on it, and only sideways: clipped on the
+            // link's rounded box (there for its focus ring), the underline, which runs in the
+            // line's last pixels, lost both its ends.
+            children: (
+              <span className="block overflow-x-clip text-ellipsis whitespace-nowrap">{name}</span>
+            ),
           })
         ) : (
           <span

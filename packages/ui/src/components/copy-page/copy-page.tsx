@@ -19,6 +19,7 @@ import { ActionArrow } from "@/internal/arrow";
 import { writeClipboard } from "@/internal/clipboard";
 import { COPY_SHOWN_MS } from "@/internal/copy";
 import { ChevronDownGlyph, TickGlyph } from "@/internal/glyphs";
+import { Tile } from "@/internal/tile";
 import { cn } from "@/lib/cn";
 
 export type CopyPageProps = Omit<
@@ -53,10 +54,10 @@ export type CopyPageProps = Omit<
  * menu repeats it with a line on what it is, and opens the Markdown in a new tab. Put it at the
  * end of the row above the page's title.
  *
- * It is a `ButtonGroup`, named by its `label`: one part with two keys, so it moves as one: under the pointer the whole fitting lifts,
- * and the key under it takes the hover wash. Pressed, the fitting goes down and drops its
- * ambient shadow, and only the pressed key takes the inner shade, so it rocks on that key and the
- * other keeps its gloss. A copy is confirmed in the key, as in a code block: the copy symbol
+ * It is a `ButtonGroup`, named by its `label`: one part with two keys. Under the pointer the whole
+ * fitting lifts and the key under it takes the hover wash; a press moves only the pressed key,
+ * which takes the inner shade and goes down while the fitting and the other key stay where they
+ * are. A copy is confirmed in the key, as in a code block: the copy symbol
  * shrinks away and the tick draws itself, short leg first, then fades where it stands while the
  * symbol seats back. There is no toast; a screen reader hears one sentence.
  *
@@ -174,9 +175,7 @@ export function CopyPage({
         </MenuPrimitive.Trigger>
         <MenuContent align="end" className="w-76 p-1.5">
           <MenuItem onClick={() => void copy()} className={row}>
-            <Tile>
-              <Icon icon={Copy01Icon} size={16} />
-            </Tile>
+            <Tile icon={Copy01Icon} />
             <RowText title={label} description={description} />
           </MenuItem>
           <MenuLinkItem href={href} target="_blank" rel="noopener" className={row}>
@@ -206,18 +205,6 @@ export function CopyPage({
 /** A row of the menu: a tile, then two lines. It keeps the list's instant highlight. */
 const row = "group/row items-center gap-3 px-2 py-2";
 
-function Tile({ children }: { children: ReactNode }) {
-  return (
-    <span
-      aria-hidden
-      data-slot="copy-page-tile"
-      className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface text-fg-muted inset-ring inset-ring-hairline group-data-highlighted/row:text-fg forced-colors:inset-ring-[CanvasText]"
-    >
-      {children}
-    </span>
-  );
-}
-
 function RowText({ title, description }: { title: ReactNode; description: string }) {
   return (
     <span className="flex min-w-0 flex-col gap-0.5">
@@ -232,12 +219,13 @@ function MarkdownGlyph(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       aria-hidden
-      width={16}
-      height={16}
+      width={18}
+      height={18}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.5}
+      // 1.5px drawn at 18px, as `Icon` pins every symbol's stroke.
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
       {...props}

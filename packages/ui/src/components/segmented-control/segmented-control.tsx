@@ -150,6 +150,8 @@ export function SegmentedControl({
     /** Where the pointer went down, and where the thumb's middle stood then. */
     startX: number;
     startMiddle: number;
+    /** Viewport pixels per layout pixel when it was grabbed (`zoomOf`). */
+    zoom: number;
     /** Every segment's box, read once when the thumb is grabbed: a pull measures nothing. */
     boxes: Box[];
     /** The thumb's box now, and the segment it would be dropped on. */
@@ -182,11 +184,11 @@ export function SegmentedControl({
       const box = segment && { left: segment.offsetLeft, width: segment.offsetWidth };
       const size = { width: track.offsetWidth, height: track.offsetHeight };
       // The lens lays the labels out a second time: it needs the track's own size for that.
-      track.style.setProperty("--track-width", `${size.width}px`);
-      track.style.setProperty("--track-height", `${size.height}px`);
+      track.style.setProperty("--track-width", String(size.width));
+      track.style.setProperty("--track-height", String(size.height));
       if (!box) return undefined;
-      track.style.setProperty("--thumb-left", `${box.left}px`);
-      track.style.setProperty("--thumb-width", `${box.width}px`);
+      track.style.setProperty("--thumb-left", String(box.left));
+      track.style.setProperty("--thumb-width", String(box.width));
       return box;
     };
 
@@ -198,6 +200,14 @@ export function SegmentedControl({
     if (!wasDropped) delete track.dataset.following;
     const box = place();
     const now = box?.left;
+    // A choice takes back what the thumb reached for (`reach`) and drops a reach still waiting
+    // for its frame: that one was measured from the segment chosen before. Also before the first
+    // frame, when the thumb does not travel yet: a test's pointer events, which come at x = 0,
+    // left it leaning towards the page's edge for good. A trip below sets its own shape.
+    cancelAnimationFrame(leanFrame.current);
+    track.style.setProperty("--thumb-lean", "0");
+    track.style.setProperty("--thumb-s", "1");
+    delete track.dataset.moving;
     if (
       inertia &&
       box &&
@@ -207,7 +217,6 @@ export function SegmentedControl({
       track.hasAttribute("data-placed") &&
       !reduced
     ) {
-      track.style.setProperty("--thumb-lean", "0px");
       busyUntil.current = performance.now() + TRAVEL_BUSY_MS;
       if (!wasDropped) {
         // Set off: stretched along the way, its leading edge holding, and let go so that the
@@ -238,9 +247,9 @@ export function SegmentedControl({
       const segment = pressed();
       if (!segment || drag.current?.moved) return;
       if (
-        track.style.getPropertyValue("--thumb-left") === `${segment.offsetLeft}px` &&
-        track.style.getPropertyValue("--thumb-width") === `${segment.offsetWidth}px` &&
-        track.style.getPropertyValue("--track-width") === `${track.offsetWidth}px`
+        track.style.getPropertyValue("--thumb-left") === String(segment.offsetLeft) &&
+        track.style.getPropertyValue("--thumb-width") === String(segment.offsetWidth) &&
+        track.style.getPropertyValue("--track-width") === String(track.offsetWidth)
       ) {
         return;
       }
@@ -270,6 +279,16 @@ export function SegmentedControl({
 
   const still = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /**
+   * How many viewport pixels one of the track's layout pixels takes: more than 1 under a zoomed
+   * ancestor or a scaled one. Pointer positions are viewport pixels and the places written onto
+   * the track are layout pixels, so a pointer's way is divided by this before it is used.
+   */
+  function zoomOf(track: HTMLElement) {
+    const drawn = track.getBoundingClientRect().width;
+    return drawn > 0 && track.offsetWidth > 0 ? drawn / track.offsetWidth : 1;
+  }
+
   /** The first and the last place the thumb can stand at, as offsets in the track. */
   function walls(track: HTMLElement) {
     const segments = track.querySelectorAll<HTMLElement>('[data-slot="segment"]');
@@ -289,7 +308,8 @@ export function SegmentedControl({
     const wall = walls(track);
     if (!segment || !wall || performance.now() < busyUntil.current || still()) return;
     const box = segment.getBoundingClientRect();
-    const offset = x < box.left ? x - box.left : x > box.right ? x - box.right : 0;
+    const offset =
+      (x < box.left ? x - box.left : x > box.right ? x - box.right : 0) / zoomOf(track);
     const room =
       offset > 0
         ? wall.end - segment.offsetLeft - segment.offsetWidth
@@ -297,7 +317,7 @@ export function SegmentedControl({
     const shape = leanShape(offset, segment.offsetWidth, room);
     track.dataset.following = "";
     track.dataset.moving = "";
-    track.style.setProperty("--thumb-lean", `${shape.shift.toFixed(2)}px`);
+    track.style.setProperty("--thumb-lean", shape.shift.toFixed(2));
     track.style.setProperty("--thumb-s", shape.stretch.toFixed(3));
     if (shape.stretch !== 1) track.style.setProperty("--thumb-hold", String(shape.hold));
   }
@@ -316,7 +336,7 @@ export function SegmentedControl({
     cancelAnimationFrame(leanFrame.current);
     // On its way or in a hand, the thumb's shape is not the lean's to take back.
     if (!inertia || drag.current?.moved || performance.now() < busyUntil.current) return;
-    track.style.setProperty("--thumb-lean", "0px");
+    track.style.setProperty("--thumb-lean", "0");
     track.style.setProperty("--thumb-s", "1");
   }
 
@@ -353,6 +373,7 @@ export function SegmentedControl({
       pointer: event.pointerId,
       startX: event.clientX,
       startMiddle: left + width / 2,
+      zoom: zoomOf(track),
       boxes: segments.map((each) => ({
         value: each.getAttribute("data-value"),
         left: each.offsetLeft,
@@ -372,12 +393,12 @@ export function SegmentedControl({
     const track = event.currentTarget;
     // Let go outside the track without our knowing (the pointer was not captured): drop it.
     if (event.buttons === 0 && !track.hasPointerCapture(event.pointerId)) return drop(event);
-    const dx = event.clientX - held.startX;
+    const dx = (event.clientX - held.startX) / held.zoom;
     if (!held.moved && Math.abs(dx) < DRAG_SLOP) return;
     if (!held.moved) {
       held.moved = true;
       cancelAnimationFrame(leanFrame.current);
-      track.style.setProperty("--thumb-lean", "0px");
+      track.style.setProperty("--thumb-lean", "0");
       track.style.setProperty("--thumb-s", "1");
       track.dataset.following = "";
       track.dataset.dragging = "";
@@ -407,8 +428,8 @@ export function SegmentedControl({
     const left = Math.min(Math.max(wish - width / 2, first.left), last.left + last.width - width);
     held.left = left;
     held.width = width;
-    track.style.setProperty("--thumb-width", `${width.toFixed(2)}px`);
-    track.style.setProperty("--thumb-left", `${left.toFixed(2)}px`);
+    track.style.setProperty("--thumb-width", width.toFixed(2));
+    track.style.setProperty("--thumb-left", left.toFixed(2));
     if (still()) return;
     // Its speed is its middle's: the left edge also moves when the width changes.
     held.motion = trackMotion(
@@ -463,8 +484,8 @@ export function SegmentedControl({
     } else {
       const pressed = track.querySelector<HTMLElement>('[data-slot="segment"][data-pressed]');
       if (pressed) {
-        track.style.setProperty("--thumb-left", `${pressed.offsetLeft}px`);
-        track.style.setProperty("--thumb-width", `${pressed.offsetWidth}px`);
+        track.style.setProperty("--thumb-left", String(pressed.offsetLeft));
+        track.style.setProperty("--thumb-width", String(pressed.offsetWidth));
       }
       lastLeft.current = pressed?.offsetLeft;
     }
@@ -529,7 +550,7 @@ export function SegmentedControl({
             <span
               data-slot="segment-lens-labels"
               className={cn(
-                "absolute left-[calc(var(--thumb-fit)*-1)] inline-flex h-(--track-height) w-(--track-width) items-center",
+                "absolute left-[calc(var(--thumb-fit)*-1)] inline-flex h-[calc(var(--track-height)*1px)] w-[calc(var(--track-width)*1px)] items-center",
                 round
                   ? "top-[calc(var(--thumb-fit)*-1)]"
                   : "top-[calc(-3px-var(--thumb-fit))] gap-0.5 p-[3px]",

@@ -9,6 +9,7 @@ import {
   useId,
   useLayoutEffect,
   useRef,
+  useState,
 } from "react";
 
 import { Chip } from "@/components/chip/chip";
@@ -19,7 +20,7 @@ import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
-import { kindOf, kindSymbols, splitName, typeWord } from "./kinds";
+import { fitName, kindOf, kindSymbols, kindSymbolsSmall, typeWord } from "./kinds";
 
 /** Where a file stands: on its way, arrived, or failed. */
 export type AttachmentStatus = "uploading" | "done" | "error";
@@ -57,43 +58,87 @@ export type AttachmentProps = Omit<ComponentProps<"div">, "children"> & {
   href?: string;
   /** In a prompt's row a chip, elsewhere a tile. */
   variant?: AttachmentVariant;
+  /**
+   * The face of a chip: `plug` (the default), a small raised part, or `flat`, quiet like a
+   * `Badge`, for a row of many or a place that is already busy.
+   */
+  chipVariant?: "plug" | "flat";
   /** What each state is called. */
   statusLabels?: Partial<Record<AttachmentStatus, string>>;
   locale?: string;
 };
 
-/** A name cut in its middle: the end of it, the extension, always stays. */
+/** How many letters before the extension stay where a name is cut: „Angebot-Ko…bst.pdf“. */
+const KEPT_LETTERS = 3;
+
+/**
+ * A name too long for its place, cut in its middle with an ellipsis as a file manager cuts it:
+ * the extension and the last three letters before it stay (`fitName`), „Angebot-Ko…bst.pdf“.
+ * Chosen by Justin (2026-11-20) over a cut at the end of the name and over the fade before the
+ * extension, which "looks odd". The room is the width the whole name would take, or less where
+ * the chip runs out: an unseen copy of the whole name sets it, and the cut is worked out again
+ * when the room changes.
+ */
 function FileName({ name, className }: { name: string; className?: string }) {
-  const { stem, end } = splitName(name);
-  const cut = useRef<HTMLSpanElement>(null);
-  // Where the name is cut, its first part fades out just before the extension, the way an edge
-  // fades where more waits. (An ellipsis left a gap of up to a letter before the extension.)
-  // Said straight on the element, so a resize never renders.
+  const room = useRef<HTMLSpanElement>(null);
+  const probe = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(name);
   useLayoutEffect(() => {
-    const box = cut.current;
-    if (!box) return;
-    const measure = () => {
-      if (box.scrollWidth > box.clientWidth + 0.5) box.dataset.cut = "";
-      else delete box.dataset.cut;
+    const box = room.current;
+    const measuring = probe.current;
+    if (!box || !measuring) return;
+    let live = true;
+    let frame = 0;
+    const fit = () => {
+      // Measured on the page by an unseen copy in the name's own font: measured on a canvas,
+      // the cuts left gaps of up to two letters. Layout pixels, so a chip that is still
+      // growing in measures at its real size.
+      const measure = (each: string) => {
+        measuring.textContent = each;
+        return measuring.offsetWidth;
+      };
+      // The room is the whole name's width where it fits, so the whole name is checked against
+      // it as it is; a cut keeps a pixel to spare, since a width is read rounded.
+      const room = box.clientWidth;
+      setShown(measure(name) <= room ? name : fitName(name, room - 1, measure, KEPT_LETTERS));
     };
-    measure();
-    const observer = new ResizeObserver(measure);
+    fit();
+    // A new room is fitted in the next frame, not while the observer reports it: the cut it
+    // renders would be a change of layout inside the report.
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fit);
+    });
     observer.observe(box);
-    return () => observer.disconnect();
+    // The web font changes every width.
+    void document.fonts?.ready.then(() => live && fit());
+    return () => {
+      live = false;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [name]);
   return (
-    <span data-slot="attachment-name" className={cn("flex min-w-0", className)}>
-      {/* Read out whole: drawn in two parts, the name would be heard with a gap in it. */}
-      <span className="sr-only">{name}</span>
-      <span aria-hidden className="flex min-w-0">
-        <span
-          ref={cut}
-          className="overflow-hidden whitespace-nowrap data-cut:[mask-image:linear-gradient(to_right,#000_calc(100%-1.25em),transparent)]"
-        >
-          {stem}
-        </span>
-        {end && <span className="shrink-0">{end}</span>}
+    <span
+      ref={room}
+      data-slot="attachment-name"
+      className={cn("grid min-w-0 grid-cols-[minmax(0,max-content)]", className)}
+    >
+      <span aria-hidden className="col-start-1 row-start-1 overflow-hidden whitespace-nowrap">
+        {shown}
       </span>
+      {/* Unseen and out of the layout: where a cut is measured. */}
+      <span ref={probe} aria-hidden className="invisible absolute whitespace-nowrap" />
+
+      {/* Unseen, the whole name: it gives the room its width. */}
+      <span
+        aria-hidden
+        className="invisible col-start-1 row-start-1 h-0 overflow-hidden whitespace-nowrap"
+      >
+        {name}
+      </span>
+      {/* Read out whole: the cut name would be heard with its ellipsis. */}
+      <span className="sr-only">{name}</span>
     </span>
   );
 }
@@ -118,6 +163,7 @@ export function Attachment({
   removeLabel = "entfernen",
   href,
   variant: variantProp,
+  chipVariant = "plug",
   statusLabels,
   locale = "de-DE",
   className,
@@ -139,7 +185,7 @@ export function Attachment({
     ) : (
       // Arrived: the symbol comes in softly where the arc was.
       <Icon
-        icon={kindSymbols[kind]}
+        icon={small ? kindSymbolsSmall[kind] : kindSymbols[kind]}
         size={small ? 14 : 18}
         className="text-fg-muted transition-opacity spring-settle in-data-live:starting:opacity-0"
       />
@@ -151,6 +197,7 @@ export function Attachment({
         data-slot="attachment"
         data-variant="chip"
         data-status={status}
+        variant={chipVariant}
         title={name}
         onRemove={onRemove}
         removeLabel={removeLabel}

@@ -1,9 +1,10 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
 /**
- * The fitting of a `ButtonGroup`: the face, the edge and the shadow that all its keys share. It
- * moves as one part: under the pointer the whole fitting lifts, under a press it goes down and
- * drops its ambient shadow, whichever key it is. Server-safe, like `buttonVariants`.
+ * The fitting of a `ButtonGroup`: the face, the edge and the shadow that all its keys share. Under
+ * the pointer the whole fitting lifts; a press moves only the key that was pressed (see
+ * `buttonGroupKeyVariants`), so the fitting itself stays where it is. Server-safe, like
+ * `buttonVariants`.
  *
  * `--key-hover` and `--key-pressed` are what a key lays over the face (button-group.css has the
  * seams and the corners).
@@ -11,10 +12,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 export const buttonGroupVariants = cva(
   [
     "relative inline-flex shrink-0 items-stretch font-medium",
-    "transition-[box-shadow,scale] spring-seat",
-    // Hover only while nothing is pressed, so the press never competes with it for the shadow.
-    "has-[[data-group-key]:hover]:spring-snap has-[[data-group-key]:hover:not(:active)]:depth-raised-hover",
-    "has-[[data-group-key]:active]:scale-(--motion-press-scale) has-[[data-group-key]:active]:shadow-pressed has-[[data-group-key]:active]:spring-snap",
+    "transition-[box-shadow] spring-seat",
+    "has-[[data-group-key]:hover]:depth-raised-hover has-[[data-group-key]:hover]:spring-snap",
     "data-[orientation=vertical]:flex-col",
     // A group that cannot be used is one flat part, like a disabled button.
     "data-disabled:bg-disabled data-disabled:depth-flat",
@@ -51,16 +50,17 @@ export const buttonGroupKeyDisabledLook =
   "data-disabled:bg-disabled data-disabled:text-on-disabled";
 
 /**
- * One key of the fitting. It has no face of its own: the fitting's gloss shows through, a wash
- * marks the key under the pointer, and a press shades only this key, so the fitting rocks on it
- * while the others keep their gloss. On a touch screen its target grows to 44px up and down,
- * never sideways, so two keys never take each other's taps.
+ * One key of the fitting. It has no face of its own: the fitting's gloss shows through and a wash
+ * marks the key under the pointer. A press moves only this key: it takes the pressed colour and
+ * the inner shade and goes down to the press scale, while the fitting and the other keys stay
+ * still. On a touch screen its target grows to 44px up and down, never sideways, so two keys
+ * never take each other's taps.
  */
 export const buttonGroupKeyVariants = cva(
   [
     "relative inline-flex shrink-0 items-center justify-center whitespace-nowrap outline-offset-2 select-none",
-    "transition-[background-color,box-shadow] spring-seat hover:bg-(--key-hover) hover:spring-snap",
-    "active:bg-(--key-pressed) active:inset-shadow-pressed active:spring-snap",
+    "transition-[background-color,box-shadow,scale] spring-seat hover:bg-(--key-hover) hover:spring-snap",
+    "active:scale-(--motion-press-scale) active:bg-(--key-pressed) active:inset-shadow-pressed active:spring-snap",
     // The key that opened a popup stays marked while it is open.
     "data-popup-open:bg-(--key-hover)",
     // With the keyboard on it a key rounds all four corners, so its ring closes around that key.

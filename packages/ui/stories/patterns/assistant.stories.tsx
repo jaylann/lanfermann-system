@@ -109,7 +109,7 @@ function Answer({ turn }: { turn: Turn }) {
         <MessageActions>
           <CopyButton text={ANSWER_TEXT} size="sm" copyLabel="Antwort kopieren" />
           <MessageFeedback />
-          <MessageAction icon={RefreshIcon} label="Noch einmal" />
+          <MessageAction icon={RefreshIcon} iconMotion="turn" label="Noch einmal" />
         </MessageActions>
       )}
     </Message>

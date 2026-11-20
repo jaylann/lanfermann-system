@@ -6,6 +6,8 @@ import type { ReactElement } from "react";
 import { Button, type ButtonProps } from "@/components/button/button";
 import { buttonVariants } from "@/components/button/button-variants";
 import { Input, type InputProps } from "@/components/input/input";
+import { TooltipProvider } from "@/components/tooltip/tooltip";
+import { KeyTip } from "@/internal/key-tip";
 import { cn, mergeClassName } from "@/lib/cn";
 
 import { ToolbarContext } from "./toolbar-context";
@@ -22,20 +24,26 @@ export type ToolbarProps = ToolbarPrimitive.Root.Props;
  * `ToolbarButton`s inside, `ToggleGroup`s and `Toggle`s as they are, a `ToolbarSeparator`
  * between two kinds of control, and at most one `ToolbarInput`, last, because the arrow keys
  * also move the text cursor. It is only the bar: what the keys do is the caller's.
+ *
+ * A key that shows only a symbol (`iconOnly`, a `ToolbarButton` or a `Toggle`) says its name in
+ * a tooltip, with its `shortcut` after it. The first waits for the pointer to rest; its
+ * neighbours then open at once.
  */
 export function Toolbar({ className, ...props }: ToolbarProps) {
   return (
     <ToolbarContext value={true}>
-      <ToolbarPrimitive.Root
-        data-slot="toolbar"
-        className={mergeClassName(
-          // Too narrow for all of its keys, a row breaks onto a second line instead of running
-          // out of its place.
-          "flex flex-wrap items-center gap-1 data-[orientation=vertical]:flex-col data-[orientation=vertical]:flex-nowrap",
-          className,
-        )}
-        {...props}
-      />
+      <TooltipProvider>
+        <ToolbarPrimitive.Root
+          data-slot="toolbar"
+          className={mergeClassName(
+            // Too narrow for all of its keys, a row breaks onto a second line instead of running
+            // out of its place.
+            "flex flex-wrap items-center gap-1 data-[orientation=vertical]:flex-col data-[orientation=vertical]:flex-nowrap",
+            className,
+          )}
+          {...props}
+        />
+      </TooltipProvider>
     </ToolbarContext>
   );
 }
@@ -50,11 +58,14 @@ export type ToolbarButtonProps = Without<ButtonProps, "render"> & {
    * `<MenuTrigger render={<ToolbarButton />}>`.
    */
   render?: ReactElement;
+  /** Its keyboard shortcut (`mod+k`), said after its name in the tooltip of a symbol key. */
+  shortcut?: string;
 };
 
 /**
  * One key of a toolbar: a quiet, small `Button` unless told otherwise. A key that cannot be
- * used right now stays in reach of the arrow keys and says that it is disabled.
+ * used right now stays in reach of the arrow keys and says that it is disabled. A key with only
+ * a symbol says its `aria-label` in a tooltip.
  */
 export function ToolbarButton({
   render,
@@ -63,9 +74,10 @@ export function ToolbarButton({
   className,
   disabled,
   focusableWhenDisabled,
+  shortcut,
   ...props
 }: ToolbarButtonProps) {
-  return (
+  const key = (
     <ToolbarPrimitive.Button
       data-slot="toolbar-button"
       disabled={disabled}
@@ -77,6 +89,8 @@ export function ToolbarButton({
       }
     />
   );
+  const label = props.iconOnly && !render ? props["aria-label"] : undefined;
+  return label ? <KeyTip label={label} shortcut={shortcut} trigger={key} /> : key;
 }
 
 /** A link among the keys. It keeps link semantics and wears a quiet key. */

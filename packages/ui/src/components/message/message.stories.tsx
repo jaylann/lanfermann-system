@@ -43,7 +43,7 @@ function Actions() {
     <MessageActions>
       <CopyButton text={ANSWER_TEXT} size="sm" copyLabel="Antwort kopieren" />
       <MessageFeedback />
-      <MessageAction icon={RefreshIcon} label="Noch einmal" onClick={retried} />
+      <MessageAction icon={RefreshIcon} iconMotion="turn" label="Noch einmal" onClick={retried} />
     </MessageActions>
   );
 }
@@ -59,6 +59,7 @@ export const Answer: Story = {
       motion: [
         { name: "good", click: '[data-slot="message-feedback"] button', frames: 8 },
         { name: "copy", click: '[data-slot="copy-button"] button', frames: 8 },
+        { name: "retry", click: '[data-slot="message-action"]', frames: 8 },
       ],
     },
   },

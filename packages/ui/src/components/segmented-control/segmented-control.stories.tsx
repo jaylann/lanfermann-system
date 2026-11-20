@@ -107,13 +107,58 @@ export const Plain: Story = {
   ),
 };
 
+/**
+ * The thumb as it is drawn, under zoom, against the segment it stands on: the same box to a
+ * pixel, in the viewport's pixels. The written numbers cannot show this (they are layout
+ * pixels and always agree with the segment's); only the drawn boxes do. Firefox drew the thumb
+ * 1.4 times too wide here, past the trough's end, while its numbers were right.
+ */
+export const ZoomedLands: Story = {
+  render: () => (
+    <div style={{ zoom: 1.4 }}>
+      <SegmentedControl defaultValue="monat" aria-label="Abrechnung">
+        <Segment value="monat">Monatlich</Segment>
+        <Segment value="jahr">Jährlich</Segment>
+        <Segment value="einmalig">Einmalig</Segment>
+      </SegmentedControl>
+    </div>
+  ),
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    const drawn = () => {
+      const thumb = canvasElement.querySelector('[data-slot="segment-thumb"]');
+      const chosen = canvasElement.querySelector('[data-slot="segment"][data-pressed]');
+      return { thumb: thumb?.getBoundingClientRect(), segment: chosen?.getBoundingClientRect() };
+    };
+    const lands = async () =>
+      waitFor(
+        async () => {
+          const { thumb, segment } = drawn();
+          await expect(thumb && segment).toBeTruthy();
+          await expect(Math.abs(thumb!.left - segment!.left)).toBeLessThanOrEqual(1);
+          await expect(Math.abs(thumb!.width - segment!.width)).toBeLessThanOrEqual(1);
+        },
+        { timeout: 2000 },
+      );
+
+    await step("At rest the thumb covers the first segment", lands);
+    await step("Chosen, it lands on the middle segment at its width", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Jährlich" }));
+      await lands();
+    });
+    await step("And on the last one, without passing the trough's end", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Einmalig" }));
+      await lands();
+    });
+  },
+};
+
 /** The thumb's place as the control wrote it, and the chosen segment's, in layout px. */
 function places(canvasElement: HTMLElement) {
   const track = canvasElement.querySelector<HTMLElement>('[data-slot="segmented-control"]');
   const chosen = track?.querySelector<HTMLElement>('[data-slot="segment"][data-pressed]');
   return {
     thumb: track?.style.getPropertyValue("--thumb-left"),
-    segment: `${chosen?.offsetLeft}px`,
+    segment: String(chosen?.offsetLeft),
   };
 }
 

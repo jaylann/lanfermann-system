@@ -1,8 +1,14 @@
 import {
+  Calendar03Icon,
+  Clock01Icon,
   Copy01Icon,
+  Csv01Icon,
   Delete02Icon,
   Download01Icon,
+  EuroIcon,
+  Pdf01Icon,
   PencilEdit02Icon,
+  UserIcon,
 } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, waitFor } from "storybook/test";
@@ -59,20 +65,12 @@ export const Default: Story = {
       <MenuContent>
         <MenuGroup>
           <MenuGroupLabel>Angebot 2026-0418</MenuGroupLabel>
-          <MenuItem>
-            <Icon icon={PencilEdit02Icon} className="text-fg-muted" />
-            Bearbeiten
-          </MenuItem>
-          <MenuItem>
-            <Icon icon={Copy01Icon} className="text-fg-muted" />
-            Duplizieren
-          </MenuItem>
-          <MenuItem>
-            <Icon icon={Download01Icon} className="text-fg-muted" />
-            Als PDF herunterladen
-          </MenuItem>
+          <MenuItem icon={PencilEdit02Icon}>Bearbeiten</MenuItem>
+          <MenuItem icon={Copy01Icon}>Duplizieren</MenuItem>
+          <MenuItem icon={Download01Icon}>Als PDF herunterladen</MenuItem>
         </MenuGroup>
         <MenuSeparator />
+        {/* In the danger colour, its symbol too: given as a child, it takes the row's colour. */}
         <MenuItem className="text-danger">
           <Icon icon={Delete02Icon} />
           Löschen
@@ -99,16 +97,9 @@ export const Open: Story = {
       <MenuContent>
         <MenuGroup>
           <MenuGroupLabel>Angebot 2026-0418</MenuGroupLabel>
-          <MenuItem>
-            <Icon icon={PencilEdit02Icon} className="text-fg-muted" />
-            Bearbeiten
-          </MenuItem>
-          <MenuItem>
-            <Icon icon={Copy01Icon} className="text-fg-muted" />
-            Duplizieren
-          </MenuItem>
-          <MenuItem disabled>
-            <Icon icon={Download01Icon} />
+          <MenuItem icon={PencilEdit02Icon}>Bearbeiten</MenuItem>
+          <MenuItem icon={Copy01Icon}>Duplizieren</MenuItem>
+          <MenuItem icon={Download01Icon} disabled>
             Als PDF herunterladen
           </MenuItem>
         </MenuGroup>
@@ -122,7 +113,10 @@ export const Open: Story = {
   ),
 };
 
-/** Options inside a menu: ticks for what is on, the disc for the one that is chosen. */
+/**
+ * Options inside a menu. Every row's words start at its left edge, the group labels' too; what
+ * is on or chosen carries its mark at the right end.
+ */
 export const Options: Story = {
   parameters: { visual: { viewport: { width: 520, height: 360 }, clip: "viewport" } },
   render: () => (
@@ -155,6 +149,56 @@ export const Options: Story = {
           <MenuSubContent>
             <MenuItem>Als PDF</MenuItem>
             <MenuItem>Als CSV</MenuItem>
+          </MenuSubContent>
+        </MenuSub>
+      </MenuContent>
+    </Menu>
+  ),
+};
+
+/** The same options, each with its symbol before its words. */
+export const OptionsWithIcons: Story = {
+  parameters: { visual: { viewport: { width: 520, height: 360 }, clip: "viewport" } },
+  render: () => (
+    <Menu defaultOpen modal={false}>
+      <MenuTrigger
+        render={
+          <Button>
+            Ansicht
+            <ChevronDownGlyph className="text-fg-muted" />
+          </Button>
+        }
+      />
+      <MenuContent>
+        <MenuGroup>
+          <MenuGroupLabel>Spalten</MenuGroupLabel>
+          <MenuCheckboxItem icon={UserIcon} defaultChecked>
+            Kunde
+          </MenuCheckboxItem>
+          <MenuCheckboxItem icon={EuroIcon} defaultChecked>
+            Betrag
+          </MenuCheckboxItem>
+          <MenuCheckboxItem icon={Clock01Icon}>Zuletzt geändert</MenuCheckboxItem>
+        </MenuGroup>
+        <MenuSeparator />
+        <MenuRadioGroup defaultValue="datum">
+          <MenuGroupLabel>Sortieren nach</MenuGroupLabel>
+          <MenuRadioItem icon={Calendar03Icon} value="datum">
+            Datum
+          </MenuRadioItem>
+          <MenuRadioItem icon={EuroIcon} value="betrag">
+            Betrag
+          </MenuRadioItem>
+          <MenuRadioItem icon={UserIcon} value="kunde">
+            Kunde
+          </MenuRadioItem>
+        </MenuRadioGroup>
+        <MenuSeparator />
+        <MenuSub>
+          <MenuSubTrigger icon={Download01Icon}>Exportieren</MenuSubTrigger>
+          <MenuSubContent>
+            <MenuItem icon={Pdf01Icon}>Als PDF</MenuItem>
+            <MenuItem icon={Csv01Icon}>Als CSV</MenuItem>
           </MenuSubContent>
         </MenuSub>
       </MenuContent>

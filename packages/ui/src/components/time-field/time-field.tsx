@@ -17,6 +17,7 @@ import {
   timeMatches,
   timesOfDay,
 } from "@/internal/iso-date";
+import { ListMark } from "@/internal/list-mark";
 import { listItem, listSheet, popupMotion } from "@/internal/popup";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
 import { cn } from "@/lib/cn";
@@ -196,15 +197,11 @@ export function TimeField({
                   value={time}
                   data-slot="time-field-option"
                   data-time={time}
-                  className={cn(listItem, "tabular-nums")}
+                  className={cn("group", listItem, "tabular-nums")}
                 >
-                  {/* As in a select: the time the field holds carries the disc. One or the other:
-                      the two are utilities of equal weight, and together the quiet one wins. */}
-                  <span
-                    aria-hidden
-                    className={cn("mark", time === typed.value ? "mark-on" : "mark-quiet")}
-                  />
                   {written(time)}
+                  {/* As in a select: the time the field holds carries the mark at the right. */}
+                  <ListMark on={time === typed.value} className="ml-auto" />
                 </Autocomplete.Item>
               )}
             </Autocomplete.List>
