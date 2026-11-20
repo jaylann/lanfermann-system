@@ -19,6 +19,10 @@ extend-exclude = [
   "packages/ui/visual-baseline/",
 ]
 
+[default]
+# Short commit hashes in the generated changelogs are not words ("e61ba3c" read as "ba").
+extend-ignore-re = ["\\b[0-9a-f]{7,40}\\b"]
+
 [default.extend-words]
 # German words in the library's own copy (labels, error messages, the forms a typed date and
 # time are read in), and "Fase", the name of the design direction.
