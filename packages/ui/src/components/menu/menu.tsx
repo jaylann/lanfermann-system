@@ -3,7 +3,9 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 
 import { useGround } from "@/components/ground/ground";
-import { ChevronRightGlyph, TickGlyph } from "@/internal/glyphs";
+import { Icon, type IconSvgElement } from "@/components/icon/icon";
+import { ChevronRightGlyph } from "@/internal/glyphs";
+import { ListMark } from "@/internal/list-mark";
 import { listGroupLabel, listItem, listSeparator, listSheet, popupMotion } from "@/internal/popup";
 import { mergeClassName } from "@/lib/cn";
 
@@ -51,63 +53,100 @@ export function MenuContent({
   );
 }
 
-export function MenuItem({ className, ...props }: MenuPrimitive.Item.Props) {
+/**
+ * A 16px symbol before a row's words, muted, darkening with the row's highlight. Give every row
+ * of a group one or none, so the words start on one line.
+ */
+type WithIcon = { icon?: IconSvgElement };
+
+function RowIcon({ icon }: WithIcon) {
+  return icon ? (
+    <Icon
+      icon={icon}
+      size={16}
+      className="text-fg-muted group-data-disabled:text-on-disabled group-data-highlighted:text-fg"
+    />
+  ) : null;
+}
+
+export function MenuItem({
+  className,
+  icon,
+  children,
+  ...props
+}: MenuPrimitive.Item.Props & WithIcon) {
   return (
     <MenuPrimitive.Item
       data-slot="menu-item"
-      className={mergeClassName(listItem, className)}
+      className={mergeClassName(["group", listItem], className)}
       {...props}
-    />
+    >
+      <RowIcon icon={icon} />
+      {children}
+    </MenuPrimitive.Item>
   );
 }
 
 /** A place rather than an action: a real link, so it can be opened in a new tab. */
-export function MenuLinkItem({ className, ...props }: MenuPrimitive.LinkItem.Props) {
+export function MenuLinkItem({
+  className,
+  icon,
+  children,
+  ...props
+}: MenuPrimitive.LinkItem.Props & WithIcon) {
   return (
     <MenuPrimitive.LinkItem
       data-slot="menu-item"
-      className={mergeClassName(listItem, className)}
+      className={mergeClassName(["group", listItem], className)}
       {...props}
-    />
+    >
+      <RowIcon icon={icon} />
+      {children}
+    </MenuPrimitive.LinkItem>
   );
 }
 
-/** An option that is on or off. The menu stays open, so several can be set in one go. */
+/**
+ * An option that is on or off. The menu stays open, so several can be set in one go. Its words
+ * start at the row's edge like every other row's; when it is on, the tick stands at the right.
+ */
 export function MenuCheckboxItem({
   className,
+  icon,
   children,
   ...props
-}: MenuPrimitive.CheckboxItem.Props) {
+}: MenuPrimitive.CheckboxItem.Props & WithIcon) {
   return (
     <MenuPrimitive.CheckboxItem
       data-slot="menu-checkbox-item"
-      className={mergeClassName(listItem, className)}
+      className={mergeClassName(["group", listItem], className)}
       {...props}
     >
-      <span aria-hidden className="flex size-3 shrink-0 items-center justify-center text-accent">
-        <MenuPrimitive.CheckboxItemIndicator data-slot="menu-item-indicator">
-          <TickGlyph />
-        </MenuPrimitive.CheckboxItemIndicator>
-      </span>
+      <RowIcon icon={icon} />
       {children}
+      <ListMark kind="multiple" className="ml-auto" />
     </MenuPrimitive.CheckboxItem>
   );
 }
 
 export const MenuRadioGroup = MenuPrimitive.RadioGroup;
 
-/** One of several: the chosen one carries the disc. */
-export function MenuRadioItem({ className, children, ...props }: MenuPrimitive.RadioItem.Props) {
+/** One of several: the chosen one carries the disc at the right. */
+export function MenuRadioItem({
+  className,
+  icon,
+  children,
+  ...props
+}: MenuPrimitive.RadioItem.Props & WithIcon) {
   return (
     <MenuPrimitive.RadioItem
       data-slot="menu-radio-item"
       className={mergeClassName(["group", listItem], className)}
       {...props}
     >
-      <span aria-hidden className="flex size-3 shrink-0 items-center justify-center">
-        <span className="mark mark-quiet group-data-checked:mark-on" />
-      </span>
+      <RowIcon icon={icon} />
       {children}
+      <ListMark className="ml-auto" />
     </MenuPrimitive.RadioItem>
   );
 }
@@ -139,15 +178,17 @@ export const MenuSub = MenuPrimitive.SubmenuRoot;
 
 export function MenuSubTrigger({
   className,
+  icon,
   children,
   ...props
-}: MenuPrimitive.SubmenuTrigger.Props) {
+}: MenuPrimitive.SubmenuTrigger.Props & WithIcon) {
   return (
     <MenuPrimitive.SubmenuTrigger
       data-slot="menu-sub-trigger"
-      className={mergeClassName([listItem, "data-popup-open:bg-hover"], className)}
+      className={mergeClassName(["group", listItem, "data-popup-open:bg-hover"], className)}
       {...props}
     >
+      <RowIcon icon={icon} />
       {children}
       <ChevronRightGlyph className="ml-auto text-fg-muted" />
     </MenuPrimitive.SubmenuTrigger>

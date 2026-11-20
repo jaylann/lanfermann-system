@@ -6,7 +6,13 @@ import {
   Csv01Icon,
   Doc01Icon,
   File01Icon,
+  FileArchiveIcon,
   FileAudioIcon,
+  FileEmpty02Icon,
+  FileImageIcon,
+  FilePenLineIcon,
+  FileSpreadsheetIcon,
+  FileTextIcon,
   FileVideoIcon,
   Image01Icon,
   Pdf01Icon,
@@ -19,6 +25,7 @@ import type { IconSvgElement } from "@/components/icon/icon";
 export type FileKind =
   "pdf" | "image" | "sheet" | "csv" | "document" | "archive" | "audio" | "video" | "file";
 
+/** The symbol of a kind at a tile's size (18px), where the letters of a type stay readable. */
 export const kindSymbols: Record<FileKind, IconSvgElement> = {
   pdf: Pdf01Icon,
   image: Image01Icon,
@@ -29,6 +36,25 @@ export const kindSymbols: Record<FileKind, IconSvgElement> = {
   audio: FileAudioIcon,
   video: FileVideoIcon,
   file: File01Icon,
+};
+
+/**
+ * The symbol of a kind in a chip (14px): a sheet with what it holds, without letters. At 14px
+ * the stroke is pinned to 1.5px, and the letters of „PDF“ or „XLS“ ran together into blots
+ * (Justin, 2026-11-20: "the icons look too thick, they kinda explode"). The extension stands in
+ * the name beside it anyway.
+ */
+export const kindSymbolsSmall: Record<FileKind, IconSvgElement> = {
+  pdf: FileTextIcon,
+  image: FileImageIcon,
+  sheet: FileSpreadsheetIcon,
+  csv: FileSpreadsheetIcon,
+  document: FilePenLineIcon,
+  archive: FileArchiveIcon,
+  audio: FileAudioIcon,
+  video: FileVideoIcon,
+  // The same sheet as the others, its corner folded at the top: `File01Icon` folds at its foot.
+  file: FileEmpty02Icon,
 };
 
 /** The word for a kind where the name has no extension to show. */
@@ -91,6 +117,38 @@ export function splitName(name: string): { stem: string; end: string } {
   // A long "extension" is part of the name (a dotted version number): nothing stays apart.
   if (!extension || extension.length > 5) return { stem: name, end: "" };
   return { stem: name.slice(0, -(extension.length + 1)), end: `.${name.slice(-extension.length)}` };
+}
+
+/**
+ * A file name shortened to fit `width`, cut with an ellipsis the way a file manager cuts it:
+ * the extension always stays, and so do the last `keep` letters before it, so „Angebot-
+ * Kornprobst.pdf“ becomes „Angebot-Ko…bst.pdf“. `measure` gives the drawn width of a text in
+ * the name's own font. The cut is exact, so no gap is left before what stays (a CSS ellipsis
+ * leaves up to a letter's room). A name that fits is returned as it is.
+ */
+export function fitName(
+  name: string,
+  width: number,
+  measure: (text: string) => number,
+  keep = 3,
+): string {
+  if (measure(name) <= width) return name;
+  const { stem, end } = splitName(name);
+  // What stays after the ellipsis: as much of the asked tail as still leaves a letter in front.
+  for (let tail = Math.min(keep, Math.max(0, stem.length - 1)); tail >= 0; tail--) {
+    const after = `…${stem.slice(stem.length - tail)}${end}`;
+    const room = stem.length - tail;
+    // The longest head that fits in front of it.
+    let low = 0;
+    let high = room;
+    while (low < high) {
+      const mid = Math.ceil((low + high) / 2);
+      if (measure(stem.slice(0, mid) + after) <= width) low = mid;
+      else high = mid - 1;
+    }
+    if (low > 0) return stem.slice(0, low).trimEnd() + after;
+  }
+  return `…${end}`;
 }
 
 /** The kind of a file: its MIME type decides, and its extension where the type says too little. */

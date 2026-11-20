@@ -4,7 +4,9 @@ import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/naviga
 import type { ComponentProps } from "react";
 
 import { useGround } from "@/components/ground/ground";
+import type { IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
+import { Tile } from "@/internal/tile";
 import { cn, mergeClassName } from "@/lib/cn";
 
 import { navigationMenuEntryVariants } from "./navigation-menu-variants";
@@ -156,6 +158,11 @@ export type NavigationMenuLinkProps = NavigationMenuPrimitive.Link.Props & {
    * link in the row itself, which looks like the entries beside it and opens nothing.
    */
   kind?: "page" | "entry";
+  /**
+   * The symbol of a page, in a small tile before its title and line. Give every page of a panel
+   * one or none. Without a line under the title, rows with tiles make a compact grid of places.
+   */
+  icon?: IconSvgElement;
 };
 
 /**
@@ -164,9 +171,12 @@ export type NavigationMenuLinkProps = NavigationMenuPrimitive.Link.Props & {
  */
 export function NavigationMenuLink({
   kind = "page",
+  icon,
   className,
+  children,
   ...props
 }: NavigationMenuLinkProps) {
+  const tiled = kind === "page" && icon !== undefined;
   return (
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
@@ -176,14 +186,24 @@ export function NavigationMenuLink({
           : [
               // The concentric radius of the sheet: 12px outside, 8px of padding, 4px left over
               // would read as square, so the row takes the control radius.
-              "flex flex-col gap-0.5 rounded-md px-3 py-2.5 text-fg-body",
+              "group/row flex rounded-md text-fg-body",
+              tiled ? "flex-row items-center gap-3 px-2 py-2" : "flex-col gap-0.5 px-3 py-2.5",
               "transition-colors duration-150 ease-out hover:bg-hover data-active:bg-tint",
               "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent",
             ],
         className,
       )}
       {...props}
-    />
+    >
+      {tiled ? (
+        <>
+          <Tile icon={icon} />
+          <span className="flex min-w-0 flex-col gap-0.5">{children}</span>
+        </>
+      ) : (
+        children
+      )}
+    </NavigationMenuPrimitive.Link>
   );
 }
 

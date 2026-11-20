@@ -6,11 +6,12 @@ import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar";
 import { Button, type ButtonProps } from "@/components/button/button";
 import { useButtonGroup } from "@/components/button-group/button-group-context";
 import { useInToolbar } from "@/components/toolbar/toolbar-context";
+import { KeyTip } from "@/internal/key-tip";
 import { cn } from "@/lib/cn";
 
 /**
- * How a key shows that it is on. A key of a group keeps the inner shade of a press, so the
- * fitting stays rocked on it. A raised key on its own stays down: the pressed recipe without
+ * How a key shows that it is on. A key of a group keeps the pressed colour and the inner shade of
+ * a press, without its scale. A raised key on its own stays down: the pressed recipe without
  * the scale, since it has come to rest. A quiet key keeps the wash it has under the pointer and
  * its symbol stays dark; off, the symbol is muted and only darkens under the pointer.
  */
@@ -32,6 +33,8 @@ export type ToggleProps<Value extends string = string> = Omit<
     /** `secondary` (the default): a raised key. `quiet`: no face, for a toolbar. */
     variant?: "secondary" | "quiet";
     className?: string;
+    /** Its keyboard shortcut (`mod+b`), said after its name in a toolbar's tooltip. */
+    shortcut?: string;
   } & (
     | {
         /** A square key for a single symbol. It has no visible label, so it needs a name. */
@@ -49,13 +52,15 @@ export type ToggleProps<Value extends string = string> = Omit<
  * Its name does not change with its state: "Fett", not "Fett ausschalten". For a setting with
  * a label beside it, a `Switch` reads better; for one choice out of a few views, a
  * `SegmentedControl`. Several toggles that belong together go into a `ToggleGroup`, where each
- * needs a `value`. In a `Toolbar` it joins the bar's one tab stop by itself.
+ * needs a `value`. In a `Toolbar` it joins the bar's one tab stop by itself, and a toggle with
+ * only a symbol says its name (and its `shortcut`) in a tooltip there.
  */
 export function Toggle<Value extends string = string>({
   variant = "secondary",
   size,
   iconOnly,
   className,
+  shortcut,
   children,
   ...props
 }: ToggleProps<Value>) {
@@ -75,7 +80,7 @@ export function Toggle<Value extends string = string>({
   ) : (
     <Button variant={variant} size={size} className={look} />
   );
-  return (
+  const toggle = (
     <TogglePrimitive<Value>
       data-slot="toggle"
       {...props}
@@ -84,4 +89,6 @@ export function Toggle<Value extends string = string>({
       {children}
     </TogglePrimitive>
   );
+  const label = inToolbar && iconOnly ? props["aria-label"] : undefined;
+  return label ? <KeyTip label={label} shortcut={shortcut} trigger={toggle} /> : toggle;
 }

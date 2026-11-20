@@ -86,8 +86,9 @@ export const Default: Story = {
 };
 
 /**
- * A customer picker, open. Each row has the name and, quieter at the right edge, the place. The
- * chosen one carries the disc, and a cross in the field takes the choice back.
+ * A customer picker, open. Each row has the name and, quieter at the right edge, the place, so
+ * the chosen one stands on the tint instead of carrying a mark; a cross in the field takes the
+ * choice back.
  */
 export const Open: Story = {
   render: () => <CustomerPicker defaultOpen defaultValue={CUSTOMERS[1]} />,

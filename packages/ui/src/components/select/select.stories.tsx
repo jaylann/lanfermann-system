@@ -75,7 +75,11 @@ export const Default: Story = {
   render: () => <TradeSelect />,
 };
 
-/** Open: the chosen option carries the disc. */
+/**
+ * Open: the labels start where the row starts, and the chosen option carries the disc at the
+ * right end. Where options have a detail at the right, the chosen one stands on the tint instead
+ * (`Groups`, `WithDetails`).
+ */
 export const Open: Story = { render: () => <TradeSelect defaultOpen defaultValue="baeckerei" /> };
 
 const TRADES_WITH_ICONS = [

@@ -37,7 +37,7 @@ function Code({ invalid, disabled, ...props }: OtpFieldProps & { invalid?: boole
 
 /**
  * Six slots in threes, each three sharing one socket. Type a digit: it seats into its slot and
- * the halo hops to the next. Paste a code: every slot is filled, one digit after the other.
+ * the halo glides on to the next. Paste a code: every slot is filled, one digit after the other.
  */
 export const Default: Story = {
   parameters: {

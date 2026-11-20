@@ -9,6 +9,7 @@ import {
   choiceCardEdge,
   type ChoiceCardText,
   choiceControl,
+  followPointer,
 } from "@/internal/choice-card";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
@@ -51,6 +52,7 @@ export function CheckboxCard({
   return (
     <label
       data-slot="checkbox-card"
+      onPointerMove={followPointer}
       className={cn(choiceCard, chosen === "edge" && choiceCardEdge, className)}
     >
       <CheckboxPrimitive.Root

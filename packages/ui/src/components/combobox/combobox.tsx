@@ -1,7 +1,7 @@
 "use client";
 
 import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox";
-import { type ReactNode, useRef, useState } from "react";
+import { createContext, type ReactNode, useContext, useRef, useState } from "react";
 
 import {
   chipDisabledLook,
@@ -25,6 +25,7 @@ import {
   focusFieldControl,
 } from "@/internal/field";
 import { ChevronDownGlyph, CloseGlyph, PlusGlyph } from "@/internal/glyphs";
+import { ListMark, listTint } from "@/internal/list-mark";
 import {
   listGroupLabel,
   listItem,
@@ -80,6 +81,9 @@ export type ComboboxProps<
   /** What the row that creates says: „Dringend“ anlegen. */
   createLabel?: (label: string) => ReactNode;
 };
+
+/** Whether several options can be chosen: their rows then carry the tick, not the disc. */
+const MultipleContext = createContext(false);
 
 /**
  * A select you can type into: for lists too long to scan (a customer out of two hundred), where
@@ -157,26 +161,28 @@ export function Combobox<Value, Multiple extends boolean | undefined = false, It
   };
 
   return (
-    <ComboboxPrimitive.Root
-      autoHighlight={autoHighlight}
-      locale={locale}
-      filter={filter === undefined ? folding.contains : filter}
-      items={offered}
-      multiple={multiple}
-      inputValue={ownsText ? typed : inputValue}
-      defaultInputValue={ownsText ? undefined : defaultInputValue}
-      onInputValueChange={(value, details) => {
-        setTyped(value);
-        onInputValueChange?.(value, details);
-      }}
-      onValueChange={changed}
-      onOpenChange={(open, details) => {
-        // Several values are taken in a row: a choice does not close the list.
-        if (multiple && !open && details.reason === "item-press") details.cancel();
-        onOpenChange?.(open, details);
-      }}
-      {...props}
-    />
+    <MultipleContext value={multiple === true}>
+      <ComboboxPrimitive.Root
+        autoHighlight={autoHighlight}
+        locale={locale}
+        filter={filter === undefined ? folding.contains : filter}
+        items={offered}
+        multiple={multiple}
+        inputValue={ownsText ? typed : inputValue}
+        defaultInputValue={ownsText ? undefined : defaultInputValue}
+        onInputValueChange={(value, details) => {
+          setTyped(value);
+          onInputValueChange?.(value, details);
+        }}
+        onValueChange={changed}
+        onOpenChange={(open, details) => {
+          // Several values are taken in a row: a choice does not close the list.
+          if (multiple && !open && details.reason === "item-press") details.cancel();
+          onOpenChange?.(open, details);
+        }}
+        {...props}
+      />
+    </MultipleContext>
   );
 }
 
@@ -542,7 +548,9 @@ export type ComboboxItemProps = ComboboxPrimitive.Item.Props & {
 
 /**
  * One row. Pass the option as `value`; its label, icon and detail are shown unless you give
- * children or props of your own. The chosen row carries the disc, as in a `Select`.
+ * children or props of your own. As in a `Select`, the chosen row carries its mark at the right
+ * end (the disc, or the tick where several can be chosen), or stands on the tint where the rows
+ * have a detail; chosen rows that touch are one shape.
  */
 export function ComboboxItem({
   className,
@@ -557,32 +565,39 @@ export function ComboboxItem({
   const option = isOption(itemValue) ? itemValue : undefined;
   const resolvedIcon = icon ?? option?.icon;
   const resolvedDetail = detail ?? option?.detail;
+  const multiple = useContext(MultipleContext);
+  const create = isCreateOption(itemValue);
+  const tinted = resolvedDetail !== undefined;
   return (
     <ComboboxPrimitive.Item
       data-slot="combobox-item"
       value={itemValue}
-      className={mergeClassName(["group", listItem], className)}
+      className={mergeClassName(["group", listItem, tinted && listTint], className)}
       {...props}
     >
-      {isCreateOption(itemValue) ? (
-        // The row that makes a new option: a plus where the others carry their mark.
+      {create ? (
+        // The row that makes a new option: a plus before its words, in a symbol's place.
         <span
           aria-hidden
-          className="flex size-2 shrink-0 items-center justify-center text-fg-muted"
+          className="flex size-4 shrink-0 items-center justify-center text-fg-muted"
         >
           <PlusGlyph width={10} height={10} />
         </span>
       ) : (
-        <span aria-hidden className="mark mark-quiet group-data-selected:mark-on" />
+        resolvedIcon && (
+          <Icon icon={resolvedIcon} className="text-fg-muted group-data-highlighted:text-fg" />
+        )
       )}
-      {resolvedIcon && <Icon icon={resolvedIcon} className="text-fg-muted" />}
       <span data-slot="combobox-item-text" className="min-w-0 truncate">
-        {children ?? (isCreateOption(itemValue) ? itemValue.create : option?.label)}
+        {children ?? (create ? itemValue.create : option?.label)}
       </span>
       {resolvedDetail !== undefined && (
         <span data-slot="combobox-item-detail" className={listItemDetail}>
           {resolvedDetail}
         </span>
+      )}
+      {!create && !tinted && (
+        <ListMark kind={multiple ? "multiple" : "single"} className="ml-auto" />
       )}
     </ComboboxPrimitive.Item>
   );
