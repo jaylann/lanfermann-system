@@ -4,6 +4,7 @@ import { Alert02Icon, RefreshIcon, ThumbsDownIcon, ThumbsUpIcon } from "@hugeico
 import {
   type ComponentProps,
   createContext,
+  type CSSProperties,
   type ReactNode,
   useContext,
   useEffect,
@@ -188,13 +189,27 @@ export type MessageActionProps = Omit<
   /** What the key does, as a button says it: its name and its tooltip. */
   label: string;
   icon: IconSvgElement;
+  /**
+   * A motion that is in the symbol: `turn` for a circling arrow („Noch einmal“), which turns a
+   * little under the pointer and once round when pressed. Every other symbol only darkens.
+   */
+  iconMotion?: "turn";
 };
 
 /**
  * A quiet key under an answer, with a symbol and a tooltip: „Noch einmal“, „Teilen“. Its name
  * is its tooltip, worded like a button.
  */
-export function MessageAction({ label, icon, className, ...props }: MessageActionProps) {
+export function MessageAction({
+  label,
+  icon,
+  iconMotion,
+  className,
+  onClick,
+  ...props
+}: MessageActionProps) {
+  // How often it has been pressed: each press turns the arrow once more round, the same way.
+  const [turns, setTurns] = useState(0);
   return (
     <Tooltip>
       <TooltipTrigger
@@ -205,10 +220,22 @@ export function MessageAction({ label, icon, className, ...props }: MessageActio
             variant="quiet"
             aria-label={label}
             data-slot="message-action"
-            className={cn("text-fg-muted hover:text-fg", className)}
+            className={cn("group/action text-fg-muted hover:text-fg", className)}
+            onClick={(event) => {
+              if (iconMotion === "turn") setTurns((count) => count + 1);
+              onClick?.(event);
+            }}
             {...props}
           >
-            <Icon icon={icon} size={14} />
+            <Icon
+              icon={icon}
+              size={14}
+              style={iconMotion === "turn" ? ({ "--turns": turns } as CSSProperties) : undefined}
+              className={cn(
+                iconMotion === "turn" &&
+                  "motion-safe:rotate-[calc(var(--turns)*360deg)] motion-safe:transition-[rotate] motion-safe:spring-glide motion-safe:group-hover/action:rotate-[calc(var(--turns)*360deg+40deg)]",
+              )}
+            />
           </Button>
         }
       />
@@ -229,8 +256,17 @@ export type MessageFeedbackProps = Omit<ComponentProps<"div">, "defaultValue" | 
 };
 
 /**
+ * How a thumb that is on shows it, on the lab board until Justin picks (2026-11-20: "could use
+ * better animations"): `wash`, the grey square of a quiet key that is down, or `bare`, no square,
+ * the chosen thumb drawn in the text colour while the other stays muted.
+ */
+export const MessageFeedbackLookContext = createContext<"wash" | "bare">("wash");
+
+/**
  * Two keys that stay down, thumbs up and thumbs down: at most one is on, and pressed again it
- * is taken back. The symbol of the key that is turned on seats into it with a small nod.
+ * is taken back. The symbol of the key that is turned on nods into it, tilted and small at
+ * first; one that is taken back, or gives way to the other, tilts back the other way and
+ * settles. A verdict that is there on load does not move.
  */
 export function MessageFeedback({
   value: valueProp,
@@ -244,12 +280,15 @@ export function MessageFeedback({
   const [own, setOwn] = useState<MessageVerdict>(defaultValue);
   const value = valueProp === undefined ? own : valueProp;
   const live = useLive();
+  const look = useContext(MessageFeedbackLookContext);
   const choose = (next: MessageVerdict) => {
     setOwn(next);
     onValueChange?.(next);
   };
   const key = (verdict: "good" | "bad", label: string, icon: IconSvgElement) => {
     const on = value === verdict;
+    // Up nods up and back (anticlockwise first), down nods down: each the way its thumb points.
+    const lean = verdict === "good" ? -1 : 1;
     return (
       <Tooltip>
         <TooltipTrigger
@@ -261,23 +300,28 @@ export function MessageFeedback({
               aria-label={label}
               pressed={on}
               onPressedChange={(pressed) => choose(pressed ? verdict : null)}
+              className={
+                look === "bare"
+                  ? "data-pressed:bg-transparent data-pressed:hover:bg-hover"
+                  : undefined
+              }
             >
               {/*
-                A new symbol when it is turned on, so it can seat: it nods in from a little
-                tilted and small, on `seat`. Only once the row stands: a verdict that is there
-                on load does not move.
+                A new symbol on every change, so it can seat: turned on, it nods in from tilted
+                and small; taken back, it tilts back the other way and settles. Both on `seat`,
+                and only once the row stands.
               */}
               <Icon
                 key={on ? "on" : "off"}
                 icon={icon}
                 size={14}
                 data-slot="message-feedback-symbol"
+                style={{ "--lean": lean } as CSSProperties}
                 className={cn(
-                  "transition-[scale,rotate] spring-seat",
-                  on &&
-                    (verdict === "good"
-                      ? "in-data-live:motion-safe:starting:scale-75 in-data-live:motion-safe:starting:-rotate-12"
-                      : "in-data-live:motion-safe:starting:scale-75 in-data-live:motion-safe:starting:rotate-12"),
+                  "transition-[scale,rotate,translate] spring-seat",
+                  on
+                    ? "in-data-live:motion-safe:starting:translate-y-[calc(var(--lean)*1.5px)] in-data-live:motion-safe:starting:scale-75 in-data-live:motion-safe:starting:rotate-[calc(var(--lean)*14deg)]"
+                    : "in-data-live:motion-safe:starting:scale-90 in-data-live:motion-safe:starting:rotate-[calc(var(--lean)*-8deg)]",
                 )}
               />
             </Toggle>
