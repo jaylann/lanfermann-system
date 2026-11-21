@@ -191,6 +191,7 @@ import {
 } from "@lanfermann/ui";
 
 import { Assistant } from "./assistant";
+import { Charts } from "./charts";
 import { Figures } from "./figures";
 import { Inputs } from "./inputs";
 import { QuoteForm } from "./quote-form";
@@ -602,6 +603,7 @@ export default function Home() {
                   </Stat>
                 </StatGroup>
                 <Figures />
+                <Charts ground={ground} />
                 <AvatarGroup
                   label={`Im Team (${ground})`}
                   people={[

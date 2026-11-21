@@ -24,7 +24,7 @@ function tokensFor(ground: Ground, css: string) {
       (ground === "paper" && selector.includes(":root")) ||
       (ground === "ink" && selector.includes(".dark"));
     if (!applies) continue;
-    for (const [, name, value] of body.matchAll(/(--lf-[a-z-]+):\s*([^;]+);/g)) {
+    for (const [, name, value] of body.matchAll(/(--lf-[a-z0-9-]+):\s*([^;]+);/g)) {
       if (name && value) tokens.set(name, value.trim());
     }
   }
@@ -45,7 +45,7 @@ function contrast(a: string, b: string) {
   return (light + 0.05) / (dark + 0.05);
 }
 
-const css = read("./grounds.css") + read("./status.css") + read("./code.css");
+const css = read("./grounds.css") + read("./status.css") + read("./code.css") + read("./chart.css");
 
 /** Every colour a highlighted span can take (code.css), and every face and wash it stands on. */
 const codeRoles = [
@@ -67,6 +67,7 @@ const byGround = Object.fromEntries(
 
 /** [foreground, background, minimum ratio] */
 const TEXT = 4.5;
+const MARK = 3;
 const pairs: [string, string, number][] = [
   ["text", "ground", TEXT],
   ["text-body", "ground", TEXT],
@@ -122,6 +123,13 @@ const pairs: [string, string, number][] = [
   ["text-muted", "code-face", TEXT],
   ["success", "code-added", TEXT],
   ["danger", "code-removed", TEXT],
+  // Chart marks: a 2px line, a bar or a swatch must stand out from the ground and the card it
+  // is drawn on (3:1, the mark contrast of WCAG 1.4.11). Their values are written in text.
+  ...[1, 2, 3, 4, 5, 6].flatMap((series): [string, string, number][] => [
+    [`series-${series}`, "ground", MARK],
+    [`series-${series}`, "surface", MARK],
+    [`on-series-${series}`, `series-${series}`, TEXT],
+  ]),
 ];
 
 describe("ground tokens", () => {

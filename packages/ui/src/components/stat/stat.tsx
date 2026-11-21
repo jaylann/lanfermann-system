@@ -48,7 +48,8 @@ export function StatGroup({ variant = "ruled", className, children, ...props }: 
 
 /**
  * One figure: what it is (`StatLabel`), the figure (`StatValue`), and how it changed
- * (`StatChange`). A `Meter` placed after the value shows usage against a limit.
+ * (`StatChange`). A `Meter` placed after the value shows usage against a limit, a `Sparkline`
+ * the way the figure came.
  *
  * A figure is read, not operated: flat, casting no shadow. Several stand in a `StatGroup`.
  * Server-safe; the value may be a `RollingNumber`, which rolls when the figure changes on screen.
@@ -58,7 +59,7 @@ export function Stat({ className, ...props }: ComponentProps<"div">) {
     <div
       data-slot="stat"
       className={cn(
-        "flex min-w-0 flex-col gap-1 [&>[data-slot=meter]]:mt-2",
+        "flex min-w-0 flex-col gap-1 [&>[data-slot=meter]]:mt-2 [&>[data-slot=sparkline]]:mt-2",
         // In a ruled row: a hairline before and above, of which the grid shows only the inner.
         "group-data-[variant=ruled]/stats:-mt-px group-data-[variant=ruled]/stats:-ml-px group-data-[variant=ruled]/stats:border-t group-data-[variant=ruled]/stats:border-l group-data-[variant=ruled]/stats:border-hairline group-data-[variant=ruled]/stats:px-5 group-data-[variant=ruled]/stats:py-4 max-sm:group-data-[variant=ruled]/stats:px-4",
         "group-data-[variant=cards]/stats:rounded-xl group-data-[variant=cards]/stats:bg-surface group-data-[variant=cards]/stats:px-5 group-data-[variant=cards]/stats:py-4 group-data-[variant=cards]/stats:depth-card",

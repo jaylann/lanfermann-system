@@ -49,6 +49,13 @@ export { type AvatarPerson, type Presence } from "./components/avatar-group/peop
 export { Badge, type BadgeProps } from "./components/badge/badge";
 export { Banner, type BannerProps, type BannerTone } from "./components/banner/banner";
 export {
+  BarChart,
+  type BarChartActive,
+  type BarChartProps,
+  type BarChartSeries,
+} from "./components/bar-chart/bar-chart";
+export { BarList, type BarListItem, type BarListProps } from "./components/bar-list/bar-list";
+export {
   BreadcrumbItem,
   BreadcrumbLink,
   type BreadcrumbLinkProps,
@@ -56,6 +63,7 @@ export {
   Breadcrumbs,
   type BreadcrumbsProps,
 } from "./components/breadcrumbs/breadcrumbs";
+export { Bullet, type BulletItem, type BulletProps } from "./components/bullet/bullet";
 export { Button, type ButtonProps } from "./components/button/button";
 export { type ButtonVariants, buttonVariants } from "./components/button/button-variants";
 export { ButtonGroup, type ButtonGroupProps } from "./components/button-group/button-group";
@@ -256,6 +264,7 @@ export {
   DrawerTitle,
   DrawerTrigger,
 } from "./components/drawer/drawer";
+export { Dumbbell, type DumbbellItem, type DumbbellProps } from "./components/dumbbell/dumbbell";
 export {
   Empty,
   EmptyActions,
@@ -289,9 +298,11 @@ export {
   sortFiles,
 } from "./components/file-upload/files";
 export { Form, type FormProps } from "./components/form/form";
+export { Funnel, type FunnelProps, type FunnelStep } from "./components/funnel/funnel";
 export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
 export { Grow, type GrowProps } from "./components/grow/grow";
 export { Heading, type HeadingProps } from "./components/heading/heading";
+export { Heatmap, type HeatmapDay, type HeatmapProps } from "./components/heatmap/heatmap";
 export {
   HoverCard,
   HoverCardContent,
@@ -431,6 +442,11 @@ export { Seam, type SeamProps } from "./components/seam/seam";
 export { SecretField, type SecretFieldProps } from "./components/secret-field/secret-field";
 export { Section, type SectionProps } from "./components/section/section";
 export {
+  SegmentedBar,
+  type SegmentedBarItem,
+  type SegmentedBarProps,
+} from "./components/segmented-bar/segmented-bar";
+export {
   Segment,
   SegmentedControl,
   type SegmentedControlProps,
@@ -541,6 +557,7 @@ export {
   Sources,
   type SourcesProps,
 } from "./components/sources/sources";
+export { Sparkline, type SparklineProps } from "./components/sparkline/sparkline";
 export { Spinner, type SpinnerProps } from "./components/spinner/spinner";
 export {
   Stat,
@@ -599,6 +616,12 @@ export {
 } from "./components/theme-switch/theme-switch";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
 export {
+  TimeSeriesChart,
+  type TimeSeriesChartActive,
+  type TimeSeriesChartProps,
+  type TimeSeriesChartSeries,
+} from "./components/time-series-chart/time-series-chart";
+export {
   Timeline,
   TimelineGroup,
   type TimelineGroupProps,
@@ -643,6 +666,17 @@ export {
   TraceSummary,
   type TraceSummaryProps,
 } from "./components/trace/trace";
+export {
+  Tracker,
+  type TrackerItem,
+  type TrackerProps,
+  type TrackerStatus,
+} from "./components/tracker/tracker";
+export {
+  Waterfall,
+  type WaterfallProps,
+  type WaterfallStep,
+} from "./components/waterfall/waterfall";
 export { cn, mergeClassName } from "./lib/cn";
 export { type Platform } from "./lib/shortcut";
 export { type SpringName, springs, transitions } from "./motion/springs";
