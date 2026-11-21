@@ -1,22 +1,19 @@
 "use client";
 
-import { ViewIcon, ViewOffSlashIcon } from "@hugeicons/core-free-icons";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
-import { Icon } from "@/components/icon/icon";
 import { Input, type InputProps } from "@/components/input/input";
 import { InputGroup, InputGroupButton } from "@/components/input-group/input-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
 import { CopyMarks, useCopy } from "@/internal/copy";
 import type { FieldSize } from "@/internal/field";
+import { RevealKey, secretSymbolSize, swapSettle, useSwap } from "@/internal/reveal-key";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
 
 /** How many discs stand for a hidden value at most: its length is nobody's business. */
 const MASK_LENGTH = 24;
-
-const symbolSize = { sm: 14, md: 16, lg: 16 } as const;
 
 export type SecretFieldProps = Omit<
   InputProps,
@@ -96,21 +93,13 @@ export function SecretField({
   const revealed = !hideable || (revealedProp ?? own);
   const field = useRef<HTMLInputElement>(null);
 
-  // The value changes in one frame and settles in the next: a short fade out of a little blur,
-  // so the swap between discs and characters does not read as a flicker.
-  const [swapping, setSwapping] = useState(false);
-  const settle = useRef(0);
-  useEffect(() => () => cancelAnimationFrame(settle.current), []);
-
-  const show = (next: boolean) => {
-    cancelAnimationFrame(settle.current);
-    setSwapping(true);
-    setOwn(next);
-    onRevealedChange?.(next);
-    settle.current = requestAnimationFrame(() => {
-      settle.current = requestAnimationFrame(() => setSwapping(false));
+  // The value changes in one frame and settles out of a short blur in the next.
+  const { swapping, swap } = useSwap();
+  const show = (next: boolean) =>
+    swap(() => {
+      setOwn(next);
+      onRevealedChange?.(next);
     });
-  };
 
   const { state, copy } = useCopy({
     text: value,
@@ -148,44 +137,17 @@ export function SecretField({
             input.setSelectionRange(0, 0);
             input.scrollLeft = 0;
           }}
-          className={cn(
-            "font-mono text-ellipsis",
-            "transition-[opacity,filter] spring-snap data-swapping:opacity-0 data-swapping:blur-[2px] data-swapping:transition-none motion-reduce:data-swapping:blur-none",
-          )}
+          className={cn("font-mono text-ellipsis", swapSettle)}
           {...props}
         />
         {hideable && (
-          <Tooltip>
-            <TooltipTrigger
-              closeOnClick={false}
-              render={
-                <InputGroupButton
-                  aria-label={revealLabel}
-                  aria-pressed={revealed}
-                  data-secret-key="reveal"
-                  onClick={() => show(!revealed)}
-                >
-                  {/* The eye gives way to the struck eye, as the copy symbol does to the tick. */}
-                  <span
-                    data-revealed={revealed ? "" : undefined}
-                    className="group/eye grid place-items-center *:col-start-1 *:row-start-1 *:transition-[scale,opacity] *:spring-seat motion-reduce:*:scale-100"
-                  >
-                    <Icon
-                      icon={ViewIcon}
-                      size={symbolSize[size]}
-                      className="group-data-revealed/eye:scale-50 group-data-revealed/eye:opacity-0 group-data-revealed/eye:spring-leave"
-                    />
-                    <Icon
-                      icon={ViewOffSlashIcon}
-                      size={symbolSize[size]}
-                      className="scale-50 opacity-0 spring-leave group-data-revealed/eye:scale-100 group-data-revealed/eye:opacity-100 group-data-revealed/eye:spring-seat"
-                    />
-                  </span>
-                </InputGroupButton>
-              }
-            />
-            <TooltipContent>{revealed ? hideLabel : revealLabel}</TooltipContent>
-          </Tooltip>
+          <RevealKey
+            revealed={revealed}
+            onRevealedChange={show}
+            size={size}
+            revealLabel={revealLabel}
+            hideLabel={hideLabel}
+          />
         )}
         <Tooltip>
           <TooltipTrigger
@@ -196,7 +158,7 @@ export function SecretField({
                 data-secret-key="copy"
                 onClick={() => void copy()}
               >
-                <CopyMarks copied={state === "copied"} size={symbolSize[size]} />
+                <CopyMarks copied={state === "copied"} size={secretSymbolSize[size]} />
               </InputGroupButton>
             }
           />

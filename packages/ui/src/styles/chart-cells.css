@@ -1,0 +1,26 @@
+/*
+ * Charts made of cells (`Tracker`, `Heatmap`): their draw-in where they first show (Justin,
+ * 2026-11-20: a chart draws itself in, `drawIn={false}` turns it off). The cells come in the
+ * way time runs, left to right: each fades in and rises 3px into its place. Set
+ * `--chart-cell-at` on a cell to its place along the way, from 0 to 1; the whole chart has
+ * arrived after 500ms plus one cell's 280ms, however many cells it has.
+ *
+ * A keyframe animation that runs once, like the draw-in of a line (`chart.css`). The cells
+ * stand where they belong at every frame, so nothing jumps when it ends. Off under reduced
+ * motion.
+ */
+
+@keyframes chart-cell-in {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+  }
+}
+
+@utility chart-cell-in {
+  animation: chart-cell-in 280ms cubic-bezier(0.25, 0.6, 0.3, 1) backwards;
+  animation-delay: calc(var(--chart-cell-at, 0) * 500ms);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

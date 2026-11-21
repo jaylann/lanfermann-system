@@ -24,6 +24,13 @@ import { Form } from "@/components/form/form";
 import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
 import { Input } from "@/components/input/input";
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
+import { RelativeTime } from "@/components/relative-time/relative-time";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/select/select";
 import {
   Table,
@@ -33,7 +40,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/table/table";
-import { Text } from "@/components/text/text";
 import { Timeline, TimelineGroup, TimelineItem } from "@/components/timeline/timeline";
 import { toast } from "@/components/toast/toast";
 
@@ -65,9 +71,13 @@ type Member = {
   email: string;
   role: string;
   presence?: Presence;
-  seen: string;
+  /** When the member was last active, as a moment; never, for an invitation not taken up. */
+  seen?: string;
   invited?: boolean;
 };
+
+/** The board's "now", so the times read the same on every day: 21 November 2026, 15:10. */
+const NOW = "2026-11-21T15:10:00+01:00";
 
 const START: Member[] = [
   {
@@ -75,28 +85,28 @@ const START: Member[] = [
     email: "maria@schreinerei-huber.de",
     role: "inhaber",
     presence: "online",
-    seen: "Jetzt",
+    seen: "2026-11-21T15:09:40+01:00",
   },
   {
     name: "Jonas Klein",
     email: "jonas@schreinerei-huber.de",
     role: "verwaltung",
     presence: "away",
-    seen: "Vor 20 Minuten",
+    seen: "2026-11-21T14:50:00+01:00",
   },
   {
     name: "Anna Weber",
     email: "anna@schreinerei-huber.de",
     role: "mitarbeit",
     presence: "offline",
-    seen: "Gestern",
+    seen: "2026-11-20T17:30:00+01:00",
   },
   {
     name: "Paul Wagner",
     email: "paul@schreinerei-huber.de",
     role: "mitarbeit",
     presence: "offline",
-    seen: "Am 12. November",
+    seen: "2026-11-12T11:15:00+01:00",
   },
 ];
 
@@ -124,10 +134,7 @@ function Board() {
   const invite = ({ email, role }: { email: string; role?: string }) => {
     const name = email.split("@")[0]!.replace(/^./, (first) => first.toLocaleUpperCase());
     setInviting(false);
-    setMembers((now) => [
-      ...now,
-      { name, email, role: role ?? "mitarbeit", seen: "Noch nie", invited: true },
-    ]);
+    setMembers((now) => [...now, { name, email, role: role ?? "mitarbeit", invited: true }]);
     setChanges((now) => [
       { who: "Maria Huber", what: `hat ${email} eingeladen.`, time: "15:12" },
       ...now,
@@ -137,67 +144,65 @@ function Board() {
 
   return (
     <AppFrame page="team">
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <div className="flex flex-col gap-2">
-          <Heading level={1} size="section">
-            Team.
-          </Heading>
-          <div className="flex items-center gap-3">
-            <AvatarGroup people={people} label="Im Team" />
-            <Text tone="muted">
-              {members.length} Personen,{" "}
-              {members.filter((member) => member.presence === "online").length} gerade online
-            </Text>
-          </div>
-        </div>
-        <Dialog open={inviting} onOpenChange={setInviting}>
-          <DialogTrigger render={<Button variant="primary" />}>
-            <Icon icon={UserAdd01Icon} />
-            Einladen
-          </DialogTrigger>
-          <DialogContent>
-            <Form<{ email: string; role?: string }> onFormSubmit={invite} className="gap-0">
-              <DialogHeader>
-                <DialogTitle>Ins Team einladen.</DialogTitle>
-                <DialogDescription>
-                  Die Person erhält eine E-Mail mit einem Link, über den sie ihr Konto anlegt.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogBody className="flex flex-col gap-4">
-                <Field name="email">
-                  <FieldLabel>E-Mail-Adresse</FieldLabel>
-                  <Input
-                    type="email"
-                    name="email"
-                    placeholder="name@schreinerei-huber.de"
-                    required
-                  />
-                </Field>
-                <Field name="role">
-                  <FieldLabel>Rolle</FieldLabel>
-                  <Select items={ROLES} name="role" defaultValue="mitarbeit">
-                    <SelectTrigger className="w-full" />
-                    <SelectContent>
-                      {ROLES.map((role) => (
-                        <SelectItem key={role.value} value={role.value}>
-                          {role.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldDescription>Die Rolle lässt sich später ändern.</FieldDescription>
-                </Field>
-              </DialogBody>
-              <DialogFooter>
-                <DialogClose render={<Button variant="quiet" />}>Abbrechen</DialogClose>
-                <Button type="submit" variant="primary">
-                  Einladung senden
-                </Button>
-              </DialogFooter>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <PageHeader>
+        <PageHeaderTitle>Team.</PageHeaderTitle>
+        <PageHeaderDescription as="div" className="flex items-center gap-3">
+          <AvatarGroup people={people} label="Im Team" />
+          <span>
+            {members.length} Personen,{" "}
+            {members.filter((member) => member.presence === "online").length} gerade online
+          </span>
+        </PageHeaderDescription>
+        <PageHeaderActions>
+          <Dialog open={inviting} onOpenChange={setInviting}>
+            <DialogTrigger render={<Button variant="primary" />}>
+              <Icon icon={UserAdd01Icon} />
+              Einladen
+            </DialogTrigger>
+            <DialogContent>
+              <Form<{ email: string; role?: string }> onFormSubmit={invite} className="gap-0">
+                <DialogHeader>
+                  <DialogTitle>Ins Team einladen.</DialogTitle>
+                  <DialogDescription>
+                    Die Person erhält eine E-Mail mit einem Link, über den sie ihr Konto anlegt.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogBody className="flex flex-col gap-4">
+                  <Field name="email">
+                    <FieldLabel>E-Mail-Adresse</FieldLabel>
+                    <Input
+                      type="email"
+                      name="email"
+                      placeholder="name@schreinerei-huber.de"
+                      required
+                    />
+                  </Field>
+                  <Field name="role">
+                    <FieldLabel>Rolle</FieldLabel>
+                    <Select items={ROLES} name="role" defaultValue="mitarbeit">
+                      <SelectTrigger className="w-full" />
+                      <SelectContent>
+                        {ROLES.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldDescription>Die Rolle lässt sich später ändern.</FieldDescription>
+                  </Field>
+                </DialogBody>
+                <DialogFooter>
+                  <DialogClose render={<Button variant="quiet" />}>Abbrechen</DialogClose>
+                  <Button type="submit" variant="primary">
+                    Einladung senden
+                  </Button>
+                </DialogFooter>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </PageHeaderActions>
+      </PageHeader>
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
         {/* Not a region of its own: the table is one, named by the heading. */}
@@ -270,7 +275,9 @@ function Board() {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-fg-muted">{member.seen}</TableCell>
+                  <TableCell className="whitespace-nowrap text-fg-muted">
+                    {member.seen ? <RelativeTime value={member.seen} now={NOW} /> : "Noch nie"}
+                  </TableCell>
                   <TableCell className="w-0">
                     <Button
                       size="sm"

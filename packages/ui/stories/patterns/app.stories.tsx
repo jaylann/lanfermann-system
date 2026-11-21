@@ -48,7 +48,6 @@ import {
   CommandTrigger,
 } from "@/components/command/command";
 import { Empty, EmptyActions, EmptyMedia, EmptyText, EmptyTitle } from "@/components/empty/empty";
-import { Heading } from "@/components/heading/heading";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import {
   Menu,
@@ -58,6 +57,12 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "@/components/menu/menu";
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
 import { Pagination } from "@/components/pagination/pagination";
 import { Shortcut, ShortcutProvider } from "@/components/shortcut/shortcut";
 import {
@@ -83,6 +88,7 @@ import {
 } from "@/components/table/table";
 import { Text } from "@/components/text/text";
 import { toast, Toaster } from "@/components/toast/toast";
+import { formatMoney } from "@/lib/format";
 
 const meta = {
   title: "Patterns/App",
@@ -139,7 +145,6 @@ type Quote = (typeof QUOTES)[number];
 const PER_PAGE = QUOTES.length;
 const TOTAL = 248;
 
-const euro = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
 const counted = (count: number) => (count === 1 ? "1 Angebot" : `${count} Angebote`);
 const waiting = ["Über 1.000 €", "Mit Anhang"];
 
@@ -405,18 +410,18 @@ function Board({ state = "list", ticked = [], narrow = false }: BoardProps) {
         </AppShellBar>
 
         <AppShellMain className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-            <div className="flex flex-col gap-1">
-              <Heading level={1} size="section">
-                Angebote.
-              </Heading>
-              <Text tone="muted">Zwölf Angebote sind offen, drei davon laufen diese Woche ab.</Text>
-            </div>
-            <Button variant="primary">
-              <Icon icon={Add01Icon} />
-              Angebot schreiben
-            </Button>
-          </div>
+          <PageHeader>
+            <PageHeaderTitle>Angebote.</PageHeaderTitle>
+            <PageHeaderDescription>
+              Zwölf Angebote sind offen, drei davon laufen diese Woche ab.
+            </PageHeaderDescription>
+            <PageHeaderActions>
+              <Button variant="primary">
+                <Icon icon={Add01Icon} />
+                Angebot schreiben
+              </Button>
+            </PageHeaderActions>
+          </PageHeader>
 
           <div className="flex flex-wrap items-center gap-1.5">
             <ChipGroup aria-label="Filter">
@@ -500,7 +505,7 @@ function Board({ state = "list", ticked = [], narrow = false }: BoardProps) {
                               </Badge>
                             </TableCell>
                           )}
-                          <TableCell numeric>{euro.format(amount)}</TableCell>
+                          <TableCell numeric>{formatMoney(amount)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
