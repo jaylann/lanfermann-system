@@ -51,5 +51,8 @@ dokument = "dokument"
 archiv = "archiv"
 # "Offen", the name of a table look Justin was shown, recorded in DESIGN.md's decisions.
 offen = "offen"
+# A relative time („vor 5 Minuten“), and the example label of a stored secret („Signatur-Secret“).
+vor = "vor"
+signatur = "signatur"
 # What a chart's plot is called to assistive tech („Diagramm“).
 diagramm = "diagramm"
