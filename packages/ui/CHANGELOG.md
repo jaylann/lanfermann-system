@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.0](https://github.com/jaylann/lanfermann-system/compare/v0.7.0...v0.8.0) (2026-11-21)
+
+
+### Features
+
+* **ui:** add charts for dashboards and analytics ([e6a258e](https://github.com/jaylann/lanfermann-system/commit/e6a258e42ac97d5e7ffcff0e1dc9ac77de21e5e4))
+* **ui:** add charts for dashboards and analytics ([b846b1b](https://github.com/jaylann/lanfermann-system/commit/b846b1b3081ff82d632b25fd245b139b8d284539))
+* **ui:** add charts, page headers, range presets, stored secrets and formats ([d17c56c](https://github.com/jaylann/lanfermann-system/commit/d17c56cee65396d32361e2a5bd88caf64e8fceba))
+* **ui:** add page headers, range presets, stored secrets and times ([ea85118](https://github.com/jaylann/lanfermann-system/commit/ea85118c2fcce753c6c9a1f8fa1eafcd5ff6f47d))
+* **ui:** add page headers, range presets, stored secrets and times ([8a513ef](https://github.com/jaylann/lanfermann-system/commit/8a513ef99bf4b554e29b96ad506cf4e9a74400ac))
+* **ui:** ease a button to the width of a new label ([086ee72](https://github.com/jaylann/lanfermann-system/commit/086ee7238ed11c2bdca916219d3ded0b9d2d2048))
+
+
+### Bug Fixes
+
+* **ui:** keep the heatmap on its newest week when it narrows on load ([50d8835](https://github.com/jaylann/lanfermann-system/commit/50d8835be88a0a1ecf35bad361b73ed56b539ddb))
+
 ## [0.7.0](https://github.com/jaylann/lanfermann-system/compare/v0.6.0...v0.7.0) (2026-11-20)
 
 
