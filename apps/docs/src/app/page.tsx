@@ -190,6 +190,7 @@ import {
   Wordmark,
 } from "@lanfermann/ui";
 
+import { AppPage } from "./app-page";
 import { Assistant } from "./assistant";
 import { Charts } from "./charts";
 import { Figures } from "./figures";
@@ -640,6 +641,9 @@ export default function Home() {
                   </TimelineGroup>
                 </Timeline>
               </div>
+
+              {/* How a page of an app opens, and the parts that read the clock in the browser. */}
+              <AppPage ground={ground} />
 
               {/* The inputs of an app. They hold state or take functions, so they stand in a
                   client component of their own. */}

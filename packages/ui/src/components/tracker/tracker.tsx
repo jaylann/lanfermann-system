@@ -17,6 +17,7 @@ import { labelAlong, lane, laneAt } from "@/internal/chart/lane";
 import { inferInterval, pointLabel, type TimeValue, toTime } from "@/internal/chart/time";
 import { statusIcons, statusIconTone } from "@/internal/status-icon";
 import { cn } from "@/lib/cn";
+import { dateFormatter } from "@/lib/format";
 
 export type TrackerStatus = "success" | "warning" | "danger" | "none";
 
@@ -306,7 +307,7 @@ function edgeLabel(time: number, interval: string, locale: string) {
       : interval === "month" || interval === "year"
         ? { month: "short", year: "numeric" }
         : { day: "numeric", month: "short" };
-  return new Intl.DateTimeFormat(locale, options).format(time);
+  return dateFormatter(locale, options).format(time);
 }
 
 type View = {

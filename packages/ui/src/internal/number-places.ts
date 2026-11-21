@@ -29,13 +29,9 @@ const BODY = new Set(["integer", "group", "decimal", "fraction"]);
 /**
  * The number format for a `RollingNumber`: German by default, and a minus only where there is
  * something below zero (`signDisplay: "negative"`), so a value rounding to zero is never "-0".
+ * It is the cached format every number of the system is written with (`lib/format.ts`).
  */
-export function numberFormat(
-  locale: Intl.LocalesArgument = "de-DE",
-  options?: Intl.NumberFormatOptions,
-): Intl.NumberFormat {
-  return new Intl.NumberFormat(locale, { signDisplay: "negative", ...options });
-}
+export { numberFormatter as numberFormat } from "@/lib/format";
 
 export function toPlaces(format: Intl.NumberFormat, value: number): NumberPlaces {
   const parts = format.formatToParts(value);

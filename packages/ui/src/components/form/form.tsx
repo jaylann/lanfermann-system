@@ -28,7 +28,8 @@ export type FormProps<FormValues extends Record<string, any> = Record<string, an
  * message, or the field's own (from `validate`). Do not put matched errors beside it on the same
  * field, or two lines show at once.
  *
- * A date, time or range field hands over its ISO value (`2026-11-14`), not the text it shows.
+ * A date, time or range field hands over its ISO value (`2026-11-14`), not the text it shows. A
+ * `StoredSecretField` hands over a new secret while one is typed, and nothing otherwise.
  *
  * React resets a form once its `action` has run: an `Input` or `Textarea` goes back to its
  * `defaultValue`, while the fields that hold a value of their own (number, combobox, select,
@@ -71,7 +72,11 @@ function submittedValues<FormValues extends Record<string, unknown>>(
   if (carried.length === 0) return values;
   const next: Record<string, unknown> = { ...values };
   for (const input of carried) {
-    if (input.name && !input.disabled) next[input.name] = input.value;
+    if (!input.name) continue;
+    // A field that sends nothing (a `StoredSecretField` left as it is) is left out, as a posted
+    // form leaves it out: the server keeps what it has.
+    if (input.hasAttribute("data-form-absent")) delete next[input.name];
+    else if (!input.disabled) next[input.name] = input.value;
   }
   // The same keys with the same kind of value (a string), so it is still the caller's type.
   return next as FormValues;

@@ -10,6 +10,12 @@ import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
 import { Link } from "@/components/link/link";
 import { Meter, MeterTrack } from "@/components/meter/meter";
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
 import { RollingNumber } from "@/components/rolling-number/rolling-number";
 import { Stat, StatChange, StatGroup, StatLabel, StatValue } from "@/components/stat/stat";
 import {
@@ -20,8 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/table/table";
-import { Text } from "@/components/text/text";
 import { Timeline, TimelineGroup, TimelineItem } from "@/components/timeline/timeline";
+import { formatMoney } from "@/lib/format";
 
 import { AppFrame } from "./app-frame";
 
@@ -39,8 +45,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const euro = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
 
 const QUOTES = [
   ["A-2026-0421", "Schreinerei Mustermann", "Einbauschrank Flur", 2780, "Entwurf", "neutral"],
@@ -75,25 +79,23 @@ function Board() {
   const won = 9 + accepted;
   return (
     <AppFrame page="uebersicht">
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <div className="flex flex-col gap-1">
-          <Heading level={1} size="section">
-            Übersicht.
-          </Heading>
-          <Text tone="muted">
-            Guten Morgen, Maria. Seit gestern ist ein Angebot angenommen worden.
-          </Text>
-        </div>
-        <Button
-          variant="secondary"
-          data-step="refresh"
-          disabled={accepted > 0}
-          onClick={() => setAccepted(1)}
-        >
-          <Icon icon={RefreshIcon} />
-          Aktualisieren
-        </Button>
-      </div>
+      <PageHeader>
+        <PageHeaderTitle>Übersicht.</PageHeaderTitle>
+        <PageHeaderDescription>
+          Guten Morgen, Maria. Seit gestern ist ein Angebot angenommen worden.
+        </PageHeaderDescription>
+        <PageHeaderActions>
+          <Button
+            variant="secondary"
+            data-step="refresh"
+            disabled={accepted > 0}
+            onClick={() => setAccepted(1)}
+          >
+            <Icon icon={RefreshIcon} />
+            Aktualisieren
+          </Button>
+        </PageHeaderActions>
+      </PageHeader>
 
       {/* The figures share one card, hairlines between them. */}
       <Card>
@@ -104,7 +106,10 @@ function Board() {
               <RollingNumber value={revenue} format={{ style: "currency", currency: "EUR" }} />
             </StatValue>
             <StatChange trend="up" tone="positive" context="zum Vormonat">
-              {accepted ? "+51 %" : "+12 %"}
+              <RollingNumber
+                value={accepted ? 0.51 : 0.12}
+                format={{ style: "percent", signDisplay: "exceptZero" }}
+              />
             </StatChange>
           </Stat>
           <Stat>
@@ -183,7 +188,7 @@ function Board() {
                       </div>
                     </TableCell>
                     <TableCell className="max-sm:hidden">{state}</TableCell>
-                    <TableCell numeric>{euro.format(amount)}</TableCell>
+                    <TableCell numeric>{formatMoney(amount)}</TableCell>
                   </TableRow>
                 );
               })}
