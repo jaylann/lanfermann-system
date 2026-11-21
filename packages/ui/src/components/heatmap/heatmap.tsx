@@ -136,10 +136,19 @@ export function Heatmap({
     const element = scroller.current;
     if (!element) return;
     let pinned = true;
+    // Where the pin itself put the box. Its own scroll event comes a frame later, before the
+    // resize observer; if the box narrowed in between (a page settling on load), that event
+    // would measure the old end against the new width, read it as the reader leaving the end,
+    // and the pin would never run again. Only a scroll to somewhere else is the reader's.
+    let placed = -1;
     const pin = () => {
-      if (pinned) element.scrollLeft = element.scrollWidth;
+      if (!pinned) return;
+      element.scrollLeft = element.scrollWidth;
+      placed = element.scrollLeft;
     };
     const scrolled = () => {
+      if (element.scrollLeft === placed) return;
+      placed = -1;
       pinned = element.scrollLeft >= element.scrollWidth - element.clientWidth - 2;
     };
     pin();
