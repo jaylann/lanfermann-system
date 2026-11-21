@@ -1,5 +1,6 @@
 import { Delete02Icon, Download01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 
 import { Icon } from "@/components/icon/icon";
 
@@ -100,6 +101,30 @@ export const Loading: Story = {
       </Button>
     </div>
   ),
+};
+
+/**
+ * A label that changes while the button is on screen: with `resize` the button eases to its new
+ * width instead of jumping, and the button beside it moves along.
+ */
+export const Resize: Story = {
+  parameters: {
+    visual: {
+      viewport: { width: 480, height: 120 },
+      motion: [{ name: "label", click: '[data-step="label"]' }],
+    },
+  },
+  render: function Render() {
+    const [all, setAll] = useState(false);
+    return (
+      <div className="flex items-center gap-3">
+        <Button resize data-step="label" onClick={() => setAll(!all)}>
+          {all ? "Nur offene Angebote zeigen" : "Alle zeigen"}
+        </Button>
+        <Button variant="quiet">Abbrechen</Button>
+      </div>
+    );
+  },
 };
 
 /** One icon, no label: it needs an `aria-label`, and usually a tooltip. */

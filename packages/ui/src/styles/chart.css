@@ -1,0 +1,188 @@
+/*
+ * Chart colours: the hues that tell the series of a chart apart. A UI-only extension, like the
+ * status colours: the kit has no charts.
+ *
+ * Series 1 is the accent's hue; the other five are the accent's lightness and chroma turned to
+ * their hue (teal, amber, blue, green, magenta), stepped a little lighter so a 2px line reads as
+ * a colour and not as text. The order is fixed: a chart takes series 1, 2, 3 … in turn and never
+ * cycles; a series keeps its colour when another is hidden. More than six series is a table.
+ *
+ * The order was chosen by search over every order of six of the hues, checked with the dataviz
+ * validator (OKLab ΔE ×100 between neighbours, under deuteranopia and protanopia simulated with
+ * Machado 2009, target 8, and unsimulated, floor 15), the same order on Paper and on Ink:
+ *   Paper (on #ffffff):  colour-blind 12.8, normal vision 20.8, every mark >= 3:1 on surface,
+ *                        ground and tint.
+ *   Ink (on #1d1c28):    colour-blind 11.6, normal vision 19.7, every mark >= 3:1.
+ * Indigo is the ask and nothing competes with it: series 1 is white there and the others are
+ * pale; they keep 3:1 but cannot be told apart by hue alone. A chart on Indigo shows one series.
+ *
+ * `--lf-series-muted` is the de-emphasis grey: a period to compare with, the series that are
+ * context to the one that matters. About 2:1, so it recedes.
+ *
+ * Text never wears a series colour: a value or a name stands in the text colours, and the
+ * colour stands beside it as a short line or a swatch.
+ */
+
+:root,
+[data-theme="paper"],
+[data-theme="tint"] {
+  --lf-series-1: #5f50d0;
+  --lf-series-2: #079390;
+  --lf-series-3: #b36e00;
+  --lf-series-4: #0486d3;
+  --lf-series-5: #139948;
+  --lf-series-6: #b855a6;
+  --lf-series-muted: #b4b3c2;
+
+  /* Text on a series fill (the share in a tall `SegmentedBar`), whichever of white and ink reads
+     at 4.5:1. On magenta neither quite does, so it is black. */
+  --lf-on-series-1: #ffffff;
+  --lf-on-series-2: #13121c;
+  --lf-on-series-3: #13121c;
+  --lf-on-series-4: #13121c;
+  --lf-on-series-5: #13121c;
+  --lf-on-series-6: #000000;
+}
+
+.dark,
+[data-theme="ink"] {
+  --lf-series-1: #8a80ec;
+  --lf-series-2: #019d9a;
+  --lf-series-3: #c97f14;
+  --lf-series-4: #2c90d7;
+  --lf-series-5: #47aa62;
+  --lf-series-6: #bc65aa;
+  --lf-series-muted: #5a5969;
+
+  --lf-on-series-1: #13121c;
+  --lf-on-series-2: #13121c;
+  --lf-on-series-3: #13121c;
+  --lf-on-series-4: #13121c;
+  --lf-on-series-5: #13121c;
+  --lf-on-series-6: #13121c;
+}
+
+[data-theme="indigo"] {
+  --lf-series-1: #ffffff;
+  --lf-series-2: #81ede8;
+  --lf-series-3: #ffcd98;
+  --lf-series-4: #b6ddfe;
+  --lf-series-5: #a8ebb5;
+  --lf-series-6: #fec1f0;
+  --lf-series-muted: #9a8fe8;
+
+  --lf-on-series-1: #13121c;
+  --lf-on-series-2: #13121c;
+  --lf-on-series-3: #13121c;
+  --lf-on-series-4: #13121c;
+  --lf-on-series-5: #13121c;
+  --lf-on-series-6: #13121c;
+}
+
+@theme inline {
+  --color-series-1: var(--lf-series-1);
+  --color-series-2: var(--lf-series-2);
+  --color-series-3: var(--lf-series-3);
+  --color-series-4: var(--lf-series-4);
+  --color-series-5: var(--lf-series-5);
+  --color-series-6: var(--lf-series-6);
+  --color-series-muted: var(--lf-series-muted);
+}
+
+/*
+ * The x-axis of a chart drops its finer marks as the chart narrows: every mark carries the
+ * width it needs (`data-level`, see `src/internal/chart/time.ts`). A container query, not a
+ * measurement, so the server draws the right marks and nothing changes on load.
+ */
+@utility chart-ticks {
+  container-type: inline-size;
+  & [data-level="1"],
+  & [data-level="2"] {
+    display: none;
+  }
+  @container (width >= 22rem) {
+    & [data-level="1"] {
+      display: block;
+    }
+  }
+  @container (width >= 36rem) {
+    & [data-level="2"] {
+      display: block;
+    }
+  }
+}
+
+/*
+ * What follows the pointer over a chart (the crosshair, the points on it, the readout) hops from
+ * point to point on the chase: the `snap` spring written as a plain bezier, which Safari runs
+ * off its main thread (`--slider-chase`; a test keeps them equal). Under a finger it is written
+ * on every move without a curve: on an iPhone a transition retargeted on every move stalls and
+ * then lurches (see `segmented.css`).
+ */
+@utility chart-follow {
+  --chart-chase: cubic-bezier(0.3, 0.95, 0.25, 1);
+  transition: translate var(--transition-duration-spring-snap) var(--chart-chase);
+  [data-scrubbing="touch"] & {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/*
+ * Where a chart first shows, it draws itself in once (Justin, 2026-11-20): the lines are
+ * uncovered from left to right, the way time runs, and the bars of a list grow out of their
+ * baseline one after the other. A keyframe animation that runs once, as the draw-in of a
+ * `Steps` does: what changes afterwards is a transition (the lines re-form, the bars glide).
+ * The marks stand where they belong at every frame; only how much of them shows changes, so
+ * nothing jumps when it ends. Off with `drawIn={false}` and under reduced motion.
+ *
+ * The clip reaches 8px past the plot on three sides, so a 2px line on the top or bottom edge
+ * is never cut.
+ */
+@keyframes chart-draw {
+  from {
+    clip-path: inset(-8px 100% -8px -8px);
+  }
+  to {
+    clip-path: inset(-8px -8px -8px -8px);
+  }
+}
+
+@keyframes chart-grow {
+  from {
+    translate: -100% 0;
+  }
+}
+
+@utility chart-draw {
+  animation: chart-draw 900ms cubic-bezier(0.25, 0.6, 0.3, 1) backwards;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes chart-rise {
+  from {
+    translate: 0 100%;
+  }
+}
+
+/* A column of a bar chart rises out of its baseline; `--chart-grow-index` is its queue place. */
+@utility chart-rise {
+  animation: chart-rise 560ms cubic-bezier(0.25, 0.6, 0.3, 1) backwards;
+  animation-delay: calc(var(--chart-grow-index, 0) * 30ms);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A bar of a list: set `--chart-grow-index` on it for its place in the queue. */
+@utility chart-grow {
+  animation: chart-grow 560ms cubic-bezier(0.25, 0.6, 0.3, 1) backwards;
+  animation-delay: calc(var(--chart-grow-index, 0) * 50ms);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

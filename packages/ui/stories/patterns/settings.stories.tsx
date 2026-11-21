@@ -8,12 +8,16 @@ import { Fieldset, FieldsetLegend } from "@/components/fieldset/fieldset";
 import { Form } from "@/components/form/form";
 import { Heading } from "@/components/heading/heading";
 import { Input } from "@/components/input/input";
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
 import { Radio, RadioGroup } from "@/components/radio/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/select/select";
 import { Separator } from "@/components/separator/separator";
 import { Switch } from "@/components/switch/switch";
 import { Tab, Tabs, TabsList, TabsPanel } from "@/components/tabs/tabs";
-import { Text } from "@/components/text/text";
 import { Textarea } from "@/components/textarea/textarea";
 import { toast, Toaster } from "@/components/toast/toast";
 
@@ -55,13 +59,12 @@ function Setting({ title, hint, on }: { title: string; hint: string; on?: boolea
 export const Settings: Story = {
   render: () => (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-10">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <Heading level={1}>Einstellungen.</Heading>
-          <Badge tone="success">Tarif Werkstatt</Badge>
-        </div>
-        <Text tone="muted">Schreinerei Mustermann, Rosenheim</Text>
-      </div>
+      <PageHeader>
+        <PageHeaderTitle size="title" badge={<Badge tone="success">Tarif Werkstatt</Badge>}>
+          Einstellungen.
+        </PageHeaderTitle>
+        <PageHeaderDescription>Schreinerei Mustermann, Rosenheim</PageHeaderDescription>
+      </PageHeader>
 
       <Tabs defaultValue="betrieb" className="gap-8">
         <TabsList>

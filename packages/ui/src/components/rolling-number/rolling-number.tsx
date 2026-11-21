@@ -32,18 +32,6 @@ export type RollingNumberProps = Omit<ComponentProps<"span">, "children"> & {
   format?: Intl.NumberFormatOptions;
 };
 
-/** Formats are cached by what they are, so a `format` written inline costs nothing per render. */
-const formats = new Map<string, Intl.NumberFormat>();
-function formatFor(locale: Intl.LocalesArgument, options?: Intl.NumberFormatOptions) {
-  const key = JSON.stringify([locale, options]);
-  let format = formats.get(key);
-  if (!format) {
-    format = numberFormat(locale, options);
-    formats.set(key, format);
-  }
-  return format;
-}
-
 /** The ten digits of a format's numbering system, for the columns, when they are not 0 to 9. */
 function digitsOf(format: Intl.NumberFormat): string | undefined {
   const zero = format.formatToParts(0).find((part) => part.type === "integer")?.value ?? "0";
@@ -89,7 +77,8 @@ export function RollingNumber({
   ref,
   ...props
 }: RollingNumberProps) {
-  const formatter = formatFor(locale, format);
+  // Cached by what it is (`lib/format.ts`), so a `format` written inline costs nothing.
+  const formatter = numberFormat(locale, format);
   const parts = toPlaces(formatter, value);
 
   // The places follow the value, worked out while rendering (state that follows a prop).

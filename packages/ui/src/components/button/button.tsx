@@ -8,6 +8,7 @@ import {
   buttonGroupKeyVariants,
 } from "@/components/button-group/button-group-variants";
 import { Spinner } from "@/components/spinner/spinner";
+import { EaseWidth } from "@/internal/ease-width";
 import { mergeClassName } from "@/lib/cn";
 
 import { buttonDisabledLook, type ButtonVariants, buttonVariants } from "./button-variants";
@@ -21,6 +22,12 @@ export type ButtonProps = ButtonPrimitive.Props &
      * cannot be pressed again. It keeps focus and its colour.
      */
     loading?: boolean;
+    /**
+     * The label changes while the button is on screen („Vorjahr zeigen“, then „Dieses Jahr
+     * zeigen“): the button eases to its new width instead of jumping, and what stands beside it
+     * moves along. Off by default; most labels never change.
+     */
+    resize?: boolean;
   } & (
     | {
         /** A square button for a single icon. It has no visible label, so it needs a name. */
@@ -48,6 +55,7 @@ export function Button({
   size,
   iconOnly,
   loading = false,
+  resize = false,
   disabled,
   focusableWhenDisabled,
   children,
@@ -56,6 +64,7 @@ export function Button({
   const group = useButtonGroup();
   const resolvedVariant = variant ?? "secondary";
   const resolvedSize = group?.size ?? size ?? "md";
+  const label = resize && !iconOnly ? <EaseWidth>{children}</EaseWidth> : children;
   return (
     <ButtonPrimitive
       data-slot="button"
@@ -88,7 +97,7 @@ export function Button({
             data-slot="button-label"
             className="inline-flex items-center gap-[inherit] opacity-0"
           >
-            {children}
+            {label}
           </span>
           <span
             data-slot="button-spinner"
@@ -98,7 +107,7 @@ export function Button({
           </span>
         </>
       ) : (
-        children
+        label
       )}
     </ButtonPrimitive>
   );

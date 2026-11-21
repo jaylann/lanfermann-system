@@ -6,6 +6,7 @@ import type { DateRange } from "@/components/calendar/calendar";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
 
 import { DateRangeField } from "./date-range-field";
+import { lastDays } from "./presets";
 
 const meta = {
   title: "Components/DateRangeField",
@@ -121,6 +122,128 @@ export const Disabled: Story = {
 };
 
 const iso = (range: DateRange) => (range.from === "" ? "leer" : `${range.from}/${range.to}`);
+
+const lookBack = [lastDays(7), lastDays(28), lastDays(90)];
+
+/**
+ * On a dashboard: „Letzte 7 Tage“, 28 and 90, taken with one press. The field names the preset
+ * the range is.
+ */
+export const Presets: Story = {
+  render: (args) => (
+    <Field className="w-72">
+      <FieldLabel>Zeitraum</FieldLabel>
+      <DateRangeField
+        {...args}
+        presets={lookBack}
+        defaultValue={{ from: "2026-10-18", to: "2026-11-14" }}
+      />
+    </Field>
+  ),
+};
+
+/** The presets as a column at the left of the calendar, the disc by the one the range is. */
+export const PresetsOpen: Story = {
+  parameters: {
+    visual: {
+      viewport: { width: 700, height: 470 },
+      clip: "viewport",
+    },
+  },
+  render: (args) => (
+    <Opened>
+      <Field className="w-72">
+        <FieldLabel>Zeitraum</FieldLabel>
+        <DateRangeField
+          {...args}
+          presets={lookBack}
+          defaultValue={{ from: "2026-10-18", to: "2026-11-14" }}
+        />
+      </Field>
+    </Opened>
+  ),
+};
+
+/** On a phone the column stands above the calendar. */
+export const PresetsOpenPhone: Story = {
+  parameters: { visual: { viewport: { width: 390, height: 640 }, clip: "viewport" } },
+  render: PresetsOpen.render,
+};
+
+function ReportedPresets() {
+  const [value, setValue] = useState<DateRange>({ from: "2026-11-02", to: "2026-11-06" });
+  return (
+    <Field className="w-96 max-w-full">
+      <FieldLabel>Zeitraum</FieldLabel>
+      <DateRangeField
+        value={value}
+        onValueChange={setValue}
+        today="2026-11-14"
+        min="2026-09-01"
+        presets={lookBack}
+      />
+      <FieldError />
+      <FieldDescription>
+        Wert: <span data-testid="value">{iso(value)}</span>
+      </FieldDescription>
+    </Field>
+  );
+}
+
+/**
+ * As a test: a preset is taken with one press and closes the sheet, the field names it, the
+ * disc stands by it when the sheet opens again, a preset past `min` cannot be taken, and a
+ * preset's name typed is that preset.
+ */
+export const KeyboardPresets: Story = {
+  render: () => <ReportedPresets />,
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Zeitraum");
+    const value = canvas.getByTestId("value");
+
+    await step("A preset is taken with one press", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Kalender öffnen" }));
+      const sheet = await screen.findByRole("dialog", { name: "Zeitraum wählen" });
+      const presets = within(sheet).getByRole("group", { name: "Schnellauswahl" });
+      await userEvent.click(within(presets).getByRole("button", { name: "Letzte 28 Tage" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await expect(value).toHaveTextContent("2026-10-18/2026-11-14");
+      await expect(input).toHaveValue("Letzte 28 Tage");
+    });
+
+    await step("The chosen preset carries the disc; one past min cannot be taken", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Kalender öffnen" }));
+      const sheet = await screen.findByRole("dialog", { name: "Zeitraum wählen" });
+      await expect(within(sheet).getByRole("button", { name: "Letzte 28 Tage" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await expect(within(sheet).getByRole("button", { name: "Letzte 7 Tage" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      await expect(within(sheet).getByRole("button", { name: "Letzte 90 Tage" })).toBeDisabled();
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+
+    await step(
+      "Days typed that are a preset are named; a preset's name typed is read",
+      async () => {
+        await userEvent.clear(input);
+        await userEvent.type(input, "8.-14.11.{Enter}");
+        await expect(input).toHaveValue("Letzte 7 Tage");
+        await expect(value).toHaveTextContent("2026-11-08/2026-11-14");
+        await userEvent.clear(input);
+        await userEvent.type(input, "letzte 28 tage{Enter}");
+        await expect(value).toHaveTextContent("2026-10-18/2026-11-14");
+        await userEvent.clear(input);
+        await userEvent.type(input, "10.-12.11.{Enter}");
+        await expect(input).toHaveValue("10.11.2026 – 12.11.2026");
+      },
+    );
+  },
+};
 
 function Reported({ time = false }: { time?: boolean }) {
   const [value, setValue] = useState<DateRange>(

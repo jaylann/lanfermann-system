@@ -35,11 +35,22 @@ import {
   DialogTitle,
 } from "@/components/dialog/dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/field/field";
+import { Form } from "@/components/form/form";
 import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
+import { Input } from "@/components/input/input";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/menu/menu";
 import { OtpField } from "@/components/otp-field/otp-field";
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
+import { RelativeTime } from "@/components/relative-time/relative-time";
 import { SecretField } from "@/components/secret-field/secret-field";
+import { Separator } from "@/components/separator/separator";
+import { StoredSecretField } from "@/components/stored-secret-field/stored-secret-field";
 import {
   Table,
   TableBody,
@@ -49,12 +60,13 @@ import {
   TableRow,
 } from "@/components/table/table";
 import { Text } from "@/components/text/text";
+import { toast, Toaster } from "@/components/toast/toast";
 
 const meta = {
   title: "Patterns/API keys",
   parameters: {
     layout: "fullscreen",
-    visual: { viewport: { width: 900, height: 620 }, clip: "viewport" },
+    visual: { viewport: { width: 900, height: 820 }, clip: "viewport" },
   },
 } satisfies Meta;
 
@@ -64,35 +76,44 @@ type Story = StoryObj<typeof meta>;
 type Key = {
   id: string;
   name: string;
-  start: string;
+  /** The kind of key, readable: `lf_live_`, `lf_test_`. */
+  prefix: string;
+  /** Its last characters, by which it is told apart; the rest is never shown again. */
+  ending: string;
   created: string;
-  used: string;
+  /** When it was last used, as a moment; never, if it has not been. */
+  used?: string;
   live: boolean;
 };
+
+/** The board's "now", so the times read the same on every day: 21 November 2026, 14:00. */
+const NOW = "2026-11-21T14:00:00+01:00";
 
 const KEYS: Key[] = [
   {
     id: "1",
     name: "Website",
-    start: "lf_live_9fK2",
+    prefix: "lf_live_",
+    ending: "3Ha9",
     created: "12.03.2026",
-    used: "vor 4 Minuten",
+    used: "2026-11-21T13:56:00+01:00",
     live: true,
   },
   {
     id: "2",
     name: "Buchhaltung",
-    start: "lf_live_Tz4b",
+    prefix: "lf_live_",
+    ending: "Tz4b",
     created: "02.09.2026",
-    used: "gestern",
+    used: "2026-11-20T18:42:00+01:00",
     live: true,
   },
   {
     id: "3",
     name: "Testumgebung",
-    start: "lf_test_81Nc",
+    prefix: "lf_test_",
+    ending: "81Nc",
     created: "18.11.2026",
-    used: "noch nie",
     live: false,
   },
 ];
@@ -126,20 +147,22 @@ function Keys({ show = "list" }: { show?: Shown }) {
   const [step, setStep] = useState<Shown>(show);
   const [doomed, setDoomed] = useState<Key | undefined>(show === "delete" ? KEYS[2] : undefined);
   const creating = step === "confirm" || step === "created";
+  const [signing, setSigning] = useState("7c1e");
+  const [replacing, setReplacing] = useState(false);
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-5 py-10 sm:px-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <Heading level={1}>API-Schlüssel.</Heading>
-          <Text tone="muted">
-            Mit einem Schlüssel greifen Ihre eigenen Programme auf den Arbeitsbereich zu.
-          </Text>
-        </div>
-        <Button variant="primary" onClick={() => setStep("confirm")}>
-          <Icon icon={Key01Icon} size={16} />
-          Schlüssel erstellen
-        </Button>
-      </div>
+      <PageHeader>
+        <PageHeaderTitle size="title">API-Schlüssel.</PageHeaderTitle>
+        <PageHeaderDescription>
+          Mit einem Schlüssel greifen Ihre eigenen Programme auf den Arbeitsbereich zu.
+        </PageHeaderDescription>
+        <PageHeaderActions>
+          <Button variant="primary" onClick={() => setStep("confirm")}>
+            <Icon icon={Key01Icon} size={16} />
+            Schlüssel erstellen
+          </Button>
+        </PageHeaderActions>
+      </PageHeader>
 
       <Table aria-label="API-Schlüssel">
         <TableHeader>
@@ -165,9 +188,13 @@ function Keys({ show = "list" }: { show?: Shown }) {
                     {!key.live && <Badge>Test</Badge>}
                   </span>
                 </TableCell>
-                <TableCell className="font-mono text-sm text-fg-body">{key.start}…</TableCell>
+                <TableCell className="font-mono text-sm text-fg-body">
+                  {key.prefix}…{key.ending}
+                </TableCell>
                 <TableCell className="tabular-nums">{key.created}</TableCell>
-                <TableCell className="text-fg-muted">{key.used}</TableCell>
+                <TableCell className="text-fg-muted">
+                  {key.used ? <RelativeTime value={key.used} now={NOW} /> : "noch nie"}
+                </TableCell>
                 <TableCell className="w-0">
                   <Menu>
                     <MenuTrigger
@@ -195,6 +222,52 @@ function Keys({ show = "list" }: { show?: Shown }) {
           ))}
         </TableBody>
       </Table>
+
+      {/* The webhook's signing secret is kept by the server and never shown again: the field
+          says how it ends and takes a new one. A new key, by contrast, is shown once below. */}
+      <section className="flex flex-col gap-5">
+        <Separator variant="rule" />
+        <div className="flex flex-col gap-1">
+          <Heading level={2}>Webhook.</Heading>
+          <Text tone="muted">
+            Bei jedem neuen Angebot und jeder Zahlung senden wir eine Anfrage an Ihre Adresse.
+          </Text>
+        </div>
+        <Form
+          className="gap-5"
+          onFormSubmit={(values: { url: string; secret?: string }) => {
+            toast({
+              title: values.secret ? "Webhook und Secret gespeichert." : "Webhook gespeichert.",
+              tone: "success",
+            });
+            if (values.secret) {
+              setSigning(values.secret.slice(-4));
+              setReplacing(false);
+            }
+          }}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field name="url">
+              <FieldLabel>Adresse</FieldLabel>
+              <Input type="url" defaultValue="https://schreinerei-huber.de/api/lanfermann" />
+            </Field>
+            <Field name="secret">
+              <FieldLabel>Signatur-Secret</FieldLabel>
+              <StoredSecretField
+                ending={signing}
+                replacing={replacing}
+                onReplacingChange={setReplacing}
+              />
+              <FieldDescription>
+                Anfragen mit dem alten Secret werden danach abgelehnt.
+              </FieldDescription>
+            </Field>
+          </div>
+          <Button type="submit" className="self-start">
+            Speichern
+          </Button>
+        </Form>
+      </section>
 
       {/* A new key: first the code that proves who asks, then the key, shown once. */}
       <Dialog open={creating} onOpenChange={(open) => !open && setStep("list")}>
@@ -266,6 +339,7 @@ function Keys({ show = "list" }: { show?: Shown }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Toaster />
     </main>
   );
 }

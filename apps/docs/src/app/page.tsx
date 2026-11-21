@@ -190,7 +190,9 @@ import {
   Wordmark,
 } from "@lanfermann/ui";
 
+import { AppPage } from "./app-page";
 import { Assistant } from "./assistant";
+import { Charts } from "./charts";
 import { Figures } from "./figures";
 import { Inputs } from "./inputs";
 import { QuoteForm } from "./quote-form";
@@ -602,6 +604,7 @@ export default function Home() {
                   </Stat>
                 </StatGroup>
                 <Figures />
+                <Charts ground={ground} />
                 <AvatarGroup
                   label={`Im Team (${ground})`}
                   people={[
@@ -638,6 +641,9 @@ export default function Home() {
                   </TimelineGroup>
                 </Timeline>
               </div>
+
+              {/* How a page of an app opens, and the parts that read the clock in the browser. */}
+              <AppPage ground={ground} />
 
               {/* The inputs of an app. They hold state or take functions, so they stand in a
                   client component of their own. */}

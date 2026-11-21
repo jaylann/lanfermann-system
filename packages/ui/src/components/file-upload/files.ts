@@ -3,6 +3,8 @@
  * Plain functions, so they can be tested and used on a server.
  */
 
+import { numberFormatter } from "@/lib/format";
+
 /** Why a file was not taken. */
 export type FileRejection = {
   file: File;
@@ -65,7 +67,7 @@ function unitOf(bytes: number) {
 function inUnit(bytes: number, unit: number, locale: string) {
   // Bytes and kilobytes are whole numbers; from a megabyte on, one decimal says enough.
   const digits = unit < 2 ? 0 : 1;
-  return new Intl.NumberFormat(locale, {
+  return numberFormatter(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   }).format(bytes / 1000 ** unit);
