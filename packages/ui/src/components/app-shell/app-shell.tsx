@@ -25,7 +25,8 @@ export type AppShellProps = ComponentProps<"div"> & {
 
 /**
  * The frame of an app: the `Sidebar` on the left, the page beside it. Put the sidebar first,
- * then an `AppShellPage` with the page's `AppShellBar` and its `AppShellMain`.
+ * then an `AppShellPage` with the page's `AppShellBar` and its `AppShellMain`, which opens with
+ * a `PageHeader`.
  *
  * The shell keeps whether the sidebar is open, so the `SidebarTrigger` in the bar and the
  * sidebar agree. To have the sidebar come back the way it was left, keep the state yourself
@@ -101,7 +102,7 @@ export function AppShellPage({ className, ...props }: ComponentProps<"div">) {
 /**
  * The bar across the top of the page: the `SidebarTrigger`, where one is (`Breadcrumbs`), and
  * what can be done from everywhere (the search). It stays in view while the page scrolls. What
- * belongs to one page only (its title, its actions) stands in the page, not here.
+ * belongs to one page only (its title, its actions) stands in the page's `PageHeader`, not here.
  */
 export function AppShellBar({ className, ...props }: ComponentProps<"header">) {
   return (

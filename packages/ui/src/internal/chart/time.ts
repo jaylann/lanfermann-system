@@ -11,19 +11,13 @@
  * Pure and server-safe.
  */
 
-export type TimeValue = Date | string | number;
+import { dateFormatter as format } from "@/lib/format";
+
+// A moment as charts take it: the system's, so a chart and a `RelativeTime` read the same values.
+export { type TimeValue, toTime } from "@/lib/format";
 
 /** How far apart the points of a series are: what a single point stands for. */
 export type TimeInterval = "hour" | "day" | "week" | "month" | "year";
-
-/** A moment as milliseconds. An ISO date without a time (`2026-11-14`) is local midnight. */
-export function toTime(value: TimeValue): number {
-  if (typeof value === "number") return value;
-  if (value instanceof Date) return value.getTime();
-  const date = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (date) return new Date(Number(date[1]), Number(date[2]) - 1, Number(date[3])).getTime();
-  return new Date(value).getTime();
-}
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -190,17 +184,6 @@ export function timeTicks(
               : false,
     };
   });
-}
-
-const formats = new Map<string, Intl.DateTimeFormat>();
-function format(locale: Intl.LocalesArgument, options: Intl.DateTimeFormatOptions) {
-  const key = JSON.stringify([locale, options]);
-  let found = formats.get(key);
-  if (!found) {
-    found = new Intl.DateTimeFormat(locale, options);
-    formats.set(key, found);
-  }
-  return found;
 }
 
 /**

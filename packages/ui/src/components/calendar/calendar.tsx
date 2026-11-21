@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useState } from "react";
 import {
   DayButton,
   type DayButtonProps,
@@ -14,6 +14,7 @@ import { de } from "react-day-picker/locale";
 import { buttonVariants } from "@/components/button/button-variants";
 import { ChevronLeftGlyph, ChevronRightGlyph } from "@/internal/glyphs";
 import { parseIsoDate, toIsoDate } from "@/internal/iso-date";
+import { useToday } from "@/internal/today";
 import { cn } from "@/lib/cn";
 
 import { CalendarSelection } from "./calendar-selection";
@@ -197,9 +198,6 @@ function useCalendarProps({ min, max, className }: CalendarCommon, chosen?: Date
   };
 }
 
-/** Today is today for as long as a calendar is open: there is nothing to listen for. */
-const neverChanges = () => () => {};
-
 /**
  * A month to pick from: one day, or with `mode="range"` a first and a last day. German weekdays,
  * Monday first, six rows always, so the sheet it sits in does not change height from month to
@@ -209,16 +207,10 @@ const neverChanges = () => () => {};
  * about one date.
  */
 export function Calendar(props: CalendarProps) {
-  // The clock is read in the browser only: a page that is rendered ahead of time has no "now"
-  // (Next refuses to prerender a component that asks for one), and a server's day is not
-  // necessarily the reader's. Pass `today` where the day has to be right from the first paint.
-  const realToday = useSyncExternalStore(
-    neverChanges,
-    () => toIsoDate(new Date()),
-    () => "",
-  );
+  // Read in the browser only (`useToday`); pass `today` for the right day from the first paint.
+  const today = useToday(props.today);
   return (
-    <Today value={props.today ?? realToday}>
+    <Today value={today}>
       {props.mode === "range" ? <RangeCalendar {...props} /> : <SingleCalendar {...props} />}
     </Today>
   );
@@ -270,7 +262,11 @@ function RangeCalendar({
   const [aim, setAim] = useState<Date>();
   const from = parseIsoDate(range.from);
   const to = parseIsoDate(range.to);
-  const { start, props } = useCalendarProps(common, from);
+  // A range that runs through today opens on today's month („Letzte 90 Tage“ would otherwise
+  // open three months back); any other on the month it starts in.
+  const now = parseIsoDate(useContext(Today));
+  const opening = from && to && now && from <= now && now <= to ? now : from;
+  const { start, props } = useCalendarProps(common, opening);
   const other = aim ?? anchor;
   const selected =
     anchor && other
