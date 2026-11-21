@@ -12,10 +12,14 @@ import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
 import { Card } from "@/components/card/card";
-import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
 import { Kbd } from "@/components/kbd/kbd";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/menu/menu";
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
 import { Segment, SegmentedControl } from "@/components/segmented-control/segmented-control";
 import {
   Table,
@@ -32,6 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/tooltip/tooltip";
+import { formatMoney } from "@/lib/format";
 
 const meta = {
   title: "Patterns/Quotes",
@@ -50,7 +55,7 @@ const QUOTES = [
     initials: "SM",
     customer: "Schreinerei Mustermann",
     subject: "Website und Google-Profil",
-    amount: "2.780,00 €",
+    amount: 2780,
     state: ["Entwurf", "neutral"],
   },
   {
@@ -58,7 +63,7 @@ const QUOTES = [
     initials: "BK",
     customer: "Bäckerei Kornprobst",
     subject: "Website, Bestellformular",
-    amount: "4.280,00 €",
+    amount: 4280,
     state: ["Gesendet", "info"],
   },
   {
@@ -66,7 +71,7 @@ const QUOTES = [
     initials: "FH",
     customer: "Friseursalon Haarscharf",
     subject: "Terminbuchung",
-    amount: "1.950,00 €",
+    amount: 1950,
     state: ["Angenommen", "success"],
   },
   {
@@ -74,7 +79,7 @@ const QUOTES = [
     initials: "EW",
     customer: "Elektro Wagner",
     subject: "Website, monatliche Pflege",
-    amount: "3.120,00 €",
+    amount: 3120,
     state: ["Überfällig", "danger"],
   },
 ] as const;
@@ -88,23 +93,24 @@ export const Quotes: Story = {
   render: () => (
     <TooltipProvider>
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-          <div className="flex flex-col gap-4">
-            <Heading level={1}>Ihre Angebote.</Heading>
-            <SegmentedControl defaultValue="alle">
-              <Segment value="alle">Alle</Segment>
-              <Segment value="offen">Offen</Segment>
-              <Segment value="angenommen">Angenommen</Segment>
-            </SegmentedControl>
-          </div>
-          <Button variant="primary">
-            <Icon icon={Add01Icon} />
-            Neues Angebot
-            <span className="flex gap-1">
-              <Kbd>N</Kbd>
-            </span>
-          </Button>
-        </div>
+        <PageHeader>
+          <PageHeaderTitle size="title">Ihre Angebote.</PageHeaderTitle>
+          <PageHeaderActions>
+            <Button variant="primary">
+              <Icon icon={Add01Icon} />
+              Neues Angebot
+              <span className="flex gap-1">
+                <Kbd>N</Kbd>
+              </span>
+            </Button>
+          </PageHeaderActions>
+        </PageHeader>
+        {/* What filters the page stands under its header. */}
+        <SegmentedControl defaultValue="alle" aria-label="Angebote zeigen" className="self-start">
+          <Segment value="alle">Alle</Segment>
+          <Segment value="offen">Offen</Segment>
+          <Segment value="angenommen">Angenommen</Segment>
+        </SegmentedControl>
 
         <Card>
           <Table aria-label="Angebote" className="min-w-[38rem]">
@@ -140,7 +146,7 @@ export const Quotes: Story = {
                     </Badge>
                   </TableCell>
                   <TableCell numeric className="font-medium text-fg">
-                    {quote.amount}
+                    {formatMoney(quote.amount)}
                   </TableCell>
                   <TableCell className="w-0">
                     <div className="flex items-center gap-1">

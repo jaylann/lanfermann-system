@@ -21,10 +21,14 @@ import {
 } from "@/components/file-upload/file-upload";
 import { Grow } from "@/components/grow/grow";
 import { Heading } from "@/components/heading/heading";
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
 import { RadioGroup } from "@/components/radio/radio";
 import { RadioCard } from "@/components/radio-card/radio-card";
 import { Step, Steps } from "@/components/steps/steps";
-import { Text } from "@/components/text/text";
 
 const meta = {
   title: "Patterns/Onboarding",
@@ -174,10 +178,12 @@ function SetUp({ start = 0 }: { start?: number }) {
   const last = step === STEPS.length - 1;
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-5 py-10 sm:px-8">
-      <div className="flex flex-col gap-2">
-        <Heading level={1}>Arbeitsbereich einrichten.</Heading>
-        <Text tone="muted">Vier Schritte, etwa zwei Minuten. Alles lässt sich später ändern.</Text>
-      </div>
+      <PageHeader>
+        <PageHeaderTitle size="title">Arbeitsbereich einrichten.</PageHeaderTitle>
+        <PageHeaderDescription>
+          Vier Schritte, etwa zwei Minuten. Alles lässt sich später ändern.
+        </PageHeaderDescription>
+      </PageHeader>
 
       <Steps aria-label="Einrichtung">
         {STEPS.map((entry, index) => (

@@ -16,6 +16,11 @@ import { Icon } from "@/components/icon/icon";
 import { Link } from "@/components/link/link";
 import { Meter, MeterLabel, MeterTrack, MeterValue } from "@/components/meter/meter";
 import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
+import {
   Table,
   TableBody,
   TableCell,
@@ -25,6 +30,7 @@ import {
 } from "@/components/table/table";
 import { Text } from "@/components/text/text";
 import { toast } from "@/components/toast/toast";
+import { formatMoney, formatNumber } from "@/lib/format";
 
 import { AppFrame } from "./app-frame";
 
@@ -42,8 +48,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const euro = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
 
 const INVOICES = [
   ["R-2026-0011", "1. November 2026", 29, "Offen", "warning"],
@@ -67,7 +71,7 @@ function Usage({
   return (
     <Meter value={value} max={max} locale="de-DE">
       <MeterLabel>{label}</MeterLabel>
-      <MeterValue>{() => `${value.toLocaleString("de-DE")} von ${max} ${unit}`}</MeterValue>
+      <MeterValue>{() => `${formatNumber(value)} von ${formatNumber(max)} ${unit}`}</MeterValue>
       <MeterTrack />
     </Meter>
   );
@@ -107,12 +111,12 @@ function Board() {
         </Banner>
       }
     >
-      <div className="flex flex-col gap-1">
-        <Heading level={1} size="section">
-          Abrechnung.
-        </Heading>
-        <Text tone="muted">Ihr Tarif, was Sie davon nutzen, und Ihre Rechnungen.</Text>
-      </div>
+      <PageHeader>
+        <PageHeaderTitle>Abrechnung.</PageHeaderTitle>
+        <PageHeaderDescription>
+          Ihr Tarif, was Sie davon nutzen, und Ihre Rechnungen.
+        </PageHeaderDescription>
+      </PageHeader>
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
         <Card role="region" aria-labelledby="tarif" className="min-w-0">
@@ -131,7 +135,7 @@ function Board() {
           <div className="px-5 pt-2 pb-2">
             <DescriptionList rule={false} className="[--dl-term:9rem]">
               <DescriptionTerm>Preis</DescriptionTerm>
-              <DescriptionDetails>29,00 € im Monat</DescriptionDetails>
+              <DescriptionDetails>{formatMoney(29)} im Monat</DescriptionDetails>
               <DescriptionTerm>Nächste Rechnung</DescriptionTerm>
               <DescriptionDetails>1. Dezember 2026</DescriptionDetails>
               <DescriptionTerm>Zahlungsmethode</DescriptionTerm>
@@ -203,7 +207,7 @@ function Board() {
                   </TableCell>
                   <TableCell className="whitespace-nowrap max-sm:hidden">{date}</TableCell>
                   <TableCell className="max-sm:hidden">{state}</TableCell>
-                  <TableCell numeric>{euro.format(amount)}</TableCell>
+                  <TableCell numeric>{formatMoney(amount)}</TableCell>
                   <TableCell className="w-0">
                     <Button
                       size="sm"

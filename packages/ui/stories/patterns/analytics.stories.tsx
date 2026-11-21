@@ -4,25 +4,33 @@ import { useState } from "react";
 import { BarChart } from "@/components/bar-chart/bar-chart";
 import { BarList, type BarListItem } from "@/components/bar-list/bar-list";
 import { Bullet } from "@/components/bullet/bullet";
+import type { DateRange } from "@/components/calendar/calendar";
 import { Card, CardBar } from "@/components/card/card";
+import { DateRangeField } from "@/components/date-range-field/date-range-field";
+import { lastDays } from "@/components/date-range-field/presets";
 import { Dumbbell } from "@/components/dumbbell/dumbbell";
 import { Funnel } from "@/components/funnel/funnel";
 import { Heading } from "@/components/heading/heading";
 import { Heatmap } from "@/components/heatmap/heatmap";
 import { quoteDays } from "@/components/heatmap/story-data";
 import { Link } from "@/components/link/link";
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
 import { RollingNumber } from "@/components/rolling-number/rolling-number";
 import { SegmentedBar } from "@/components/segmented-bar/segmented-bar";
-import { Segment, SegmentedControl } from "@/components/segmented-control/segmented-control";
 import { Sparkline } from "@/components/sparkline/sparkline";
 import { Stat, StatChange, StatGroup, StatLabel, StatValue } from "@/components/stat/stat";
-import { Text } from "@/components/text/text";
 import { revenueDays, visitDays } from "@/components/time-series-chart/story-data";
 import { TimeSeriesChart } from "@/components/time-series-chart/time-series-chart";
 import { uptimeDays } from "@/components/tracker/story-data";
 import { Tracker } from "@/components/tracker/tracker";
 import { Waterfall } from "@/components/waterfall/waterfall";
-import { pointLabel, toTime } from "@/internal/chart/time";
+import { pointLabel } from "@/internal/chart/time";
+import { formatMoney, formatPercent, toTime } from "@/lib/format";
 
 import { AppFrame } from "./app-frame";
 
@@ -37,7 +45,14 @@ const meta = {
     visual: {
       viewport: { width: 1180, height: 2300 },
       clip: "viewport",
-      motion: [{ name: "range", click: '[data-step="range-7"]' }],
+      // The page's range: the sheet opens, „Letzte 7 Tage“ is pressed, and the chart re-forms.
+      motion: [
+        {
+          name: "range",
+          click: '[data-slot="date-range-field"] [data-slot="input-group-button"]',
+          then: { click: '[data-slot="date-range-field-preset"]', at: 250 },
+        },
+      ],
     },
   },
 } satisfies Meta;
@@ -47,8 +62,11 @@ type Story = StoryObj<typeof meta>;
 
 const euro = { style: "currency", currency: "EUR", maximumFractionDigits: 0 } as const;
 const month = new Intl.DateTimeFormat("de-DE", { month: "short" });
-const ranges = { "7": 7, "30": 30, "90": 90 } as const;
-type Range = keyof typeof ranges;
+
+/** The board's today: the sample series end here. */
+const TODAY = "2026-11-20";
+const lookBack = [lastDays(7), lastDays(28), lastDays(90)];
+const DAY = 86_400_000;
 
 const visits = visitDays();
 const customers: BarListItem[] = [
@@ -67,9 +85,10 @@ const quotes = [
   { monat: "2026-11-01", erstellt: 24, angenommen: 16 },
 ];
 
-function Revenue() {
-  const [range, setRange] = useState<Range>("30");
-  const days = revenueDays(ranges[range]);
+function Revenue({ range }: { range: DateRange }) {
+  // The days of the range, up to the last one the series has.
+  const count = Math.round((toTime(range.to) - toTime(range.from)) / DAY) + 1;
+  const days = revenueDays(count, new Date(toTime(range.to)));
   const [active, setActive] = useState<(typeof days)[number] | null>(null);
   const total = days.reduce((sum, day) => sum + day.umsatz, 0);
   return (
@@ -78,24 +97,15 @@ function Revenue() {
         <Heading level={2} size="label">
           Umsatz
         </Heading>
-        <SegmentedControl
-          aria-label="Zeitraum"
-          value={range}
-          onValueChange={(next) => setRange(next as Range)}
-        >
-          <Segment value="7" data-step="range-7">
-            7 Tage
-          </Segment>
-          <Segment value="30">30 Tage</Segment>
-          <Segment value="90">90 Tage</Segment>
-        </SegmentedControl>
       </CardBar>
       <div className="flex flex-col gap-5 px-5 pt-4 pb-5">
         <Stat>
           <StatLabel>
             {active
               ? pointLabel(toTime(active.tag), "day")
-              : `In den letzten ${ranges[range]} Tagen`}
+              : range.to === TODAY
+                ? `In den letzten ${count} Tagen`
+                : `An ${count} Tagen`}
           </StatLabel>
           <StatValue>
             <RollingNumber value={active ? active.umsatz : total} format={euro} />
@@ -117,20 +127,33 @@ function Revenue() {
 }
 
 function Analytics() {
+  const [range, setRange] = useState(() => lastDays(28).range(TODAY));
   return (
     <AppFrame page="auswertung">
-      <div className="flex flex-col gap-1">
-        <Heading level={1} size="section">
-          Auswertung.
-        </Heading>
-        <Text tone="muted">Wie die Werkstatt im November läuft, mit den Wochen davor.</Text>
-      </div>
+      <PageHeader>
+        <PageHeaderTitle>Auswertung.</PageHeaderTitle>
+        <PageHeaderDescription>
+          Wie die Werkstatt im November läuft, mit den Wochen davor.
+        </PageHeaderDescription>
+        <PageHeaderActions>
+          <DateRangeField
+            aria-label="Zeitraum"
+            value={range}
+            // An emptied field keeps the page on the range it showed.
+            onValueChange={(next) => next.from && setRange(next)}
+            presets={lookBack}
+            today={TODAY}
+            max={TODAY}
+            className="w-60"
+          />
+        </PageHeaderActions>
+      </PageHeader>
 
       <Card>
         <StatGroup>
           <Stat>
             <StatLabel>Umsatz im November</StatLabel>
-            <StatValue>117.074 €</StatValue>
+            <StatValue>{formatMoney(117_074, { maximumFractionDigits: 0 })}</StatValue>
             <StatChange trend="up" tone="positive" context="zum Vormonat">
               +18 %
             </StatChange>
@@ -167,7 +190,7 @@ function Analytics() {
       </Card>
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-        <Revenue />
+        <Revenue range={range} />
         <Card>
           <CardBar>
             <Heading level={2} size="label">
@@ -225,7 +248,9 @@ function Analytics() {
             <div className="flex flex-col gap-3">
               <div className="flex items-baseline justify-between gap-4">
                 <p className="text-control font-medium text-fg">Angebotsdienst</p>
-                <p className="text-sm text-fg-muted tabular-nums">99,8 % verfügbar</p>
+                <p className="text-sm text-fg-muted tabular-nums">
+                  {formatPercent(0.998, { maximumFractionDigits: 1 })} verfügbar
+                </p>
               </div>
               <Tracker
                 label="Verfügbarkeit des Angebotsdienstes, letzte 90 Tage"

@@ -32,7 +32,6 @@ import {
 } from "@/components/app-shell/app-shell";
 import { Avatar, AvatarFallback } from "@/components/avatar/avatar";
 import { BreadcrumbItem, BreadcrumbPage, Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
-import { Heading } from "@/components/heading/heading";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import {
   Menu,
@@ -46,8 +45,12 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "@/components/menu/menu";
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header/page-header";
 import { ShortcutProvider } from "@/components/shortcut/shortcut";
-import { Text } from "@/components/text/text";
 
 import {
   Sidebar,
@@ -307,10 +310,12 @@ function Page({ children }: { children?: ReactNode }) {
         </Breadcrumbs>
       </AppShellBar>
       <AppShellMain className="flex flex-col gap-2">
-        <Heading level={1} size="section">
-          Angebote.
-        </Heading>
-        <Text tone="muted">Zwölf Angebote sind offen, drei davon laufen diese Woche ab.</Text>
+        <PageHeader>
+          <PageHeaderTitle>Angebote.</PageHeaderTitle>
+          <PageHeaderDescription>
+            Zwölf Angebote sind offen, drei davon laufen diese Woche ab.
+          </PageHeaderDescription>
+        </PageHeader>
         {children}
       </AppShellMain>
     </AppShellPage>
