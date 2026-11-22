@@ -250,34 +250,34 @@
 [data-mode="dark"] [data-theme="ink"] {
   color-scheme: dark;
 
-  --lf-ground: #23222e;
+  --lf-ground: #2b2a36;
   --lf-text: #fbfbfd;
   --lf-text-body: #d8d8df;
   --lf-text-muted: #aaa9ba;
-  --lf-line: #74738a;
+  --lf-line: #7a798f;
   --lf-rule: #fbfbfd;
   --lf-accent: #a6a1fd;
   --lf-on-accent: #13121c;
-  --lf-surface: #2b2a37;
-  --lf-surface-quiet: #2b2a37;
+  --lf-surface: #33323f;
+  --lf-surface-quiet: #33323f;
 
-  --lf-raised: #33323f;
-  --lf-raised-pressed: #2b2a37;
-  --lf-sheet: #33323f;
+  --lf-raised: #3b3a48;
+  --lf-raised-pressed: #33323f;
+  --lf-sheet: #3b3a48;
   --lf-key: #fbfbfd;
   --lf-key-hover: #ffffff;
   --lf-key-pressed: #e4e4ec;
   --lf-on-key: #13121c;
   --lf-accent-hover: #b6b2fe;
   --lf-accent-pressed: #9590ee;
-  --lf-tint: #352f62;
+  --lf-tint: #3a3468;
   --lf-hairline: rgb(255 255 255 / 0.14);
   --lf-hover: rgb(255 255 255 / 0.08);
   --lf-scrim: rgb(8 7 12 / 0.6);
-  --lf-disabled: #2b2a37;
-  --lf-on-disabled: #9998a8;
-  --lf-trough: #17161f;
-  --lf-well: #1f1e29;
+  --lf-disabled: #33323f;
+  --lf-on-disabled: #a3a2b2;
+  --lf-trough: #1e1d28;
+  --lf-well: #26252f;
   --lf-thumb: #e4e4ec;
 }
 

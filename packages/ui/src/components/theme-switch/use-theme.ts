@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 import {
   applyMode,
@@ -101,15 +101,11 @@ export type UseThemeResult = {
  *
  * The choice is kept in `localStorage` and in a cookie (`lf-theme`); "system" follows the
  * system's setting while the page is open. Every `useTheme` on a page shares one choice, and a
- * choice made in another tab turns this one too.
+ * choice made in another tab turns this one too. It turns the page only when the choice or the
+ * system's setting changes: on load that is `ThemeScript`'s, before React runs.
  */
 export function useTheme({ transition = "instant" }: UseThemeOptions = {}): UseThemeResult {
   const { theme, mode } = useSyncExternalStore(subscribe, getSnapshot, () => SERVER);
-
-  // Without `ThemeScript` nothing set the mode yet; with it this changes nothing.
-  useEffect(() => {
-    applyMode(getSnapshot().mode);
-  }, []);
 
   const setTheme = useCallback(
     (next: Theme) => {
