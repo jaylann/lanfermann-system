@@ -64,7 +64,7 @@
     clip-path: polygon(var(--shape-edge, 0 0));
   }
   & > [data-layer="face"] {
-    background-color: var(--color-accent);
+    background-color: var(--color-selection);
     background-image: var(--range-face);
     clip-path: polygon(var(--shape, 0 0));
   }

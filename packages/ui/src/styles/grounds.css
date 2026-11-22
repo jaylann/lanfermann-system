@@ -68,6 +68,8 @@
   --lf-on-ask-block: #ffffff;
   --lf-key-block: #24232f; /* a block in the key's tone, and its words */
   --lf-on-key-block: #fbfbfd;
+  --lf-floor: #f2f2f7; /* the floor of a site: its footer, and the window past its end */
+  --lf-selection: #5f50d0; /* what is chosen in a calendar: one shape, its days on-accent */
 }
 
 [data-theme="tint"] {
@@ -112,6 +114,8 @@
   --lf-on-ask-block: #ffffff;
   --lf-key-block: #24232f;
   --lf-on-key-block: #fbfbfd;
+  --lf-floor: #e3dff8;
+  --lf-selection: #5f50d0;
 }
 
 .dark,
@@ -158,6 +162,8 @@
   --lf-on-ask-block: #13121c;
   --lf-key-block: #fbfbfd;
   --lf-on-key-block: #13121c;
+  --lf-floor: #1d1c28;
+  --lf-selection: #a6a1fd;
 }
 
 [data-theme="indigo"],
@@ -204,6 +210,8 @@
   --lf-on-ask-block: #5f50d0;
   --lf-key-block: #24232f;
   --lf-on-key-block: #fbfbfd;
+  --lf-floor: #5244c2;
+  --lf-selection: #ffffff;
 }
 
 /*
@@ -262,11 +270,11 @@
   --lf-well: #211f2b;
   --lf-thumb: #e4e4ec;
   --lf-thumb-on: #e4e4ec;
-  --lf-thumb-disabled: #6e6d7c;
+  --lf-thumb-disabled: #858494;
   --lf-fill-disabled: #4a4958;
-  /* A little lighter than any ground: an empty day is "nothing", not a hole (the Tracker's
-     reasoning for its cells without data). */
-  --lf-placeholder: #33323e;
+  /* A little lighter than any ground, the tint of a chosen row included: an empty day is
+     "nothing", not a hole (the Tracker's reasoning for its cells without data). */
+  --lf-placeholder: #3a3946;
   /* An avatar in the text colour would be the brightest thing on a dark page. */
   --lf-avatar: #474656;
   --lf-on-avatar: #fbfbfd;
@@ -277,6 +285,12 @@
   /* A block in the key's tone: a plate of the kit's Ink below the page, not a white slab. */
   --lf-key-block: #13121c;
   --lf-on-key-block: #fbfbfd;
+  /* The site's floor lies a step below the page, as light's does; a lighter one read as a slab
+     raised over it. */
+  --lf-floor: #18171f;
+  /* What a calendar holds chosen is one shape, often many days: a deeper lavender than a key's,
+     or a range would be the brightest slab on the sheet. */
+  --lf-selection: #8f89f2;
 }
 
 [data-mode="dark"][data-theme="tint"],
@@ -315,15 +329,17 @@
   --lf-well: #191726;
   --lf-thumb: #e4e4ec;
   --lf-thumb-on: #e4e4ec;
-  --lf-thumb-disabled: #6c6a82;
+  --lf-thumb-disabled: #83819a;
   --lf-fill-disabled: #4a4860;
-  --lf-placeholder: #34324a;
+  --lf-placeholder: #3a384f;
   --lf-avatar: #46445c;
   --lf-on-avatar: #fbfbfd;
   --lf-ask-block: #4a3eb4;
   --lf-on-ask-block: #ffffff;
   --lf-key-block: #13121c;
   --lf-on-key-block: #fbfbfd;
+  --lf-floor: #171522;
+  --lf-selection: #8f89f2;
 }
 
 /* Indigo in dark mode is deeper, so the ask does not glare beside the dark page (Justin,
@@ -350,6 +366,7 @@
   --lf-placeholder: #392d98;
   --lf-on-avatar: #4a3eb4;
   --lf-on-ask-block: #4a3eb4;
+  --lf-floor: #4033a4;
 }
 
 @theme inline {
@@ -372,6 +389,8 @@
   --color-on-ask-block: var(--lf-on-ask-block);
   --color-key-block: var(--lf-key-block);
   --color-on-key-block: var(--lf-on-key-block);
+  --color-floor: var(--lf-floor);
+  --color-selection: var(--lf-selection);
 
   --color-fg: var(--lf-text);
   --color-fg-body: var(--lf-text-body);

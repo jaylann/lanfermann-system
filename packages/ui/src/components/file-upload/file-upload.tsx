@@ -226,7 +226,7 @@ export function FileUploadZone({
         <span
           aria-hidden
           data-slot="file-upload-tile"
-          className="mb-2 flex size-10 items-center justify-center rounded-lg bg-surface-quiet text-fg-muted inset-ring inset-ring-hairline group-data-disabled/zone:text-on-disabled forced-colors:inset-ring-[CanvasText]"
+          className="mb-2 flex size-10 items-center justify-center rounded-lg bg-surface-quiet text-fg-muted inset-ring inset-ring-hairline group-data-disabled/zone:bg-disabled group-data-disabled/zone:text-on-disabled forced-colors:inset-ring-[CanvasText]"
         >
           {/* It rises a little while a file hangs over the zone: it is about to be taken up. */}
           <Icon

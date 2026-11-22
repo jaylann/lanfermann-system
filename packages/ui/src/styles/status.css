@@ -90,6 +90,12 @@
   --lf-info-soft: #2e2b4f;
 }
 
+/* On the dark Tint the info wash is that ground's tint, as it is the page's on the dark page. */
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  --lf-info-soft: #2d2a4b;
+}
+
 /* Indigo is the ask: nothing competes with it. Statuses there are white, in words. */
 [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],

@@ -97,6 +97,18 @@
   --depth-key-ambient: rgb(42 37 82 / 0.4);
   --depth-key-press: rgb(0 0 0 / 0.55);
 
+  /* a block in the key's tone (the Cta): the key's own light, except in dark mode */
+  --depth-key-block-face: linear-gradient(
+    rgb(255 255 255 / 0.2),
+    rgb(255 255 255 / 0.06) 50%,
+    rgb(255 255 255 / 0)
+  );
+  --depth-key-block-edge: #08070c;
+  --depth-key-block-hi: rgb(255 255 255 / 0.2);
+  --depth-key-block-lo: rgb(0 0 0 / 0.35);
+  --depth-key-block-contact: rgb(19 18 28 / 0.3);
+  --depth-key-block-ambient: rgb(42 37 82 / 0.4);
+
   /* the ask and every checked state: Indigo face */
   --depth-accent-face: linear-gradient(rgb(255 255 255 / 0.16), rgb(255 255 255 / 0));
   --depth-accent-edge: #4c40a3;
@@ -206,6 +218,13 @@
   --depth-key-ambient: rgb(8 7 12 / 0.5);
   --depth-key-press: rgb(19 18 28 / 0.28);
 
+  --depth-key-block-face: linear-gradient(rgb(19 18 28 / 0), rgb(19 18 28 / 0.08));
+  --depth-key-block-edge: rgb(8 7 12 / 0.6);
+  --depth-key-block-hi: rgb(255 255 255 / 0);
+  --depth-key-block-lo: rgb(19 18 28 / 0.18);
+  --depth-key-block-contact: rgb(8 7 12 / 0.6);
+  --depth-key-block-ambient: rgb(8 7 12 / 0.5);
+
   --depth-accent-face: linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0));
   --depth-accent-edge: rgb(8 7 12 / 0.6);
   --depth-accent-hi: rgb(255 255 255 / 0.35);
@@ -284,6 +303,24 @@
   --depth-join-accent: rgb(19 18 28 / 0.2);
 }
 
+/* In dark mode a block in the key's tone is a plate of Ink, not the inverted light key: it takes
+   the light of a dark face (a lit top edge, a face that fades, a light rim), so it stands as a
+   fitting beside the Indigo and the raised blocks. After the block above, which it overrides. */
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"] {
+  --depth-key-block-face: linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0));
+  --depth-key-block-edge: rgb(255 255 255 / 0.08);
+  --depth-key-block-hi: rgb(255 255 255 / 0.1);
+  --depth-key-block-lo: rgb(0 0 0 / 0);
+  --depth-key-block-contact: rgb(8 7 12 / 0.5);
+  --depth-key-block-ambient: rgb(8 7 12 / 0.35);
+}
+
 [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
 [data-mode="dark"] [data-theme="indigo"] {
@@ -306,6 +343,17 @@
   --depth-key-contact: rgb(19 18 28 / 0.3);
   --depth-key-ambient: rgb(19 18 28 / 0.4);
   --depth-key-press: rgb(0 0 0 / 0.55);
+
+  --depth-key-block-face: linear-gradient(
+    rgb(255 255 255 / 0.2),
+    rgb(255 255 255 / 0.06) 50%,
+    rgb(255 255 255 / 0)
+  );
+  --depth-key-block-edge: #08070c;
+  --depth-key-block-hi: rgb(255 255 255 / 0.2);
+  --depth-key-block-lo: rgb(0 0 0 / 0.35);
+  --depth-key-block-contact: rgb(19 18 28 / 0.3);
+  --depth-key-block-ambient: rgb(19 18 28 / 0.4);
 
   /* on Indigo the ask is a white face */
   --depth-accent-face: linear-gradient(rgb(42 37 82 / 0) 40%, rgb(42 37 82 / 0.085));
@@ -637,6 +685,15 @@
   --d-ambient: var(--depth-key-ambient);
   --d-press: var(--depth-key-press);
   --d-face: var(--depth-key-face);
+}
+/* A block in the key's tone: the key's light, but a fitting's light of its own in dark mode. */
+@utility depth-tone-key-block {
+  --d-edge: var(--depth-key-block-edge);
+  --d-hi: var(--depth-key-block-hi);
+  --d-lo: var(--depth-key-block-lo);
+  --d-contact: var(--depth-key-block-contact);
+  --d-ambient: var(--depth-key-block-ambient);
+  --d-face: var(--depth-key-block-face);
 }
 @utility depth-tone-accent {
   --d-edge: var(--depth-accent-edge);

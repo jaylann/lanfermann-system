@@ -47,7 +47,7 @@ const KindContext = createContext<Kind>("joint");
  */
 const tones = {
   accent: { knobs: "depth-tone-accent", fill: "bg-ask-block", text: "text-on-ask-block" },
-  key: { knobs: "depth-tone-key", fill: "bg-key-block", text: "text-on-key-block" },
+  key: { knobs: "depth-tone-key-block", fill: "bg-key-block", text: "text-on-key-block" },
   raised: { knobs: "", fill: "bg-raised", text: "text-fg" },
 } as const;
 export type CtaTone = keyof typeof tones;

@@ -130,6 +130,11 @@ const pairs: [string, string, number][] = [
   ["on-avatar", "avatar", TEXT],
   ["on-ask-block", "ask-block", TEXT],
   ["on-key-block", "key-block", TEXT],
+  // The site's floor carries the footer's words; a calendar's chosen days are on-accent.
+  ["text", "floor", TEXT],
+  ["text-body", "floor", TEXT],
+  ["text-muted", "floor", TEXT],
+  ["on-accent", "selection", TEXT],
   // The kit's structural line: 3:1, so a socket's rim is perceivable without its fill.
   ["line", "ground", 2.95],
   ...["danger", "warning", "success", "info"].flatMap((status): [string, string, number][] => [
