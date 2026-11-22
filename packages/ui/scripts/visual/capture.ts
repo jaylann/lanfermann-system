@@ -11,7 +11,9 @@
  *   --url <origin>       a running Storybook (default http://127.0.0.1:6006)
  *   --static <dir>       serve a `storybook build` from disk instead (no port, no server)
  *   --only a,b           keep stories whose id or title contains one of these
- *   --grounds a,b|all    grounds to render (default paper,ink)
+ *   --grounds a,b|all    grounds to render (default paper,dark). `dark` is Paper in dark mode,
+ *                        `<ground>-dark` (tint-dark, ink-dark, indigo-dark) the others; `all`
+ *                        is every ground in both modes
  *   --vary key=a,b       add a toolbar global as a further variant axis (repeatable)
  *   --set key=value      pin a toolbar global for the whole run (repeatable)
  *   --frames <n>         frames per motion strip (default 8)
@@ -127,7 +129,7 @@ function parseArgs(argv: string[]) {
     url: "http://127.0.0.1:6006",
     staticDir: undefined as string | undefined,
     only: [] as string[],
-    grounds: ["paper", "ink"],
+    grounds: ["paper", "dark"],
     vary: [] as { key: string; values: string[] }[],
     set: {} as Record<string, string>,
     frames: 8,
@@ -159,7 +161,10 @@ function parseArgs(argv: string[]) {
     else if (arg === "--only") options.only = next(arg).split(",").filter(Boolean);
     else if (arg === "--grounds") {
       const value = next(arg);
-      options.grounds = value === "all" ? ALL_GROUNDS : value.split(",");
+      options.grounds =
+        value === "all"
+          ? [...ALL_GROUNDS, "dark", ...ALL_GROUNDS.slice(1).map((ground) => `${ground}-dark`)]
+          : value.split(",");
     } else if (arg === "--vary") {
       const [key, values] = next(arg).split("=");
       if (!key || !values) throw new Error("--vary expects key=a,b");
@@ -214,10 +219,22 @@ function parseEngines(value: string | undefined): Engine[] {
   return names as Engine[];
 }
 
+/**
+ * The globals of one `--grounds` entry. A ground may carry the mode: `dark` is Paper in dark mode,
+ * `<ground>-dark` any other ground in it; a plain ground is light.
+ */
+function groundGlobals(entry: string): Record<string, string> {
+  if (entry === "dark") return { ground: "paper", mode: "dark" };
+  const [ground = entry, mode = "light"] = entry.split("-");
+  if (!ALL_GROUNDS.includes(ground) || (mode !== "light" && mode !== "dark"))
+    throw new Error(`--grounds: unknown ground "${entry}" (use ${ALL_GROUNDS.join(", ")}, dark)`);
+  return { ground, mode };
+}
+
 function buildVariants(options: ReturnType<typeof parseArgs>): Variant[] {
   let variants: Variant[] = options.grounds.map((ground) => ({
     label: ground,
-    globals: { ...options.set, ground },
+    globals: { ...options.set, ...groundGlobals(ground) },
   }));
   for (const { key, values } of options.vary) {
     variants = variants.flatMap((variant) =>
