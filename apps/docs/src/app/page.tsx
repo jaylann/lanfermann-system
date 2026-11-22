@@ -197,6 +197,7 @@ import { Figures } from "./figures";
 import { Inputs } from "./inputs";
 import { QuoteForm } from "./quote-form";
 import { Selection } from "./selection";
+import { Theme } from "./theme";
 
 const GROUNDS: GroundName[] = ["paper", "tint", "ink", "indigo"];
 
@@ -230,7 +231,8 @@ const GLOBALS = `@import "tailwindcss";
 
 /**
  * Consumer smoke test: a Server Component that renders every component of the library from its
- * built `dist`, on all four grounds. If a component loses its "use client" directive, a peer is
+ * built `dist`, on all four grounds, in the mode the switch at the top sets (`ThemeScript` in the
+ * layout sets it before the first paint). If a component loses its "use client" directive, a peer is
  * missing, an export is forgotten or a token does not resolve inside a nested ground,
  * `next build` or this page shows it. The workshop for looking at components is Storybook
  * (`bun run storybook`), not this app.
@@ -239,6 +241,9 @@ export default function Home() {
   return (
     <TooltipProvider>
       <main className="flex w-full flex-1 flex-col">
+        <div className="flex justify-end px-6 pt-6">
+          <Theme />
+        </div>
         {GROUNDS.map((ground) => (
           <Ground key={ground} ground={ground} className="px-6 py-12">
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">

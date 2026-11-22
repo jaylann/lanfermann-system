@@ -14,6 +14,15 @@ export type ThemeScriptProps = {
  * script and nothing else. Changing the mode afterwards is `useTheme`'s.
  */
 export function ThemeScript({ nonce }: ThemeScriptProps) {
-  // The script is a constant of this module, never content from outside.
-  return <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />;
+  return (
+    <script
+      nonce={nonce}
+      // It runs from the server's HTML. Rendered in the browser (a client tree) it is inert
+      // text, so React does not warn about a script it would never run.
+      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+      suppressHydrationWarning
+      // A constant of this module, never content from outside.
+      dangerouslySetInnerHTML={{ __html: themeScript }}
+    />
+  );
 }
