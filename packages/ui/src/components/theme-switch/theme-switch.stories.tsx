@@ -137,8 +137,10 @@ export const SegmentedKeyboard: Story = {
   },
 };
 
+// Instant, not the fade: a view transition inside the story runner's frame closes the page in
+// Playwright's headless Chromium (CI), and the whole run dies with it.
 function WiredSwitch() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme({ transition: "instant" });
   return <ThemeSwitch variant="segmented" withLabels value={theme} onValueChange={setTheme} />;
 }
 
