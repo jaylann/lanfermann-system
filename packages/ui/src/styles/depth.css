@@ -178,6 +178,7 @@
   --depth-bar-hi: rgb(255 255 255 / 0.7);
   --depth-bar-near: rgb(19 18 28 / 0.05);
   --depth-bar-far: rgb(42 37 82 / 0.1);
+  --depth-bar-face: none;
 
   /* the seam between two sections: a quiet edge, a short shadow from the plate on top */
   --depth-seam-edge: rgb(19 18 28 / 0.1);
@@ -259,20 +260,23 @@
   --depth-field-halo: rgb(166 161 253 / 0.24);
   --depth-field-halo-danger: rgb(241 135 140 / 0.22);
 
-  --depth-card-edge: rgb(255 255 255 / 0.08);
+  /* Cards and the bar wear a fitting's near-black edge under their top light: a light ring read
+     as an outlined box beside the bevelled buttons (Justin, 2026-11-22). No lip, as a fitting
+     here has none. */
+  --depth-card-edge: rgb(8 7 12 / 0.7);
   --depth-card-hi: rgb(255 255 255 / 0.06);
   --depth-card-near: rgb(8 7 12 / 0.4);
   --depth-card-far: rgb(8 7 12 / 0.3);
 
   --depth-bevel-face: linear-gradient(rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01));
-  --depth-bevel-edge: rgb(255 255 255 / 0.08);
-  --depth-bevel-hi: rgb(255 255 255 / 0.09);
-  --depth-bevel-lo: rgb(0 0 0 / 0.3);
-  --depth-bevel-contact: rgb(8 7 12 / 0.55);
+  --depth-bevel-edge: rgb(8 7 12 / 0.7);
+  --depth-bevel-hi: rgb(255 255 255 / 0.1);
+  --depth-bevel-lo: rgb(0 0 0 / 0);
+  --depth-bevel-contact: rgb(8 7 12 / 0.5);
   --depth-bevel-ambient: rgb(8 7 12 / 0.35);
   --depth-gloss-face: linear-gradient(rgb(255 255 255 / 0.085), rgb(255 255 255 / 0.015));
   --depth-gloss-hi: rgb(255 255 255 / 0.14);
-  --depth-gloss-lo: rgb(0 0 0 / 0.35);
+  --depth-gloss-lo: rgb(0 0 0 / 0);
   --depth-bevel-light: rgb(255 255 255 / 0.06);
 
   --depth-sheet-edge: rgb(8 7 12 / 0.8);
@@ -283,10 +287,12 @@
   --depth-overlay-mid: rgb(8 7 12 / 0.8);
   --depth-overlay-far: rgb(8 7 12 / 0.7);
 
-  --depth-bar-edge: rgb(255 255 255 / 0.1);
-  --depth-bar-hi: rgb(255 255 255 / 0.06);
+  /* its face is the page's, so a button's gloss sets it off */
+  --depth-bar-edge: rgb(8 7 12 / 0.7);
+  --depth-bar-hi: rgb(255 255 255 / 0.1);
   --depth-bar-near: rgb(8 7 12 / 0.4);
   --depth-bar-far: rgb(8 7 12 / 0.35);
+  --depth-bar-face: linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02));
 
   --depth-seam-edge: rgb(8 7 12 / 0.7);
   --depth-seam-lo: rgb(8 7 12 / 0.2);
@@ -304,11 +310,10 @@
  *   sheets   the edge and the top light set a sheet off; a heavier long shadow darkened the
  *            words on the page under a menu
  *   fields   the danger halo fainter than the accent's: at .22 it turned into a brown band
- *   bar      the top light outshines the ring, or the frosted bar reads as an outlined box
  *   danger   a press shade that shows on the deeper red
  *   joins    a key group's seams in the face's own hue, not a black cut across it
  *   key block  a plate of Ink, not the inverted light key: the light of a dark face (a lit top
- *            edge, a face that fades, a light rim), so it stands as a fitting beside the others
+ *            edge, a face that fades) and a fitting's edge, so it stands beside the others
  */
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
@@ -320,14 +325,12 @@
   --depth-sheet-mid: rgb(8 7 12 / 0.5);
   --depth-sheet-far: rgb(8 7 12 / 0.38);
   --depth-field-halo-danger: rgb(241 135 140 / 0.15);
-  --depth-bar-edge: rgb(255 255 255 / 0.09);
-  --depth-bar-hi: rgb(255 255 255 / 0.1);
   --depth-danger-press: rgb(19 18 28 / 0.45);
   --depth-join-key: rgb(19 18 28 / 0.16);
   --depth-join-accent: rgb(19 18 28 / 0.2);
 
   --depth-key-block-face: linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0));
-  --depth-key-block-edge: rgb(255 255 255 / 0.08);
+  --depth-key-block-edge: rgb(8 7 12 / 0.7);
   --depth-key-block-hi: rgb(255 255 255 / 0.1);
   --depth-key-block-lo: rgb(0 0 0 / 0);
   --depth-key-block-contact: rgb(8 7 12 / 0.5);
@@ -403,14 +406,15 @@
   --depth-field-halo: rgb(255 255 255 / 0.3);
   --depth-field-halo-danger: rgb(255 255 255 / 0.3);
 
-  --depth-card-edge: rgb(255 255 255 / 0.14);
+  /* cards and the bar wear the fittings' edge, as on Ink */
+  --depth-card-edge: rgb(19 18 28 / 0.28);
   --depth-card-hi: rgb(255 255 255 / 0.1);
   --depth-card-near: rgb(19 18 28 / 0.14);
   --depth-card-far: rgb(19 18 28 / 0.22);
 
   --depth-bevel-face: linear-gradient(rgb(255 255 255 / 0.08), rgb(255 255 255 / 0));
-  --depth-bevel-edge: rgb(255 255 255 / 0.16);
-  --depth-bevel-hi: rgb(255 255 255 / 0.14);
+  --depth-bevel-edge: rgb(19 18 28 / 0.28);
+  --depth-bevel-hi: rgb(255 255 255 / 0.18);
   --depth-bevel-lo: rgb(19 18 28 / 0.16);
   --depth-bevel-contact: rgb(19 18 28 / 0.16);
   --depth-bevel-ambient: rgb(19 18 28 / 0.2);
@@ -427,10 +431,11 @@
   --depth-overlay-mid: rgb(19 18 28 / 0.36);
   --depth-overlay-far: rgb(19 18 28 / 0.32);
 
-  --depth-bar-edge: rgb(255 255 255 / 0.14);
-  --depth-bar-hi: rgb(255 255 255 / 0.1);
+  --depth-bar-edge: rgb(19 18 28 / 0.28);
+  --depth-bar-hi: rgb(255 255 255 / 0.18);
   --depth-bar-near: rgb(19 18 28 / 0.14);
   --depth-bar-far: rgb(19 18 28 / 0.2);
+  --depth-bar-face: linear-gradient(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.03));
 
   --depth-seam-edge: rgb(19 18 28 / 0.28);
   --depth-seam-lo: rgb(19 18 28 / 0.1);
@@ -676,6 +681,7 @@
 }
 @utility depth-bar {
   @apply shadow-bar inset-shadow-bar;
+  background-image: var(--depth-bar-face);
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
     outline-offset: -1px;
