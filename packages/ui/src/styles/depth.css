@@ -174,8 +174,17 @@
   --depth-seam-ambient: rgb(42 37 82 / 0.1);
 }
 
+/* Ink's recipes, and in dark mode every ground's but Indigo's: light from above on a dark face,
+   near-black edges and shadows, the key inverted. */
 .dark,
-[data-theme="ink"] {
+[data-theme="ink"],
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"] {
   --depth-surface-face: linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0));
   --depth-surface-edge: rgb(8 7 12 / 0.7);
   --depth-surface-hi: rgb(255 255 255 / 0.1);
@@ -262,7 +271,9 @@
   --depth-seam-ambient: rgb(8 7 12 / 0.35);
 }
 
-[data-theme="indigo"] {
+[data-theme="indigo"],
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
   --depth-surface-face: linear-gradient(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0));
   --depth-surface-edge: rgb(19 18 28 / 0.28);
   --depth-surface-hi: rgb(255 255 255 / 0.18);

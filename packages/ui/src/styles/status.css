@@ -39,8 +39,16 @@
   --lf-info-soft: #ffffff;
 }
 
+/* Ink's, and in dark mode every ground's but Indigo's: the colours are made for a dark ground. */
 .dark,
-[data-theme="ink"] {
+[data-theme="ink"],
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"] {
   --lf-danger: #f1878c;
   --lf-danger-soft: #4b1d20;
   --lf-danger-solid: #f1878c;
@@ -62,8 +70,16 @@
   --lf-on-info: #13121c;
 }
 
+/* On the dark Tint the info wash would be the ground's own colour; it steps up to the tint. */
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  --lf-info-soft: #3a3470;
+}
+
 /* Indigo is the ask: nothing competes with it. Statuses there are white, in words. */
-[data-theme="indigo"] {
+[data-theme="indigo"],
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
   --lf-danger: #ffffff;
   --lf-danger-soft: #5244c2;
   --lf-danger-solid: #ffffff;
