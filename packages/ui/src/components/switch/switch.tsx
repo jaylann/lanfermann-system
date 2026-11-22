@@ -34,7 +34,7 @@ export function Switch({ className, ...props }: SwitchProps) {
           "block size-[calc(var(--switch-h)-4px)] rounded-full bg-thumb depth-raised depth-tone-thumb",
           "transition-[translate,width,background-color] spring-seat",
           "group-active:w-[calc(var(--switch-h)-1px)]",
-          "data-checked:translate-x-[calc(var(--switch-w)-var(--switch-h))] data-checked:bg-on-accent",
+          "data-checked:translate-x-[calc(var(--switch-w)-var(--switch-h))] data-checked:bg-thumb-on",
           "data-checked:group-active:translate-x-[calc(var(--switch-w)-var(--switch-h)-3px)]",
           "group-data-disabled:bg-raised group-data-disabled:depth-flat",
         )}

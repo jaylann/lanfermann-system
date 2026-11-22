@@ -368,7 +368,7 @@ export function SliderThumb({ className, index = 0, ...props }: SliderThumbProps
               className={cn("pointer-events-none slider-at h-(--slider-thumb)", travels)}
               style={vars({
                 "--p": place(state, index),
-                "--thumb-face": onFill ? "var(--color-on-accent)" : "var(--color-thumb)",
+                "--thumb-face": onFill ? "var(--color-thumb-on)" : "var(--color-thumb)",
               })}
             >
               <span

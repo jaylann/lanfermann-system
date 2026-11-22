@@ -77,8 +77,9 @@ function getSnapshot(): Snapshot {
 
 export type UseThemeOptions = {
   /**
-   * How the page changes when `setTheme` is called: at once, or by a short fade of the old page
-   * into the new one (where the browser can, and the reader has not asked for less motion).
+   * How the page changes when `setTheme` is called: by a short fade of the old page into the new
+   * one (the default, where the browser can and the reader has not asked for less motion), or at
+   * once.
    */
   transition?: ThemeTransition;
 };
@@ -104,7 +105,7 @@ export type UseThemeResult = {
  * choice made in another tab turns this one too. It turns the page only when the choice or the
  * system's setting changes: on load that is `ThemeScript`'s, before React runs.
  */
-export function useTheme({ transition = "instant" }: UseThemeOptions = {}): UseThemeResult {
+export function useTheme({ transition = "fade" }: UseThemeOptions = {}): UseThemeResult {
   const { theme, mode } = useSyncExternalStore(subscribe, getSnapshot, () => SERVER);
 
   const setTheme = useCallback(

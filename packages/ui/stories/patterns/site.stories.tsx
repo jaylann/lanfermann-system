@@ -78,7 +78,7 @@ const nextStep = "flex flex-wrap items-center gap-x-5 gap-y-3 pt-2";
 
 /** Light or dark, at the floor of the page: three symbols, each one press away. */
 function SiteTheme() {
-  const { theme, setTheme } = useTheme({ transition: "fade" });
+  const { theme, setTheme } = useTheme();
   return <ThemeSwitch variant="segmented" value={theme} onValueChange={setTheme} />;
 }
 

@@ -89,6 +89,12 @@
   --lf-on-series-6: #13121c;
 }
 
+/* The deeper Indigo of dark mode: the de-emphasis grey steps down with it. */
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
+  --lf-series-muted: #8578dc;
+}
+
 @theme inline {
   --color-series-1: var(--lf-series-1);
   --color-series-2: var(--lf-series-2);

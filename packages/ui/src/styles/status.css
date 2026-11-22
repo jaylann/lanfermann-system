@@ -70,12 +70,6 @@
   --lf-on-info: #13121c;
 }
 
-/* On the dark Tint the info wash would be the ground's own colour; it steps up to the tint. */
-[data-mode="dark"][data-theme="tint"],
-[data-mode="dark"] [data-theme="tint"] {
-  --lf-info-soft: #3a3470;
-}
-
 /* Indigo is the ask: nothing competes with it. Statuses there are white, in words. */
 [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
@@ -99,6 +93,16 @@
   --lf-info-soft: #5244c2;
   --lf-info-solid: #ffffff;
   --lf-on-info: #5f50d0;
+}
+
+/* The deeper Indigo of dark mode: its washes step down with it. */
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
+  --lf-danger-soft: #4033a4;
+  --lf-warning-soft: #4033a4;
+  --lf-success-soft: #4033a4;
+  --lf-info-soft: #4033a4;
+  --lf-on-info: #4a3eb4;
 }
 
 @theme inline {
