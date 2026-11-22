@@ -39,8 +39,16 @@
   --lf-info-soft: #ffffff;
 }
 
+/* Ink's, and in dark mode every ground's but Indigo's: the colours are made for a dark ground. */
 .dark,
-[data-theme="ink"] {
+[data-theme="ink"],
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"] {
   --lf-danger: #f1878c;
   --lf-danger-soft: #4b1d20;
   --lf-danger-solid: #f1878c;
@@ -62,8 +70,36 @@
   --lf-on-info: #13121c;
 }
 
+/*
+ * The dark page, a step above Ink, with the dark Ink and Tint. Its washes are calmer than Ink's
+ * (a four-colour band of banners read as mud and wine), the info wash is the tint as in light,
+ * and the danger fill is a red with weight, not a pastel: in a chart an outage must read
+ * louder than a disturbance. After the block above, which it overrides for the same selectors.
+ */
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  --lf-danger-soft: #3b2026;
+  --lf-danger-solid: #e45a62;
+  --lf-warning-soft: #332a1c;
+  --lf-success-soft: #1b2f25;
+  --lf-info-soft: #2e2b4f;
+}
+
+/* On the dark Tint the info wash is that ground's tint, as it is the page's on the dark page. */
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  --lf-info-soft: #2d2a4b;
+}
+
 /* Indigo is the ask: nothing competes with it. Statuses there are white, in words. */
-[data-theme="indigo"] {
+[data-theme="indigo"],
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
   --lf-danger: #ffffff;
   --lf-danger-soft: #5244c2;
   --lf-danger-solid: #ffffff;
@@ -83,6 +119,16 @@
   --lf-info-soft: #5244c2;
   --lf-info-solid: #ffffff;
   --lf-on-info: #5f50d0;
+}
+
+/* The deeper Indigo of dark mode: its washes step down with it. */
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
+  --lf-danger-soft: #4033a4;
+  --lf-warning-soft: #4033a4;
+  --lf-success-soft: #4033a4;
+  --lf-info-soft: #4033a4;
+  --lf-on-info: #4a3eb4;
 }
 
 @theme inline {

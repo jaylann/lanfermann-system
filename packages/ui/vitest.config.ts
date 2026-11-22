@@ -14,6 +14,7 @@ import { defineConfig } from "vitest/config";
  * The story project takes two environment variables:
  *   VISUAL_BROWSER  chromium (default, Playwright's build) | chrome (the system's) | webkit | firefox
  *   SB_GROUND       the ground to render on (default paper), so contrast is checked on Ink too
+ *   SB_MODE         light (default) or dark, so contrast is checked in dark mode
  */
 const engine = process.env.VISUAL_BROWSER ?? "chromium";
 const browser = engine === "chrome" ? "chromium" : (engine as "chromium" | "firefox" | "webkit");
@@ -37,7 +38,10 @@ export default defineConfig({
           // each story into a test. It applies the preview's annotations itself.
           storybookTest({
             configDir: join(import.meta.dirname, ".storybook"),
-            initialGlobals: { ground: process.env.SB_GROUND ?? "paper" },
+            initialGlobals: {
+              ground: process.env.SB_GROUND ?? "paper",
+              mode: process.env.SB_MODE ?? "light",
+            },
           }),
         ],
         test: {

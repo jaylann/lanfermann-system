@@ -24,7 +24,7 @@ describe("the container the baseline is drawn in", () => {
     );
   });
 
-  it("covers the grounds that have a depth recipe of their own", () => {
-    expect(BASELINE_GROUNDS.split(",")).toEqual(["paper", "ink", "indigo"]);
+  it("covers the page in both modes and Indigo, the recipes of their own", () => {
+    expect(BASELINE_GROUNDS.split(",")).toEqual(["paper", "dark", "indigo"]);
   });
 });

@@ -18,6 +18,15 @@
     border-radius: 0;
   }
 
+  /* The keys carry no tone of their own (the fitting does), so a seam in the key's or the ask's
+     tone names its colour: the neutral edge would cut across a light or a lavender face. */
+  [data-slot="button-group"][data-variant="primary"] > [data-group-key] {
+    border-color: var(--depth-join-key);
+  }
+  [data-slot="button-group"][data-variant="ask"] > [data-group-key] {
+    border-color: var(--depth-join-accent);
+  }
+
   /* In a row. */
   :not([data-orientation="vertical"]) > [data-group-key] {
     &:is([data-group-key] ~ *) {

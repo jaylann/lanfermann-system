@@ -106,7 +106,12 @@ export const Nested: Story = {
   render: () => (
     <div className="flex w-full max-w-3xl flex-col gap-4">
       {(["tint", "ink", "indigo"] as const).map((ground) => (
-        <div key={ground} data-theme={ground} className="flex items-center gap-6 rounded-xl p-5">
+        // The hairline outlines each region: in dark mode Ink speaks as the page does.
+        <div
+          key={ground}
+          data-theme={ground}
+          className="flex items-center gap-6 rounded-xl p-5 inset-ring inset-ring-hairline"
+        >
           <p className="w-40 font-semibold text-fg">{ground} inside the page</p>
           <div className="flex h-9 items-center rounded-md bg-raised depth-raised px-4 font-medium text-fg">
             neutral

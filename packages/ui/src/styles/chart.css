@@ -44,8 +44,16 @@
   --lf-on-series-6: #000000;
 }
 
+/* Ink's, and in dark mode every ground's but Indigo's. */
 .dark,
-[data-theme="ink"] {
+[data-theme="ink"],
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"] {
   --lf-series-1: #8a80ec;
   --lf-series-2: #019d9a;
   --lf-series-3: #c97f14;
@@ -62,7 +70,9 @@
   --lf-on-series-6: #13121c;
 }
 
-[data-theme="indigo"] {
+[data-theme="indigo"],
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
   --lf-series-1: #ffffff;
   --lf-series-2: #81ede8;
   --lf-series-3: #ffcd98;
@@ -77,6 +87,12 @@
   --lf-on-series-4: #13121c;
   --lf-on-series-5: #13121c;
   --lf-on-series-6: #13121c;
+}
+
+/* The deeper Indigo of dark mode: the de-emphasis grey steps down with it. */
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
+  --lf-series-muted: #8578dc;
 }
 
 @theme inline {

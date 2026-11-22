@@ -1,6 +1,6 @@
 import "./globals.css";
 
-import { cn } from "@lanfermann/ui";
+import { cn, ThemeScript } from "@lanfermann/ui";
 import type { Metadata } from "next";
 import { JetBrains_Mono, Sofia_Sans } from "next/font/google";
 
@@ -28,7 +28,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="de" className={cn(sofiaSans.variable, jetBrainsMono.variable, "h-full")}>
+    // `ThemeScript` writes `data-mode` on <html> before React hydrates: the DOM wins there.
+    <html
+      lang="de"
+      className={cn(sofiaSans.variable, jetBrainsMono.variable, "h-full")}
+      suppressHydrationWarning
+    >
+      <head>
+        <ThemeScript />
+      </head>
       {/* Base UI: `relative` on body for iOS Safari backdrops, `isolate` root for portaled popups. */}
       <body className="relative min-h-full bg-ground font-sans text-fg-body">
         <div className="isolate flex min-h-full flex-col">

@@ -15,7 +15,8 @@ Then Read the PNGs it lists (`.visual/sheets/*.png`, or one shot under `.visual/
 
 - Modes: `shots` (default), `states` (rest, hover, keyboard focus, pressed), `motion` (frame
   strips of what a story declares in `parameters.visual.motion`), `all`.
-- `--grounds paper,ink` is the default; `--grounds all` adds tint and indigo.
+- `--grounds paper,dark` is the default (`dark` is Paper in dark mode); `<ground>-dark` gives
+  another ground in dark mode, and `--grounds all` every ground in both modes.
 - `--viewport 1290x1100` overrides the story's viewport. **Check every board at a normal window
   width before showing it to anyone**: a layout that only works at 1500px is broken.
 - `--scale 3` for edge and shadow detail, `--smoke` to render everything and fail on errors,

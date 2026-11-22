@@ -10,6 +10,15 @@
  * Switch with `data-theme` on any element (the kit's attribute); `.dark` aliases Ink. Components
  * never branch on the ground themselves: every difference flows through these variables.
  *
+ * Mode: `data-mode="dark"` on <html> turns every ground into its dark counterpart (the blocks
+ * under "Dark mode" below). The ground still says who is speaking; the mode only says how light
+ * the room is. Each ground's dark selectors are `[data-mode="dark"][data-theme="<ground>"]` (the
+ * ground on <html> itself) and `[data-mode="dark"] [data-theme="<ground>"]` (nested); Paper adds
+ * `:root[data-mode="dark"]:not([data-theme])` for a root that names no ground. They outrank the
+ * plain ground blocks and never two of them match one element, so their order does not matter.
+ * Every file with per-ground tokens (depth, status, code, chart) carries the same selectors;
+ * `tokens.test.ts` checks that every ground in both modes has the full set.
+ *
  * Scope rule: a custom property that references a ground token resolves where it is DECLARED. Put
  * derived values in every ground block or in `@theme inline`, never on `:root` alone, or a nested
  * ground silently keeps its parent's colours.
@@ -49,6 +58,18 @@
   --lf-trough: #e9e9f0; /* floor of a sunken track: switch off, segmented control */
   --lf-well: #f6f6fa; /* a recessed strip inside a surface: card footer */
   --lf-thumb: #ffffff; /* the part that runs in a switch */
+  --lf-thumb-on: #ffffff; /* the same part on the filled, accent track */
+  --lf-thumb-disabled: #ffffff; /* the same part when it cannot move */
+  --lf-fill-disabled: #686775; /* a slider's fill when it cannot move */
+  --lf-placeholder: #e9e9f0; /* what holds nothing yet: a heatmap's empty day, an avatar group's +N */
+  --lf-avatar: #13121c; /* an avatar's tile, and its initials */
+  --lf-on-avatar: #fbfbfd;
+  --lf-ask-block: #5f50d0; /* a block in the ask's tone (the Cta), and its words */
+  --lf-on-ask-block: #ffffff;
+  --lf-key-block: #24232f; /* a block in the key's tone, and its words */
+  --lf-on-key-block: #fbfbfd;
+  --lf-floor: #f2f2f7; /* the floor of a site: its footer, and the window past its end */
+  --lf-selection: #5f50d0; /* what is chosen in a calendar: one shape, its days on-accent */
 }
 
 [data-theme="tint"] {
@@ -83,6 +104,18 @@
   --lf-trough: #dedaf5;
   --lf-well: #f6f5fd;
   --lf-thumb: #ffffff;
+  --lf-thumb-on: #ffffff;
+  --lf-thumb-disabled: #ffffff;
+  --lf-fill-disabled: #5f5e6e;
+  --lf-placeholder: #dedaf5;
+  --lf-avatar: #13121c;
+  --lf-on-avatar: #edeafc;
+  --lf-ask-block: #5f50d0;
+  --lf-on-ask-block: #ffffff;
+  --lf-key-block: #24232f;
+  --lf-on-key-block: #fbfbfd;
+  --lf-floor: #e3dff8;
+  --lf-selection: #5f50d0;
 }
 
 .dark,
@@ -118,9 +151,24 @@
   --lf-trough: #0c0b12;
   --lf-well: #181721;
   --lf-thumb: #e4e4ec;
+  /* Light on the lavender track too: a dark knob there read as a hole (Justin, 2026-11-22). */
+  --lf-thumb-on: #e4e4ec;
+  --lf-thumb-disabled: #272632;
+  --lf-fill-disabled: #8a8999;
+  --lf-placeholder: #0c0b12;
+  --lf-avatar: #fbfbfd;
+  --lf-on-avatar: #13121c;
+  --lf-ask-block: #a6a1fd;
+  --lf-on-ask-block: #13121c;
+  --lf-key-block: #fbfbfd;
+  --lf-on-key-block: #13121c;
+  --lf-floor: #1d1c28;
+  --lf-selection: #a6a1fd;
 }
 
-[data-theme="indigo"] {
+[data-theme="indigo"],
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
   color-scheme: dark;
 
   --lf-ground: #5f50d0;
@@ -152,6 +200,173 @@
   --lf-trough: #4a3db6;
   --lf-well: #4b3eb8;
   --lf-thumb: #ffffff;
+  --lf-thumb-on: #5f50d0;
+  --lf-thumb-disabled: #6e60d8;
+  --lf-fill-disabled: #e6e3fb;
+  --lf-placeholder: #4a3db6;
+  --lf-avatar: #ffffff;
+  --lf-on-avatar: #5f50d0;
+  --lf-ask-block: #ffffff;
+  --lf-on-ask-block: #5f50d0;
+  --lf-key-block: #24232f;
+  --lf-on-key-block: #fbfbfd;
+  --lf-floor: #5244c2;
+  --lf-selection: #ffffff;
+}
+
+/*
+ * Dark mode (chosen by Justin on 2026-11-22 from rendered options, see DESIGN.md):
+ *   Paper   a dark page a step above the kit's Ink, light text, the lavender accent, the key
+ *           inverted to a light face.
+ *   Ink     the system's own voice speaks as the page does: a tooltip or toast is a sheet of the
+ *           page, set off by its edge and shadow (not lifted, not inverted).
+ *   Tint    someone else's words on a barely tinted ground.
+ *   Indigo  the ask, deeper than in light (its block above, and the override below).
+ * The recipes of depth, status, code and charts for Paper, Ink and Tint are Ink's (their files).
+ */
+
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"] {
+  color-scheme: dark;
+
+  /* A step lighter than the kit's Ink, so the page reads as a room and not as a void
+     (Justin, 2026-11-22, chosen over Ink and over a deeper, almost black one). */
+  --lf-ground: #1c1b26;
+  --lf-text: #fbfbfd;
+  --lf-text-body: #d8d8df;
+  --lf-text-muted: #aaa9ba;
+  --lf-line: #737287;
+  /* A light line spreads on a dark ground: the 2px rule is the body colour, not white. */
+  --lf-rule: #d8d8df;
+  --lf-accent: #a6a1fd;
+  --lf-on-accent: #13121c;
+  --lf-surface: #25242f;
+  /* Washes add light in the dark: the quiet surface is a step above the surface (a flat chip in
+     a field, an icon's tile on a card, the site's floor). */
+  --lf-surface-quiet: #2a2934;
+
+  --lf-raised: #2f2e3a;
+  --lf-raised-pressed: #25242f;
+  --lf-sheet: #2f2e3a;
+  --lf-key: #fbfbfd;
+  --lf-key-hover: #ffffff;
+  --lf-key-pressed: #e4e4ec;
+  --lf-on-key: #13121c;
+  --lf-accent-hover: #b6b2fe;
+  --lf-accent-pressed: #9590ee;
+  /* The "you are here" wash: as far off the page as light's, with half the violet, so three
+     chosen rows do not become the loudest thing on the screen. */
+  --lf-tint: #2e2b4f;
+  --lf-hairline: rgb(255 255 255 / 0.12);
+  --lf-hover: rgb(255 255 255 / 0.07);
+  --lf-scrim: rgb(12 10 22 / 0.5);
+  /* Below the field's face, towards the page, as light's grey sits below its white face. */
+  --lf-disabled: #1f1e29;
+  --lf-on-disabled: #9a99a9;
+  --lf-trough: #12111a;
+  --lf-well: #211f2b;
+  --lf-thumb: #e4e4ec;
+  --lf-thumb-on: #e4e4ec;
+  --lf-thumb-disabled: #858494;
+  --lf-fill-disabled: #4a4958;
+  /* A little lighter than any ground, the tint of a chosen row included: an empty day is
+     "nothing", not a hole (the Tracker's reasoning for its cells without data). */
+  --lf-placeholder: #3a3946;
+  /* An avatar in the text colour would be the brightest thing on a dark page. */
+  --lf-avatar: #474656;
+  --lf-on-avatar: #fbfbfd;
+  /* A block in the ask's tone is a slab, not a key: in the dark it takes the deeper Indigo of
+     the Indigo ground; lavender that large glared. */
+  --lf-ask-block: #4a3eb4;
+  --lf-on-ask-block: #ffffff;
+  /* A block in the key's tone: a plate of the kit's Ink below the page, not a white slab. */
+  --lf-key-block: #13121c;
+  --lf-on-key-block: #fbfbfd;
+  /* The site's floor lies a step below the page, as light's does; a lighter one read as a slab
+     raised over it. */
+  --lf-floor: #18171f;
+  /* What a calendar holds chosen is one shape, often many days: a deeper lavender than a key's,
+     or a range would be the brightest slab on the sheet. */
+  --lf-selection: #8f89f2;
+}
+
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  color-scheme: dark;
+
+  /* Barely tinted, so someone else's words stand apart without a violet block on the page
+     (Justin, 2026-11-22, chosen over a visible violet wash). */
+  --lf-ground: #1c1a29;
+  --lf-text: #fbfbfd;
+  --lf-text-body: #d8d8df;
+  --lf-text-muted: #aeacc0;
+  --lf-line: #6e6c86;
+  --lf-rule: #d8d8df;
+  --lf-accent: #a6a1fd;
+  --lf-on-accent: #13121c;
+  --lf-surface: #252336;
+  --lf-surface-quiet: #2a283c;
+
+  --lf-raised: #2d2b40;
+  --lf-raised-pressed: #252336;
+  --lf-sheet: #2d2b40;
+  --lf-key: #fbfbfd;
+  --lf-key-hover: #ffffff;
+  --lf-key-pressed: #e4e4ec;
+  --lf-on-key: #13121c;
+  --lf-accent-hover: #b6b2fe;
+  --lf-accent-pressed: #9590ee;
+  --lf-tint: #2d2a4b;
+  --lf-hairline: rgb(255 255 255 / 0.14);
+  --lf-hover: rgb(255 255 255 / 0.08);
+  --lf-scrim: rgb(12 10 22 / 0.5);
+  --lf-disabled: #1f1d2d;
+  --lf-on-disabled: #9a98ae;
+  --lf-trough: #141320;
+  --lf-well: #191726;
+  --lf-thumb: #e4e4ec;
+  --lf-thumb-on: #e4e4ec;
+  --lf-thumb-disabled: #83819a;
+  --lf-fill-disabled: #4a4860;
+  --lf-placeholder: #3a384f;
+  --lf-avatar: #46445c;
+  --lf-on-avatar: #fbfbfd;
+  --lf-ask-block: #4a3eb4;
+  --lf-on-ask-block: #ffffff;
+  --lf-key-block: #13121c;
+  --lf-on-key-block: #fbfbfd;
+  --lf-floor: #171522;
+  --lf-selection: #8f89f2;
+}
+
+/* Indigo in dark mode is deeper, so the ask does not glare beside the dark page (Justin,
+   2026-11-22, chosen over Indigo as in light). The rest of its block is Indigo's, above. */
+[data-mode="dark"][data-theme="indigo"],
+[data-mode="dark"] [data-theme="indigo"] {
+  --lf-ground: #4a3eb4;
+  --lf-text-muted: #e1ddfa;
+  --lf-line: #a39aeb;
+  --lf-on-accent: #4a3eb4;
+  --lf-surface: #4033a4;
+  --lf-surface-quiet: #4033a4;
+  --lf-raised: #5a4ec4;
+  --lf-raised-pressed: #4033a4;
+  --lf-sheet: #392d98;
+  --lf-tint: #4033a4;
+  --lf-disabled: #4033a4;
+  --lf-on-disabled: #e1ddfa;
+  --lf-trough: #392d98;
+  --lf-well: #3c30a0;
+  --lf-thumb-on: #4a3eb4;
+  --lf-thumb-disabled: #5a4ec4;
+  --lf-fill-disabled: #e1ddfa;
+  --lf-placeholder: #392d98;
+  --lf-on-avatar: #4a3eb4;
+  --lf-on-ask-block: #4a3eb4;
+  --lf-floor: #4033a4;
 }
 
 @theme inline {
@@ -164,6 +379,18 @@
   --color-trough: var(--lf-trough);
   --color-well: var(--lf-well);
   --color-thumb: var(--lf-thumb);
+  --color-thumb-on: var(--lf-thumb-on);
+  --color-thumb-disabled: var(--lf-thumb-disabled);
+  --color-fill-disabled: var(--lf-fill-disabled);
+  --color-placeholder: var(--lf-placeholder);
+  --color-avatar: var(--lf-avatar);
+  --color-on-avatar: var(--lf-on-avatar);
+  --color-ask-block: var(--lf-ask-block);
+  --color-on-ask-block: var(--lf-on-ask-block);
+  --color-key-block: var(--lf-key-block);
+  --color-on-key-block: var(--lf-on-key-block);
+  --color-floor: var(--lf-floor);
+  --color-selection: var(--lf-selection);
 
   --color-fg: var(--lf-text);
   --color-fg-body: var(--lf-text-body);

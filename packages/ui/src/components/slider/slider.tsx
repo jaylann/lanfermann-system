@@ -231,7 +231,7 @@ function SliderFill({ state }: { state: SliderState }) {
   const range = places.length > 1;
   const first = places[0] ?? 0;
   const last = places[places.length - 1] ?? 0;
-  const colour = state.disabled ? "bg-on-disabled" : "bg-accent forced-colors:bg-[Highlight]";
+  const colour = state.disabled ? "bg-fill-disabled" : "bg-accent forced-colors:bg-[Highlight]";
 
   return (
     <span
@@ -368,7 +368,7 @@ export function SliderThumb({ className, index = 0, ...props }: SliderThumbProps
               className={cn("pointer-events-none slider-at h-(--slider-thumb)", travels)}
               style={vars({
                 "--p": place(state, index),
-                "--thumb-face": onFill ? "var(--color-on-accent)" : "var(--color-thumb)",
+                "--thumb-face": onFill ? "var(--color-thumb-on)" : "var(--color-thumb)",
               })}
             >
               <span
@@ -386,7 +386,7 @@ export function SliderThumb({ className, index = 0, ...props }: SliderThumbProps
                     "slider-body block h-full w-[calc(100%+var(--held,0px))] rounded-full bg-(--thumb-face) depth-raised depth-tone-thumb",
                     "[[data-slot=slider-thumb]:hover+*_&]:depth-raised-hover",
                     held && "depth-raised-hover [--held:3px]",
-                    state.disabled && "bg-raised depth-flat",
+                    state.disabled && "bg-thumb-disabled depth-flat",
                   )}
                   style={body(index, "var(--slider-thumb)")}
                 />

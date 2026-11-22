@@ -8,8 +8,10 @@
  * Contract: components use only the semantic tokens defined in ./styles (bg-ground, text-fg,
  * border-line, depth-raised, spring-settle, …), never raw palette colours and never a `dark:`
  * variant. Grounds switch with `data-theme="paper|tint|ink|indigo"` on any element; `.dark` is an
- * alias for Ink. Control size switches with `data-density="compact|comfortable"` (compact is the
- * default). The partials are private: import this file only.
+ * alias for Ink. Dark mode switches with `data-mode="dark"` on <html>: every ground turns into its
+ * dark counterpart (`ThemeScript` and `useTheme` set it). Control size switches with
+ * `data-density="compact|comfortable"` (compact is the default). The partials are private: import
+ * this file only.
  */
 
 @import "./styles/grounds.css";
@@ -49,5 +51,5 @@
 /* Let the consumer's Tailwind see the class names used in the compiled components. */
 @source "../dist";
 
-/* For app code that wants a dark variant: it follows the Ink ground. */
-@custom-variant dark (&:where(.dark, .dark *, [data-theme="ink"], [data-theme="ink"] *));
+/* For app code that wants a dark variant: it follows the Ink ground, and everything in dark mode. */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="ink"], [data-theme="ink"] *, [data-mode="dark"], [data-mode="dark"] *));

@@ -18,7 +18,7 @@ export function SiteFooter({ className, children, ...props }: ComponentProps<"fo
   return (
     <footer
       data-slot="site-footer"
-      className={cn("border-t border-hairline bg-surface-quiet text-fg-body", className)}
+      className={cn("border-t border-hairline bg-floor text-fg-body", className)}
       {...props}
     >
       <div

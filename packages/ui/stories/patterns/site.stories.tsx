@@ -48,6 +48,8 @@ import {
   SiteHeaderMenuLink,
 } from "@/components/site-header/site-header";
 import { Text } from "@/components/text/text";
+import { ThemeSwitch } from "@/components/theme-switch/theme-switch";
+import { useTheme } from "@/components/theme-switch/use-theme";
 import { cn } from "@/lib/cn";
 
 const meta = {
@@ -73,6 +75,12 @@ const opening = "flex flex-col items-start gap-4";
 const titleMeasure = "max-w-[44rem]";
 const leadMeasure = "max-w-[34rem] text-pretty";
 const nextStep = "flex flex-wrap items-center gap-x-5 gap-y-3 pt-2";
+
+/** Light or dark, at the floor of the page: three symbols, each one press away. */
+function SiteTheme() {
+  const { theme, setTheme } = useTheme();
+  return <ThemeSwitch variant="segmented" value={theme} onValueChange={setTheme} />;
+}
 
 function Page() {
   const brand = (
@@ -264,11 +272,12 @@ function Page() {
             </SiteFooterGroup>
           </SiteFooterNav>
         </SiteFooterMain>
-        <SiteFooterLegal>
-          <p className="flex flex-wrap justify-between gap-x-8 gap-y-1">
+        <SiteFooterLegal className="sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex flex-wrap gap-x-8 gap-y-1">
             <span>Justin Lanfermann · Websites, Apps und Programme</span>
             <span>© 2026 Justin Lanfermann, München</span>
           </p>
+          <SiteTheme />
         </SiteFooterLegal>
       </SiteFooter>
     </>

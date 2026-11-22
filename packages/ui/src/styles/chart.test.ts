@@ -20,8 +20,9 @@ describe("chart", () => {
 
   it("gives every ground the six series and the muted grey", () => {
     const css = read("chart.css");
-    // The ground blocks, not the `@theme` aliases that read them.
-    const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*--lf-series[^{}]*)\}/g)].filter(
+    // The ground blocks, not the `@theme` aliases that read them, nor a block that only changes
+    // a token or two for one ground in dark mode (tokens.test.ts checks those are complete).
+    const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*--lf-series-1:[^{}]*)\}/g)].filter(
       ([, selector]) => !selector!.includes("@theme"),
     );
     expect(blocks).toHaveLength(3);

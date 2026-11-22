@@ -67,14 +67,19 @@ jobs:
         run: bun run build-storybook
 
   # Every story in a real browser: it renders, has no accessibility violation, and its `play`
-  # function (the keyboard path) passes. On Paper and on Ink, where contrast differs.
+  # function (the keyboard path) passes. On the page in light and in dark mode, where contrast
+  # differs.
   stories:
-    name: Stories (${{ matrix.ground }})
+    name: Stories (${{ matrix.name }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        ground: [paper, ink]
+        include:
+          - name: paper
+            mode: light
+          - name: dark
+            mode: dark
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
@@ -99,7 +104,8 @@ jobs:
         working-directory: packages/ui
         run: bun run test:stories
         env:
-          SB_GROUND: ${{ matrix.ground }}
+          SB_GROUND: paper
+          SB_MODE: ${{ matrix.mode }}
 
   # Every story's picture against the committed baseline. The pictures are drawn inside the
   # pinned Playwright image (scripts/visual/image.ts), the same one a laptop uses, on an arm64

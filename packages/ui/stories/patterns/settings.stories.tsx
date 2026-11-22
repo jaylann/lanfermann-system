@@ -19,6 +19,8 @@ import { Separator } from "@/components/separator/separator";
 import { Switch } from "@/components/switch/switch";
 import { Tab, Tabs, TabsList, TabsPanel } from "@/components/tabs/tabs";
 import { Textarea } from "@/components/textarea/textarea";
+import { ThemeSwitch } from "@/components/theme-switch/theme-switch";
+import { useTheme } from "@/components/theme-switch/use-theme";
 import { toast, Toaster } from "@/components/toast/toast";
 
 const meta = {
@@ -48,6 +50,20 @@ function Setting({ title, hint, on }: { title: string; hint: string; on?: boolea
       </span>
       <Switch defaultChecked={on} />
     </label>
+  );
+}
+
+/** Light or dark for this device: it turns the page at once and is not part of the form. */
+function Appearance() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+      <span className="flex flex-col">
+        <span className="text-control font-medium text-fg">Erscheinungsbild</span>
+        <span className="text-sm text-fg-muted">Gilt auf diesem Gerät und wechselt sofort.</span>
+      </span>
+      <ThemeSwitch variant="segmented" withLabels value={theme} onValueChange={setTheme} />
+    </div>
   );
 }
 
@@ -155,6 +171,12 @@ export const Settings: Story = {
                 />
                 <Separator />
               </div>
+            </section>
+
+            <section className="flex flex-col gap-5">
+              <Separator variant="rule" />
+              <Heading level={2}>Darstellung.</Heading>
+              <Appearance />
             </section>
 
             <div className="flex items-center justify-end gap-2">

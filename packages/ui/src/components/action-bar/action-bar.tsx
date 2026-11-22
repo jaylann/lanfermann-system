@@ -53,7 +53,8 @@ const places = {
  * What can be done with the rows that are selected in a list: it rises at the foot of the
  * window with the first row that is ticked, counts them, and leaves with the last. It is the
  * system speaking about the selection, so by default it speaks on Ink, as a toast does; over a
- * dark page it can be the light one instead (`ground="paper"`). It is cut like a key that
+ * dark section of a light page it can be the light one instead (`ground="paper"`). In dark mode
+ * both grounds are a sheet of the page, set off by its edge and shadow. It is cut like a key that
  * floats: a key's glossy face, light edge and lip, over a long, wide shadow (`depth-dock`).
  *
  * Put the actions inside as `ActionBarButton`s, worded like buttons ("Als PDF herunterladen").

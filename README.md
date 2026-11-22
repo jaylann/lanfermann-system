@@ -50,7 +50,7 @@ In `packages/ui`, with a browser:
 | `bun run visual:baseline` | Draws them again and accepts the result as the new baseline              |
 | `bun run storybook:phone` | Serves the built workshop on the local network, for a real phone         |
 
-`test:stories` takes `VISUAL_BROWSER=chrome|webkit|firefox` and `SB_GROUND=ink`.
+`test:stories` takes `VISUAL_BROWSER=chrome|webkit|firefox`, `SB_GROUND=ink` and `SB_MODE=dark`.
 
 ### When a picture changes
 
@@ -80,6 +80,7 @@ bun add @lanfermann/ui
 
 ```tsx
 // app/layout.tsx
+import { ThemeScript } from "@lanfermann/ui";
 import { JetBrains_Mono, Sofia_Sans } from "next/font/google";
 
 const sans = Sofia_Sans({ subsets: ["latin"], variable: "--font-sofia-sans" });
@@ -87,7 +88,15 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mo
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" data-theme="paper" className={`${sans.variable} ${mono.variable}`}>
+    <html
+      lang="de"
+      data-theme="paper"
+      className={`${sans.variable} ${mono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <ThemeScript />
+      </head>
       <body className="relative min-h-dvh font-sans text-fg-body">
         <div className="isolate flow-root min-h-dvh bg-ground">{children}</div>
       </body>
@@ -117,8 +126,27 @@ What the app provides, and what it gets:
   registers the library's compiled output as a Tailwind source. App code styles with these, not
   with raw palette colours.
 - **Grounds:** `data-theme="paper | tint | ink | indigo"` on `<html>` or on any element switches
-  the colour scope; `.dark` is an alias for Ink, and the `dark:` variant follows it. For a nested
-  region that opens popups, use `<Ground ground="ink">` so they keep that ground.
+  the colour scope; `.dark` is an alias for Ink. For a nested region that opens popups, use
+  `<Ground ground="ink">` so they keep that ground.
+- **Dark mode:** `data-mode="dark"` on `<html>` turns every ground into its dark counterpart, and
+  the `dark:` variant follows it (and Ink). `<ThemeScript />` in the `<head>` sets it before the
+  first paint from the reader's stored choice, or from the system's setting without one; give
+  `<html>` `suppressHydrationWarning`, since the script writes there before React hydrates. Wire
+  the switch with `useTheme`, which keeps the choice in `localStorage` and a cookie (`lf-theme`,
+  for a server that renders `data-mode` itself) and fades the page into the new mode:
+
+  ```tsx
+  "use client";
+  import { ThemeSwitch, useTheme } from "@lanfermann/ui";
+
+  export function Theme() {
+    const { theme, setTheme } = useTheme();
+    return <ThemeSwitch value={theme} onValueChange={setTheme} />;
+  }
+  ```
+
+  Without `ThemeScript` the page stays light until the reader switches.
+
 - **Density:** controls are compact by default; `data-density="comfortable"` on `<html>` or on a
   subtree gives the larger set.
 

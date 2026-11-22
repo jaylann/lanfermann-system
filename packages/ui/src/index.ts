@@ -623,10 +623,18 @@ export {
 export { Text, type TextProps } from "./components/text/text";
 export { Textarea, type TextareaProps } from "./components/textarea/textarea";
 export {
+  type ColorMode,
   type Theme,
-  ThemeSwitch,
-  type ThemeSwitchProps,
-} from "./components/theme-switch/theme-switch";
+  THEME_STORAGE_KEY,
+  type ThemeTransition,
+} from "./components/theme-switch/theme-mode";
+export { ThemeScript, type ThemeScriptProps } from "./components/theme-switch/theme-script";
+export { ThemeSwitch, type ThemeSwitchProps } from "./components/theme-switch/theme-switch";
+export {
+  useTheme,
+  type UseThemeOptions,
+  type UseThemeResult,
+} from "./components/theme-switch/use-theme";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
 export {
   TimeSeriesChart,
