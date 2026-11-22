@@ -140,7 +140,7 @@ export function AvatarGroup({
           {...cut(tiles.length, false)}
           // The same shape as an avatar, quieter: it stands for people, it is not one.
           className={cn(
-            "inline-flex shrink-0 items-center justify-center rounded-full bg-trough font-semibold text-fg tabular-nums select-none forced-colors:outline",
+            "inline-flex shrink-0 items-center justify-center rounded-full bg-placeholder font-semibold text-fg tabular-nums select-none forced-colors:outline",
             centred(tiles.length === 0),
             size === "sm" && "size-6 text-[0.625rem]",
             size === "md" && "size-7 text-xs",

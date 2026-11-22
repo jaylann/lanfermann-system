@@ -126,6 +126,10 @@ const pairs: [string, string, number][] = [
   ["on-key", "key-hover", TEXT],
   ["on-key", "key-pressed", TEXT],
   ["on-disabled", "disabled", TEXT],
+  // Initials on an avatar's tile; the words on a Cta's block in the ask's and the key's tone.
+  ["on-avatar", "avatar", TEXT],
+  ["on-ask-block", "ask-block", TEXT],
+  ["on-key-block", "key-block", TEXT],
   // The kit's structural line: 3:1, so a socket's rim is perceivable without its fill.
   ["line", "ground", 2.95],
   ...["danger", "warning", "success", "info"].flatMap((status): [string, string, number][] => [

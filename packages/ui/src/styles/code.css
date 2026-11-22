@@ -86,16 +86,40 @@
   --lf-code-removed: #4b1d20;
 }
 
-/* The dark page (and Ink, which speaks as the page in dark mode) stands a step above the kit's
-   Ink: the slab stays below it and its header lifts with the page's surface. After the block
-   above, which it overrides for the same selectors. */
+/*
+ * Dark mode, after the block above, which it overrides for the same selectors. The page stands a
+ * step above the kit's Ink: the slab stays below it and its header lifts with the page's surface.
+ * The hues are evened out to about the same weight, as in light, where each sits at half the body
+ * text's contrast: on Ink's values the keyword was the dimmest and strings and types nearly as
+ * bright as the text. The line washes sit as far off the slab as light's do off the sheet.
+ */
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
 [data-mode="dark"] [data-theme="paper"],
 [data-mode="dark"][data-theme="ink"],
-[data-mode="dark"] [data-theme="ink"] {
+[data-mode="dark"] [data-theme="ink"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  --lf-code-keyword: #b6b2fe;
+  --lf-code-string: #74cc86;
+  --lf-code-number: #eeac6c;
+  --lf-code-function: #7cc0f7;
+  --lf-code-type: #62caca;
+  --lf-code-tag: #f59aa2;
+  --lf-code-attribute: #7cc0f7;
+
   --lf-code-face: #15141d;
   --lf-code-head: #25242f;
+
+  --lf-code-mark: #24203f;
+  --lf-code-added: #162a1c;
+  --lf-code-removed: #3a1a1e;
+}
+
+/* On the dark Tint the header lifts with Tint's surface. */
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  --lf-code-head: #252336;
 }
 
 [data-theme="indigo"],

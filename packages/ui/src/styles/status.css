@@ -70,6 +70,26 @@
   --lf-on-info: #13121c;
 }
 
+/*
+ * The dark page, a step above Ink, with the dark Ink and Tint. Its washes are calmer than Ink's
+ * (a four-colour band of banners read as mud and wine), the info wash is the tint as in light,
+ * and the danger fill is a red with weight, not a pastel: in a chart an outage must read
+ * louder than a disturbance. After the block above, which it overrides for the same selectors.
+ */
+:root[data-mode="dark"]:not([data-theme]),
+[data-mode="dark"][data-theme="paper"],
+[data-mode="dark"] [data-theme="paper"],
+[data-mode="dark"][data-theme="ink"],
+[data-mode="dark"] [data-theme="ink"],
+[data-mode="dark"][data-theme="tint"],
+[data-mode="dark"] [data-theme="tint"] {
+  --lf-danger-soft: #3b2026;
+  --lf-danger-solid: #e45a62;
+  --lf-warning-soft: #332a1c;
+  --lf-success-soft: #1b2f25;
+  --lf-info-soft: #2e2b4f;
+}
+
 /* Indigo is the ask: nothing competes with it. Statuses there are white, in words. */
 [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],

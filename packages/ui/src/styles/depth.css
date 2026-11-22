@@ -172,6 +172,10 @@
   --depth-seam-lo: rgb(19 18 28 / 0.035);
   --depth-seam-contact: rgb(19 18 28 / 0.06);
   --depth-seam-ambient: rgb(42 37 82 / 0.1);
+
+  /* where two keys of a ButtonGroup in the key's and the ask's tone meet (button-group.css) */
+  --depth-join-key: rgb(19 18 28 / 0.12);
+  --depth-join-accent: rgb(19 18 28 / 0.12);
 }
 
 /* Ink's recipes, and in dark mode every ground's but Indigo's: light from above on a dark face,
@@ -216,7 +220,7 @@
   --depth-danger-lo: rgb(19 18 28 / 0.2);
   --depth-danger-contact: rgb(8 7 12 / 0.6);
   --depth-danger-ambient: rgb(8 7 12 / 0.45);
-  --depth-danger-press: rgb(19 18 28 / 0.3);
+  --depth-danger-press: rgb(19 18 28 / 0.45);
 
   --depth-thumb-face: none;
   --depth-thumb-edge: rgb(8 7 12 / 0.6);
@@ -234,7 +238,8 @@
   --depth-field-contact: rgb(8 7 12 / 0);
   --depth-field-shade: rgb(8 7 12 / 0.4);
   --depth-field-halo: rgb(166 161 253 / 0.24);
-  --depth-field-halo-danger: rgb(241 135 140 / 0.22);
+  /* Fainter than the accent's: at .22 the salmon halo turned into a brown band. */
+  --depth-field-halo-danger: rgb(241 135 140 / 0.15);
 
   --depth-card-edge: rgb(255 255 255 / 0.08);
   --depth-card-hi: rgb(255 255 255 / 0.06);
@@ -255,13 +260,16 @@
   --depth-sheet-edge: rgb(8 7 12 / 0.8);
   --depth-sheet-hi: rgb(255 255 255 / 0.08);
   --depth-sheet-near: rgb(8 7 12 / 0.4);
-  --depth-sheet-mid: rgb(8 7 12 / 0.7);
-  --depth-sheet-far: rgb(8 7 12 / 0.6);
+  /* The edge and the top light set a sheet off; the long shadow only deepens it. Heavier, it
+     darkened the words on the page under a menu. */
+  --depth-sheet-mid: rgb(8 7 12 / 0.5);
+  --depth-sheet-far: rgb(8 7 12 / 0.38);
   --depth-overlay-mid: rgb(8 7 12 / 0.8);
   --depth-overlay-far: rgb(8 7 12 / 0.7);
 
-  --depth-bar-edge: rgb(255 255 255 / 0.1);
-  --depth-bar-hi: rgb(255 255 255 / 0.06);
+  /* The top light outshines the ring, or the frosted bar reads as an outlined box. */
+  --depth-bar-edge: rgb(255 255 255 / 0.09);
+  --depth-bar-hi: rgb(255 255 255 / 0.1);
   --depth-bar-near: rgb(8 7 12 / 0.4);
   --depth-bar-far: rgb(8 7 12 / 0.35);
 
@@ -269,6 +277,11 @@
   --depth-seam-lo: rgb(8 7 12 / 0.2);
   --depth-seam-contact: rgb(8 7 12 / 0.5);
   --depth-seam-ambient: rgb(8 7 12 / 0.35);
+
+  /* in the face's own hue: the dark edge of the page's fittings cut a black line across the
+     light key and the lavender ask */
+  --depth-join-key: rgb(19 18 28 / 0.16);
+  --depth-join-accent: rgb(19 18 28 / 0.2);
 }
 
 [data-theme="indigo"],
@@ -362,6 +375,9 @@
   --depth-seam-lo: rgb(19 18 28 / 0.1);
   --depth-seam-contact: rgb(19 18 28 / 0.18);
   --depth-seam-ambient: rgb(19 18 28 / 0.22);
+
+  --depth-join-key: rgb(19 18 28 / 0.28);
+  --depth-join-accent: rgb(19 18 28 / 0.28);
 }
 
 @theme inline {

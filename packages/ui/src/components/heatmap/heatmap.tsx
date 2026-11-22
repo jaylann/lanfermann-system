@@ -54,13 +54,17 @@ export type HeatmapProps = Omit<ComponentProps<"figure">, "children"> & {
   drawIn?: boolean;
 };
 
-/** How much of the hue each step mixes into the trough, in OKLab, so the steps rise evenly. */
+/**
+ * How much of the hue each step mixes into the placeholder, in OKLab, so the steps rise evenly.
+ * The placeholder is the trough on a light ground and a shade above the page on a dark one, so an
+ * empty day reads as "nothing", never as a hole.
+ */
 const STEP_MIX = [0, 28, 52, 76, 100] as const;
 
 const stepColor = (step: number) =>
   step === 0
-    ? "var(--lf-trough)"
-    : `color-mix(in oklab, var(--heat) ${STEP_MIX[step]}%, var(--lf-trough))`;
+    ? "var(--lf-placeholder)"
+    : `color-mix(in oklab, var(--heat) ${STEP_MIX[step]}%, var(--lf-placeholder))`;
 
 type Scrub = { index: number; shown: boolean; entry: number; touch: boolean; keyboard: boolean };
 type Place = { x: number; y: number; share: number };
