@@ -15,8 +15,9 @@ import {
 } from "@/components/select/select";
 import { cn } from "@/lib/cn";
 
-/** How a site should look: as the system says, light, or dark. */
-export type Theme = "system" | "light" | "dark";
+import type { Theme } from "./theme-mode";
+
+export type { Theme };
 
 const themes: readonly { value: Theme; icon: IconSvgElement }[] = [
   { value: "system", icon: ComputerIcon },
@@ -72,10 +73,12 @@ export type ThemeSwitchProps = AsSelect | AsSegments;
  * select that shows the chosen one by symbol and name, and three symbols in a round trough whose
  * thumb travels to the chosen one.
  *
- * It is the control only. It holds a choice and reports it (`onValueChange`); it does not
- * remember the choice, read the system's setting or change the page. The app does that: it sets
- * `data-theme="paper"` or `"ink"` on `<html>`, and for `system` follows
- * `prefers-color-scheme`.
+ * It is the control only: it holds a choice and reports it (`onValueChange`). `useTheme` keeps
+ * the choice and turns the page, and `ThemeScript` in the <head> sets the mode before the first
+ * paint:
+ *
+ *   const { theme, setTheme } = useTheme();
+ *   <ThemeSwitch value={theme} onValueChange={setTheme} />
  */
 export function ThemeSwitch(props: ThemeSwitchProps) {
   return props.variant === "segmented" ? <ThemeSegments {...props} /> : <ThemeSelect {...props} />;

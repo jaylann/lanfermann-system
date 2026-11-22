@@ -27,6 +27,18 @@
 }
 
 /*
+ * Turning light or dark with a fade (`useTheme({ transition: "fade" })`): the old page fades into
+ * the new one on the `settle` spring. `applyMode` sets the attribute only for this transition, so
+ * an app's own view transitions keep their timing.
+ */
+:root[data-mode-switch]::view-transition-group(root),
+:root[data-mode-switch]::view-transition-old(root),
+:root[data-mode-switch]::view-transition-new(root) {
+  animation-duration: var(--transition-duration-spring-settle);
+  animation-timing-function: var(--ease-spring-settle);
+}
+
+/*
  * Three of the four keyframe animations in the system (the fourth is the shimmer of a line of
  * text, shimmer.css). All show ongoing work nobody triggered a state change for: the spinner
  * turns, a progress bar without a known end runs through its trough, and under reduced motion
