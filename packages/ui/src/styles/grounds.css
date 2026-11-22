@@ -129,7 +129,8 @@
   --lf-trough: #0c0b12;
   --lf-well: #181721;
   --lf-thumb: #e4e4ec;
-  --lf-thumb-on: #13121c;
+  /* Light on the lavender track too: a dark knob there read as a hole (Justin, 2026-11-22). */
+  --lf-thumb-on: #e4e4ec;
 }
 
 [data-theme="indigo"],
@@ -218,7 +219,7 @@
   --lf-trough: #12111a;
   --lf-well: #211f2b;
   --lf-thumb: #e4e4ec;
-  --lf-thumb-on: #13121c;
+  --lf-thumb-on: #e4e4ec;
 }
 
 [data-mode="dark"][data-theme="tint"],
@@ -256,7 +257,7 @@
   --lf-trough: #141320;
   --lf-well: #191726;
   --lf-thumb: #e4e4ec;
-  --lf-thumb-on: #13121c;
+  --lf-thumb-on: #e4e4ec;
 }
 
 /* Indigo in dark mode is deeper, so the ask does not glare beside the dark page (Justin,
