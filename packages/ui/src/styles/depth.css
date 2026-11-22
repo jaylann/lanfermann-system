@@ -239,7 +239,7 @@
   --depth-danger-lo: rgb(19 18 28 / 0.2);
   --depth-danger-contact: rgb(8 7 12 / 0.6);
   --depth-danger-ambient: rgb(8 7 12 / 0.45);
-  --depth-danger-press: rgb(19 18 28 / 0.45);
+  --depth-danger-press: rgb(19 18 28 / 0.3);
 
   --depth-thumb-face: none;
   --depth-thumb-edge: rgb(8 7 12 / 0.6);
@@ -257,8 +257,7 @@
   --depth-field-contact: rgb(8 7 12 / 0);
   --depth-field-shade: rgb(8 7 12 / 0.4);
   --depth-field-halo: rgb(166 161 253 / 0.24);
-  /* Fainter than the accent's: at .22 the salmon halo turned into a brown band. */
-  --depth-field-halo-danger: rgb(241 135 140 / 0.15);
+  --depth-field-halo-danger: rgb(241 135 140 / 0.22);
 
   --depth-card-edge: rgb(255 255 255 / 0.08);
   --depth-card-hi: rgb(255 255 255 / 0.06);
@@ -279,16 +278,13 @@
   --depth-sheet-edge: rgb(8 7 12 / 0.8);
   --depth-sheet-hi: rgb(255 255 255 / 0.08);
   --depth-sheet-near: rgb(8 7 12 / 0.4);
-  /* The edge and the top light set a sheet off; the long shadow only deepens it. Heavier, it
-     darkened the words on the page under a menu. */
-  --depth-sheet-mid: rgb(8 7 12 / 0.5);
-  --depth-sheet-far: rgb(8 7 12 / 0.38);
+  --depth-sheet-mid: rgb(8 7 12 / 0.7);
+  --depth-sheet-far: rgb(8 7 12 / 0.6);
   --depth-overlay-mid: rgb(8 7 12 / 0.8);
   --depth-overlay-far: rgb(8 7 12 / 0.7);
 
-  /* The top light outshines the ring, or the frosted bar reads as an outlined box. */
-  --depth-bar-edge: rgb(255 255 255 / 0.09);
-  --depth-bar-hi: rgb(255 255 255 / 0.1);
+  --depth-bar-edge: rgb(255 255 255 / 0.1);
+  --depth-bar-hi: rgb(255 255 255 / 0.06);
   --depth-bar-near: rgb(8 7 12 / 0.4);
   --depth-bar-far: rgb(8 7 12 / 0.35);
 
@@ -297,15 +293,23 @@
   --depth-seam-contact: rgb(8 7 12 / 0.5);
   --depth-seam-ambient: rgb(8 7 12 / 0.35);
 
-  /* in the face's own hue: the dark edge of the page's fittings cut a black line across the
-     light key and the lavender ask */
-  --depth-join-key: rgb(19 18 28 / 0.16);
-  --depth-join-accent: rgb(19 18 28 / 0.2);
+  /* Ink in light mode keeps the edge its fittings always had. */
+  --depth-join-key: rgb(8 7 12 / 0.7);
+  --depth-join-accent: rgb(8 7 12 / 0.7);
 }
 
-/* In dark mode a block in the key's tone is a plate of Ink, not the inverted light key: it takes
-   the light of a dark face (a lit top edge, a face that fades, a light rim), so it stands as a
-   fitting beside the Indigo and the raised blocks. After the block above, which it overrides. */
+/*
+ * Dark mode refined, after the block above, which it overrides for the dark grounds only: Ink in
+ * light mode (tooltips, toasts and dark sections on a light page) keeps the values above.
+ *   sheets   the edge and the top light set a sheet off; a heavier long shadow darkened the
+ *            words on the page under a menu
+ *   fields   the danger halo fainter than the accent's: at .22 it turned into a brown band
+ *   bar      the top light outshines the ring, or the frosted bar reads as an outlined box
+ *   danger   a press shade that shows on the deeper red
+ *   joins    a key group's seams in the face's own hue, not a black cut across it
+ *   key block  a plate of Ink, not the inverted light key: the light of a dark face (a lit top
+ *            edge, a face that fades, a light rim), so it stands as a fitting beside the others
+ */
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
 [data-mode="dark"] [data-theme="paper"],
@@ -313,6 +317,15 @@
 [data-mode="dark"] [data-theme="tint"],
 [data-mode="dark"][data-theme="ink"],
 [data-mode="dark"] [data-theme="ink"] {
+  --depth-sheet-mid: rgb(8 7 12 / 0.5);
+  --depth-sheet-far: rgb(8 7 12 / 0.38);
+  --depth-field-halo-danger: rgb(241 135 140 / 0.15);
+  --depth-bar-edge: rgb(255 255 255 / 0.09);
+  --depth-bar-hi: rgb(255 255 255 / 0.1);
+  --depth-danger-press: rgb(19 18 28 / 0.45);
+  --depth-join-key: rgb(19 18 28 / 0.16);
+  --depth-join-accent: rgb(19 18 28 / 0.2);
+
   --depth-key-block-face: linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0));
   --depth-key-block-edge: rgb(255 255 255 / 0.08);
   --depth-key-block-hi: rgb(255 255 255 / 0.1);
