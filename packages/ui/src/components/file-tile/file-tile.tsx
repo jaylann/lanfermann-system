@@ -23,8 +23,6 @@ import { Progress, ProgressTrack } from "@/components/progress/progress";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
-import { FilesLookContext } from "./files-look";
-
 /** Where a file stands: on its way, arrived, or failed. */
 export type FileTileStatus = "uploading" | "done" | "error";
 
@@ -82,26 +80,25 @@ export type FileTileProps = Omit<ComponentProps<"div">, "children"> & {
 const fileTile = cva(
   [
     "group/tile relative isolate flex min-w-0 rounded-xl text-left select-none",
+    // A part that is handled stands on a bevelled card (Fase; Justin, 2026-11-23, over the
+    // picture flat on the well). The chosen edge eases in on `settle` and what is given up
+    // leaves on `leave`, as on a choice card.
+    "bg-surface depth-bevel transition-[box-shadow] spring-leave data-selected:depth-bevel-chosen data-selected:spring-settle",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-    // A drop target takes the field's halo on `snap`, laid over whatever face the tile has, so
-    // the face's own shadow does not have to change its layers.
+    // A drop target takes the field's halo on `snap`, laid over the card, so the card's own
+    // shadow does not have to change its layers.
     "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:opacity-0 after:shadow-field-focus",
     "after:transition-opacity after:spring-snap data-drop-over:after:opacity-100",
   ],
   {
     variants: {
-      face: {
-        // A part that is handled stands on a bevelled card (DESIGN.md: "a tile to open"). The
-        // chosen edge eases in on `settle` and what is given up leaves on `leave`, as on a
-        // choice card.
-        bevel:
-          "bg-surface depth-bevel transition-[box-shadow] spring-leave data-selected:depth-bevel-chosen data-selected:spring-settle",
-        // No card: the picture stands on the well, the pointer washes the whole tile, and a
-        // chosen tile stands on the tint, as a chosen row does.
-        flat: "transition-colors spring-snap hover:bg-hover data-selected:bg-tint",
-      },
       shape: {
+        /** A file: its picture or symbol above its name. */
         tile: "p-1",
+        /**
+         * A folder: one line in the files' columns (Justin, 2026-11-23, over a folder as large
+         * as a file).
+         */
         row: "min-h-11 items-center px-3 py-2",
       },
     },
@@ -135,7 +132,10 @@ function Mark({ className }: { className?: string }) {
   );
 }
 
-/** The kind's symbol before a name, which gives its place to the mark while the mark shows. */
+/**
+ * The kind's symbol before a folder's name, which gives its place to the mark while the mark
+ * shows: a folder row has no picture to carry it.
+ */
 function SymbolOrMark({ kind }: { kind: FileSymbolKind }) {
   return (
     <span className="relative flex size-(--check-size) shrink-0 items-center justify-center">
@@ -233,10 +233,9 @@ export function FileTile({
   className,
   ...props
 }: FileTileProps) {
-  const look = useContext(FilesLookContext);
   const { inGrid } = useContext(FileGridContext);
   const kind = kindProp ?? (variant === "folder" ? "folder" : kindOf({ name, type }));
-  const shape = variant === "folder" && look.folders === "row" ? "row" : "tile";
+  const shape = variant === "folder" ? "row" : "tile";
 
   // The bar is there once the file has been on its way, so it can be seen full and fade when
   // the file arrives; a file that was there all along never had one. State that follows a
@@ -264,7 +263,7 @@ export function FileTile({
       data-slot="file-tile-name"
       className="flex min-w-0 items-center gap-1.5 text-control font-medium text-fg"
     >
-      {(shape === "row" || look.mark === "name") && <SymbolOrMark kind={kind} />}
+      {shape === "row" && <SymbolOrMark kind={kind} />}
       {spoken}
       <MiddleTruncate text={name} />
     </span>
@@ -307,7 +306,8 @@ export function FileTile({
         >
           {preview ??
             (src !== undefined ? <Picture src={src} kind={kind} /> : <PreviewSymbol kind={kind} />)}
-          {look.mark === "corner" && <Mark className="absolute top-2 left-2" />}
+          {/* At the top left over the picture (Justin, 2026-11-23, over before the name). */}
+          <Mark className="absolute top-2 left-2" />
           {carried && (
             <div
               data-slot="file-tile-progress"
@@ -382,7 +382,7 @@ export function FileTile({
       // In a grid a tile is one of its rows, which can be chosen; alone it is a plain block.
       role={inGrid ? "row" : undefined}
       aria-selected={inGrid ? selected : undefined}
-      className={cn(fileTile({ face: look.face, shape }), className)}
+      className={cn(fileTile({ shape }), className)}
       {...props}
     >
       <div
