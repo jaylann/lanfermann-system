@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/jaylann/lanfermann-system/compare/v0.10.0...v0.11.0) (2026-11-23)
+
+
+### Features
+
+* **ui:** let a stored secret field save itself with its own key ([#75](https://github.com/jaylann/lanfermann-system/issues/75)) ([9972640](https://github.com/jaylann/lanfermann-system/commit/9972640c03fc3edaf098fc542bc2b5ea6d1c60a5))
+
 ## [0.10.0](https://github.com/jaylann/lanfermann-system/compare/v0.9.0...v0.10.0) (2026-11-23)
 
 
