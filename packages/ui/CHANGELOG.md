@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.10.0](https://github.com/jaylann/lanfermann-system/compare/v0.9.0...v0.10.0) (2026-11-23)
+
+
+### Features
+
+* **ui:** lay see-through pictures on a quiet checker ([cd0bcc9](https://github.com/jaylann/lanfermann-system/commit/cd0bcc928e4f75684b796df8f95caf6999a172c0))
+* **ui:** lay see-through pictures on a quiet checker ([da4934b](https://github.com/jaylann/lanfermann-system/commit/da4934bd4e7048442ef66997362d13ed7f6fe191))
+
+
+### Bug Fixes
+
+* **ui:** lay the checker behind the drawn picture only ([a4870b6](https://github.com/jaylann/lanfermann-system/commit/a4870b63f82f620a900b9be5cfa93b85f6549dbe))
+* **ui:** lay the checker behind the drawn picture only ([fd36647](https://github.com/jaylann/lanfermann-system/commit/fd366479e6df7a7d856a863d6f1803d12350c708)), closes [#68](https://github.com/jaylann/lanfermann-system/issues/68)
+
 ## [0.9.0](https://github.com/jaylann/lanfermann-system/compare/v0.8.0...v0.9.0) (2026-11-23)
 
 
