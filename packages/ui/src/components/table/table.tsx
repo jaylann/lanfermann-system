@@ -218,6 +218,9 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
         "data-interactive:hover:bg-hover data-selected:bg-tint data-selected:text-fg",
         // Rows selected one after another are one wash, without a line across it.
         "data-selected:has-[+[data-selected]]:border-b-tint",
+        // A row that is chosen with the keyboard (`useSelection`) takes the focus itself; its
+        // ring stands inside it, where the scrolling region does not cut it.
+        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent",
         stackedRow,
         className,
       )}

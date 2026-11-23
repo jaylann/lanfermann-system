@@ -125,7 +125,13 @@ const markLook = [
 
 function Mark({ className }: { className?: string }) {
   return (
-    <span aria-hidden data-slot="file-tile-mark" className={cn(markLook, className)}>
+    <span
+      aria-hidden
+      data-slot="file-tile-mark"
+      // A press on the mark adds the tile to what is chosen, or takes it away (`useSelection`).
+      data-selection-toggle=""
+      className={cn(markLook, className)}
+    >
       {/* The tick draws in (short leg first), as a checkbox's does. */}
       <TickGlyph className="opacity-0 transition-[stroke-dashoffset,opacity] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-selected/tile:opacity-100 group-data-selected/tile:[stroke-dashoffset:0]" />
     </span>

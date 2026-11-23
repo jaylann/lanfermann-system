@@ -496,6 +496,14 @@ export {
   SelectTrigger,
   type SelectTriggerProps,
 } from "./components/select/select";
+export {
+  type Selection,
+  type SelectionContainerProps,
+  type SelectionItemProps,
+  type SelectionLayout,
+  useSelection,
+  type UseSelectionOptions,
+} from "./components/selection/use-selection";
 export { Separator, type SeparatorProps } from "./components/separator/separator";
 export { Shimmer, type ShimmerProps } from "./components/shimmer/shimmer";
 export {
