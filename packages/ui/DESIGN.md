@@ -1023,6 +1023,16 @@ Every component belongs to one of the four matters, and takes its treatment from
   it has arrived; a failure says why over the picture, with „Noch einmal versuchen“. Nothing
   changes a tile's size. A folder that would take what hangs over it wears the field's halo.
   For assistive tech the grid is a grid whose rows are the tiles.
+- **Choosing several** (`useSelection`) works as a file manager does, for the tiles of a
+  `FileGrid` and the rows of a `Table` alike. A click chooses one, Cmd or Ctrl and a click adds
+  or takes away one, Shift and a click takes the range from the last one chosen, a press on a
+  tile's mark adds or takes away that one, and a double click opens it. The box is one stop for
+  Tab; the arrows move through it and what they land on is chosen, so an inspector follows. In
+  a grid up and down go by the columns it really has, found from where the tiles stand, so they
+  also cross from the folders into the files. Shift and an arrow takes the way along, Cmd or
+  Ctrl and an arrow moves without choosing, Space adds or takes away, Cmd or Ctrl and A takes
+  all, Enter opens, Escape lets go of all, and with nothing chosen leaves Escape to the page.
+  Keys in a field inside an item stay the field's. What is chosen rises in an `ActionBar`.
 - **Sources** keeps an answer's numbered references and their list together, so every number
   leads somewhere. A reference is a small link in tabular digits after its sentence, leading to
   its entry in the list under the answer; one card serves every reference of the answer, opens
