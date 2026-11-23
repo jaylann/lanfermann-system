@@ -194,6 +194,7 @@ story `Patterns/Specimen`.
 | File tile face            | A `FileTile` stands on a bevelled card (Fase), a part that is handled; chosen it wears the accent edge. Chosen over the picture flat on the well with the chosen tile on the tint.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Justin, 2026-11-23                                     |
 | File tile mark            | The mark of a file tile (the checkbox's socket, plug and tick) stands at the top left over the picture. Chosen over the mark before the name in place of the kind's symbol.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Justin, 2026-11-23                                     |
 | Folders among files       | A folder is a compact row one line high in the files' columns, its symbol before its name, the mark taking the symbol's place. Chosen over a folder as large as a file's tile.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Justin, 2026-11-23                                     |
+| Drop plate                | While files hang over a `FileDropArea`, the plate that says where they go („In building-gbar ablegen“, a folder's own label over a folder) stands in the middle of the area, a raised plate. Chosen over a bar along the area's foot.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Justin, 2026-11-23                                     |
 
 ## Colour
 
@@ -1035,15 +1036,14 @@ Every component belongs to one of the four matters, and takes its treatment from
   Keys in a field inside an item stay the field's. What is chosen rises in an `ActionBar`.
 - **FileDropArea** takes files where they are let go: a card of a file browser, dropped from the
   system or pasted while the focus is inside it. While files hang over it, it takes the field's
-  halo on `snap` and a plate fades in that says where they will go („In building-gbar
-  ablegen“); there is no dashed border and nothing shakes. A folder's tile or a link of the
-  trail inside it is a target of its own (`useDropTarget`): over one it wins, wears the halo
-  itself, and the plate names it. Items dragged inside it (`useItemDrag`) carry the chosen ids
-  and show how many under the pointer („3 Dateien“); a folder does not take a drag of itself,
-  and the area itself takes no items, as they would stay where they are. Dragging has no
-  keyboard path, so a page offers the same through its keys. Where the plate stands (in the
-  middle or as a bar along the foot) is still open (`Lab/Files`). `FileUploadZone` counts its
-  enters and leaves the same way (`useDragDepth`).
+  halo on `snap` and a plate fades in in its middle that says where they will go („In
+  building-gbar ablegen“); there is no dashed border and nothing shakes. A folder's tile or a
+  link of the trail inside it is a target of its own (`useDropTarget`): over one it wins,
+  wears the halo itself, and the plate names it. Items dragged inside it (`useItemDrag`) carry
+  the chosen ids and show how many under the pointer („3 Dateien“); a folder does not take a
+  drag of itself, and the area itself takes no items, as they would stay where they are.
+  Dragging has no keyboard path, so a page offers the same through its keys. `FileUploadZone`
+  counts its enters and leaves the same way (`useDragDepth`).
 - **Sources** keeps an answer's numbered references and their list together, so every number
   leads somewhere. A reference is a small link in tabular digits after its sentence, leading to
   its entry in the list under the answer; one card serves every reference of the answer, opens

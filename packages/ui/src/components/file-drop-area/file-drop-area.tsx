@@ -1,7 +1,6 @@
 "use client";
 
 import { Upload04Icon } from "@hugeicons/core-free-icons";
-import { cva } from "class-variance-authority";
 import {
   type ComponentProps,
   createContext,
@@ -16,8 +15,6 @@ import {
 import { Icon } from "@/components/icon/icon";
 import { carriesFiles, useDragDepth } from "@/internal/drag-depth";
 import { cn } from "@/lib/cn";
-
-import { DropPlaceContext } from "./drop-look";
 
 /** The type under which items dragged inside an area carry their ids: a JSON list of strings. */
 export const ITEMS_TYPE = "application/x-lanfermann-items";
@@ -64,22 +61,14 @@ const fileDropArea = [
   "after:transition-opacity after:spring-snap data-dragging:after:opacity-100",
 ].join(" ");
 
-/** The plate that says where a drop goes. It fades in on `settle` and leaves on `leave`. */
-const plate = cva(
-  [
-    "pointer-events-none absolute z-20 flex opacity-0",
-    "transition-opacity spring-leave data-shown:opacity-100 data-shown:spring-settle",
-  ],
-  {
-    variants: {
-      /** In the middle of the area, or as a bar along its foot. */
-      place: {
-        centre: "inset-0 items-center justify-center p-4",
-        bar: "inset-x-3 bottom-3 *:w-full *:justify-center",
-      },
-    },
-  },
-);
+/**
+ * The plate that says where a drop goes, in the middle of the area (Justin, 2026-11-23, over a
+ * bar along its foot). It fades in on `settle` and leaves on `leave`.
+ */
+const plate = [
+  "pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-4 opacity-0",
+  "transition-opacity spring-leave data-shown:opacity-100 data-shown:spring-settle",
+].join(" ");
 
 export type FileDropAreaProps = Omit<ComponentProps<"div">, "onDrop"> & {
   /**
@@ -121,7 +110,6 @@ export function FileDropArea({
   children,
   ...props
 }: FileDropAreaProps) {
-  const place = useContext(DropPlaceContext);
   const [target, setTarget] = useState<Target | null>(null);
   const targetNow = useRef<Target | null>(null);
   const [dragged, setDragged] = useState<readonly string[] | null>(null);
@@ -243,7 +231,7 @@ export function FileDropArea({
           aria-hidden
           data-slot="file-drop-area-plate"
           data-shown={plateText !== null ? "" : undefined}
-          className={plate({ place })}
+          className={plate}
         >
           <span className="flex items-center gap-2 rounded-xl bg-raised px-4 py-2.5 text-control font-medium text-fg depth-floating">
             <Icon icon={Upload04Icon} size={16} className="text-fg-muted" />
