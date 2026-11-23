@@ -18,6 +18,9 @@ Intent and decisions: `packages/ui/DESIGN.md`.
   `text-control`. Components read these; they never hard-code a control height.
 - `type.css`, `radius.css`, `motion.css`, `marks.css` — the scale, the one radius knob, the two
   keyframe animations, the ring-to-disc `mark` utility.
+- `checker.css` — the quiet `checker` behind a picture that may be see-through: the background
+  of the picture's own box (sized to the drawn picture, never the whole well), drawn from the
+  ground's text colour only.
 
 ## When adding or changing a token
 

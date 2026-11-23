@@ -1,0 +1,32 @@
+/*
+ * The checker: what stands behind a picture that may be see-through (a PNG, a WebP, an SVG, a
+ * GIF, an AVIF, an icon), in the place it is shown on (`FileTile`, `MediaPreview`). A black logo
+ * vanished on a dark well and a white one on a light well, and both variants of a logo (`x.svg`
+ * and `x_dark.svg`) live side by side, so no one background serves. The checker is two quiet
+ * tones in squares, as a design tool's or a file manager's preview shows transparency: where a
+ * picture is see-through the squares show, and its shape stands out against them in any colour
+ * (Justin, 2026-11-23).
+ *
+ * It is the picture's own background, on a box sized to the picture as it is drawn, so it lies
+ * behind the picture only and never in the bands of the well beside it: an opaque square badge
+ * in a wide well shows none of it. It lays the second tone over what lies under the picture
+ * (the well) and nothing else: the ground's text colour, as a faint wash, on every other square.
+ * So it darkens on a light ground and lightens on a dark one, follows every ground and mode
+ * without a value of its own, and reads as a surface, not as a pattern. In the dark it is a step
+ * weaker, where light squares glare sooner. A picture that is not see-through covers it.
+ *
+ *   --checker-cell   the side of one square (0.5rem)
+ */
+@utility checker {
+  --checker-tone: light-dark(
+    color-mix(in oklab, var(--lf-text) 8%, transparent),
+    color-mix(in oklab, var(--lf-text) 7%, transparent)
+  );
+  background-image: conic-gradient(
+    var(--checker-tone) 25%,
+    transparent 0 50%,
+    var(--checker-tone) 0 75%,
+    transparent 0
+  );
+  background-size: calc(var(--checker-cell, 0.5rem) * 2) calc(var(--checker-cell, 0.5rem) * 2);
+}

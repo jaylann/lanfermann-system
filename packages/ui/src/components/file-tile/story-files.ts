@@ -44,6 +44,37 @@ export const PHOTO = svg(
   '<rect width="900" height="1200" fill="#3a2b22"/><rect x="0" y="760" width="900" height="440" fill="#6b4a36"/><ellipse cx="450" cy="780" rx="330" ry="90" fill="#c9a27a"/><ellipse cx="450" cy="740" rx="260" ry="120" fill="#e8c48f"/><circle cx="370" cy="700" r="40" fill="#b5532f"/><circle cx="520" cy="720" r="34" fill="#b5532f"/><rect x="120" y="140" width="660" height="420" rx="30" fill="#251b15"/><rect x="170" y="200" width="560" height="300" rx="20" fill="#e07b39"/>',
 );
 
+/**
+ * The bar's mark on nothing, the way a logo is kept: the square with its tent cut out, the name
+ * and a lighter line under it. `fill` is black for a light page, white for a dark one.
+ */
+const mark = (fill: string) =>
+  svg(
+    640,
+    240,
+    `<path fill-rule="evenodd" fill="${fill}" d="M80 70H140A20 20 0 0 1 160 90V150A20 20 0 0 1 140 170H80A20 20 0 0 1 60 150V90A20 20 0 0 1 80 70ZM85 145L110 95L135 145Z"/><rect x="190" y="88" width="300" height="30" rx="6" fill="${fill}"/><rect x="190" y="132" width="190" height="20" rx="5" fill="${fill}" fill-opacity="0.6"/>`,
+  );
+
+/** The mark for a light page: black, see-through around it. */
+export const MARK = mark("#000000");
+
+/** The same mark for a dark page (`_dark`): white, see-through around it. */
+export const MARK_DARK = mark("#ffffff");
+
+/** A round badge with a soft shadow under it, cut free: see-through around it. */
+export const STICKER = svg(
+  512,
+  512,
+  '<ellipse cx="256" cy="468" rx="150" ry="22" fill="#13121c" fill-opacity="0.18"/><circle cx="256" cy="236" r="200" fill="#1f8a5b"/><circle cx="256" cy="236" r="168" fill="none" stroke="#ffffff" stroke-width="10"/><path d="M256 130 L284 202 L360 204 L300 250 L322 324 L256 280 L190 324 L212 250 L152 204 L228 202Z" fill="#ffffff"/>',
+);
+
+/** The bar's favicon at its own small size, 32px, its rounded corners see-through. */
+export const FAVICON = svg(
+  32,
+  32,
+  '<rect width="32" height="32" rx="7" fill="#5f50d0"/><path d="M9 23L16 9L23 23Z" fill="#ffffff"/>',
+);
+
 /** One entry of a folder as a story shows it. */
 export type StoryEntry = {
   id: string;
@@ -90,6 +121,41 @@ export const FILES: StoryEntry[] = [
     meta: "4,8 MB · 9.11.",
   },
   { id: "teaser", name: "teaser.mp4", type: "video/mp4", meta: "18,2 MB · 1.11." },
+];
+
+/**
+ * A folder of logos: both variants of the mark, a badge and the favicon, all see-through around
+ * them.
+ */
+export const SEE_THROUGH: StoryEntry[] = [
+  {
+    id: "zeichen",
+    name: "gbar-zeichen.svg",
+    type: "image/svg+xml",
+    src: MARK,
+    meta: "2 KB · 2.11.",
+  },
+  {
+    id: "zeichen-dark",
+    name: "gbar-zeichen_dark.svg",
+    type: "image/svg+xml",
+    src: MARK_DARK,
+    meta: "2 KB · 2.11.",
+  },
+  {
+    id: "abzeichen",
+    name: "abzeichen_rund.png",
+    type: "image/png",
+    src: STICKER,
+    meta: "38 KB · 14.11.",
+  },
+  {
+    id: "favicon",
+    name: "favicon-32.png",
+    type: "image/png",
+    src: FAVICON,
+    meta: "1 KB · 2.11.",
+  },
 ];
 
 /** A file that is being added: its own picture, read from the disk before it is stored. */

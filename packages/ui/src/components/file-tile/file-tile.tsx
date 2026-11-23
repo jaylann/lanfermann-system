@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-import { kindOf } from "@/components/attachment/kinds";
+import { kindOf, mayBeTransparent } from "@/components/attachment/kinds";
 import { FileGridContext } from "@/components/file-grid/file-grid-context";
 import {
   FileKindSymbol,
@@ -167,8 +167,22 @@ function SymbolOrMark({ kind }: { kind: FileSymbolKind }) {
  * A file's picture, which fades in on `settle` once it has loaded. One that was already loaded
  * (from the cache, before the page woke up) is simply there; one that cannot be loaded gives
  * its place to the kind's symbol.
+ *
+ * Its box is the picture as it is drawn: contained in the well and never larger than its own
+ * size, so a 32px favicon stays sharp and is not blown up to the tile. One that may be
+ * see-through has the `checker` as that box's background, so the checker lies only behind the
+ * picture and never in the well beside it; it fades in with the picture and goes with it when
+ * the symbol takes its place.
  */
-function Picture({ src, kind }: { src: string; kind: FileSymbolKind }) {
+function Picture({
+  src,
+  kind,
+  seeThrough,
+}: {
+  src: string;
+  kind: FileSymbolKind;
+  seeThrough: boolean;
+}) {
   const picture = useRef<HTMLImageElement>(null);
   const [state, setState] = useState<"loading" | "loaded" | "failed">("loading");
   // A new address starts over. Compared while rendering, as React asks for state that follows
@@ -200,7 +214,12 @@ function Picture({ src, kind }: { src: string; kind: FileSymbolKind }) {
       data-loaded={state === "loaded" ? "" : undefined}
       onLoad={() => setState("loaded")}
       onError={() => setState("failed")}
-      className="size-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
+      className={cn(
+        // Sized by the picture (the well centres it and its aspect ratio gives `max-h-full` a
+        // height to resolve against), not stretched to the well.
+        "h-auto max-h-full w-auto max-w-full opacity-0 transition-opacity spring-settle data-loaded:opacity-100",
+        seeThrough && "checker",
+      )}
     />
   );
 }
@@ -217,7 +236,11 @@ function PreviewSymbol({ kind }: { kind: FileSymbolKind }) {
  * its name cut in the middle so its end stays readable („Angebot_Ko…bst.pdf“), and a short line
  * of facts („84 KB · gestern“). It is a part that is handled (chosen, opened, dragged), so it
  * stands on a bevelled card; chosen, it wears the accent edge and its mark closes. The mark
- * shows under the pointer and while anything in the grid is chosen.
+ * shows under the pointer and while anything in the grid is chosen. A picture is contained in
+ * the well and never drawn larger than its own size. One that may be see-through (a PNG, WebP,
+ * SVG, GIF, AVIF or icon, by `type` or else by the name's extension) lies on the quiet
+ * `checker`, behind the picture only, so a black logo shows in the dark and a white one in the
+ * light; a JPEG and the symbol keep the plain well.
  *
  * A file on its way shows its own picture with a bar across its foot; once it has arrived the
  * bar is seen full for a moment and fades. A file that failed says why over its picture, with a
@@ -323,7 +346,11 @@ export function FileTile({
           )}
         >
           {preview ??
-            (src !== undefined ? <Picture src={src} kind={kind} /> : <PreviewSymbol kind={kind} />)}
+            (src !== undefined ? (
+              <Picture src={src} kind={kind} seeThrough={mayBeTransparent({ name, type })} />
+            ) : (
+              <PreviewSymbol kind={kind} />
+            ))}
           {/* At the top left over the picture (Justin, 2026-11-23, over before the name). */}
           <Mark className="absolute top-2 left-2" />
           {carried && (

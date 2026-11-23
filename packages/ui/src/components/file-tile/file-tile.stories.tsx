@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ReactNode, useState } from "react";
+import { expect, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
 
 import { FileTile, type FileTileStatus } from "./file-tile";
-import { ARRIVING, FILES, FOLDERS } from "./story-files";
+import { ARRIVING, FILES, FOLDERS, SEE_THROUGH } from "./story-files";
 
 const meta = {
   title: "Components/FileTile",
@@ -81,6 +82,94 @@ export const DropTarget: Story = {
       <FileTile variant="folder" {...FOLDERS[1]!} />
     </Row>
   ),
+};
+
+/**
+ * A picture that may be see-through (here an SVG for a light page, its `_dark` twin, a PNG
+ * badge and a 32px favicon) lies on the quiet checker, behind the picture only, so the black
+ * mark shows in the dark and the white one in the light. The favicon keeps its own size.
+ */
+export const Transparent: Story = {
+  render: () => (
+    <Row>
+      {SEE_THROUGH.map(({ id, ...file }) => (
+        <FileTile key={id} {...file} />
+      ))}
+    </Row>
+  ),
+};
+
+/** A tile's picture element, the box the checker is drawn on. */
+function pictureOf(tile: Element | undefined): HTMLElement | null {
+  return tile?.querySelector<HTMLElement>('[data-slot="file-tile-picture"]') ?? null;
+}
+
+/** What stands behind a tile's picture, as the browser computed it. */
+function backdropOf(tile: Element | undefined): string | undefined {
+  const picture = pictureOf(tile);
+  return picture ? getComputedStyle(picture).backgroundImage : undefined;
+}
+
+/** The checker goes by the file's format: under an SVG and a PNG, never under a JPEG. */
+export const CheckerByFormat: Story = {
+  render: () => (
+    <Row>
+      {[SEE_THROUGH[0]!, SEE_THROUGH[2]!, FILES[6]!].map(({ id, ...file }) => (
+        <FileTile key={id} {...file} />
+      ))}
+    </Row>
+  ),
+  play: async ({ canvasElement }) => {
+    const [svg, png, jpeg] = canvasElement.querySelectorAll('[data-slot="file-tile"]');
+    await expect(backdropOf(svg)).toContain("conic-gradient");
+    await expect(backdropOf(png)).toContain("conic-gradient");
+    await expect(backdropOf(jpeg)).toBe("none");
+  },
+};
+
+/** The size a tile's loaded picture is drawn at, and the size of the well it stands in. */
+async function drawnSize(tile: Element | undefined) {
+  const picture = pictureOf(tile);
+  await waitFor(() => expect(picture).toHaveAttribute("data-loaded"));
+  const box = picture?.getBoundingClientRect();
+  const well = picture?.parentElement?.getBoundingClientRect();
+  return {
+    width: box?.width ?? 0,
+    height: box?.height ?? 0,
+    wellWidth: well?.width ?? 0,
+    wellHeight: well?.height ?? 0,
+  };
+}
+
+/**
+ * The picture's box is the picture as it is drawn, so the checker never reaches the well beside
+ * it: a square badge is a square inside the wider well, a wide picture spans the well's width
+ * only, and a 32px favicon stays 32px instead of filling the tile.
+ */
+export const PictureBox: Story = {
+  render: () => (
+    <Row>
+      {[SEE_THROUGH[2]!, SEE_THROUGH[3]!, FILES[0]!].map(({ id, ...file }) => (
+        <FileTile key={id} {...file} />
+      ))}
+    </Row>
+  ),
+  play: async ({ canvasElement }) => {
+    const [badge, favicon, wide] = canvasElement.querySelectorAll('[data-slot="file-tile"]');
+
+    const square = await drawnSize(badge);
+    await expect(Math.abs(square.width - square.height)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(square.height - square.wellHeight)).toBeLessThanOrEqual(1);
+    await expect(square.width).toBeLessThan(square.wellWidth - 20);
+
+    const small = await drawnSize(favicon);
+    await expect(small.width).toBe(32);
+    await expect(small.height).toBe(32);
+
+    const hero = await drawnSize(wide);
+    await expect(Math.abs(hero.width - hero.wellWidth)).toBeLessThanOrEqual(1);
+    await expect(hero.height).toBeLessThan(hero.wellHeight - 10);
+  },
 };
 
 /** A picture that cannot be loaded gives its place to the symbol of its kind. */

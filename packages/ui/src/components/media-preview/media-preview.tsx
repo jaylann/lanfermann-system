@@ -2,7 +2,7 @@
 
 import { type ComponentProps, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { kindOf, typeWord } from "@/components/attachment/kinds";
+import { kindOf, mayBeTransparent, typeWord } from "@/components/attachment/kinds";
 import {
   FileKindSymbol,
   type FileSymbolKind,
@@ -25,15 +25,22 @@ export type MediaPreviewProps = Omit<ComponentProps<"div">, "children"> & {
   onNaturalSize?: (size: NaturalSize) => void;
 };
 
-/** A picture, which fades in on `settle` once it has loaded and then reports its own size. */
+/**
+ * A picture, which fades in on `settle` once it has loaded and then reports its own size. Its
+ * box is the picture as it is drawn (contained, never larger than its own size), so one that
+ * may be see-through has the `checker` as that box's background: behind the picture only,
+ * fading in with it, and gone with it when the symbol takes its place.
+ */
 function Picture({
   src,
   name,
+  seeThrough,
   onLoaded,
   onFail,
 }: {
   src: string;
   name: string;
+  seeThrough: boolean;
   onLoaded: (size: NaturalSize) => void;
   onFail: () => void;
 }) {
@@ -67,7 +74,10 @@ function Picture({
         });
       }}
       onError={onFail}
-      className="max-h-full max-w-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
+      className={cn(
+        "h-auto max-h-full w-auto max-w-full opacity-0 transition-opacity spring-settle data-loaded:opacity-100",
+        seeThrough && "checker",
+      )}
     />
   );
 }
@@ -78,7 +88,10 @@ function Picture({
  * video or a piece of audio with the browser's own controls (only its length is loaded until it
  * is played), a PDF in the browser's own viewer, and for anything else the symbol of its kind,
  * large, with its type. A picture that cannot be loaded gives its place to the symbol. Nothing
- * travels: the picture fades in on `settle`.
+ * travels: the picture fades in on `settle`. A picture that may be see-through (a PNG, WebP,
+ * SVG, GIF, AVIF or icon, by `type` or else by the name's extension) lies on the quiet
+ * `checker`, behind the picture only, so a black logo shows in the dark and a white one in the
+ * light; a JPEG keeps the plain well.
  *
  * Give it its height (a class, or the room of the inspector); it fills it.
  */
@@ -112,6 +125,7 @@ export function MediaPreview({
           key={src}
           src={src}
           name={name}
+          seeThrough={mayBeTransparent({ name, type })}
           onLoaded={(size) => onNaturalSize?.(size)}
           onFail={() => setFailed(src)}
         />

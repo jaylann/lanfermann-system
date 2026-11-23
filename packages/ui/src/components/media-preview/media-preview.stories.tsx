@@ -2,7 +2,15 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, waitFor } from "storybook/test";
 
-import { BADGE, HERO, LOGO, PHOTO } from "@/components/file-tile/story-files";
+import {
+  BADGE,
+  HERO,
+  LOGO,
+  MARK,
+  MARK_DARK,
+  PHOTO,
+  STICKER,
+} from "@/components/file-tile/story-files";
 
 import { MediaPreview, type NaturalSize } from "./media-preview";
 
@@ -50,6 +58,46 @@ export const Pictures: Story = {
 export const Logo: Story = {
   parameters: { visual: { viewport: { width: 480, height: 260 } } },
   render: () => <MediaPreview src={LOGO} name="building-gbar.svg" className="h-40 w-80" />,
+};
+
+/**
+ * A picture that may be see-through (an SVG for a light page, its `_dark` twin, a PNG) lies on
+ * the quiet checker, behind the picture only, so the black mark shows in the dark and the white
+ * one in the light. The square badge leaves the well beside it plain.
+ */
+export const Transparent: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <WithSize src={MARK} name="gbar-zeichen.svg" />
+      <WithSize src={MARK_DARK} name="gbar-zeichen_dark.svg" />
+      <WithSize src={STICKER} name="abzeichen_rund.png" />
+    </div>
+  ),
+};
+
+/**
+ * The checker is the picture's own background, and the picture's box is the picture as drawn:
+ * the square badge is square inside the wider well, a JPEG has no checker.
+ */
+export const CheckerByFormat: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <WithSize src={STICKER} name="abzeichen_rund.png" />
+      <WithSize src={PHOTO} name="ofen.jpg" />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const png = canvas.getByRole("img", { name: "abzeichen_rund.png" });
+    const jpeg = canvas.getByRole("img", { name: "ofen.jpg" });
+    await waitFor(() => expect(png).toHaveAttribute("data-loaded"));
+    await expect(getComputedStyle(png).backgroundImage).toContain("conic-gradient");
+    await expect(getComputedStyle(jpeg).backgroundImage).toBe("none");
+
+    const box = png.getBoundingClientRect();
+    const well = png.parentElement?.getBoundingClientRect();
+    await expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(1);
+    await expect(box.width).toBeLessThan((well?.width ?? 0) - 20);
+  },
 };
 
 /** What has no picture of its own shows the symbol of its kind, large, with its type. */
