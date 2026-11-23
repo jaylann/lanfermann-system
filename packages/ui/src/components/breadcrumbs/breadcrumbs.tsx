@@ -53,13 +53,18 @@ export function BreadcrumbItem({ className, children, ...props }: ComponentProps
 
 export type BreadcrumbLinkProps = useRender.ComponentProps<"a">;
 
-/** A place that is a page. For a router's link, pass it as `render`. */
+/**
+ * A place that is a page. For a router's link, pass it as `render`. In a file browser it can
+ * take a drop (spread `useDropTarget`'s props on it): while files or items hang over it, it
+ * wears the field's halo, as a folder's tile does.
+ */
 export function BreadcrumbLink({ render, className, ...props }: BreadcrumbLinkProps) {
   return renderAs("a", render, {
     ...props,
     "data-slot": "breadcrumb-link",
     className: cn(
-      "rounded-xs underline decoration-transparent decoration-1 underline-offset-[0.25em] transition-colors spring-snap hover:text-fg hover:decoration-current",
+      "rounded-xs underline decoration-transparent decoration-1 underline-offset-[0.25em] hover:text-fg hover:decoration-current",
+      "transition-[color,text-decoration-color,box-shadow] spring-snap data-drop-over:text-fg data-drop-over:shadow-field-focus",
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
       className,
     ),

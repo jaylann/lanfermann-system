@@ -56,6 +56,11 @@ export {
 } from "./components/bar-chart/bar-chart";
 export { BarList, type BarListItem, type BarListProps } from "./components/bar-list/bar-list";
 export {
+  BreadcrumbEllipsis,
+  type BreadcrumbEllipsisProps,
+  type BreadcrumbFold,
+} from "./components/breadcrumbs/breadcrumb-ellipsis";
+export {
   BreadcrumbItem,
   BreadcrumbLink,
   type BreadcrumbLinkProps,
@@ -266,6 +271,7 @@ export {
   DrawerTrigger,
 } from "./components/drawer/drawer";
 export { Dumbbell, type DumbbellItem, type DumbbellProps } from "./components/dumbbell/dumbbell";
+export { EditableName, type EditableNameProps } from "./components/editable-name/editable-name";
 export {
   Empty,
   EmptyActions,
@@ -352,6 +358,11 @@ export { Link, type LinkProps } from "./components/link/link";
 export { type LinkVariants, linkVariants } from "./components/link/link-variants";
 export { Logomark, type LogomarkProps } from "./components/logo/logomark";
 export { Wordmark, type WordmarkProps } from "./components/logo/wordmark";
+export {
+  MediaPreview,
+  type MediaPreviewProps,
+  type NaturalSize,
+} from "./components/media-preview/media-preview";
 export {
   Menu,
   MenuCheckboxItem,
