@@ -1,6 +1,7 @@
 "use client";
 
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
+import { useEffect, useState } from "react";
 
 import { useButtonGroup } from "@/components/button-group/button-group-context";
 import {
@@ -9,7 +10,8 @@ import {
 } from "@/components/button-group/button-group-variants";
 import { Spinner } from "@/components/spinner/spinner";
 import { EaseWidth } from "@/internal/ease-width";
-import { mergeClassName } from "@/lib/cn";
+import { TickGlyph } from "@/internal/glyphs";
+import { cn, mergeClassName } from "@/lib/cn";
 
 import { buttonDisabledLook, type ButtonVariants, buttonVariants } from "./button-variants";
 
@@ -22,6 +24,12 @@ export type ButtonProps = ButtonPrimitive.Props &
      * cannot be pressed again. It keeps focus and its colour.
      */
     loading?: boolean;
+    /**
+     * What was asked for went through: a tick is drawn in the label's place, the width stays, and
+     * the button cannot be pressed until it is turned off again. Shown briefly, after `loading`,
+     * by the app that knows the moment; the words for assistive tech are the app's to say.
+     */
+    done?: boolean;
     /**
      * The label changes while the button is on screen („Vorjahr zeigen“, then „Dieses Jahr
      * zeigen“): the button eases to its new width instead of jumping, and what stands beside it
@@ -55,6 +63,7 @@ export function Button({
   size,
   iconOnly,
   loading = false,
+  done = false,
   resize = false,
   disabled,
   focusableWhenDisabled,
@@ -65,6 +74,8 @@ export function Button({
   const resolvedVariant = variant ?? "secondary";
   const resolvedSize = group?.size ?? size ?? "md";
   const label = resize && !iconOnly ? <EaseWidth>{children}</EaseWidth> : children;
+  const busy = loading || done;
+  const layered = useStateLayer(busy);
   return (
     <ButtonPrimitive
       data-slot="button"
@@ -72,38 +83,59 @@ export function Button({
       data-variant={group ? undefined : resolvedVariant}
       data-size={resolvedSize}
       data-loading={loading ? "" : undefined}
+      data-done={done ? "" : undefined}
       aria-busy={loading || undefined}
-      disabled={disabled || loading || group?.disabled}
-      // A loading button stays focusable, so focus is not thrown to <body> mid-action.
-      focusableWhenDisabled={focusableWhenDisabled ?? loading}
+      disabled={disabled || busy || group?.disabled}
+      // A busy button stays focusable, so focus is not thrown to <body> mid-action.
+      focusableWhenDisabled={focusableWhenDisabled ?? busy}
       className={mergeClassName(
         group
           ? [
               buttonGroupKeyVariants({ size: resolvedSize, iconOnly }),
-              !loading && buttonGroupKeyDisabledLook,
+              !busy && buttonGroupKeyDisabledLook,
             ]
           : [
               buttonVariants({ variant, size, iconOnly }),
-              !loading && buttonDisabledLook[resolvedVariant],
+              !busy && buttonDisabledLook[resolvedVariant],
             ],
         className,
       )}
       {...props}
     >
-      {loading ? (
+      {layered ? (
         <>
-          {/* Still laid out and still the accessible name; only its ink is gone. */}
+          {/* Still laid out and still the accessible name while busy; only its ink is gone. It
+              sinks away fast and seats back with the button's release bounce. */}
           <span
             data-slot="button-label"
-            className="inline-flex items-center gap-[inherit] opacity-0"
+            className={cn(
+              "inline-flex items-center gap-[inherit] transition-[opacity,scale] spring-seat motion-reduce:scale-100",
+              busy && "scale-92 opacity-0 spring-snap starting:scale-100 starting:opacity-100",
+            )}
           >
             {label}
           </span>
           <span
-            data-slot="button-spinner"
-            className="absolute inset-0 flex items-center justify-center transition-opacity duration-150 ease-out starting:opacity-0"
+            aria-hidden
+            data-slot="button-state"
+            className="pointer-events-none absolute inset-0 grid place-items-center *:col-start-1 *:row-start-1"
           >
-            <Spinner size={spinnerSize[resolvedSize]} />
+            <span
+              data-slot="button-spinner"
+              className={cn(
+                "flex scale-80 opacity-0 transition-[opacity,scale] spring-leave motion-reduce:scale-100",
+                loading &&
+                  "scale-100 opacity-100 spring-settle starting:scale-80 starting:opacity-0",
+              )}
+            >
+              <Spinner size={spinnerSize[resolvedSize]} />
+            </span>
+            <TickGlyph
+              data-slot="button-tick"
+              width={spinnerSize[resolvedSize]}
+              height={spinnerSize[resolvedSize]}
+              strokeWidth={21 / spinnerSize[resolvedSize]}
+            />
           </span>
         </>
       ) : (
@@ -111,4 +143,27 @@ export function Button({
       )}
     </ButtonPrimitive>
   );
+}
+
+/** How long the spinner and the tick take to fade once a button is no longer busy, in ms. */
+const STATE_LEAVE_MS = 200;
+
+/**
+ * Whether the layer over the label (spinner and tick) is drawn: while the button is busy, and for
+ * the moment its marks take to fade after, so ending `loading` fades the spinner out and seats
+ * the label back instead of cutting. At rest it is not drawn: most buttons never need it.
+ */
+function useStateLayer(busy: boolean) {
+  const [lingering, setLingering] = useState(false);
+  const [wasBusy, setWasBusy] = useState(busy);
+  if (busy !== wasBusy) {
+    setWasBusy(busy);
+    setLingering(!busy);
+  }
+  useEffect(() => {
+    if (!lingering) return;
+    const timer = setTimeout(() => setLingering(false), STATE_LEAVE_MS);
+    return () => clearTimeout(timer);
+  }, [lingering]);
+  return busy || lingering;
 }
