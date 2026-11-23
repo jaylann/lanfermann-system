@@ -1,7 +1,7 @@
 "use client";
 
 import { SquareLock02Icon } from "@hugeicons/core-free-icons";
-import { type ComponentProps, useEffect, useRef, useState } from "react";
+import { type ComponentProps, useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { Button } from "@/components/button/button";
 import { Icon } from "@/components/icon/icon";
@@ -14,6 +14,9 @@ import { mergeRefs } from "@/lib/merge-refs";
 
 /** How many discs stand before the ending: the length is nobody's business. */
 const MASK_DISCS = 8;
+
+/** How long the tick of a save stands in the Save key before the field turns back, in ms. */
+export const SAVED_SHOWN_MS = 900;
 
 export type StoredSecretFieldProps = Omit<
   InputProps,
@@ -31,13 +34,33 @@ export type StoredSecretFieldProps = Omit<
   onReplacingChange?: (replacing: boolean) => void;
   /** The size of the field, from the density. */
   size?: FieldSize;
+  /**
+   * The field's own Save key, „Speichern“: it submits the form and stands beside the field
+   * while a new secret is typed, making room as it comes and closing it as it goes. Without it
+   * the form's own submit button sends the secret.
+   */
+  saveLabel?: string;
+  /** The save is under way: a spinner in the Save key, and what is typed holds still. */
+  saving?: boolean;
+  /**
+   * The save went through. Its Save key draws a tick for a moment (`savedHold`), then leaves,
+   * and the field turns back to the stored secret: give it the new `ending` by then.
+   */
+  saved?: boolean;
+  /** That the save went through, as assistive tech hears it: „Gespeichert“. */
+  savedLabel?: string;
+  /** How long the tick stands before the field turns back, in ms. */
+  savedHold?: number;
   /** That a secret is stored, as assistive tech hears it: „Gesetzt“. */
   storedLabel?: string;
   /** Before its ending, as assistive tech hears it: „endet auf“. */
   endingLabel?: string;
   /** The key that begins a new one: „Ersetzen“. */
   replaceLabel?: string;
-  /** The same key while a new one is typed: „Abbrechen“. */
+  /**
+   * @deprecated No longer shown: while a new secret is typed the field has no key of its own;
+   * Escape, or leaving it empty, keeps the stored one.
+   */
   cancelLabel?: string;
   /** The key with the eye while what is typed is hidden, and its tooltip. */
   revealLabel?: string;
@@ -52,11 +75,16 @@ export type StoredSecretFieldProps = Omit<
  * of a mail server, a key to another service. The field shows that one is stored and how it ends,
  * as a `SecretField` hides a value but with the end kept: „••••••••4f2a“ (assistive tech hears
  * „Gesetzt, endet auf 4f2a“). „Ersetzen“ turns it into an empty field for a new one, typed or
- * pasted behind discs that the eye shows. „Abbrechen“ or Escape keeps the stored one.
+ * pasted behind discs that the eye shows. Escape, or leaving the field while it is empty, keeps
+ * the stored one.
  *
  * It is write-only: under its `name` a form receives the new secret while one is typed, and
  * nothing while the stored one stands, so the server keeps what it has. A secret that has just
  * been made and must be copied once is a `SecretField`.
+ *
+ * With `saveLabel` it saves itself, one field to a form: the Save key stands beside it once
+ * something is typed, spins while `saving`, draws a tick once `saved`, and the field turns back
+ * to the stored secret with its new ending. Without it, the form has its own submit button.
  *
  * Label it with a `FieldLabel` („Signatur-Secret“) and say in a `FieldDescription` what a new one
  * changes („Anfragen mit dem alten werden danach abgelehnt.“).
@@ -67,22 +95,39 @@ export function StoredSecretField({
   defaultReplacing = false,
   onReplacingChange,
   size = "md",
+  saveLabel,
+  saving = false,
+  saved = false,
+  savedLabel = "Gespeichert",
+  savedHold = SAVED_SHOWN_MS,
   storedLabel = "Gesetzt",
   endingLabel = "endet auf",
   replaceLabel = "Ersetzen",
-  cancelLabel = "Abbrechen",
+  cancelLabel: _cancelLabel,
   revealLabel = "Anzeigen",
   hideLabel = "Verbergen",
   name,
   className,
   ref,
   onKeyDown,
+  onChange,
+  onBlur,
   ...props
 }: StoredSecretFieldProps) {
   const stored = ending !== undefined && ending !== "";
   const [own, setOwn] = useState(defaultReplacing);
   const replacing = replacingProp ?? own;
-  const typing = !stored || replacing;
+  // Whether something is typed: the Save key stands only then.
+  const [filled, setFilled] = useState(false);
+  // The moment a save went through: the tick stands, and the new secret with it, until the hold
+  // ends and the field turns back.
+  const [confirming, setConfirming] = useState(false);
+  const [wasSaved, setWasSaved] = useState(saved);
+  if (saved !== wasSaved) {
+    setWasSaved(saved);
+    if (saved) setConfirming(true);
+  }
+  const typing = !stored || replacing || confirming;
   const [revealed, setRevealed] = useState(false);
   // Two swaps: the whole field turns between the stored secret and a new one, and what is typed
   // turns between discs and characters. The eye fades in with the first only.
@@ -90,6 +135,8 @@ export function StoredSecretField({
   const reveal = useSwap();
   const swapping = turn.swapping || reveal.swapping;
 
+  const root = useRef<HTMLDivElement>(null);
+  const group = useRef<HTMLDivElement>(null);
   const entry = useRef<HTMLInputElement>(null);
   const key = useRef<HTMLButtonElement>(null);
   // Where the focus goes once a change the reader asked for has been drawn: into the new field,
@@ -102,23 +149,55 @@ export function StoredSecretField({
     (target === "entry" ? entry : key).current?.focus();
   });
 
-  const setReplacing = (next: boolean) =>
+  // `focus: false` when the reader has already put the focus elsewhere (left the field).
+  const setReplacing = (next: boolean, { focus = true } = {}) =>
     turn.swap(() => {
       setOwn(next);
       setRevealed(false);
+      setFilled(false);
       onReplacingChange?.(next);
-      focusAfter.current = next ? "entry" : "key";
+      if (focus) focusAfter.current = next ? "entry" : "key";
     });
+
+  // The hold is over: the Save key leaves and the field turns back to what is stored now. The
+  // focus follows only if it was in the field or on the Save key, which can no longer hold it.
+  const settle = useEffectEvent(() => {
+    const within = root.current?.contains(document.activeElement) ?? false;
+    turn.swap(() => {
+      setConfirming(false);
+      setOwn(false);
+      setRevealed(false);
+      setFilled(false);
+      if (replacing) onReplacingChange?.(false);
+      if (within && stored) focusAfter.current = "key";
+    });
+  });
+  useEffect(() => {
+    if (!confirming) return;
+    const timer = setTimeout(settle, savedHold);
+    return () => clearTimeout(timer);
+  }, [confirming, savedHold]);
 
   // What assistive tech reads in the field, whatever it looks like.
   const said = `${storedLabel}, ${endingLabel} ${ending ?? ""}`;
+  const saveShown = typing && (filled || confirming);
 
-  return (
+  const field = (
     <InputGroup
-      data-slot="stored-secret-field"
-      data-state={typing ? "typing" : "stored"}
+      ref={group}
+      // Left empty, the new one was not wanted: once the focus leaves the field (the eye is
+      // inside it), the stored one comes back.
+      onBlur={(event) => {
+        const to = event.relatedTarget;
+        if (!stored || !replacing || saving || confirming) return;
+        if (entry.current?.value) return;
+        if (to instanceof Node && group.current?.contains(to)) return;
+        setReplacing(false, { focus: false });
+      }}
+      data-slot={saveLabel === undefined ? "stored-secret-field" : undefined}
+      data-state={saveLabel === undefined ? (typing ? "typing" : "stored") : undefined}
       size={size}
-      className={className}
+      className={saveLabel === undefined ? className : "min-w-0 flex-1"}
     >
       {typing ? (
         <>
@@ -135,9 +214,17 @@ export function StoredSecretField({
             data-lpignore="true"
             data-bwignore=""
             data-swapping={swapping ? "" : undefined}
+            // While it is sent and confirmed, what was sent holds still.
+            readOnly={saving || confirming}
+            onChange={(event) => {
+              onChange?.(event);
+              setFilled(event.currentTarget.value !== "");
+            }}
+            onBlur={onBlur}
             onKeyDown={(event) => {
               onKeyDown?.(event);
               if (event.defaultPrevented || !stored || event.key !== "Escape") return;
+              if (saving || confirming) return;
               event.preventDefault();
               setReplacing(false);
             }}
@@ -211,23 +298,67 @@ export function StoredSecretField({
           </span>
         </>
       )}
-      {stored && (
+      {/* Only on the stored secret: while a new one is typed the field keeps its room for it,
+          and Escape or leaving it empty is the way back (Justin, 2026-11-23). */}
+      {stored && !typing && (
         <Button
           ref={key}
           size="sm"
           variant="quiet"
-          resize
           data-secret-key="replace"
-          onClick={() => setReplacing(!replacing)}
+          onClick={() => setReplacing(true)}
           className={cn(
             "mr-[3px] h-[calc(var(--field-height)-6px)] shrink-0 rounded-[calc(var(--field-radius)-3px)] px-2.5 text-fg-body hover:text-fg",
             // Inside the field there is no room for the usual 2px gap around the outline.
             "focus-visible:outline-offset-0",
           )}
         >
-          {replacing ? cancelLabel : replaceLabel}
+          {replaceLabel}
         </Button>
       )}
     </InputGroup>
+  );
+
+  if (saveLabel === undefined) return field;
+
+  return (
+    <div
+      ref={root}
+      data-slot="stored-secret-field"
+      data-state={typing ? "typing" : "stored"}
+      className={cn("flex min-w-0", className)}
+    >
+      {field}
+      {/* The Save key's room: a column that opens from nothing beside the field, so the field's
+          edge glides aside as the key comes, and closes once the key has faded as it goes. It
+          clips sideways only; its padding at the end, taken back by the margin, keeps the key's
+          shadow and outline inside it. */}
+      <div
+        data-slot="stored-secret-field-save"
+        data-shown={saveShown ? "" : undefined}
+        inert={!saveShown}
+        className={cn(
+          "grid shrink-0 grid-cols-[0fr] transition-[grid-template-columns,margin] delay-75 spring-glide motion-reduce:transition-none",
+          "data-shown:-me-2 data-shown:grid-cols-[1fr] data-shown:delay-0",
+        )}
+      >
+        <div className="min-w-0 overflow-x-clip">
+          <div
+            className={cn(
+              "flex w-max ps-2 pe-2",
+              "scale-96 opacity-0 transition-[opacity,scale] spring-leave motion-reduce:scale-100",
+              saveShown && "scale-100 opacity-100 spring-seat",
+            )}
+          >
+            <Button type="submit" variant="primary" size={size} loading={saving} done={confirming}>
+              {saveLabel}
+            </Button>
+          </div>
+        </div>
+      </div>
+      <span role="status" className="sr-only">
+        {confirming ? savedLabel : ""}
+      </span>
+    </div>
   );
 }
