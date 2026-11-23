@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { expect, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
-import { Field, FieldDescription, FieldLabel } from "@/components/field/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
 import { Form } from "@/components/form/form";
 
 import { StoredSecretField, type StoredSecretFieldProps } from "./stored-secret-field";
@@ -39,7 +39,7 @@ function Stored({
 
 /**
  * Stored: discs with the end kept, so it is told apart from another. „Ersetzen“ makes the field
- * empty for a new one, and the key turns into „Abbrechen“ in its place.
+ * empty for a new one; Escape, or leaving it empty, brings the stored one back.
  */
 export const Default: Story = {
   parameters: {
@@ -89,7 +89,7 @@ export const Phone: Story = {
   render: () => <Stored />,
 };
 
-function Saving() {
+function WithSubmit() {
   const [ending, setEnding] = useState("4f2a");
   const [sent, setSent] = useState("nichts gesendet");
   const [replacing, setReplacing] = useState(false);
@@ -121,10 +121,10 @@ function Saving() {
 /**
  * As a test: the stored secret is read out with its ending and sends nothing; „Ersetzen“ moves
  * the focus into an empty field, Escape keeps the stored one and returns the focus to the key,
- * and a new secret is sent under the field's name.
+ * leaving the field empty keeps it too, and a new secret is sent under the field's name.
  */
 export const Keyboard: Story = {
-  render: () => <Saving />,
+  render: () => <WithSubmit />,
   play: async ({ canvas, userEvent, step }) => {
     const sent = canvas.getByTestId("sent");
     const save = canvas.getByRole("button", { name: "Speichern" });
@@ -143,7 +143,9 @@ export const Keyboard: Story = {
       const entry = canvas.getByRole("textbox", { name: "Signatur-Secret" });
       await waitFor(() => expect(entry).toHaveFocus());
       await expect(entry).toHaveValue("");
-      await expect(canvas.getByRole("button", { name: "Abbrechen" })).toBeVisible();
+      // While a new one is typed the field has no key of its own.
+      await expect(canvas.queryByRole("button", { name: "Abbrechen" })).toBeNull();
+      await expect(canvas.queryByRole("button", { name: "Ersetzen" })).toBeNull();
     });
 
     await step("Escape keeps the stored one and returns to the key", async () => {
@@ -153,6 +155,25 @@ export const Keyboard: Story = {
       await expect(canvas.getByRole("textbox", { name: "Signatur-Secret" })).toHaveValue(
         "Gesetzt, endet auf 4f2a",
       );
+    });
+
+    await step("Leaving the field empty keeps the stored one", async () => {
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByRole("textbox", { name: "Signatur-Secret" })).toHaveFocus(),
+      );
+      // To the eye first: that is still inside the field, which stays open.
+      await userEvent.tab();
+      await expect(canvas.getByRole("button", { name: "Anzeigen" })).toHaveFocus();
+      await userEvent.tab();
+      await waitFor(() =>
+        expect(canvas.getByRole("textbox", { name: "Signatur-Secret" })).toHaveValue(
+          "Gesetzt, endet auf 4f2a",
+        ),
+      );
+      // The focus stays where the reader put it, not back on the key.
+      await expect(canvas.getByRole("button", { name: "Ersetzen" })).not.toHaveFocus();
+      canvas.getByRole("button", { name: "Ersetzen" }).focus();
     });
 
     await step("A new secret is sent under the field's name", async () => {
@@ -169,6 +190,232 @@ export const Keyboard: Story = {
           "Gesetzt, endet auf b7c1",
         ),
       );
+    });
+  },
+};
+
+/** How a story's save ends: through, or refused by the service. */
+type Outcome = "through" | "refused";
+
+/**
+ * The field saving itself, as an app wires it: a form of one field, its Save key, a save that
+ * takes `delay` ms and goes through or is refused. `prefill` types a new secret on mount, so a
+ * still shows the key; `start` shows it saving from the first frame.
+ */
+function SaveFlow({
+  ending: initialEnding = "4f2a",
+  prefill,
+  start = false,
+  delay = 1200,
+  outcome = "through",
+  savedHold,
+}: {
+  ending?: string;
+  prefill?: string;
+  start?: boolean;
+  delay?: number;
+  outcome?: Outcome;
+  savedHold?: number;
+}) {
+  const [ending, setEnding] = useState<string | undefined>(initialEnding);
+  const [replacing, setReplacing] = useState(prefill !== undefined);
+  // A story that starts saving stays there: it is a still of the spinner.
+  const [saving, setSaving] = useState(start);
+  const [saved, setSaved] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const form = useRef<HTMLFormElement>(null);
+
+  const save = (secret: string | undefined) => {
+    if (!secret) return;
+    setErrors({});
+    setSaved(false);
+    setSaving(true);
+    setTimeout(() => {
+      setSaving(false);
+      if (outcome === "refused") {
+        setErrors({ secret: "Der Dienst hat das Secret abgelehnt. Es beginnt mit „whsec_“." });
+        return;
+      }
+      setEnding(secret.slice(-4));
+      setSaved(true);
+    }, delay);
+  };
+
+  useEffect(() => {
+    const entry = form.current?.querySelector<HTMLInputElement>("input[name='secret']");
+    if (prefill === undefined || !entry) return;
+    // Typed as a person would: React hears the change through the native setter.
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(entry, prefill);
+    entry.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [prefill]);
+
+  return (
+    <Form
+      ref={form}
+      className="w-96 max-w-full"
+      errors={errors}
+      onFormSubmit={(values: { secret?: string }) => save(values.secret)}
+    >
+      <Field name="secret">
+        <FieldLabel>Signatur-Secret</FieldLabel>
+        <StoredSecretField
+          ending={ending}
+          replacing={replacing}
+          onReplacingChange={(next) => {
+            setReplacing(next);
+            if (next) setSaved(false);
+          }}
+          saveLabel="Speichern"
+          saving={saving}
+          saved={saved}
+          savedHold={savedHold}
+          placeholder={ending ? "Neues Secret" : "Nicht gesetzt"}
+        />
+        <FieldError />
+        <FieldDescription>Anfragen mit dem alten Secret werden danach abgelehnt.</FieldDescription>
+      </Field>
+    </Form>
+  );
+}
+
+const saveViewport = { viewport: { width: 460, height: 190 } };
+
+/**
+ * With its own Save key: once something is typed the key stands beside the field, and the
+ * field's edge glides aside to make room for it.
+ */
+export const Save: Story = {
+  name: "Speichern",
+  parameters: {
+    visual: {
+      ...saveViewport,
+      target: '[data-slot="stored-secret-field-save"] button',
+      motion: [
+        // The save begins: the label sinks away and the spinner seats in its place.
+        { name: "save", click: '[data-slot="stored-secret-field-save"] button', frames: 8 },
+      ],
+    },
+  },
+  render: () => <SaveFlow prefill="whsec_8Hd2kQ93b7c1" />,
+};
+
+/** The key's room opening as the first character is typed, and closing when it is cleared. */
+export const SaveAppears: Story = {
+  name: "Speichern erscheint",
+  parameters: {
+    visual: {
+      ...saveViewport,
+      motion: [
+        { name: "appear", click: '[data-secret-key="replace"]', type: "w", frames: 10 },
+        {
+          name: "clear",
+          click: '[data-secret-key="replace"]',
+          type: "w\b",
+          frames: 10,
+        },
+      ],
+    },
+  },
+  render: () => <SaveFlow />,
+};
+
+/** The save is under way: a spinner in the key, at the key's width, and the field holds still. */
+export const Saving: Story = {
+  name: "Wird gespeichert",
+  parameters: { visual: saveViewport },
+  render: () => <SaveFlow prefill="whsec_8Hd2kQ93b7c1" start />,
+};
+
+/**
+ * It went through: the tick is drawn in the key. After the hold the key leaves and the field
+ * turns back to the stored secret with its new ending.
+ */
+export const Saved: Story = {
+  name: "Gespeichert",
+  parameters: {
+    visual: {
+      ...saveViewport,
+      motion: [
+        // A quick save, so the spinner gives way to the tick within the strip.
+        { name: "saved", click: '[data-slot="stored-secret-field-save"] button', frames: 12 },
+      ],
+    },
+  },
+  render: () => <SaveFlow prefill="whsec_8Hd2kQ93b7c1" delay={120} savedHold={600_000} />,
+};
+
+/** Nothing stored yet: the first secret is saved the same way. */
+export const SaveFirst: Story = {
+  name: "Erstes Secret speichern",
+  parameters: { visual: saveViewport },
+  render: () => <SaveFlow ending={undefined} prefill="whsec_8Hd2kQ93b7c1" />,
+};
+
+/**
+ * The whole way, to try by hand: „Ersetzen“, type, „Speichern“. Switch whether the service takes
+ * the secret, and how long the tick stands before the field turns back.
+ */
+export const SaveFlowStory: Story = {
+  name: "Ablauf",
+  parameters: { visual: { skip: true } },
+  argTypes: {
+    // These belong to the flow, not to the field.
+    ...({
+      outcome: {
+        name: "Ausgang",
+        options: ["through", "refused"],
+        control: { type: "inline-radio", labels: { through: "Gespeichert", refused: "Abgelehnt" } },
+      },
+      savedHold: {
+        name: "Haken steht (ms)",
+        options: [600, 900, 1400],
+        control: { type: "inline-radio" },
+      },
+    } as Meta["argTypes"]),
+  },
+  args: { outcome: "through", savedHold: 900 } as Partial<StoredSecretFieldProps>,
+  render: (args) => {
+    const { outcome, savedHold } = args as { outcome?: Outcome; savedHold?: number };
+    return <SaveFlow key={`${outcome}-${savedHold}`} outcome={outcome} savedHold={savedHold} />;
+  },
+};
+
+/**
+ * As a test: typing brings the Save key, Enter saves, the key is busy while it runs and says
+ * „Gespeichert“ to assistive tech when it went through; the field turns back with the new ending
+ * and the focus on „Ersetzen“. A refused save leaves the key and the typed secret standing.
+ */
+export const SaveKeyboard: Story = {
+  render: () => <SaveFlow delay={150} savedHold={300} />,
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    await step("Typing brings the Save key", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Ersetzen" }));
+      const entry = canvas.getByRole("textbox", { name: "Signatur-Secret" });
+      await waitFor(() => expect(entry).toHaveFocus());
+      const room = canvasElement.querySelector('[data-slot="stored-secret-field-save"]');
+      await expect(room).not.toHaveAttribute("data-shown");
+      await userEvent.type(entry, "whsec_8Hd2kQ93b7c1");
+      await expect(room).toHaveAttribute("data-shown");
+    });
+
+    await step("Enter saves; the key is busy, then says it went through", async () => {
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByRole("button", { name: "Speichern" })).toHaveAttribute("aria-busy"),
+      );
+      await waitFor(() => expect(canvas.getByRole("status")).toHaveTextContent("Gespeichert"));
+    });
+
+    await step("The field turns back with the new ending and the focus on „Ersetzen“", async () => {
+      await waitFor(() =>
+        expect(canvas.getByRole("textbox", { name: "Signatur-Secret" })).toHaveValue(
+          "Gesetzt, endet auf b7c1",
+        ),
+      );
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Ersetzen" })).toHaveFocus());
+      await expect(
+        canvasElement.querySelector('[data-slot="stored-secret-field-save"]'),
+      ).not.toHaveAttribute("data-shown");
     });
   },
 };

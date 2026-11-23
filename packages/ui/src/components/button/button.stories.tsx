@@ -104,6 +104,25 @@ export const Loading: Story = {
 };
 
 /**
+ * What was asked for went through: the tick is drawn in the label's place for a moment, at the
+ * button's width, as a copy is confirmed.
+ */
+export const Done: Story = {
+  parameters: { visual: { viewport: { width: 560, height: 120 } } },
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Button variant="primary" done>
+        Angebot senden
+      </Button>
+      <Button done>Entwurf speichern</Button>
+      <Button size="sm" done>
+        Senden
+      </Button>
+    </div>
+  ),
+};
+
+/**
  * A label that changes while the button is on screen: with `resize` the button eases to its new
  * width instead of jumping, and the button beside it moves along.
  */
