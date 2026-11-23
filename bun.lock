@@ -11,7 +11,7 @@
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-simple-import-sort": "^14.0.0",
-        "eslint-plugin-storybook": "^10.6.7",
+        "eslint-plugin-storybook": "^10.6.8",
         "globals": "^17.14.0",
         "lint-staged": "^17.6.0",
         "prettier": "^3.10.1",
@@ -41,7 +41,7 @@
     },
     "packages/ui": {
       "name": "@lanfermann/ui",
-      "version": "0.0.0",
+      "version": "0.8.0",
       "dependencies": {
         "@base-ui/react": "^1.9.0",
         "@hugeicons/core-free-icons": "^4.4.0",
@@ -71,7 +71,7 @@
         "pngjs": "^7.0.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
-        "storybook": "^10.6.7",
+        "storybook": "^10.6.8",
         "tailwindcss": "^4.3.5",
         "tsdown": "^0.23.7",
         "typescript": "^6.0.3",
@@ -748,7 +748,7 @@
 
     "eslint-plugin-simple-import-sort": ["eslint-plugin-simple-import-sort@14.0.0", "", { "peerDependencies": { "eslint": ">=5.0.0" } }, "sha512-NUJO0+XFCkk+o5EsAJruTgnfMEpeWrPWeJS15UVF60GgXmqz1BJ9/3hzlvG7lkL8Bubzos5cCLptThbFfPnSMQ=="],
 
-    "eslint-plugin-storybook": ["eslint-plugin-storybook@10.6.7", "", { "dependencies": { "@typescript-eslint/types": "^8.60.0", "@typescript-eslint/utils": "^8.60.0" }, "peerDependencies": { "eslint": ">=8" } }, "sha512-L+dSHmoFxgPEuaMxuEq3mYMBVeDZnWq/vL4QK3b7JdjAA4SRZsXrl/teYoB2x+5SKkMEtIBZZYb+OL0NALGv+w=="],
+    "eslint-plugin-storybook": ["eslint-plugin-storybook@10.6.8", "", { "dependencies": { "@typescript-eslint/types": "^8.60.0", "@typescript-eslint/utils": "^8.60.0" }, "peerDependencies": { "eslint": ">=8" } }, "sha512-H+v2hkMdYCDfxV/cp54PSUkLZCq/AWfzBZFFdgK3J7FVV11kxTtsnuI4sLxjMTIwVZCYjCw/GwzH4VQmKSE/Vw=="],
 
     "eslint-scope": ["eslint-scope@8.4.0", "", { "dependencies": { "esrecurse": "^4.3.0", "estraverse": "^5.2.0" } }, "sha512-sNXOfKCn74rt8RICKMvJS7XKV/Xk9kA7DyJr8mJik3S7Cwgy3qlkkmyS2uQB3jiJg6VNdZd/pDBJu0nvG2NlTg=="],
 
@@ -1080,7 +1080,7 @@
 
     "std-env": ["std-env@4.3.0", "", {}, "sha512-OtU/EgQ1kIm5KwqQpBC6ZEMXrZRui11w8zgfTWp8cdO9B8OaPsbA8bTHO2P+HNo1VlUTGMVBwPhydu6poeXiag=="],
 
-    "storybook": ["storybook@10.6.7", "", { "dependencies": { "@storybook/global": "^5.0.0", "@storybook/icons": "^2.0.2", "@testing-library/dom": "^10.4.1", "@testing-library/jest-dom": "6.9.1", "@testing-library/user-event": "^14.6.3", "@vitest/expect": "3.2.4", "@vitest/spy": "3.2.4", "@webcontainer/env": "^1.1.1", "esbuild": "^0.18.0 || ^0.19.0 || ^0.20.0 || ^0.21.0 || ^0.22.0 || ^0.23.0 || ^0.24.0 || ^0.25.0 || ^0.26.0 || ^0.27.0 || ^0.28.0", "jsonc-parser": "^3.3.1", "open": "^10.2.0", "oxc-parser": "^0.127.0", "oxc-resolver": "11.21.2", "recast": "^0.23.5", "semver": "^7.7.3", "use-sync-external-store": "^1.5.0", "ws": "^8.21.1" }, "peerDependencies": { "@types/react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "prettier": "^2 || ^3", "vite-plus": "^0.1.15 || ^0.2.0" }, "optionalPeers": ["@types/react", "prettier", "vite-plus"], "bin": "./dist/bin/dispatcher.js" }, "sha512-/1h87XqC+8tZ5PQ/GVWOg78tCQuEAshYWwok5niBcnHEKzZy6Ls06uuT5/rhQ3iUB0y8iexEVHmUe3jaaxNguw=="],
+    "storybook": ["storybook@10.6.8", "", { "dependencies": { "@storybook/global": "^5.0.0", "@storybook/icons": "^2.0.2", "@testing-library/dom": "^10.4.1", "@testing-library/jest-dom": "6.9.1", "@testing-library/user-event": "^14.6.3", "@vitest/expect": "3.2.4", "@vitest/spy": "3.2.4", "@webcontainer/env": "^1.1.1", "esbuild": "^0.18.0 || ^0.19.0 || ^0.20.0 || ^0.21.0 || ^0.22.0 || ^0.23.0 || ^0.24.0 || ^0.25.0 || ^0.26.0 || ^0.27.0 || ^0.28.0", "jsonc-parser": "^3.3.1", "open": "^10.2.0", "oxc-parser": "^0.127.0", "oxc-resolver": "11.21.2", "recast": "^0.23.5", "semver": "^7.7.3", "use-sync-external-store": "^1.5.0", "ws": "^8.21.1" }, "peerDependencies": { "@types/react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "prettier": "^2 || ^3", "vite-plus": "^0.1.15 || ^0.2.0" }, "optionalPeers": ["@types/react", "prettier", "vite-plus"], "bin": "./dist/bin/dispatcher.js" }, "sha512-evtpCo87LwamL5oMQJmtD0kaQNOBePOAbhW9WlM2zW5nItbtDHeXVBLJR4d3Wld9++XhPntaGJKE3RUw6c0VVg=="],
 
     "string-argv": ["string-argv@0.3.2", "", {}, "sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q=="],
 
