@@ -75,6 +75,11 @@ export type FileTileProps = Omit<ComponentProps<"div">, "children"> & {
    * as a field does when it has the focus. Set by a drop target.
    */
   dropOver?: boolean;
+  /**
+   * What stands in the name's place instead of the name cut in its middle: an `EditableName`
+   * while the file is renamed. `name` still names the tile.
+   */
+  nameSlot?: ReactNode;
 };
 
 const fileTile = cva(
@@ -105,12 +110,15 @@ const fileTile = cva(
   },
 );
 
-/** The mark shows under the pointer, with the keyboard on the tile, and while anything is chosen. */
+/**
+ * The mark shows under the pointer, with the keyboard on the tile, while the tile's own menu is
+ * open (a `ContextMenuTrigger` around it sets `data-popup-open`), and while anything is chosen.
+ */
 const markShown =
-  "group-hover/tile:opacity-100 group-focus-visible/tile:opacity-100 group-data-selected/tile:opacity-100 group-has-[[data-selected]]/files:opacity-100";
+  "group-hover/tile:opacity-100 group-focus-visible/tile:opacity-100 group-data-popup-open/tile:opacity-100 group-data-selected/tile:opacity-100 group-has-[[data-selected]]/files:opacity-100";
 /** What the mark takes the place of gives way while the mark shows. */
 const markHides =
-  "group-hover/tile:opacity-0 group-focus-visible/tile:opacity-0 group-data-selected/tile:opacity-0 group-has-[[data-selected]]/files:opacity-0";
+  "group-hover/tile:opacity-0 group-focus-visible/tile:opacity-0 group-data-popup-open/tile:opacity-0 group-data-selected/tile:opacity-0 group-has-[[data-selected]]/files:opacity-0";
 
 /**
  * The mark: the checkbox's own socket, which takes the accent plug and its tick when the tile is
@@ -217,6 +225,9 @@ function PreviewSymbol({ kind }: { kind: FileSymbolKind }) {
  * of state. A folder (`variant="folder"`) is a compact tile, its symbol before its name.
  *
  * Choosing, opening and the keyboard are the caller's: spread `useSelection`'s item props on it.
+ * Its menu is a `ContextMenu` whose trigger renders the tile (`render={<FileTile … />}`): the
+ * tile takes the trigger's ref and handlers on its own element, and shows its mark while the
+ * menu is open. Choose the tile when its menu opens, as a file manager does.
  * Word the facts as a file manager would: the size, then when it changed, „84 KB · gestern“.
  */
 export function FileTile({
@@ -236,6 +247,7 @@ export function FileTile({
   variant = "file",
   folderLabel = "Ordner",
   dropOver = false,
+  nameSlot,
   className,
   ...props
 }: FileTileProps) {
@@ -271,7 +283,7 @@ export function FileTile({
     >
       {shape === "row" && <SymbolOrMark kind={kind} />}
       {spoken}
-      <MiddleTruncate text={name} />
+      {nameSlot ?? <MiddleTruncate text={name} />}
     </span>
   );
 
