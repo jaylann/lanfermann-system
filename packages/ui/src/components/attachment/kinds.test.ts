@@ -1,6 +1,36 @@
 import { describe, expect, it } from "vitest";
 
-import { extensionOf, fitName, kindOf, splitName, typeWord } from "./kinds";
+import { extensionOf, fitName, kindOf, mayBeTransparent, splitName, typeWord } from "./kinds";
+
+describe("mayBeTransparent", () => {
+  it("says yes for the formats that can hold see-through pixels", () => {
+    expect(mayBeTransparent({ name: "logo.svg", type: "image/svg+xml" })).toBe(true);
+    expect(mayBeTransparent({ name: "badge.png", type: "image/png" })).toBe(true);
+    expect(mayBeTransparent({ name: "hero.webp", type: "image/webp" })).toBe(true);
+    expect(mayBeTransparent({ name: "lade.gif", type: "image/gif" })).toBe(true);
+    expect(mayBeTransparent({ name: "titelbild.avif", type: "image/avif" })).toBe(true);
+    expect(mayBeTransparent({ name: "favicon.ico", type: "image/x-icon" })).toBe(true);
+    expect(mayBeTransparent({ name: "favicon.ico", type: "image/vnd.microsoft.icon" })).toBe(true);
+  });
+
+  it("says no for photos that cannot", () => {
+    expect(mayBeTransparent({ name: "ofen.jpg", type: "image/jpeg" })).toBe(false);
+    expect(mayBeTransparent({ name: "IMG_2041.HEIC", type: "image/heic" })).toBe(false);
+    expect(mayBeTransparent({ name: "ofen.jpeg" })).toBe(false);
+  });
+
+  it("lets an image type decide over the extension", () => {
+    expect(mayBeTransparent({ name: "logo.png", type: "image/jpeg" })).toBe(false);
+    expect(mayBeTransparent({ name: "logo", type: "Image/SVG+XML; charset=utf-8" })).toBe(true);
+  });
+
+  it("reads the extension where the type says nothing about the picture", () => {
+    expect(mayBeTransparent({ name: "Logo_Dark.SVG" })).toBe(true);
+    expect(mayBeTransparent({ name: "favicon.ico", type: "application/octet-stream" })).toBe(true);
+    expect(mayBeTransparent({ name: "Angebot.pdf", type: "application/pdf" })).toBe(false);
+    expect(mayBeTransparent({ name: "LIESMICH" })).toBe(false);
+  });
+});
 
 describe("kindOf", () => {
   it("reads the MIME type first", () => {

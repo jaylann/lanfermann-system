@@ -2,7 +2,7 @@
 
 import { type ComponentProps, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { kindOf, typeWord } from "@/components/attachment/kinds";
+import { kindOf, mayBeTransparent, typeWord } from "@/components/attachment/kinds";
 import {
   FileKindSymbol,
   type FileSymbolKind,
@@ -25,15 +25,21 @@ export type MediaPreviewProps = Omit<ComponentProps<"div">, "children"> & {
   onNaturalSize?: (size: NaturalSize) => void;
 };
 
-/** A picture, which fades in on `settle` once it has loaded and then reports its own size. */
+/**
+ * A picture, which fades in on `settle` once it has loaded and then reports its own size. One
+ * that may be see-through brings the `checker` over the whole well, fading in with it; it goes
+ * with the picture when the symbol takes its place.
+ */
 function Picture({
   src,
   name,
+  seeThrough,
   onLoaded,
   onFail,
 }: {
   src: string;
   name: string;
+  seeThrough: boolean;
   onLoaded: (size: NaturalSize) => void;
   onFail: () => void;
 }) {
@@ -51,24 +57,36 @@ function Picture({
     report.current({ width: element.naturalWidth, height: element.naturalHeight });
   }, []);
   return (
-    <img
-      ref={picture}
-      src={src}
-      alt={name}
-      decoding="async"
-      draggable={false}
-      data-slot="media-preview-picture"
-      data-loaded={loaded ? "" : undefined}
-      onLoad={(event) => {
-        setLoaded(true);
-        onLoaded({
-          width: event.currentTarget.naturalWidth,
-          height: event.currentTarget.naturalHeight,
-        });
-      }}
-      onError={onFail}
-      className="max-h-full max-w-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
-    />
+    <>
+      {seeThrough && (
+        // On the well behind the picture, which keeps its own size (a small icon stays small).
+        <span
+          aria-hidden
+          data-slot="media-preview-checker"
+          data-loaded={loaded ? "" : undefined}
+          className="absolute inset-0 checker opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
+        />
+      )}
+      <img
+        ref={picture}
+        src={src}
+        alt={name}
+        decoding="async"
+        draggable={false}
+        data-slot="media-preview-picture"
+        data-loaded={loaded ? "" : undefined}
+        onLoad={(event) => {
+          setLoaded(true);
+          onLoaded({
+            width: event.currentTarget.naturalWidth,
+            height: event.currentTarget.naturalHeight,
+          });
+        }}
+        onError={onFail}
+        // Positioned, so it lies over the checker.
+        className="relative max-h-full max-w-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
+      />
+    </>
   );
 }
 
@@ -78,7 +96,10 @@ function Picture({
  * video or a piece of audio with the browser's own controls (only its length is loaded until it
  * is played), a PDF in the browser's own viewer, and for anything else the symbol of its kind,
  * large, with its type. A picture that cannot be loaded gives its place to the symbol. Nothing
- * travels: the picture fades in on `settle`.
+ * travels: the picture fades in on `settle`. A picture that may be see-through (a PNG, WebP,
+ * SVG, GIF, AVIF or icon, by `type` or else by the name's extension) brings the quiet `checker`
+ * over the well, so a black logo shows in the dark and a white one in the light; a JPEG keeps
+ * the plain well.
  *
  * Give it its height (a class, or the room of the inspector); it fills it.
  */
@@ -112,6 +133,7 @@ export function MediaPreview({
           key={src}
           src={src}
           name={name}
+          seeThrough={mayBeTransparent({ name, type })}
           onLoaded={(size) => onNaturalSize?.(size)}
           onFail={() => setFailed(src)}
         />

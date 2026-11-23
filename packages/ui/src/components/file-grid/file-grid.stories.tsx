@@ -4,7 +4,13 @@ import { expect, fn, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
 import { FileTile } from "@/components/file-tile/file-tile";
-import { ARRIVING, FILES, FOLDERS, type StoryEntry } from "@/components/file-tile/story-files";
+import {
+  ARRIVING,
+  FILES,
+  FOLDERS,
+  SEE_THROUGH,
+  type StoryEntry,
+} from "@/components/file-tile/story-files";
 
 import { FileGrid, FileGridSection } from "./file-grid";
 
@@ -73,6 +79,23 @@ export const Small: Story = {
     <FileGrid aria-label="Abzeichen" size="sm">
       <FileGridSection>
         {FILES.slice(0, 6).map(({ id, ...file }) => (
+          <FileTile key={id} {...file} />
+        ))}
+      </FileGridSection>
+    </FileGrid>
+  ),
+};
+
+/**
+ * A folder of logos: a mark for light pages, its `_dark` twin and a badge, see-through around
+ * them, lie on the quiet checker; the photo beside them keeps the plain well.
+ */
+export const Logos: Story = {
+  parameters: { visual: { viewport: { width: 960, height: 320 } } },
+  render: () => (
+    <FileGrid aria-label="Dateien in blogs/building-gbar/logos">
+      <FileGridSection>
+        {[...SEE_THROUGH, FILES[6]!].map(({ id, ...file }) => (
           <FileTile key={id} {...file} />
         ))}
       </FileGridSection>
