@@ -16,8 +16,9 @@ const DENSITIES = ["compact", "comfortable"] as const;
  */
 const withGlobals: Decorator = (Story, context) => {
   const root = document.documentElement;
-  const globals = context.globals as { ground?: string; density?: string };
+  const globals = context.globals as { ground?: string; mode?: string; density?: string };
   root.dataset.theme = globals.ground ?? "paper";
+  root.dataset.mode = globals.mode ?? "light";
   root.dataset.density = globals.density ?? "compact";
   root.dataset.visual = JSON.stringify(context.parameters.visual ?? {});
   return (
@@ -33,6 +34,18 @@ const preview: Preview = {
       description: "Ground (who is speaking)",
       toolbar: { title: "Ground", icon: "contrast", items: [...GROUNDS], dynamicTitle: true },
     },
+    mode: {
+      description: "Mode (light or dark)",
+      toolbar: {
+        title: "Mode",
+        icon: "sun",
+        items: [
+          { value: "light", title: "Light", icon: "sun" },
+          { value: "dark", title: "Dark", icon: "moon" },
+        ],
+        dynamicTitle: true,
+      },
+    },
     density: {
       description: "Density (control size)",
       toolbar: { title: "Density", icon: "ruler", items: [...DENSITIES], dynamicTitle: true },
@@ -40,6 +53,7 @@ const preview: Preview = {
   },
   initialGlobals: {
     ground: "paper",
+    mode: "light",
     density: "compact",
   },
   decorators: [withGlobals],

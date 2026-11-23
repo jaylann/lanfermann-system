@@ -5,6 +5,8 @@ import { ArrowUpGlyph } from "@/internal/glyphs";
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
 
+import { LiveTableBody } from "./table-live";
+
 /** A table scrolls sideways in its own region, and a region needs a name. */
 type Named =
   | { "aria-label": string; "aria-labelledby"?: undefined }
@@ -155,20 +157,25 @@ export function TableHeader({ className, ...props }: ComponentProps<"thead">) {
   );
 }
 
-export function TableBody({ className, ...props }: ComponentProps<"tbody">) {
-  return (
-    <tbody
-      data-slot="table-body"
-      role="rowgroup"
-      className={cn(
-        stackedGroup,
-        // In a card the card's edge closes the table: no line under the last row.
-        "in-data-[slot=card]:[&>tr:last-child]:border-b-0",
-        className,
-      )}
-      {...props}
-    />
+export type TableBodyProps = ComponentProps<"tbody"> & {
+  /**
+   * Rows come and go while the table is read (a file browser's list, a queue): a row that joins
+   * fades in and the rows below glide aside; one that is taken away fades and the rest glide up
+   * into its place. What is there on load stands still. Give every row a `key` that stays its
+   * own. Off by default, since it needs script; without it the body is plain markup.
+   */
+  live?: boolean;
+};
+
+export function TableBody({ className, live = false, ...props }: TableBodyProps) {
+  const classes = cn(
+    stackedGroup,
+    // In a card the card's edge closes the table: no line under the last row.
+    "in-data-[slot=card]:[&>tr:last-child]:border-b-0",
+    className,
   );
+  if (live) return <LiveTableBody className={classes} {...props} />;
+  return <tbody data-slot="table-body" role="rowgroup" className={classes} {...props} />;
 }
 
 /** The sum line: set off by the structural line, in the weight of a result. */
@@ -209,8 +216,14 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
         "group/row border-b border-hairline",
         // Instant, like the highlight of a menu: it follows the pointer without lag.
         "data-interactive:hover:bg-hover data-selected:bg-tint data-selected:text-fg",
+        // While its own menu is open (a `ContextMenuTrigger` renders the row), it stays washed
+        // as under the pointer.
+        "data-popup-open:not-data-selected:bg-hover",
         // Rows selected one after another are one wash, without a line across it.
         "data-selected:has-[+[data-selected]]:border-b-tint",
+        // A row that is chosen with the keyboard (`useSelection`) takes the focus itself; its
+        // ring stands inside it, where the scrolling region does not cut it.
+        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent",
         stackedRow,
         className,
       )}

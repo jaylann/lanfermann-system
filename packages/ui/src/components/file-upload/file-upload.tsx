@@ -5,7 +5,6 @@ import {
   Children,
   type ComponentProps,
   createContext,
-  type DragEvent,
   isValidElement,
   type ReactElement,
   type ReactNode,
@@ -19,6 +18,7 @@ import { Button } from "@/components/button/button";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { Progress, ProgressTrack } from "@/components/progress/progress";
 import { Spinner } from "@/components/spinner/spinner";
+import { carriesFiles, useDragDepth } from "@/internal/drag-depth";
 import { CloseGlyph } from "@/internal/glyphs";
 import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
@@ -154,9 +154,6 @@ export type FileUploadZoneProps = Omit<ComponentProps<"div">, "title"> & {
   icon?: IconSvgElement;
 };
 
-/** Whether what is being dragged is files, and not a piece of text or a link. */
-const carriesFiles = (event: DragEvent) => event.dataTransfer.types.includes("Files");
-
 /**
  * Where files are dropped. It is a socket, cut like a field: white, with a hairline edge. While
  * a file hangs over it, it takes the field's halo, the sign that it will take what is let go.
@@ -175,12 +172,7 @@ export function FileUploadZone({
   const { open, add, disabled } = useContext(FileUploadContext);
   // Entering a child fires a leave on the zone and an enter on the child: counted, the zone
   // knows when the file has really left it.
-  const depth = useRef(0);
-  const [over, setOver] = useState(false);
-  const rest = () => {
-    depth.current = 0;
-    setOver(false);
-  };
+  const { over, reset, handlers } = useDragDepth(carriesFiles, disabled);
   return (
     <div
       data-slot="file-upload-zone"
@@ -193,25 +185,11 @@ export function FileUploadZone({
         "data-disabled:bg-disabled data-disabled:depth-flat",
         className,
       )}
-      onDragEnter={(event) => {
-        if (disabled || !carriesFiles(event)) return;
-        event.preventDefault();
-        depth.current += 1;
-        setOver(true);
-      }}
-      onDragOver={(event) => {
-        // Without this the browser does not let the file be dropped here.
-        if (!disabled && carriesFiles(event)) event.preventDefault();
-      }}
-      onDragLeave={(event) => {
-        if (disabled || !carriesFiles(event)) return;
-        depth.current = Math.max(0, depth.current - 1);
-        if (depth.current === 0) setOver(false);
-      }}
+      {...handlers}
       onDrop={(event) => {
         if (disabled || !carriesFiles(event)) return;
         event.preventDefault();
-        rest();
+        reset();
         add([...event.dataTransfer.files]);
       }}
       onPaste={(event) => {
@@ -226,7 +204,7 @@ export function FileUploadZone({
         <span
           aria-hidden
           data-slot="file-upload-tile"
-          className="mb-2 flex size-10 items-center justify-center rounded-lg bg-surface-quiet text-fg-muted inset-ring inset-ring-hairline group-data-disabled/zone:text-on-disabled forced-colors:inset-ring-[CanvasText]"
+          className="mb-2 flex size-10 items-center justify-center rounded-lg bg-surface-quiet text-fg-muted inset-ring inset-ring-hairline group-data-disabled/zone:bg-disabled group-data-disabled/zone:text-on-disabled forced-colors:inset-ring-[CanvasText]"
         >
           {/* It rises a little while a file hangs over the zone: it is about to be taken up. */}
           <Icon

@@ -3,13 +3,17 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { expect } from "storybook/test";
 
+import { kindOf } from "@/components/attachment/kinds";
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
 import { Card, CardBar } from "@/components/card/card";
+import { FileKindSymbol } from "@/components/file-kind-symbol/file-kind-symbol";
+import { ARRIVING, FILES } from "@/components/file-tile/story-files";
 import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
 import { Link } from "@/components/link/link";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/menu/menu";
+import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 
 import {
   Table,
@@ -482,4 +486,88 @@ export const Text: Story = {
 export const Stacked: Story = {
   render: () => <Modes />,
   parameters: { visual: { viewport: { width: 390, height: 600 } } },
+};
+
+const LIST = FILES.slice(0, 6).sort((a, b) => a.name.localeCompare(b.name, "de"));
+
+/** A folder's files as a list whose rows come and go: one is added, one is taken away. */
+function ChangingFiles() {
+  const [files, setFiles] = useState(LIST);
+  return (
+    <div className="flex w-full max-w-2xl flex-col gap-4">
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          data-step="add"
+          onClick={() =>
+            setFiles((all) =>
+              all.some(({ id }) => id === ARRIVING.id)
+                ? all
+                : [...all, ARRIVING].sort((a, b) => a.name.localeCompare(b.name, "de")),
+            )
+          }
+        >
+          Hochladen
+        </Button>
+        <Button
+          size="sm"
+          variant="quiet"
+          data-step="remove"
+          onClick={() => setFiles((all) => all.filter(({ id }) => id !== "badge"))}
+        >
+          badge_neu.webp löschen
+        </Button>
+      </div>
+      <Card>
+        <CardBar>
+          <Heading level={2} size="label" id="dateien-liste">
+            Dateien
+          </Heading>
+        </CardBar>
+        <Table aria-labelledby="dateien-liste">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-full">Name</TableHead>
+              <TableHead numeric>Größe und Stand</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody live>
+            {files.map((file) => (
+              <TableRow key={file.id}>
+                <TableCell className="w-full max-w-0">
+                  <span className="flex min-w-0 items-center gap-2 font-medium text-fg">
+                    <FileKindSymbol
+                      kind={kindOf(file)}
+                      size={14}
+                      className="shrink-0 text-fg-muted"
+                    />
+                    <MiddleTruncate text={file.name} />
+                  </span>
+                </TableCell>
+                <TableCell numeric>{file.meta}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
+  );
+}
+
+/**
+ * Rows that come and go while the table is read (`TableBody live`): what is there on load
+ * stands still; a row that joins fades in at its place and the rows below glide down; one that
+ * is taken away fades and the rows below glide up into its place.
+ */
+export const Live: Story = {
+  parameters: {
+    visual: {
+      viewport: { width: 760, height: 520 },
+      motion: [
+        { name: "join", click: '[data-step="add"]', frames: 8 },
+        { name: "leave", click: '[data-step="remove"]', frames: 10 },
+      ],
+    },
+  },
+  render: () => <ChangingFiles />,
 };

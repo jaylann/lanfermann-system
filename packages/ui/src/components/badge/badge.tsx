@@ -26,7 +26,9 @@ const dots = {
   info: "bg-info forced-colors:bg-[CanvasText]",
   success: "bg-success forced-colors:bg-[CanvasText]",
   warning: "bg-warning forced-colors:bg-[CanvasText]",
-  danger: "bg-danger forced-colors:bg-[CanvasText]",
+  // The fill, not the text colour: where the two differ (dark mode) the dot is the red a chart
+  // gives an outage, not a second, paler one.
+  danger: "bg-danger-solid forced-colors:bg-[CanvasText]",
 } as const;
 
 export type BadgeProps = ComponentProps<"span"> &

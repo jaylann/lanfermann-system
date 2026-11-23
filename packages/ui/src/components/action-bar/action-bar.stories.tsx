@@ -160,8 +160,9 @@ export const Default: Story = {
 };
 
 /**
- * `ground="paper"`: the bar as a light sheet. It is the one to take over a dark page, where the
- * dark sheet would be dark on dark; look at it on the Ink ground.
+ * `ground="paper"`: the bar as a light sheet. It is the one to take over a dark section of a
+ * light page, where the dark sheet would be dark on dark; look at it on the Ink ground. In dark
+ * mode it is the same as the default: both grounds are a sheet of the page there.
  */
 export const Light: Story = {
   render: () => <Selection start={["2026-0421", "2026-0418"]} ground="paper" />,

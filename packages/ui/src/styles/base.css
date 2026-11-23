@@ -20,7 +20,7 @@
    * 2026-11-16: under the footer, then above the docs).
    */
   html[data-site-floor] {
-    background-color: var(--lf-surface-quiet);
+    background-color: var(--lf-floor);
   }
 
   /*

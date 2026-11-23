@@ -79,7 +79,7 @@ export const Recipes: Story = {
           <div className="size-3.5 rounded-full bg-thumb depth-raised depth-tone-thumb" />
         </div>
         <div className="flex h-[18px] w-8 items-center justify-end rounded-full bg-accent px-0.5 depth-trough">
-          <div className="size-3.5 rounded-full bg-on-accent depth-raised depth-tone-thumb" />
+          <div className="size-3.5 rounded-full bg-thumb-on depth-raised depth-tone-thumb" />
         </div>
         <div className="flex h-8 w-44 items-center rounded-md bg-trough p-0.5 depth-trough">
           <div className="h-7 w-20 rounded-[calc(var(--radius-md)-2px)] bg-raised depth-raised depth-tone-thumb" />

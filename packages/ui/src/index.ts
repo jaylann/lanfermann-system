@@ -56,6 +56,11 @@ export {
 } from "./components/bar-chart/bar-chart";
 export { BarList, type BarListItem, type BarListProps } from "./components/bar-list/bar-list";
 export {
+  BreadcrumbEllipsis,
+  type BreadcrumbEllipsisProps,
+  type BreadcrumbFold,
+} from "./components/breadcrumbs/breadcrumb-ellipsis";
+export {
   BreadcrumbItem,
   BreadcrumbLink,
   type BreadcrumbLinkProps,
@@ -266,6 +271,7 @@ export {
   DrawerTrigger,
 } from "./components/drawer/drawer";
 export { Dumbbell, type DumbbellItem, type DumbbellProps } from "./components/dumbbell/dumbbell";
+export { EditableName, type EditableNameProps } from "./components/editable-name/editable-name";
 export {
   Empty,
   EmptyActions,
@@ -279,6 +285,33 @@ export {
 export { Field, FieldDescription, FieldError, FieldLabel } from "./components/field/field";
 export { Fieldset, FieldsetLegend } from "./components/fieldset/fieldset";
 export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
+export {
+  type DropTargetProps,
+  FileDropArea,
+  type FileDropAreaProps,
+  type ItemDragProps,
+  ITEMS_TYPE,
+  useDropTarget,
+  type UseDropTargetOptions,
+  useItemDrag,
+  type UseItemDragOptions,
+} from "./components/file-drop-area/file-drop-area";
+export {
+  FileGrid,
+  type FileGridProps,
+  FileGridSection,
+  type FileGridSectionProps,
+} from "./components/file-grid/file-grid";
+export {
+  FileKindSymbol,
+  type FileKindSymbolProps,
+  type FileSymbolKind,
+} from "./components/file-kind-symbol/file-kind-symbol";
+export {
+  FileTile,
+  type FileTileProps,
+  type FileTileStatus,
+} from "./components/file-tile/file-tile";
 export {
   FileUpload,
   FileUploadItem,
@@ -326,6 +359,11 @@ export { type LinkVariants, linkVariants } from "./components/link/link-variants
 export { Logomark, type LogomarkProps } from "./components/logo/logomark";
 export { Wordmark, type WordmarkProps } from "./components/logo/wordmark";
 export {
+  MediaPreview,
+  type MediaPreviewProps,
+  type NaturalSize,
+} from "./components/media-preview/media-preview";
+export {
   Menu,
   MenuCheckboxItem,
   MenuContent,
@@ -364,6 +402,10 @@ export {
   MeterTrack,
   MeterValue,
 } from "./components/meter/meter";
+export {
+  MiddleTruncate,
+  type MiddleTruncateProps,
+} from "./components/middle-truncate/middle-truncate";
 export {
   NavigationMenu,
   NavigationMenuContent,
@@ -476,6 +518,14 @@ export {
   SelectTrigger,
   type SelectTriggerProps,
 } from "./components/select/select";
+export {
+  type Selection,
+  type SelectionContainerProps,
+  type SelectionItemProps,
+  type SelectionLayout,
+  useSelection,
+  type UseSelectionOptions,
+} from "./components/selection/use-selection";
 export { Separator, type SeparatorProps } from "./components/separator/separator";
 export { Shimmer, type ShimmerProps } from "./components/shimmer/shimmer";
 export {
@@ -593,6 +643,7 @@ export { Switch, type SwitchProps } from "./components/switch/switch";
 export {
   Table,
   TableBody,
+  type TableBodyProps,
   TableCaption,
   TableCell,
   type TableCellProps,
@@ -623,10 +674,18 @@ export {
 export { Text, type TextProps } from "./components/text/text";
 export { Textarea, type TextareaProps } from "./components/textarea/textarea";
 export {
+  type ColorMode,
   type Theme,
-  ThemeSwitch,
-  type ThemeSwitchProps,
-} from "./components/theme-switch/theme-switch";
+  THEME_STORAGE_KEY,
+  type ThemeTransition,
+} from "./components/theme-switch/theme-mode";
+export { ThemeScript, type ThemeScriptProps } from "./components/theme-switch/theme-script";
+export { ThemeSwitch, type ThemeSwitchProps } from "./components/theme-switch/theme-switch";
+export {
+  useTheme,
+  type UseThemeOptions,
+  type UseThemeResult,
+} from "./components/theme-switch/use-theme";
 export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
 export {
   TimeSeriesChart,

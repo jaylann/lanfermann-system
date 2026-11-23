@@ -38,14 +38,16 @@ const KindContext = createContext<Kind>("joint");
 
 /**
  * The colours a Cta's block can take: a fitting's tones from depth.css, so its edge, light, shade
- * and shadow follow the face on every ground.
- *   accent  the ask: Indigo on Paper, the light violet on Ink, white on an Indigo page
- *   key     the committed key: charcoal, a Paper face on Ink
+ * and shadow follow the face on every ground. Its fill is the block's own token, not the key's:
+ * a slab that large in a key's colour glares in dark mode.
+ *   accent  the ask: Indigo on Paper, the light violet on Ink, white on an Indigo page, and the
+ *           deeper Indigo of the Indigo ground in dark mode
+ *   key     the committed key: charcoal, a Paper face on Ink, a plate of Ink in dark mode
  *   raised  the neutral fitting: a white face (a deeper Indigo on an Indigo page)
  */
 const tones = {
-  accent: { knobs: "depth-tone-accent", fill: "bg-accent", text: "text-on-accent" },
-  key: { knobs: "depth-tone-key", fill: "bg-key", text: "text-on-key" },
+  accent: { knobs: "depth-tone-accent", fill: "bg-ask-block", text: "text-on-ask-block" },
+  key: { knobs: "depth-tone-key-block", fill: "bg-key-block", text: "text-on-key-block" },
   raised: { knobs: "", fill: "bg-raised", text: "text-fg" },
 } as const;
 export type CtaTone = keyof typeof tones;

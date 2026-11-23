@@ -11,7 +11,9 @@ import { mergeClassName } from "@/lib/cn";
 
 const avatarVariants = cva(
   // Round: a person is not a part of the machine (Justin, 2026-11-19; before, a rounded square).
-  "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-fg font-semibold text-ground select-none forced-colors:outline",
+  // `avatar` is the text colour on a light ground and a lifted grey on a dark one, where a white
+  // tile would outshine the headings beside it.
+  "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-avatar font-semibold text-on-avatar select-none forced-colors:outline",
   {
     variants: {
       size: {

@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, waitFor, within } from "storybook/test";
 
+import { THEME_STORAGE_KEY } from "./theme-mode";
 import { ThemeSwitch } from "./theme-switch";
+import { useTheme } from "./use-theme";
 
 const meta = {
   title: "Components/ThemeSwitch",
@@ -132,5 +134,48 @@ export const SegmentedKeyboard: Story = {
       await expect(segment("System")).toHaveAttribute("aria-pressed", "false");
       await expect(args.onValueChange).toHaveBeenLastCalledWith("dark");
     });
+  },
+};
+
+// Instant, not the fade: a view transition inside the story runner's frame closes the page in
+// Playwright's headless Chromium (CI), and the whole run dies with it.
+function WiredSwitch() {
+  const { theme, setTheme } = useTheme({ transition: "instant" });
+  return <ThemeSwitch variant="segmented" withLabels value={theme} onValueChange={setTheme} />;
+}
+
+/**
+ * Wired to the page with `useTheme`, as a test: a choice turns the page and is kept for the next
+ * visit, in storage for `ThemeScript` and in a cookie for a server.
+ */
+export const WithThePage: Story = {
+  args: { variant: "segmented" },
+  render: () => <WiredSwitch />,
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    const root = canvasElement.ownerDocument.documentElement;
+    const before = root.getAttribute("data-mode");
+    try {
+      await step("Dunkel turns the page dark and keeps the choice", async () => {
+        await userEvent.click(canvas.getByRole("button", { name: "Dunkel" }));
+        await waitFor(() => expect(root).toHaveAttribute("data-mode", "dark"));
+        await expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
+        await expect(document.cookie).toContain(`${THEME_STORAGE_KEY}=dark`);
+      });
+
+      await step("Hell turns it light again", async () => {
+        await userEvent.click(canvas.getByRole("button", { name: "Hell" }));
+        await waitFor(() => expect(root).toHaveAttribute("data-mode", "light"));
+        await expect(canvas.getByRole("button", { name: "Hell" })).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+      });
+    } finally {
+      // Leave the workshop as the toolbar had it.
+      localStorage.removeItem(THEME_STORAGE_KEY);
+      document.cookie = `${THEME_STORAGE_KEY}=; path=/; max-age=0`;
+      if (before === null) root.removeAttribute("data-mode");
+      else root.setAttribute("data-mode", before);
+    }
   },
 };
