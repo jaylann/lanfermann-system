@@ -1,26 +1,18 @@
 "use client";
 
 import { Alert02Icon } from "@hugeicons/core-free-icons";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  useContext,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ComponentProps, createContext, type ReactNode, useContext, useId } from "react";
 
 import { Chip } from "@/components/chip/chip";
 import { chipRemoveKey } from "@/components/chip/chip-variants";
 import { formatFileSize } from "@/components/file-upload/files";
 import { Icon } from "@/components/icon/icon";
+import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
-import { fitName, kindOf, kindSymbols, kindSymbolsSmall, typeWord } from "./kinds";
+import { kindOf, kindSymbols, kindSymbolsSmall, typeWord } from "./kinds";
 
 /** Where a file stands: on its way, arrived, or failed. */
 export type AttachmentStatus = "uploading" | "done" | "error";
@@ -68,79 +60,14 @@ export type AttachmentProps = Omit<ComponentProps<"div">, "children"> & {
   locale?: string;
 };
 
-/** How many letters before the extension stay where a name is cut: „Angebot-Ko…bst.pdf“. */
-const KEPT_LETTERS = 3;
-
 /**
  * A name too long for its place, cut in its middle with an ellipsis as a file manager cuts it:
- * the extension and the last three letters before it stay (`fitName`), „Angebot-Ko…bst.pdf“.
- * Chosen by Justin (2026-11-20) over a cut at the end of the name and over the fade before the
- * extension, which "looks odd". The room is the width the whole name would take, or less where
- * the chip runs out: an unseen copy of the whole name sets it, and the cut is worked out again
- * when the room changes.
+ * the extension and the last three letters before it stay, „Angebot-Ko…bst.pdf“ (Justin,
+ * 2026-11-20). The room is the width the whole name would take, or less where the chip runs
+ * out.
  */
-function FileName({ name, className }: { name: string; className?: string }) {
-  const room = useRef<HTMLSpanElement>(null);
-  const probe = useRef<HTMLSpanElement>(null);
-  const [shown, setShown] = useState(name);
-  useLayoutEffect(() => {
-    const box = room.current;
-    const measuring = probe.current;
-    if (!box || !measuring) return;
-    let live = true;
-    let frame = 0;
-    const fit = () => {
-      // Measured on the page by an unseen copy in the name's own font: measured on a canvas,
-      // the cuts left gaps of up to two letters. Layout pixels, so a chip that is still
-      // growing in measures at its real size.
-      const measure = (each: string) => {
-        measuring.textContent = each;
-        return measuring.offsetWidth;
-      };
-      // The room is the whole name's width where it fits, so the whole name is checked against
-      // it as it is; a cut keeps a pixel to spare, since a width is read rounded.
-      const room = box.clientWidth;
-      setShown(measure(name) <= room ? name : fitName(name, room - 1, measure, KEPT_LETTERS));
-    };
-    fit();
-    // A new room is fitted in the next frame, not while the observer reports it: the cut it
-    // renders would be a change of layout inside the report.
-    const observer = new ResizeObserver(() => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(fit);
-    });
-    observer.observe(box);
-    // The web font changes every width.
-    void document.fonts?.ready.then(() => live && fit());
-    return () => {
-      live = false;
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
-  }, [name]);
-  return (
-    <span
-      ref={room}
-      data-slot="attachment-name"
-      className={cn("grid min-w-0 grid-cols-[minmax(0,max-content)]", className)}
-    >
-      <span aria-hidden className="col-start-1 row-start-1 overflow-hidden whitespace-nowrap">
-        {shown}
-      </span>
-      {/* Unseen and out of the layout: where a cut is measured. */}
-      <span ref={probe} aria-hidden className="invisible absolute whitespace-nowrap" />
-
-      {/* Unseen, the whole name: it gives the room its width. */}
-      <span
-        aria-hidden
-        className="invisible col-start-1 row-start-1 h-0 overflow-hidden whitespace-nowrap"
-      >
-        {name}
-      </span>
-      {/* Read out whole: the cut name would be heard with its ellipsis. */}
-      <span className="sr-only">{name}</span>
-    </span>
-  );
+function FileName({ name }: { name: string }) {
+  return <MiddleTruncate data-slot="attachment-name" text={name} />;
 }
 
 /**

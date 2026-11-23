@@ -5,6 +5,8 @@ import { ArrowUpGlyph } from "@/internal/glyphs";
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
 
+import { LiveTableBody } from "./table-live";
+
 /** A table scrolls sideways in its own region, and a region needs a name. */
 type Named =
   | { "aria-label": string; "aria-labelledby"?: undefined }
@@ -155,20 +157,25 @@ export function TableHeader({ className, ...props }: ComponentProps<"thead">) {
   );
 }
 
-export function TableBody({ className, ...props }: ComponentProps<"tbody">) {
-  return (
-    <tbody
-      data-slot="table-body"
-      role="rowgroup"
-      className={cn(
-        stackedGroup,
-        // In a card the card's edge closes the table: no line under the last row.
-        "in-data-[slot=card]:[&>tr:last-child]:border-b-0",
-        className,
-      )}
-      {...props}
-    />
+export type TableBodyProps = ComponentProps<"tbody"> & {
+  /**
+   * Rows come and go while the table is read (a file browser's list, a queue): a row that joins
+   * fades in and the rows below glide aside; one that is taken away fades and the rest glide up
+   * into its place. What is there on load stands still. Give every row a `key` that stays its
+   * own. Off by default, since it needs script; without it the body is plain markup.
+   */
+  live?: boolean;
+};
+
+export function TableBody({ className, live = false, ...props }: TableBodyProps) {
+  const classes = cn(
+    stackedGroup,
+    // In a card the card's edge closes the table: no line under the last row.
+    "in-data-[slot=card]:[&>tr:last-child]:border-b-0",
+    className,
   );
+  if (live) return <LiveTableBody className={classes} {...props} />;
+  return <tbody data-slot="table-body" role="rowgroup" className={classes} {...props} />;
 }
 
 /** The sum line: set off by the structural line, in the weight of a result. */
