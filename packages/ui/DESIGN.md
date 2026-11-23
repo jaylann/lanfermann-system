@@ -1033,6 +1033,17 @@ Every component belongs to one of the four matters, and takes its treatment from
   Ctrl and an arrow moves without choosing, Space adds or takes away, Cmd or Ctrl and A takes
   all, Enter opens, Escape lets go of all, and with nothing chosen leaves Escape to the page.
   Keys in a field inside an item stay the field's. What is chosen rises in an `ActionBar`.
+- **FileDropArea** takes files where they are let go: a card of a file browser, dropped from the
+  system or pasted while the focus is inside it. While files hang over it, it takes the field's
+  halo on `snap` and a plate fades in that says where they will go („In building-gbar
+  ablegen“); there is no dashed border and nothing shakes. A folder's tile or a link of the
+  trail inside it is a target of its own (`useDropTarget`): over one it wins, wears the halo
+  itself, and the plate names it. Items dragged inside it (`useItemDrag`) carry the chosen ids
+  and show how many under the pointer („3 Dateien“); a folder does not take a drag of itself,
+  and the area itself takes no items, as they would stay where they are. Dragging has no
+  keyboard path, so a page offers the same through its keys. Where the plate stands (in the
+  middle or as a bar along the foot) is still open (`Lab/Files`). `FileUploadZone` counts its
+  enters and leaves the same way (`useDragDepth`).
 - **Sources** keeps an answer's numbered references and their list together, so every number
   leads somewhere. A reference is a small link in tabular digits after its sentence, leading to
   its entry in the list under the answer; one card serves every reference of the answer, opens

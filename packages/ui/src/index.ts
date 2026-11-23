@@ -280,6 +280,17 @@ export { Field, FieldDescription, FieldError, FieldLabel } from "./components/fi
 export { Fieldset, FieldsetLegend } from "./components/fieldset/fieldset";
 export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
 export {
+  type DropTargetProps,
+  FileDropArea,
+  type FileDropAreaProps,
+  type ItemDragProps,
+  ITEMS_TYPE,
+  useDropTarget,
+  type UseDropTargetOptions,
+  useItemDrag,
+  type UseItemDragOptions,
+} from "./components/file-drop-area/file-drop-area";
+export {
   FileGrid,
   type FileGridProps,
   FileGridSection,
