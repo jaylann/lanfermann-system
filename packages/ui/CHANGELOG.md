@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.9.0](https://github.com/jaylann/lanfermann-system/compare/v0.8.0...v0.9.0) (2026-11-23)
+
+
+### Features
+
+* **docs:** set the mode before the first paint and switch it ([87fc91f](https://github.com/jaylann/lanfermann-system/commit/87fc91fec695aaea8c51f04510b4eb928ee6ada0))
+* **ui:** add a dark mode beside the four grounds ([a1090b0](https://github.com/jaylann/lanfermann-system/commit/a1090b06786a37e15d121bfac22b8f4aa83c984a))
+* **ui:** add a file drop area with folder targets and item drags ([f4c5365](https://github.com/jaylann/lanfermann-system/commit/f4c5365c97373708bda9783f3b5c4665f4ad4961))
+* **ui:** add a file drop area with folder targets and item drags ([000157d](https://github.com/jaylann/lanfermann-system/commit/000157de4cc833a2295d48626a83cbafaa4b54ae))
+* **ui:** add a media preview, an editable name and a breadcrumb ellipsis ([a476def](https://github.com/jaylann/lanfermann-system/commit/a476defe0e26097cac51179040d7cc2dbb0aec87))
+* **ui:** add a media preview, an editable name and a breadcrumb ellipsis ([fbd9062](https://github.com/jaylann/lanfermann-system/commit/fbd90622a2c9aac88b6b62082f1521cfd2c02b90))
+* **ui:** add file tiles, a file grid, kind symbols and live table rows ([192c24a](https://github.com/jaylann/lanfermann-system/commit/192c24a97d89a6e546412b11ac58943feb333766))
+* **ui:** add file tiles, a file grid, kind symbols and live table rows ([e7caea8](https://github.com/jaylann/lanfermann-system/commit/e7caea8e5e4cfe6495a63d58c1c465ca804a5879))
+* **ui:** add useSelection for choosing files in a grid or a list ([71aeafc](https://github.com/jaylann/lanfermann-system/commit/71aeafc76d3a45bd294d464930bfc798d797ab4a))
+* **ui:** add useSelection for choosing files in a grid or a list ([42f8f75](https://github.com/jaylann/lanfermann-system/commit/42f8f755344b38536df93921b5583cea5488cab3))
+* **ui:** give every ground a dark counterpart under data-mode ([281e8e5](https://github.com/jaylann/lanfermann-system/commit/281e8e5dc7cade0ddb177ed0366d010cd3013033))
+* **ui:** keep a switch's knob light on a dark ground ([f67d08e](https://github.com/jaylann/lanfermann-system/commit/f67d08eacf74fb9f4a2b7e94bb2b490ac34b487b))
+* **ui:** keep the reader's light or dark choice with useTheme ([d594690](https://github.com/jaylann/lanfermann-system/commit/d59469017183c2875ced21dff5bd9d4a0341e91f))
+* **ui:** let a context menu render file tiles and table rows ([dc51e36](https://github.com/jaylann/lanfermann-system/commit/dc51e367a36d482fae41392dcdc2adf948b3b496))
+* **ui:** settle the dark page, voice, tint, indigo and switch fade ([3ffe713](https://github.com/jaylann/lanfermann-system/commit/3ffe71353e1d5bfcef6f25f1fb0a9a968ae6157a))
+* **ui:** settle the drop plate in the middle of the area as picked ([bc3d2b3](https://github.com/jaylann/lanfermann-system/commit/bc3d2b3e25ab1fafeefc8bbdd5e4313cbda9a82b))
+* **ui:** settle the file tile's face, mark and folder rows as picked ([d56ed2e](https://github.com/jaylann/lanfermann-system/commit/d56ed2ed6ae7d258148e37e7815e1da62a0d2b83))
+* **ui:** wire the theme switch into the settings and site patterns ([d0607b4](https://github.com/jaylann/lanfermann-system/commit/d0607b45f0c2deb247d23ddbce9288968d5df4a3))
+
+
+### Bug Fixes
+
+* **ui:** cut the bar and cards like the buttons on dark grounds ([e121def](https://github.com/jaylann/lanfermann-system/commit/e121defaec8373b90bcb71cac9f55649e25244b2))
+* **ui:** keep light-mode Ink's depth as it was ([62af0dd](https://github.com/jaylann/lanfermann-system/commit/62af0dd4056175978d706d2386677838ad63e4f3))
+* **ui:** refine the dark grounds after a review of every story ([c1d504d](https://github.com/jaylann/lanfermann-system/commit/c1d504d5b5e053df6026643df1ea5d9e5e58d8c4))
+* **ui:** settle the dark floor, calendar range and key plate ([26407cb](https://github.com/jaylann/lanfermann-system/commit/26407cbd728b65b9eef29a7fa5ce29442cbfb620))
+
 ## [0.8.0](https://github.com/jaylann/lanfermann-system/compare/v0.7.0...v0.8.0) (2026-11-21)
 
 
