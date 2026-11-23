@@ -165,6 +165,31 @@ export function kindOf({ name, type = "" }: { name: string; type?: string }): Fi
   return byExtension[extensionOf(name)] ?? (mime.startsWith("text/") ? "document" : "file");
 }
 
+/** The picture formats that can hold see-through pixels, by MIME type and by extension. */
+const seeThroughTypes = new Set([
+  "image/png",
+  "image/webp",
+  "image/svg+xml",
+  "image/gif",
+  "image/avif",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+]);
+const seeThroughExtensions = new Set(["png", "webp", "svg", "gif", "avif", "ico"]);
+
+/**
+ * Whether a file's picture may have see-through parts, so it is shown on the `checker`: a PNG,
+ * WebP, SVG, GIF, AVIF or icon may, a JPEG cannot. Whether it really has any is only known once
+ * it is decoded, so this is the format's word, not the picture's. As in `kindOf`, an image type
+ * decides and the extension speaks where the type says nothing about the picture.
+ */
+export function mayBeTransparent({ name, type = "" }: { name: string; type?: string }): boolean {
+  // A type from a server may carry parameters: „image/svg+xml; charset=utf-8“.
+  const mime = (type.split(";")[0] ?? "").trim().toLowerCase();
+  if (mime.startsWith("image/")) return seeThroughTypes.has(mime);
+  return seeThroughExtensions.has(extensionOf(name));
+}
+
 /** The word under a file's name: its extension as it is written (`PDF`), or its kind's word. */
 export function typeWord(file: { name: string; type?: string }): string {
   const extension = extensionOf(file.name);

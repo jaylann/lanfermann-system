@@ -2,7 +2,15 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, waitFor } from "storybook/test";
 
-import { BADGE, HERO, LOGO, PHOTO } from "@/components/file-tile/story-files";
+import {
+  BADGE,
+  HERO,
+  LOGO,
+  MARK,
+  MARK_DARK,
+  PHOTO,
+  STICKER,
+} from "@/components/file-tile/story-files";
 
 import { MediaPreview, type NaturalSize } from "./media-preview";
 
@@ -50,6 +58,40 @@ export const Pictures: Story = {
 export const Logo: Story = {
   parameters: { visual: { viewport: { width: 480, height: 260 } } },
   render: () => <MediaPreview src={LOGO} name="building-gbar.svg" className="h-40 w-80" />,
+};
+
+/**
+ * A picture that may be see-through (an SVG for a light page, its `_dark` twin, a PNG) lies on
+ * the quiet checker across the well, so the black mark shows in the dark and the white one in
+ * the light.
+ */
+export const Transparent: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <WithSize src={MARK} name="gbar-zeichen.svg" />
+      <WithSize src={MARK_DARK} name="gbar-zeichen_dark.svg" />
+      <WithSize src={STICKER} name="abzeichen_rund.png" />
+    </div>
+  ),
+};
+
+/** The checker comes with a see-through picture once it has loaded; a JPEG has none. */
+export const CheckerByFormat: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <WithSize src={STICKER} name="abzeichen_rund.png" />
+      <WithSize src={PHOTO} name="ofen.jpg" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const [png, jpeg] = canvasElement.querySelectorAll('[data-slot="media-preview"]');
+    await waitFor(() =>
+      expect(png?.querySelector('[data-slot="media-preview-checker"]')).toHaveAttribute(
+        "data-loaded",
+      ),
+    );
+    await expect(jpeg?.querySelector('[data-slot="media-preview-checker"]')).toBeNull();
+  },
 };
 
 /** What has no picture of its own shows the symbol of its kind, large, with its type. */

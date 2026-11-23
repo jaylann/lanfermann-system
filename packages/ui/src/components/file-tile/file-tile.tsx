@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-import { kindOf } from "@/components/attachment/kinds";
+import { kindOf, mayBeTransparent } from "@/components/attachment/kinds";
 import { FileGridContext } from "@/components/file-grid/file-grid-context";
 import {
   FileKindSymbol,
@@ -167,8 +167,19 @@ function SymbolOrMark({ kind }: { kind: FileSymbolKind }) {
  * A file's picture, which fades in on `settle` once it has loaded. One that was already loaded
  * (from the cache, before the page woke up) is simply there; one that cannot be loaded gives
  * its place to the kind's symbol.
+ *
+ * One that may be see-through lies on the `checker`, drawn on the picture's own box, which
+ * fills the well: it fades in with the picture and goes with it when the symbol takes its place.
  */
-function Picture({ src, kind }: { src: string; kind: FileSymbolKind }) {
+function Picture({
+  src,
+  kind,
+  seeThrough,
+}: {
+  src: string;
+  kind: FileSymbolKind;
+  seeThrough: boolean;
+}) {
   const picture = useRef<HTMLImageElement>(null);
   const [state, setState] = useState<"loading" | "loaded" | "failed">("loading");
   // A new address starts over. Compared while rendering, as React asks for state that follows
@@ -200,7 +211,10 @@ function Picture({ src, kind }: { src: string; kind: FileSymbolKind }) {
       data-loaded={state === "loaded" ? "" : undefined}
       onLoad={() => setState("loaded")}
       onError={() => setState("failed")}
-      className="size-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
+      className={cn(
+        "size-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100",
+        seeThrough && "checker",
+      )}
     />
   );
 }
@@ -217,7 +231,10 @@ function PreviewSymbol({ kind }: { kind: FileSymbolKind }) {
  * its name cut in the middle so its end stays readable („Angebot_Ko…bst.pdf“), and a short line
  * of facts („84 KB · gestern“). It is a part that is handled (chosen, opened, dragged), so it
  * stands on a bevelled card; chosen, it wears the accent edge and its mark closes. The mark
- * shows under the pointer and while anything in the grid is chosen.
+ * shows under the pointer and while anything in the grid is chosen. A picture that may be
+ * see-through (a PNG, WebP, SVG, GIF, AVIF or icon, by `type` or else by the name's extension)
+ * lies on the quiet `checker`, so a black logo shows in the dark and a white one in the light; a
+ * JPEG and the symbol keep the plain well.
  *
  * A file on its way shows its own picture with a bar across its foot; once it has arrived the
  * bar is seen full for a moment and fades. A file that failed says why over its picture, with a
@@ -323,7 +340,11 @@ export function FileTile({
           )}
         >
           {preview ??
-            (src !== undefined ? <Picture src={src} kind={kind} /> : <PreviewSymbol kind={kind} />)}
+            (src !== undefined ? (
+              <Picture src={src} kind={kind} seeThrough={mayBeTransparent({ name, type })} />
+            ) : (
+              <PreviewSymbol kind={kind} />
+            ))}
           {/* At the top left over the picture (Justin, 2026-11-23, over before the name). */}
           <Mark className="absolute top-2 left-2" />
           {carried && (

@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ReactNode, useState } from "react";
+import { expect } from "storybook/test";
 
 import { Button } from "@/components/button/button";
 
 import { FileTile, type FileTileStatus } from "./file-tile";
-import { ARRIVING, FILES, FOLDERS } from "./story-files";
+import { ARRIVING, FILES, FOLDERS, SEE_THROUGH } from "./story-files";
 
 const meta = {
   title: "Components/FileTile",
@@ -81,6 +82,44 @@ export const DropTarget: Story = {
       <FileTile variant="folder" {...FOLDERS[1]!} />
     </Row>
   ),
+};
+
+/**
+ * A picture that may be see-through (here an SVG for a light page, its `_dark` twin and a PNG)
+ * lies on the quiet checker, so the black mark shows in the dark and the white one in the
+ * light. A JPEG keeps the plain well.
+ */
+export const Transparent: Story = {
+  render: () => (
+    <Row>
+      {[...SEE_THROUGH, FILES[6]!].map(({ id, ...file }) => (
+        <FileTile key={id} {...file} />
+      ))}
+    </Row>
+  ),
+};
+
+/** What stands behind a tile's picture, as the browser computed it. */
+function backdropOf(tile: Element | undefined): string | undefined {
+  const picture = tile?.querySelector('[data-slot="file-tile-picture"]');
+  return picture ? getComputedStyle(picture).backgroundImage : undefined;
+}
+
+/** The checker goes by the file's format: under an SVG and a PNG, never under a JPEG. */
+export const CheckerByFormat: Story = {
+  render: () => (
+    <Row>
+      {[SEE_THROUGH[0]!, SEE_THROUGH[2]!, FILES[6]!].map(({ id, ...file }) => (
+        <FileTile key={id} {...file} />
+      ))}
+    </Row>
+  ),
+  play: async ({ canvasElement }) => {
+    const [svg, png, jpeg] = canvasElement.querySelectorAll('[data-slot="file-tile"]');
+    await expect(backdropOf(svg)).toContain("conic-gradient");
+    await expect(backdropOf(png)).toContain("conic-gradient");
+    await expect(backdropOf(jpeg)).toBe("none");
+  },
 };
 
 /** A picture that cannot be loaded gives its place to the symbol of its kind. */
