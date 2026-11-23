@@ -1,16 +1,29 @@
-import { Delete02Icon, Download04Icon, FolderTransferIcon } from "@hugeicons/core-free-icons";
+import {
+  Copy01Icon,
+  Delete02Icon,
+  Download04Icon,
+  FolderTransferIcon,
+  LinkSquare02Icon,
+  PencilEdit02Icon,
+} from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, waitFor } from "storybook/test";
 
 import { ActionBar, ActionBarButton } from "@/components/action-bar/action-bar";
 import { kindOf } from "@/components/attachment/kinds";
 import { Card, CardBar } from "@/components/card/card";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from "@/components/context-menu/context-menu";
 import { FileGrid, FileGridSection } from "@/components/file-grid/file-grid";
 import { FileKindSymbol } from "@/components/file-kind-symbol/file-kind-symbol";
 import { FileTile } from "@/components/file-tile/file-tile";
 import { FILES, FOLDERS } from "@/components/file-tile/story-files";
 import { Heading } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
+import { MenuItem, MenuSeparator } from "@/components/menu/menu";
 import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 import {
   Table,
@@ -254,6 +267,106 @@ export const Pointer: Story = {
     await step("a double click opens it", async () => {
       await userEvent.dblClick(tile(/archiv/));
       await expect(opened).toHaveBeenCalledWith("archiv");
+    });
+  },
+};
+
+/**
+ * The entries of a file's menu, one list for the right click and for the menu behind a key
+ * (`ContextMenu` cannot be opened from the keyboard).
+ */
+function FileMenuEntries() {
+  return (
+    <>
+      <MenuItem icon={LinkSquare02Icon}>Öffnen</MenuItem>
+      <MenuItem icon={Copy01Icon}>Adresse kopieren</MenuItem>
+      <MenuItem icon={PencilEdit02Icon}>Umbenennen</MenuItem>
+      <MenuItem icon={FolderTransferIcon}>Verschieben nach…</MenuItem>
+      <MenuSeparator />
+      <MenuItem icon={Delete02Icon} className="text-danger">
+        In den Papierkorb
+      </MenuItem>
+    </>
+  );
+}
+
+/** Tiles whose own menu opens on a right click or a long press, choosing the tile it is about. */
+function FilesWithMenus() {
+  const selection = useSelection({ ids: IDS, layout: "grid" });
+  const tile = (entry: (typeof ENTRIES)[number]) => {
+    const { id, folder, ...rest } = entry;
+    return (
+      <ContextMenu
+        key={id}
+        // A right click on a tile that is not chosen chooses it, as a file manager does, so
+        // the menu is about what is chosen.
+        onOpenChange={(open) => {
+          if (open && !selection.isSelected(id)) selection.select([id]);
+        }}
+      >
+        <ContextMenuTrigger
+          render={
+            <FileTile
+              variant={folder ? "folder" : "file"}
+              {...rest}
+              selected={selection.isSelected(id)}
+              {...selection.itemProps(id)}
+            />
+          }
+        />
+        <ContextMenuContent>
+          <FileMenuEntries />
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  };
+  return (
+    <div className="w-[44rem]">
+      <FileGrid aria-label="Dateien in blogs/building-gbar" {...selection.containerProps}>
+        <FileGridSection key="ordner" label="Ordner">
+          {ENTRIES.filter(({ folder }) => folder).map(tile)}
+        </FileGridSection>
+        <FileGridSection key="dateien" label="Dateien">
+          {ENTRIES.filter(({ folder }) => !folder).map(tile)}
+        </FileGridSection>
+      </FileGrid>
+    </div>
+  );
+}
+
+/**
+ * A tile's menu on a right click (a long press on a phone): the trigger renders the tile, so
+ * the tile takes its handlers and ref and keeps choosing, its mark and dragging. While the menu
+ * is open the tile shows its mark; a right click on a tile that is not chosen chooses it.
+ */
+export const WithMenu: Story = {
+  render: () => <FilesWithMenus />,
+  play: async ({ canvas, userEvent, step }) => {
+    // Found before the menu opens: an open menu hides the page from assistive tech.
+    const thumbnail = canvas.getByRole("row", { name: /thumbnail/ });
+    const hero = canvas.getByRole("row", { name: /hero/ });
+    await step("a right click opens the tile's menu and chooses the tile", async () => {
+      await userEvent.pointer({ keys: "[MouseRight]", target: thumbnail });
+      await waitFor(() => expect(document.querySelector('[role="menu"]')).toBeInTheDocument());
+      const entries = [...document.querySelectorAll('[role="menuitem"]')].map(
+        (entry) => entry.textContent,
+      );
+      await expect(entries).toEqual([
+        "Öffnen",
+        "Adresse kopieren",
+        "Umbenennen",
+        "Verschieben nach…",
+        "In den Papierkorb",
+      ]);
+      await expect(thumbnail).toHaveAttribute("data-popup-open");
+      await expect(thumbnail).toHaveAttribute("aria-selected", "true");
+    });
+    await step("Escape closes it, and a click still chooses as before", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(document.querySelector('[role="menu"]')).toBeNull());
+      await userEvent.click(hero);
+      await expect(hero).toHaveAttribute("aria-selected", "true");
+      await expect(thumbnail).toHaveAttribute("aria-selected", "false");
     });
   },
 };

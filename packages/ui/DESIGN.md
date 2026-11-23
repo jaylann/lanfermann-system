@@ -1023,7 +1023,9 @@ Every component belongs to one of the four matters, and takes its treatment from
   its way a file shows its own picture with a bar across its foot, seen full for a moment once
   it has arrived; a failure says why over the picture, with „Noch einmal versuchen“. Nothing
   changes a tile's size. A folder that would take what hangs over it wears the field's halo.
-  For assistive tech the grid is a grid whose rows are the tiles.
+  For assistive tech the grid is a grid whose rows are the tiles. A tile's menu is a
+  `ContextMenu` whose trigger renders the tile; while it is open the tile shows its mark, as
+  under the pointer, and a row of a table stays washed.
 - **Choosing several** (`useSelection`) works as a file manager does, for the tiles of a
   `FileGrid` and the rows of a `Table` alike. A click chooses one, Cmd or Ctrl and a click adds
   or takes away one, Shift and a click takes the range from the last one chosen, a press on a
@@ -1044,6 +1046,15 @@ Every component belongs to one of the four matters, and takes its treatment from
   drag of itself, and the area itself takes no items, as they would stay where they are.
   Dragging has no keyboard path, so a page offers the same through its keys. `FileUploadZone`
   counts its enters and leaves the same way (`useDragDepth`).
+- **MediaPreview** shows what a file holds in an inspector: a picture contained on the well,
+  fading in once loaded and reporting its own size, a video or audio with the browser's own
+  controls and only its length loaded, a PDF in the browser's viewer, and for anything else the
+  kind's symbol, large, with its type. **EditableName** changes a name where it stands (a tile,
+  a row, an inspector): a field in the name's place with only the base name selected, Enter
+  takes it, Escape keeps the old one, the focus leaving takes it too, and a refused name stays
+  with its reason under it and the field's danger halo; nothing shakes. **BreadcrumbEllipsis**
+  folds the middle of a long trail into „…“, a key that opens a `Menu` of the folded places as
+  links; a link of the trail that takes a drop wears the field's halo.
 - **Sources** keeps an answer's numbered references and their list together, so every number
   leads somewhere. A reference is a small link in tabular digits after its sentence, leading to
   its entry in the list under the answer; one card serves every reference of the answer, opens

@@ -216,6 +216,9 @@ export function TableRow({ className, interactive, selected, ...props }: TableRo
         "group/row border-b border-hairline",
         // Instant, like the highlight of a menu: it follows the pointer without lag.
         "data-interactive:hover:bg-hover data-selected:bg-tint data-selected:text-fg",
+        // While its own menu is open (a `ContextMenuTrigger` renders the row), it stays washed
+        // as under the pointer.
+        "data-popup-open:not-data-selected:bg-hover",
         // Rows selected one after another are one wash, without a line across it.
         "data-selected:has-[+[data-selected]]:border-b-tint",
         // A row that is chosen with the keyboard (`useSelection`) takes the focus itself; its
