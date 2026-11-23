@@ -280,6 +280,22 @@ export { Field, FieldDescription, FieldError, FieldLabel } from "./components/fi
 export { Fieldset, FieldsetLegend } from "./components/fieldset/fieldset";
 export { Figure, FigureCaption, FigureFrame } from "./components/figure/figure";
 export {
+  FileGrid,
+  type FileGridProps,
+  FileGridSection,
+  type FileGridSectionProps,
+} from "./components/file-grid/file-grid";
+export {
+  FileKindSymbol,
+  type FileKindSymbolProps,
+  type FileSymbolKind,
+} from "./components/file-kind-symbol/file-kind-symbol";
+export {
+  FileTile,
+  type FileTileProps,
+  type FileTileStatus,
+} from "./components/file-tile/file-tile";
+export {
   FileUpload,
   FileUploadItem,
   type FileUploadItemProps,
@@ -364,6 +380,10 @@ export {
   MeterTrack,
   MeterValue,
 } from "./components/meter/meter";
+export {
+  MiddleTruncate,
+  type MiddleTruncateProps,
+} from "./components/middle-truncate/middle-truncate";
 export {
   NavigationMenu,
   NavigationMenuContent,
@@ -593,6 +613,7 @@ export { Switch, type SwitchProps } from "./components/switch/switch";
 export {
   Table,
   TableBody,
+  type TableBodyProps,
   TableCaption,
   TableCell,
   type TableCellProps,

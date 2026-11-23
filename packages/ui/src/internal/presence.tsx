@@ -17,7 +17,17 @@ export function useLive(): boolean {
 }
 
 /** One place of a row or a list: what stands in it, and whether that is on its way out. */
-export type Place<Item> = { item: Item; key: string; leaving: boolean };
+export type Place<Item> = {
+  item: Item;
+  key: string;
+  leaving: boolean;
+  /**
+   * New since the owner's list last changed. An entrance gated on it (`data-joining`) plays for
+   * what joins and not for what React only moves: a moved element is put into the page again,
+   * and `@starting-style` would fade it in from nothing as if it were new.
+   */
+  joining: boolean;
+};
 
 /** Something its owner has stopped rendering, kept until it has left, and where it stood. */
 type Leaver<Item> = { item: Item; key: string; index: number };
@@ -42,17 +52,21 @@ export function usePresence<Item>(
 ) {
   const [before, setBefore] = useState(items);
   const [leavers, setLeavers] = useState<readonly Leaver<Item>[]>([]);
+  const [joined, setJoined] = useState<ReadonlySet<string>>(() => new Set());
 
   // Compared while rendering, as React asks for state that follows a prop.
   const keys = items.map(keyOf);
   if (before !== items) {
-    if (before.map(keyOf).join("\n") !== keys.join("\n")) {
+    const was = before.map(keyOf);
+    if (was.join("\n") !== keys.join("\n")) {
       const stays = new Set(keys);
       const gone = before
         .map((item, index) => ({ item, key: keyOf(item), index }))
         .filter(({ key }) => !stays.has(key));
       // What comes back while it is leaving is simply there again.
       setLeavers((old) => [...old.filter(({ key }) => !stays.has(key)), ...gone]);
+      const known = new Set(was);
+      setJoined(new Set(keys.filter((key) => !known.has(key))));
     }
     setBefore(items);
   }
@@ -81,9 +95,15 @@ export function usePresence<Item>(
     item,
     key: keys[index] ?? "",
     leaving: false,
+    joining: joined.has(keys[index] ?? ""),
   }));
   for (const { item, key, index } of leavers) {
-    places.splice(Math.min(index, places.length), 0, { item, key, leaving: true });
+    places.splice(Math.min(index, places.length), 0, {
+      item,
+      key,
+      leaving: true,
+      joining: false,
+    });
   }
   return { places, left };
 }

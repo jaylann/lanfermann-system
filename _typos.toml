@@ -56,3 +56,5 @@ vor = "vor"
 signatur = "signatur"
 # What a chart's plot is called to assistive tech („Diagramm“).
 diagramm = "diagramm"
+# A folder, as a file tile names it to assistive tech and a file grid labels its section.
+ordner = "ordner"
