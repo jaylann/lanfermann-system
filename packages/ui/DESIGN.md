@@ -195,7 +195,7 @@ story `Patterns/Specimen`.
 | File tile mark            | The mark of a file tile (the checkbox's socket, plug and tick) stands at the top left over the picture. Chosen over the mark before the name in place of the kind's symbol.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Justin, 2026-11-23                                     |
 | Folders among files       | A folder is a compact row one line high in the files' columns, its symbol before its name, the mark taking the symbol's place. Chosen over a folder as large as a file's tile.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Justin, 2026-11-23                                     |
 | Drop plate                | While files hang over a `FileDropArea`, the plate that says where they go („In building-gbar ablegen“, a folder's own label over a folder) stands in the middle of the area, a raised plate. Chosen over a bar along the area's foot.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Justin, 2026-11-23                                     |
-| See-through pictures      | A picture that may be see-through (PNG, WebP, SVG, GIF, AVIF, icon; not JPEG) lies on a quiet checker (`checker`, `src/styles/checker.css`) in a `FileTile` and a `MediaPreview`: two tones of the well, the second the ground's text colour as a faint wash (8%, 7% in the dark), squares of 8px. A black logo vanished on the dark well and a white one on the light well, and both variants of a logo (`x.svg`, `x_dark.svg`) are kept side by side, so no fixed background serves. Decided, not a switch. It covers the whole well, so an opaque PNG shows it where it does not fill the well.                                                                                                                                                                                                                                                        | Justin, 2026-11-23                                     |
+| See-through pictures      | A picture that may be see-through (PNG, WebP, SVG, GIF, AVIF, icon; not JPEG) lies on a quiet checker (`checker`, `src/styles/checker.css`) in a `FileTile` and a `MediaPreview`: two tones of the well, the second the ground's text colour as a faint wash (8%, 7% in the dark), squares of 8px. A black logo vanished on the dark well and a white one on the light well, and both variants of a logo (`x.svg`, `x_dark.svg`) are kept side by side, so no fixed background serves. Decided, not a switch. It lies behind the drawn picture only: it is the background of the picture's own box, contained in the well and never larger than the picture's own size, so the well beside it stays plain. Across the whole well (the first version, the same day) it put stripes beside every opaque square badge in a wide tile.                        | Justin, 2026-11-23                                     |
 
 ## Colour
 
@@ -1015,11 +1015,12 @@ Every component belongs to one of the four matters, and takes its treatment from
   sections that each start on a row of their own (the folders, „Ordner“, then the files,
   „Dateien“) and share the grid's columns. It measures its columns and says how many. A
   **FileTile** is handled, so it stands on a bevelled card: a file's picture contained on the
-  well inside it, loaded when it comes near and faded in, or the symbol of its kind
-  (`FileKindSymbol`, with the letters of its type from 16px on), under it the name cut in its
-  middle and one line of facts („84 KB · gestern“). A picture that may be see-through (PNG,
-  WebP, SVG, GIF, AVIF, icon) lies on the quiet `checker`, which fades in with it, so a black
-  logo shows in the dark and a white one in the light. A folder is a compact row in the files'
+  well inside it, never larger than its own size (a 32px favicon stays 32px), loaded when it
+  comes near and faded in, or the symbol of its kind (`FileKindSymbol`, with the letters of its
+  type from 16px on), under it the name cut in its middle and one line of facts („84 KB ·
+  gestern“). A picture that may be see-through (PNG, WebP, SVG, GIF, AVIF, icon) lies on the
+  quiet `checker`, behind the picture only and fading in with it, so a black logo shows in the
+  dark and a white one in the light. A folder is a compact row in the files'
   columns, its symbol before its name. Chosen, a tile wears the accent edge and its mark, the
   checkbox's plug and tick at the top left over the picture (on a folder in its symbol's
   place), closes; the mark shows under the pointer and on every tile while any is chosen. On
@@ -1050,8 +1051,8 @@ Every component belongs to one of the four matters, and takes its treatment from
   Dragging has no keyboard path, so a page offers the same through its keys. `FileUploadZone`
   counts its enters and leaves the same way (`useDragDepth`).
 - **MediaPreview** shows what a file holds in an inspector: a picture contained on the well,
-  fading in once loaded and reporting its own size (one that may be see-through brings the
-  quiet `checker` across the well with it, as on a file tile), a video or audio with the
+  fading in once loaded and reporting its own size (one that may be see-through lies on the
+  quiet `checker`, behind the picture only, as on a file tile), a video or audio with the
   browser's own controls and only its length loaded, a PDF in the browser's viewer, and for
   anything else the kind's symbol, large, with its type. **EditableName** changes a name where
   it stands (a tile, a row, an inspector): a field in the name's place with only the base name

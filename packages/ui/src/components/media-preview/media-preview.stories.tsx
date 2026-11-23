@@ -62,8 +62,8 @@ export const Logo: Story = {
 
 /**
  * A picture that may be see-through (an SVG for a light page, its `_dark` twin, a PNG) lies on
- * the quiet checker across the well, so the black mark shows in the dark and the white one in
- * the light.
+ * the quiet checker, behind the picture only, so the black mark shows in the dark and the white
+ * one in the light. The square badge leaves the well beside it plain.
  */
 export const Transparent: Story = {
   render: () => (
@@ -75,7 +75,10 @@ export const Transparent: Story = {
   ),
 };
 
-/** The checker comes with a see-through picture once it has loaded; a JPEG has none. */
+/**
+ * The checker is the picture's own background, and the picture's box is the picture as drawn:
+ * the square badge is square inside the wider well, a JPEG has no checker.
+ */
 export const CheckerByFormat: Story = {
   render: () => (
     <div className="flex gap-4">
@@ -83,14 +86,17 @@ export const CheckerByFormat: Story = {
       <WithSize src={PHOTO} name="ofen.jpg" />
     </div>
   ),
-  play: async ({ canvasElement }) => {
-    const [png, jpeg] = canvasElement.querySelectorAll('[data-slot="media-preview"]');
-    await waitFor(() =>
-      expect(png?.querySelector('[data-slot="media-preview-checker"]')).toHaveAttribute(
-        "data-loaded",
-      ),
-    );
-    await expect(jpeg?.querySelector('[data-slot="media-preview-checker"]')).toBeNull();
+  play: async ({ canvas }) => {
+    const png = canvas.getByRole("img", { name: "abzeichen_rund.png" });
+    const jpeg = canvas.getByRole("img", { name: "ofen.jpg" });
+    await waitFor(() => expect(png).toHaveAttribute("data-loaded"));
+    await expect(getComputedStyle(png).backgroundImage).toContain("conic-gradient");
+    await expect(getComputedStyle(jpeg).backgroundImage).toBe("none");
+
+    const box = png.getBoundingClientRect();
+    const well = png.parentElement?.getBoundingClientRect();
+    await expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(1);
+    await expect(box.width).toBeLessThan((well?.width ?? 0) - 20);
   },
 };
 

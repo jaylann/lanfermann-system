@@ -68,6 +68,13 @@ export const STICKER = svg(
   '<ellipse cx="256" cy="468" rx="150" ry="22" fill="#13121c" fill-opacity="0.18"/><circle cx="256" cy="236" r="200" fill="#1f8a5b"/><circle cx="256" cy="236" r="168" fill="none" stroke="#ffffff" stroke-width="10"/><path d="M256 130 L284 202 L360 204 L300 250 L322 324 L256 280 L190 324 L212 250 L152 204 L228 202Z" fill="#ffffff"/>',
 );
 
+/** The bar's favicon at its own small size, 32px, its rounded corners see-through. */
+export const FAVICON = svg(
+  32,
+  32,
+  '<rect width="32" height="32" rx="7" fill="#5f50d0"/><path d="M9 23L16 9L23 23Z" fill="#ffffff"/>',
+);
+
 /** One entry of a folder as a story shows it. */
 export type StoryEntry = {
   id: string;
@@ -116,7 +123,10 @@ export const FILES: StoryEntry[] = [
   { id: "teaser", name: "teaser.mp4", type: "video/mp4", meta: "18,2 MB · 1.11." },
 ];
 
-/** A folder of logos: both variants of the mark and a badge, all see-through around them. */
+/**
+ * A folder of logos: both variants of the mark, a badge and the favicon, all see-through around
+ * them.
+ */
 export const SEE_THROUGH: StoryEntry[] = [
   {
     id: "zeichen",
@@ -138,6 +148,13 @@ export const SEE_THROUGH: StoryEntry[] = [
     type: "image/png",
     src: STICKER,
     meta: "38 KB · 14.11.",
+  },
+  {
+    id: "favicon",
+    name: "favicon-32.png",
+    type: "image/png",
+    src: FAVICON,
+    meta: "1 KB · 2.11.",
   },
 ];
 

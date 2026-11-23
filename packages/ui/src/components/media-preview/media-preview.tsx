@@ -26,9 +26,10 @@ export type MediaPreviewProps = Omit<ComponentProps<"div">, "children"> & {
 };
 
 /**
- * A picture, which fades in on `settle` once it has loaded and then reports its own size. One
- * that may be see-through brings the `checker` over the whole well, fading in with it; it goes
- * with the picture when the symbol takes its place.
+ * A picture, which fades in on `settle` once it has loaded and then reports its own size. Its
+ * box is the picture as it is drawn (contained, never larger than its own size), so one that
+ * may be see-through has the `checker` as that box's background: behind the picture only,
+ * fading in with it, and gone with it when the symbol takes its place.
  */
 function Picture({
   src,
@@ -57,36 +58,27 @@ function Picture({
     report.current({ width: element.naturalWidth, height: element.naturalHeight });
   }, []);
   return (
-    <>
-      {seeThrough && (
-        // On the well behind the picture, which keeps its own size (a small icon stays small).
-        <span
-          aria-hidden
-          data-slot="media-preview-checker"
-          data-loaded={loaded ? "" : undefined}
-          className="absolute inset-0 checker opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
-        />
+    <img
+      ref={picture}
+      src={src}
+      alt={name}
+      decoding="async"
+      draggable={false}
+      data-slot="media-preview-picture"
+      data-loaded={loaded ? "" : undefined}
+      onLoad={(event) => {
+        setLoaded(true);
+        onLoaded({
+          width: event.currentTarget.naturalWidth,
+          height: event.currentTarget.naturalHeight,
+        });
+      }}
+      onError={onFail}
+      className={cn(
+        "h-auto max-h-full w-auto max-w-full opacity-0 transition-opacity spring-settle data-loaded:opacity-100",
+        seeThrough && "checker",
       )}
-      <img
-        ref={picture}
-        src={src}
-        alt={name}
-        decoding="async"
-        draggable={false}
-        data-slot="media-preview-picture"
-        data-loaded={loaded ? "" : undefined}
-        onLoad={(event) => {
-          setLoaded(true);
-          onLoaded({
-            width: event.currentTarget.naturalWidth,
-            height: event.currentTarget.naturalHeight,
-          });
-        }}
-        onError={onFail}
-        // Positioned, so it lies over the checker.
-        className="relative max-h-full max-w-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100"
-      />
-    </>
+    />
   );
 }
 
@@ -97,9 +89,9 @@ function Picture({
  * is played), a PDF in the browser's own viewer, and for anything else the symbol of its kind,
  * large, with its type. A picture that cannot be loaded gives its place to the symbol. Nothing
  * travels: the picture fades in on `settle`. A picture that may be see-through (a PNG, WebP,
- * SVG, GIF, AVIF or icon, by `type` or else by the name's extension) brings the quiet `checker`
- * over the well, so a black logo shows in the dark and a white one in the light; a JPEG keeps
- * the plain well.
+ * SVG, GIF, AVIF or icon, by `type` or else by the name's extension) lies on the quiet
+ * `checker`, behind the picture only, so a black logo shows in the dark and a white one in the
+ * light; a JPEG keeps the plain well.
  *
  * Give it its height (a class, or the room of the inspector); it fills it.
  */

@@ -87,8 +87,9 @@ export const Small: Story = {
 };
 
 /**
- * A folder of logos: a mark for light pages, its `_dark` twin and a badge, see-through around
- * them, lie on the quiet checker; the photo beside them keeps the plain well.
+ * A folder of logos: a mark for light pages, its `_dark` twin, a badge and the favicon,
+ * see-through around them, lie on the quiet checker behind the picture only; the favicon keeps
+ * its own small size, and the photo beside them keeps the plain well.
  */
 export const Logos: Story = {
   parameters: { visual: { viewport: { width: 960, height: 320 } } },

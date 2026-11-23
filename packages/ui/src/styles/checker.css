@@ -7,11 +7,13 @@
  * picture is see-through the squares show, and its shape stands out against them in any colour
  * (Justin, 2026-11-23).
  *
- * It lays the second tone over the part's own background colour (the well) and nothing else:
- * the ground's text colour, as a faint wash, on every other square. So it darkens on a light
- * ground and lightens on a dark one, follows every ground and mode without a value of its own,
- * and reads as a surface, not as a pattern. In the dark it is a step weaker, where light squares
- * glare sooner. A picture that is not see-through covers it.
+ * It is the picture's own background, on a box sized to the picture as it is drawn, so it lies
+ * behind the picture only and never in the bands of the well beside it: an opaque square badge
+ * in a wide well shows none of it. It lays the second tone over what lies under the picture
+ * (the well) and nothing else: the ground's text colour, as a faint wash, on every other square.
+ * So it darkens on a light ground and lightens on a dark one, follows every ground and mode
+ * without a value of its own, and reads as a surface, not as a pattern. In the dark it is a step
+ * weaker, where light squares glare sooner. A picture that is not see-through covers it.
  *
  *   --checker-cell   the side of one square (0.5rem)
  */

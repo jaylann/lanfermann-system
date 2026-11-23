@@ -168,8 +168,11 @@ function SymbolOrMark({ kind }: { kind: FileSymbolKind }) {
  * (from the cache, before the page woke up) is simply there; one that cannot be loaded gives
  * its place to the kind's symbol.
  *
- * One that may be see-through lies on the `checker`, drawn on the picture's own box, which
- * fills the well: it fades in with the picture and goes with it when the symbol takes its place.
+ * Its box is the picture as it is drawn: contained in the well and never larger than its own
+ * size, so a 32px favicon stays sharp and is not blown up to the tile. One that may be
+ * see-through has the `checker` as that box's background, so the checker lies only behind the
+ * picture and never in the well beside it; it fades in with the picture and goes with it when
+ * the symbol takes its place.
  */
 function Picture({
   src,
@@ -212,7 +215,9 @@ function Picture({
       onLoad={() => setState("loaded")}
       onError={() => setState("failed")}
       className={cn(
-        "size-full object-contain opacity-0 transition-opacity spring-settle data-loaded:opacity-100",
+        // Sized by the picture (the well centres it and its aspect ratio gives `max-h-full` a
+        // height to resolve against), not stretched to the well.
+        "h-auto max-h-full w-auto max-w-full opacity-0 transition-opacity spring-settle data-loaded:opacity-100",
         seeThrough && "checker",
       )}
     />
@@ -231,10 +236,11 @@ function PreviewSymbol({ kind }: { kind: FileSymbolKind }) {
  * its name cut in the middle so its end stays readable („Angebot_Ko…bst.pdf“), and a short line
  * of facts („84 KB · gestern“). It is a part that is handled (chosen, opened, dragged), so it
  * stands on a bevelled card; chosen, it wears the accent edge and its mark closes. The mark
- * shows under the pointer and while anything in the grid is chosen. A picture that may be
- * see-through (a PNG, WebP, SVG, GIF, AVIF or icon, by `type` or else by the name's extension)
- * lies on the quiet `checker`, so a black logo shows in the dark and a white one in the light; a
- * JPEG and the symbol keep the plain well.
+ * shows under the pointer and while anything in the grid is chosen. A picture is contained in
+ * the well and never drawn larger than its own size. One that may be see-through (a PNG, WebP,
+ * SVG, GIF, AVIF or icon, by `type` or else by the name's extension) lies on the quiet
+ * `checker`, behind the picture only, so a black logo shows in the dark and a white one in the
+ * light; a JPEG and the symbol keep the plain well.
  *
  * A file on its way shows its own picture with a bar across its foot; once it has arrived the
  * bar is seen full for a moment and fades. A file that failed says why over its picture, with a
