@@ -39,7 +39,12 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./slides": {
+      "types": "./dist/slides/index.d.ts",
+      "default": "./dist/slides/index.js"
+    },
     "./styles.css": "./src/styles.css",
+    "./slides.css": "./src/styles/slides.css",
     "./brand/*": "./brand/*",
     "./package.json": "./package.json"
   },

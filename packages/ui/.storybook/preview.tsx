@@ -85,7 +85,7 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["Foundations", "Components", "Patterns", "Lab"],
+        order: ["Foundations", "Components", "Slides", "Patterns", "Lab"],
       },
     },
   },
