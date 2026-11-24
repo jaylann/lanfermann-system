@@ -74,7 +74,7 @@ export const Default: Story = {
   ),
 };
 
-/** A refused name stays in the field, the reason under it in words, the halo in danger. */
+/** A refused name stays in the field, the reason under it in words, the name underlined. */
 function Refused() {
   const [editing, setEditing] = useState(true);
   return (

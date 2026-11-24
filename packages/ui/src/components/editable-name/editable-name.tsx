@@ -41,10 +41,12 @@ export type EditableNameProps = Omit<ComponentProps<"span">, "children" | "onCha
 /**
  * A name that is changed where it stands: in a tile, a row, an inspector. While it is changed it
  * is a field in the name's place with only the base name selected, so what is typed keeps the
- * extension („hero“ of „hero.webp“). Enter takes the new name, Escape keeps the old one, and
- * the focus leaving takes it as Enter does. A name that is refused stays in the field with the
- * reason under it in words, and the field wears the danger halo; nothing shakes. An unchanged or
- * empty name changes nothing.
+ * extension („hero“ of „hero.webp“). The field is seamless: no edge and no halo of its own, only
+ * the caret and the selection, so it reads as typing into the tile or the row. Whatever holds it
+ * shows that it is being worked on (a chosen tile's ring). Enter takes the new name, Escape keeps
+ * the old one, and the focus leaving takes it as Enter does. A name that is refused stays in the
+ * field with the reason under it in words, and the name is underlined in danger; nothing shakes.
+ * An unchanged or empty name changes nothing.
  *
  * Changing begins where the page says (F2, a menu's „Umbenennen“, a folder just made): set
  * `editing`. Keys pressed in the field stay the field's, also inside a `useSelection` item, and
@@ -145,9 +147,14 @@ export function EditableName({
           if (!busy && reason === null) void commit();
         }}
         className={cn(
-          "-mx-1 h-[1.6em] w-full min-w-0 rounded-sm bg-surface px-1 depth-field",
-          "transition-[box-shadow] spring-snap focus:depth-field-focus focus:outline-hidden",
-          "aria-invalid:depth-field-invalid",
+          // Seamless: the name's own type in the name's own place, so nothing moves as changing
+          // begins. The host (a chosen tile, a row, a title) carries the one ring; the caret and
+          // the selected base name are the field's only signs. `outline-hidden` keeps a real
+          // outline for forced colours.
+          "m-0 w-full min-w-0 bg-transparent p-0 caret-accent focus:outline-hidden",
+          // Refused: the reason under it says why, and the name is underlined in danger, as a
+          // word that is spelt wrong is.
+          "aria-invalid:underline aria-invalid:decoration-danger aria-invalid:decoration-1 aria-invalid:underline-offset-[0.25em]",
         )}
       />
       {reason !== null && (
