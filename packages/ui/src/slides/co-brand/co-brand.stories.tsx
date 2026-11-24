@@ -25,7 +25,7 @@ export const Default: Story = {
 };
 
 /**
- * At 24px on Paper: both sides are live text, and the hairline is as tall as the type. Without
+ * At 24px on Paper: the drawn wordmark beside the client's name, the hairline as tall as the type. Without
  * the footer row, which would show the wordmark a second time.
  */
 export const Small: Story = {

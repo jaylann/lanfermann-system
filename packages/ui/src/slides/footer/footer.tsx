@@ -14,7 +14,7 @@ export type FooterProps = {
 };
 
 /**
- * The single footer row of a content slide: the wordmark as live text on the left, the deck's
+ * The single footer row of a content slide: the drawn wordmark at 24px on the left, the deck's
  * title and the page number on the right, all on one line 64px above the foot. `Slide` draws it;
  * the cover and the closing slide have none.
  */
