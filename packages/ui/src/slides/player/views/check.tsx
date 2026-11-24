@@ -50,7 +50,7 @@ export function CheckView({ entries, labels, lang, title }: CheckViewProps) {
       const slides = entries.map((entry, index) => {
         const box = element.querySelector(`[data-slides-entry="${index}"]`);
         const issues: SlideIssue[] = box
-          ? measureEntry(box)
+          ? measureEntry(box, entry.steps)
           : [{ kind: "structure", message: "The child was not drawn." }];
         return entry.id === undefined ? { index, issues } : { index, id: entry.id, issues };
       });

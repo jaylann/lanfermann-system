@@ -19,7 +19,7 @@ import {
 import type { PlayerIntent } from "@/slides/player/input";
 import { fill } from "@/slides/player/labels";
 import { placeOnOtherScreen } from "@/slides/player/screens";
-import { elapsed } from "@/slides/player/state";
+import { atEnd, atStart, elapsed, upcoming } from "@/slides/player/state";
 import { HEARTBEAT, isNewer, type Link, openLink, sessionOfWindow } from "@/slides/player/sync";
 import { Stage } from "@/slides/stage/stage";
 
@@ -54,9 +54,14 @@ type PresenterViewProps = ViewProps & {
 type Notice = "drag" | "blocked" | null;
 
 /**
- * The presenter's console, on Ink: the current slide large, the next one and the notes beside
- * it, the time since the talk began and the time of day, and the buttons for the grid, the black
- * screen and the audience's window. This window says where the deck is; the audience's follows.
+ * The presenter's console, on Ink: the current slide large, what the next press brings and the
+ * notes beside it, the time since the talk began and the time of day, and the buttons for the
+ * grid, the black screen and the audience's window. This window says where the deck is; the
+ * audience's follows.
+ *
+ * On a slide with steps the head of the current slide says the step, and the preview is the same
+ * slide one step on („Nächster Schritt“) until its last step; then it is the next slide at its
+ * start. The current slide is `live`, the preview stands still.
  */
 export function PresenterView({
   entries,
@@ -68,7 +73,8 @@ export function PresenterView({
   hash,
   embedded,
 }: PresenterViewProps) {
-  const [state, dispatch] = usePlayerState(entries.length, start);
+  const stepCounts = useMemo(() => entries.map((entry) => entry.steps), [entries]);
+  const [state, dispatch] = usePlayerState(stepCounts, start);
   const ids = useMemo(() => entries.map((entry) => entry.id), [entries]);
   const time = useNow(now, 1000);
   const [notice, setNotice] = useState<Notice>(null);
@@ -110,8 +116,8 @@ export function PresenterView({
       },
     });
     const say = () => {
-      const { index, blackout } = latest.current.state;
-      opened.send({ type: "state", seq: seq.current, index, blackout });
+      const { index, step, blackout } = latest.current.state;
+      opened.send({ type: "state", seq: seq.current, index, step, blackout });
     };
     link.current = opened;
     const beat = window.setInterval(say, HEARTBEAT);
@@ -129,9 +135,10 @@ export function PresenterView({
       type: "state",
       seq: seq.current,
       index: state.index,
+      step: state.step,
       blackout: state.blackout,
     });
-  }, [state.index, state.blackout]);
+  }, [state.index, state.step, state.blackout]);
 
   const act = useCallback(
     (intent: PlayerIntent) => {
@@ -143,18 +150,29 @@ export function PresenterView({
   );
   useKeys(act);
 
-  const go = useCallback((index: number) => dispatch({ type: "go", index }), [dispatch]);
-  useHash(state.index, ids, go, hash);
+  const go = useCallback(
+    (index: number, step?: number) => dispatch({ type: "go", index, step }),
+    [dispatch],
+  );
+  useHash(state.index, state.step, ids, go, hash);
 
   useEmbed({
     enabled: embedded,
-    ids,
+    slides: entries,
     index: state.index,
+    step: state.step,
     blackout: state.blackout,
     onCommand(command) {
       if (command.type === "intent") act(command.intent);
-      else if (command.blackout === undefined) go(command.index);
-      else dispatch({ type: "sync", index: command.index, blackout: command.blackout });
+      else if (command.blackout === undefined) go(command.index, command.step);
+      else {
+        dispatch({
+          type: "sync",
+          index: command.index,
+          step: command.step ?? 0,
+          blackout: command.blackout,
+        });
+      }
     },
   });
 
@@ -190,7 +208,10 @@ export function PresenterView({
   const count = entries.length;
   const page = state.index + 1;
   const entry = entries[state.index];
-  const following = entries[state.index + 1];
+  const steps = entry?.steps ?? 0;
+  const coming = upcoming(state);
+  const following = coming && entries[coming.index];
+  const sameSlide = coming?.index === state.index;
 
   return (
     <div
@@ -218,11 +239,27 @@ export function PresenterView({
                 }
               >
                 {fill(labels.slide, { page, count })}
+                {steps > 0 && (
+                  <>
+                    {" "}
+                    <span data-slot="player-step" className="ml-1 text-fg-muted">
+                      {fill(labels.step, { step: state.step, steps })}
+                    </span>
+                  </>
+                )}
               </BlockHead>
               <div data-slot="player-console-current" className="border border-line">
                 <Stage>
                   {entry && (
-                    <DeckSlide entry={entry} index={state.index} errorLabel={labels.slideError} />
+                    // Keyed by the slide: a new slide is mounted fresh, a step only reveals.
+                    <DeckSlide
+                      key={entry.key}
+                      entry={entry}
+                      index={state.index}
+                      step={state.step}
+                      live
+                      errorLabel={labels.slideError}
+                    />
                   )}
                 </Stage>
               </div>
@@ -264,13 +301,14 @@ export function PresenterView({
 
             <div className="flex min-h-0 min-w-0 flex-col gap-6">
               <div>
-                <BlockHead>{labels.nextSlide}</BlockHead>
-                {following ? (
-                  <div inert className="border border-line">
+                <BlockHead>{sameSlide ? labels.nextStep : labels.nextSlide}</BlockHead>
+                {coming && following ? (
+                  <div inert data-slot="player-console-next" className="border border-line">
                     <Stage>
                       <DeckSlide
                         entry={following}
-                        index={state.index + 1}
+                        index={coming.index}
+                        step={coming.step}
                         errorLabel={labels.slideError}
                       />
                     </Stage>
@@ -341,7 +379,7 @@ export function PresenterView({
             type="button"
             className={iconButton}
             aria-label={labels.previous}
-            aria-disabled={state.index === 0 ? true : undefined}
+            aria-disabled={atStart(state) ? true : undefined}
             onClick={() => act("previous")}
           >
             <Icon icon={ArrowLeft01Icon} size={18} />
@@ -351,7 +389,7 @@ export function PresenterView({
             // The arrow, not the button's box, ends on the rule above.
             className={`${iconButton} -mr-2`}
             aria-label={labels.next}
-            aria-disabled={page === count ? true : undefined}
+            aria-disabled={atEnd(state) ? true : undefined}
             onClick={() => act("next")}
           >
             <Icon icon={ArrowRight01Icon} size={18} />

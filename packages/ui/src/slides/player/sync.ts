@@ -32,8 +32,11 @@ const REMOTE_INTENTS: readonly string[] = [
 export type PlayerMessage =
   /** Audience to presenter: I am here, tell me where the deck is. */
   | { type: "hello" }
-  /** Presenter to audience: the slide shown, and whether the screen is black. */
-  | { type: "state"; seq: number; index: number; blackout: boolean }
+  /**
+   * Presenter to audience: the slide shown, its step, and whether the screen is black. A
+   * presenter of an older build sends no step; that reads as step 0.
+   */
+  | { type: "state"; seq: number; index: number; step: number; blackout: boolean }
   /** Audience to presenter: a key was pressed here. */
   | { type: "intent"; seq: number; intent: RemoteIntent };
 
@@ -74,10 +77,20 @@ export function parseMessage(data: unknown, session: string): PlayerMessage | un
   switch (record.type) {
     case "hello":
       return { type: "hello" };
-    case "state":
+    case "state": {
       if (!isCount(record.seq) || !isCount(record.index)) return undefined;
       if (typeof record.blackout !== "boolean") return undefined;
-      return { type: "state", seq: record.seq, index: record.index, blackout: record.blackout };
+      // Optional: the two windows may be files of different builds.
+      const step = record.step === undefined ? 0 : record.step;
+      if (!isCount(step)) return undefined;
+      return {
+        type: "state",
+        seq: record.seq,
+        index: record.index,
+        step,
+        blackout: record.blackout,
+      };
+    }
     case "intent":
       if (!isCount(record.seq) || !isRemoteIntent(record.intent)) return undefined;
       return { type: "intent", seq: record.seq, intent: record.intent };

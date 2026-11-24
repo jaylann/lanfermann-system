@@ -10,15 +10,20 @@
  * told:
  *
  *   out, to `parent`, addressed to "*" (an opaque origin cannot be named as a target):
- *     { lfSlides: "embed", type: "ready", count, slides: [{ id }] }             once, first
- *     { lfSlides: "embed", type: "state", index, count, id, blackout }          on every change
- *     { lfSlides: "embed", type: "intent", intent: "audience-window" }          the console's button
+ *     { lfSlides: "embed", type: "ready", count, slides: [{ id, steps }] }          once, first
+ *     { lfSlides: "embed", type: "state", index, count, id, step, steps, blackout } on every change
+ *     { lfSlides: "embed", type: "intent", intent: "audience-window" }              the console's button
  *   in, taken only when `event.source === window.parent` (the one check there is, on both sides):
- *     { lfSlides: "embed", type: "go", index, blackout? }
+ *     { lfSlides: "embed", type: "go", index, step?, blackout? }
  *     { lfSlides: "embed", type: "intent", intent }
  *
  * `blackout` on `go` is an addition to the contract: with it the framing page can hand a state it
  * was given by one frame to another as it is, where a `blackout` intent would only toggle.
+ *
+ * Steps are an addition too. `steps` is how many steps a slide shows click by click (0: none),
+ * `step` where the shown slide stands among them (0 to `steps`). A `next` intent walks the steps
+ * before it leaves a slide; `go` lands on step 0 unless it names one (clamped to the slide's).
+ * A state carries a change of step as well, with the same `index`.
  */
 import { useEffect, useSyncExternalStore } from "react";
 
@@ -39,7 +44,8 @@ const EMBED_INTENTS: readonly string[] = [
 ] satisfies EmbedIntent[];
 
 export type EmbedCommand =
-  { type: "go"; index: number; blackout?: boolean } | { type: "intent"; intent: EmbedIntent };
+  | { type: "go"; index: number; step?: number; blackout?: boolean }
+  | { type: "intent"; intent: EmbedIntent };
 
 export type EmbedState = {
   /** The slide shown, counted from 0. */
@@ -47,10 +53,21 @@ export type EmbedState = {
   count: number;
   /** The shown slide's id, if it has one. */
   id?: string;
+  /** Where the shown slide stands among its steps, from 0. */
+  step: number;
+  /** How many steps the shown slide has (0: it shows everything at once). */
+  steps: number;
   blackout: boolean;
 };
 
+/** One slide as the first message lists it. */
+export type EmbedSlide = { id?: string; steps: number };
+
 const MARK = "embed";
+
+function isCount(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
 
 /**
  * Reads what the framing page sent. Anything that is not one of the two commands, whole and of
@@ -61,10 +78,16 @@ export function parseEmbedCommand(data: unknown): EmbedCommand | undefined {
   const record = data as Record<string, unknown>;
   if (record.lfSlides !== MARK) return undefined;
   if (record.type === "go") {
-    const { index, blackout } = record;
-    if (typeof index !== "number" || !Number.isSafeInteger(index) || index < 0) return undefined;
-    if (blackout === undefined) return { type: "go", index };
-    return typeof blackout === "boolean" ? { type: "go", index, blackout } : undefined;
+    const { index, step, blackout } = record;
+    if (!isCount(index)) return undefined;
+    if (step !== undefined && !isCount(step)) return undefined;
+    if (blackout !== undefined && typeof blackout !== "boolean") return undefined;
+    return {
+      type: "go",
+      index,
+      ...(step === undefined ? {} : { step }),
+      ...(blackout === undefined ? {} : { blackout }),
+    };
   }
   if (record.type === "intent") {
     const { intent } = record;
@@ -75,24 +98,26 @@ export function parseEmbedCommand(data: unknown): EmbedCommand | undefined {
   return undefined;
 }
 
-/** The first message: how many slides there are, and their ids in order. */
-export function readyMessage(ids: readonly (string | undefined)[]) {
+/** The first message: how many slides there are, with their ids and steps in order. */
+export function readyMessage(slides: readonly EmbedSlide[]) {
   return {
     lfSlides: MARK,
     type: "ready",
-    count: ids.length,
-    slides: ids.map((id) => (id === undefined ? {} : { id })),
+    count: slides.length,
+    slides: slides.map(({ id, steps }) => (id === undefined ? { steps } : { id, steps })),
   } as const;
 }
 
 /** Where the deck is, as it is told on every change. */
-export function stateMessage({ index, count, id, blackout }: EmbedState) {
+export function stateMessage({ index, count, id, step, steps, blackout }: EmbedState) {
   return {
     lfSlides: MARK,
     type: "state",
     index,
     count,
     ...(id === undefined ? {} : { id }),
+    step,
+    steps,
     blackout,
   } as const;
 }
@@ -123,20 +148,29 @@ export function useEmbedded(embed: boolean | undefined): boolean {
 
 type EmbedOptions = {
   enabled: boolean;
-  ids: readonly (string | undefined)[];
+  /** The deck's slides in order, with their ids and steps (a `SlideEntry` is one). */
+  slides: readonly EmbedSlide[];
   index: number;
+  step: number;
   blackout: boolean;
   onCommand: (command: EmbedCommand) => void;
 };
 
 /** Tells the framing page where the deck is, and takes its commands. Does nothing when not framed. */
-export function useEmbed({ enabled, ids, index, blackout, onCommand }: EmbedOptions): void {
+export function useEmbed({
+  enabled,
+  slides,
+  index,
+  step,
+  blackout,
+  onCommand,
+}: EmbedOptions): void {
   const handler = useLatest(onCommand);
 
   // Declared before the state's effect, so `ready` is the first message out.
   useEffect(() => {
     if (!enabled) return;
-    post(readyMessage(ids));
+    post(readyMessage(slides));
     const onMessage = (event: MessageEvent<unknown>) => {
       if (event.source !== window.parent) return;
       const command = parseEmbedCommand(event.data);
@@ -144,10 +178,20 @@ export function useEmbed({ enabled, ids, index, blackout, onCommand }: EmbedOpti
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [enabled, ids, handler]);
+  }, [enabled, slides, handler]);
 
   useEffect(() => {
     if (!enabled) return;
-    post(stateMessage({ index, count: ids.length, id: ids[index], blackout }));
-  }, [enabled, ids, index, blackout]);
+    const slide = slides[index];
+    post(
+      stateMessage({
+        index,
+        count: slides.length,
+        id: slide?.id,
+        step,
+        steps: slide?.steps ?? 0,
+        blackout,
+      }),
+    );
+  }, [enabled, slides, index, step, blackout]);
 }

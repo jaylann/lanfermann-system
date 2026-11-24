@@ -1,7 +1,7 @@
 /**
  * Every word the player itself shows or says: the audience's controls and the presenter's
  * console. German by default; a deck in another language hands `labels` to `mount` or `Player`.
- * `{page}` and `{count}` are filled in where a label counts.
+ * `{page}` and `{count}` (and `{step}` and `{steps}`) are filled in where a label counts.
  */
 export const defaultLabels = {
   /** Names the audience's bar of controls to assistive tech. */
@@ -14,6 +14,11 @@ export const defaultLabels = {
   position: "{page} / {count}",
   /** What the counter says to assistive tech, and the head of the console's current slide. */
   slide: "Folie {page} von {count}",
+  /**
+   * Where a slide with steps stands among them, after its position: muted in the console's head,
+   * spoken after the counter in the audience's bar. `{step}` counts from 0, as the address does.
+   */
+  step: "Schritt {step} von {steps}",
   /** The button that fills the screen (F). */
   fullscreen: "Vollbild",
   /** The same button while the screen is filled. */
@@ -26,6 +31,8 @@ export const defaultLabels = {
   console: "Vortrag steuern",
   /** The head of the slide that comes next. */
   nextSlide: "Nächste Folie",
+  /** The same head while the next press brings a further step of the current slide. */
+  nextStep: "Nächster Schritt",
   /** Stands in its place after the last slide. */
   end: "Ende",
   /** The head of the notes. */

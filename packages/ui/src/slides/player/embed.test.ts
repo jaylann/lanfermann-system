@@ -14,6 +14,14 @@ describe("the bridge to a framing page", () => {
       index: 2,
       blackout: true,
     });
+    expect(parseEmbedCommand({ lfSlides: "embed", type: "go", index: 2, step: 1 })).toEqual({
+      type: "go",
+      index: 2,
+      step: 1,
+    });
+    expect(
+      parseEmbedCommand({ lfSlides: "embed", type: "go", index: 2, step: 0, blackout: false }),
+    ).toEqual({ type: "go", index: 2, step: 0, blackout: false });
     for (const intent of ["next", "previous", "first", "last", "blackout", "grid", "escape"]) {
       expect(parseEmbedCommand({ lfSlides: "embed", type: "intent", intent })).toEqual({
         type: "intent",
@@ -33,6 +41,10 @@ describe("the bridge to a framing page", () => {
       { lfSlides: "embed", type: "go", index: 1.5 },
       { lfSlides: "embed", type: "go", index: "1" },
       { lfSlides: "embed", type: "go", index: 1, blackout: "yes" },
+      { lfSlides: "embed", type: "go", index: 1, step: -1 },
+      { lfSlides: "embed", type: "go", index: 1, step: 1.5 },
+      { lfSlides: "embed", type: "go", index: 1, step: "2" },
+      { lfSlides: "embed", type: "go", index: 1, step: null },
       { lfSlides: "embed", type: "intent", intent: "fullscreen" },
       { lfSlides: "embed", type: "intent", intent: "audience-window" },
       { lfSlides: "embed", type: "intent" },
@@ -41,29 +53,37 @@ describe("the bridge to a framing page", () => {
     for (const data of not) expect(parseEmbedCommand(data)).toBeUndefined();
   });
 
-  it("says first how many slides there are, with their ids in order", () => {
-    expect(readyMessage(["cover", undefined, "befunde"])).toEqual({
+  it("says first how many slides there are, with their ids and steps in order", () => {
+    expect(
+      readyMessage([{ id: "cover", steps: 0 }, { steps: 2 }, { id: "befunde", steps: 1 }]),
+    ).toEqual({
       lfSlides: "embed",
       type: "ready",
       count: 3,
-      slides: [{ id: "cover" }, {}, { id: "befunde" }],
+      slides: [{ id: "cover", steps: 0 }, { steps: 2 }, { id: "befunde", steps: 1 }],
     });
   });
 
-  it("says where the deck is, with the slide's id where it has one", () => {
-    expect(stateMessage({ index: 2, count: 3, id: "befunde", blackout: false })).toEqual({
+  it("says where the deck is, with the slide's id where it has one, and its step", () => {
+    expect(
+      stateMessage({ index: 2, count: 3, id: "befunde", step: 1, steps: 2, blackout: false }),
+    ).toEqual({
       lfSlides: "embed",
       type: "state",
       index: 2,
       count: 3,
       id: "befunde",
+      step: 1,
+      steps: 2,
       blackout: false,
     });
-    expect(stateMessage({ index: 1, count: 3, blackout: true })).toEqual({
+    expect(stateMessage({ index: 1, count: 3, step: 0, steps: 0, blackout: true })).toEqual({
       lfSlides: "embed",
       type: "state",
       index: 1,
       count: 3,
+      step: 0,
+      steps: 0,
       blackout: true,
     });
   });

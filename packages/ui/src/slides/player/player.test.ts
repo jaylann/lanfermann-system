@@ -1,8 +1,26 @@
 import { describe, expect, it } from "vitest";
 
-import { hashOfSlide, slideFromHash } from "./hash";
+import { addressFromHash, hashOfSlide, hashToWrite } from "./hash";
 import { intentOfKey, intentOfSwipe } from "./input";
-import { elapsed, initialState, reduce } from "./state";
+import {
+  atEnd,
+  atStart,
+  elapsed,
+  initialState,
+  type PlayerAction,
+  type PlayerState,
+  reduce,
+  upcoming,
+} from "./state";
+
+/** Where the deck stands after `actions`, as `[slide, step]`. */
+function walk(state: PlayerState, ...actions: PlayerAction[]): [number, number] {
+  const end = actions.reduce(reduce, state);
+  return [end.index, end.step];
+}
+
+const next: PlayerAction = { type: "next", at: 1 };
+const previous: PlayerAction = { type: "previous" };
 
 describe("the player's state", () => {
   const start = initialState(10);
@@ -47,11 +65,25 @@ describe("the player's state", () => {
 
   it("takes over what the presenter's window says, without touching its own grid", () => {
     const open = { ...start, grid: true };
-    expect(reduce(open, { type: "sync", index: 6, blackout: true })).toMatchObject({
+    expect(reduce(open, { type: "sync", index: 6, step: 0, blackout: true })).toMatchObject({
       index: 6,
+      step: 0,
       blackout: true,
       grid: true,
     });
+  });
+
+  it("never leaves step 0 in a deck whose slides have no steps", () => {
+    const states = [
+      reduce(start, next),
+      reduce(reduce(start, next), previous),
+      reduce(start, { type: "last" }),
+      reduce(start, { type: "go", index: 4, step: 2 }),
+      reduce(start, { type: "sync", index: 4, step: 2, blackout: false }),
+    ];
+    expect(states.map((state) => state.step)).toEqual([0, 0, 0, 0, 0]);
+    expect(initialState(3)).toMatchObject({ count: 3, steps: [0, 0, 0] });
+    expect(upcoming(start)).toEqual({ index: 1, step: 0 });
   });
 
   it("writes the time of the talk as minutes and seconds", () => {
@@ -61,23 +93,151 @@ describe("the player's state", () => {
   });
 });
 
+describe("the steps of a slide", () => {
+  // Four slides: the second shows two steps, the last three.
+  const deck = initialState([0, 2, 0, 3]);
+
+  it("starts at step 0, and knows each slide's steps", () => {
+    expect(deck).toMatchObject({ index: 0, step: 0, count: 4, steps: [0, 2, 0, 3] });
+    expect(initialState([0, 2, 0, 3], 1, 1)).toMatchObject({ index: 1, step: 1 });
+    expect(initialState([0, 2, 0, 3], 1, 9).step).toBe(2);
+    expect(initialState([0, 2, 0, 3], 0, 1).step).toBe(0);
+  });
+
+  it("walks a slide's steps before it moves on, and enters the next at step 0", () => {
+    expect(walk(deck, next)).toEqual([1, 0]);
+    expect(walk(deck, next, next)).toEqual([1, 1]);
+    expect(walk(deck, next, next, next)).toEqual([1, 2]);
+    expect(walk(deck, next, next, next, next)).toEqual([2, 0]);
+  });
+
+  it("walks them back, and enters the slide before at its last step", () => {
+    const third = reduce(deck, { type: "go", index: 2 });
+    expect(walk(third, previous)).toEqual([1, 2]);
+    expect(walk(third, previous, previous)).toEqual([1, 1]);
+    expect(walk(third, previous, previous, previous)).toEqual([1, 0]);
+    expect(walk(third, previous, previous, previous, previous)).toEqual([0, 0]);
+    expect(walk(deck, previous)).toEqual([0, 0]);
+  });
+
+  it("stops at the last step of the last slide", () => {
+    const last = reduce(deck, { type: "last" });
+    expect([last.index, last.step]).toEqual([3, 3]);
+    expect(atEnd(last)).toBe(true);
+    expect(walk(last, next)).toEqual([3, 3]);
+    expect(atEnd(reduce(deck, { type: "go", index: 3 }))).toBe(false);
+  });
+
+  it("goes to the first slide at step 0 from anywhere", () => {
+    const deep = reduce(deck, { type: "go", index: 3, step: 2 });
+    expect(walk(deep, { type: "first" })).toEqual([0, 0]);
+    expect(atStart(deep)).toBe(false);
+    expect(atStart(reduce(deep, { type: "first" }))).toBe(true);
+    expect(atStart(reduce(deck, { type: "go", index: 0, step: 0 }))).toBe(true);
+  });
+
+  it("goes to a slide at step 0, or at the step it names, clamped to the slide's", () => {
+    expect(walk(deck, { type: "go", index: 1 })).toEqual([1, 0]);
+    expect(walk(deck, { type: "go", index: 1, step: 1 })).toEqual([1, 1]);
+    expect(walk(deck, { type: "go", index: 1, step: 7 })).toEqual([1, 2]);
+    expect(walk(deck, { type: "go", index: 1, step: -2 })).toEqual([1, 0]);
+    expect(walk(deck, { type: "go", index: 2, step: 1 })).toEqual([2, 0]);
+    expect(walk(deck, { type: "go", index: 99, step: 99 })).toEqual([3, 3]);
+    expect(walk(deck, { type: "go", index: 1, step: Number.NaN })).toEqual([1, 0]);
+  });
+
+  it("takes over slide and step from the presenter's window, clamped to this deck", () => {
+    const synced = reduce(deck, { type: "sync", index: 3, step: 2, blackout: true });
+    expect(synced).toMatchObject({ index: 3, step: 2, blackout: true });
+    expect(reduce(deck, { type: "sync", index: 1, step: 5, blackout: false }).step).toBe(2);
+  });
+
+  it("ends the black screen and closes the grid on a step, too", () => {
+    const second = reduce(deck, { type: "go", index: 1 });
+    const dark = { ...second, blackout: true, grid: true };
+    expect(reduce(dark, next)).toMatchObject({ index: 1, step: 1, blackout: false, grid: false });
+    const later = { ...reduce(second, next), blackout: true, grid: true };
+    expect(reduce(later, previous)).toMatchObject({ step: 0, blackout: false, grid: false });
+  });
+
+  it("starts the clock with the first press forward, also when it is a step", () => {
+    const second = reduce(deck, { type: "go", index: 1 });
+    const stepped = reduce(second, { type: "next", at: 4000 });
+    expect(stepped).toMatchObject({ index: 1, step: 1, startedAt: 4000 });
+    expect(reduce(stepped, { type: "next", at: 9000 }).startedAt).toBe(4000);
+  });
+
+  it("says what the next press brings: a step of this slide, then the next slide", () => {
+    const second = reduce(deck, { type: "go", index: 1 });
+    expect(upcoming(second)).toEqual({ index: 1, step: 1 });
+    expect(upcoming(reduce(second, { type: "go", index: 1, step: 2 }))).toEqual({
+      index: 2,
+      step: 0,
+    });
+    expect(upcoming(reduce(deck, { type: "last" }))).toBeUndefined();
+  });
+});
+
 describe("deep links", () => {
   const ids = ["cover", "recherche", undefined, "befunde"];
 
+  const slide = (hash: string) => addressFromHash(hash, ids)?.index;
+
   it("reads a page and an id, and nothing else", () => {
-    expect(slideFromHash("#/1", ids)).toBe(0);
-    expect(slideFromHash("#/4", ids)).toBe(3);
-    expect(slideFromHash("#/befunde", ids)).toBe(3);
-    expect(slideFromHash("#/5", ids)).toBeUndefined();
-    expect(slideFromHash("#/0", ids)).toBeUndefined();
-    expect(slideFromHash("#/nichts", ids)).toBeUndefined();
-    expect(slideFromHash("#befunde", ids)).toBeUndefined();
-    expect(slideFromHash("", ids)).toBeUndefined();
+    expect(slide("#/1")).toBe(0);
+    expect(slide("#/4")).toBe(3);
+    expect(slide("#/befunde")).toBe(3);
+    expect(slide("#/5")).toBeUndefined();
+    expect(slide("#/0")).toBeUndefined();
+    expect(slide("#/nichts")).toBeUndefined();
+    expect(slide("#befunde")).toBeUndefined();
+    expect(slide("")).toBeUndefined();
+    expect(slide("#/%E0%A4")).toBeUndefined();
   });
 
-  it("writes the page of a slide", () => {
+  it("reads a step after the last dot, and step 0 without one", () => {
+    expect(addressFromHash("#/4", ids)).toEqual({ index: 3, step: 0 });
+    expect(addressFromHash("#/4.1", ids)).toEqual({ index: 3, step: 1 });
+    expect(addressFromHash("#/befunde.2", ids)).toEqual({ index: 3, step: 2 });
+    expect(addressFromHash("#/befunde.0", ids)).toEqual({ index: 3, step: 0 });
+    expect(addressFromHash("#/2.12", ids)).toEqual({ index: 1, step: 12 });
+    expect(addressFromHash("#/5.1", ids)).toBeUndefined();
+    expect(addressFromHash("#/.1", ids)).toBeUndefined();
+    expect(addressFromHash("#/4.", ids)).toBeUndefined();
+    expect(addressFromHash("#/4.x", ids)).toBeUndefined();
+  });
+
+  it("takes an id with a dot while it does not end in a dot and digits", () => {
+    const dotted = ["teil.eins", "v1", "v1.2"];
+    expect(addressFromHash("#/teil.eins", dotted)).toEqual({ index: 0, step: 0 });
+    expect(addressFromHash("#/teil.eins.3", dotted)).toEqual({ index: 0, step: 3 });
+    // The last dot and digits are always the step: `v1.2` is the slide `v1` at step 2.
+    expect(addressFromHash("#/v1.2", dotted)).toEqual({ index: 1, step: 2 });
+  });
+
+  it("writes the page of a slide, and its step when it is not 0", () => {
     expect(hashOfSlide(0)).toBe("#/1");
-    expect(slideFromHash(hashOfSlide(2), ids)).toBe(2);
+    expect(hashOfSlide(6, 0)).toBe("#/7");
+    expect(hashOfSlide(6, 1)).toBe("#/7.1");
+    expect(addressFromHash(hashOfSlide(2), ids)).toEqual({ index: 2, step: 0 });
+    expect(addressFromHash(hashOfSlide(1, 3), ids)).toEqual({ index: 1, step: 3 });
+  });
+
+  it("leaves the address alone while it says where the deck is", () => {
+    expect(hashToWrite("#/befunde", ids, 3, 0)).toBeUndefined();
+    expect(hashToWrite("#/4", ids, 3, 0)).toBeUndefined();
+    expect(hashToWrite("#/4.2", ids, 3, 2)).toBeUndefined();
+    expect(hashToWrite("#/befunde.2", ids, 3, 2)).toBeUndefined();
+  });
+
+  it("keeps an id when only the step changes, and writes the page on another slide", () => {
+    expect(hashToWrite("#/befunde", ids, 3, 2)).toBe("#/befunde.2");
+    expect(hashToWrite("#/befunde.2", ids, 3, 0)).toBe("#/befunde");
+    expect(hashToWrite("#/befunde.2", ids, 1, 0)).toBe("#/2");
+    expect(hashToWrite("#/4", ids, 3, 1)).toBe("#/4.1");
+    expect(hashToWrite("#/4.1", ids, 2, 0)).toBe("#/3");
+    expect(hashToWrite("", ids, 0, 1)).toBe("#/1.1");
+    expect(hashToWrite("#/nichts", ids, 1, 0)).toBe("#/2");
   });
 });
 

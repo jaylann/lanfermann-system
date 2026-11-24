@@ -30,6 +30,7 @@ import {
 } from "@/slides/player/hooks";
 import { intentOfSwipe, type PlayerIntent } from "@/slides/player/input";
 import { fill } from "@/slides/player/labels";
+import { atEnd, atStart } from "@/slides/player/state";
 import {
   HEARTBEAT,
   isNewer,
@@ -66,7 +67,8 @@ type AudienceViewProps = ViewProps & {
 /**
  * What the audience sees: the current slide, as large as the window allows, and a small bar of
  * controls that leaves when nobody is at them. Keys, a clicker, a swipe and a click on either
- * half of the slide step the deck. There are no transitions between slides.
+ * half of the slide step the deck, through a slide's steps first. The slide is drawn `live`: what
+ * moves (an entrance, a step that appears) is the stylesheet's, behind `data-slides-live`.
  *
  * In a session (the second window of a presenter) it shows what the presenter's window says and
  * sends its own keys there instead of moving. In a frame there is no session and no full screen:
@@ -85,7 +87,8 @@ export function AudienceView({
 }: AudienceViewProps) {
   // A frame cannot reach a presenter's window: its page relays instead.
   const session = embedded ? undefined : givenSession;
-  const [state, dispatch] = usePlayerState(entries.length, start);
+  const stepCounts = useMemo(() => entries.map((entry) => entry.steps), [entries]);
+  const [state, dispatch] = usePlayerState(stepCounts, start);
   const ids = useMemo(() => entries.map((entry) => entry.id), [entries]);
   const { available, active: filled, toggle } = useFullscreen();
   const shown = useActivity(IDLE);
@@ -107,7 +110,12 @@ export function AudienceView({
         heard = performance.now();
         if (!isNewer(message.seq, last)) return;
         last = message.seq;
-        dispatch({ type: "sync", index: message.index, blackout: message.blackout });
+        dispatch({
+          type: "sync",
+          index: message.index,
+          step: message.step,
+          blackout: message.blackout,
+        });
       },
     });
     remote.current = (intent) => {
@@ -146,18 +154,29 @@ export function AudienceView({
   );
   useKeys(act);
 
-  const go = useCallback((index: number) => dispatch({ type: "go", index }), [dispatch]);
-  useHash(state.index, ids, go, hash && !session);
+  const go = useCallback(
+    (index: number, step?: number) => dispatch({ type: "go", index, step }),
+    [dispatch],
+  );
+  useHash(state.index, state.step, ids, go, hash && !session);
 
   useEmbed({
     enabled: embedded,
-    ids,
+    slides: entries,
     index: state.index,
+    step: state.step,
     blackout: state.blackout,
     onCommand(command) {
       if (command.type === "intent") act(command.intent);
-      else if (command.blackout === undefined) go(command.index);
-      else dispatch({ type: "sync", index: command.index, blackout: command.blackout });
+      else if (command.blackout === undefined) go(command.index, command.step);
+      else {
+        dispatch({
+          type: "sync",
+          index: command.index,
+          step: command.step ?? 0,
+          blackout: command.blackout,
+        });
+      }
     },
   });
 
@@ -198,6 +217,7 @@ export function AudienceView({
   const entry = entries[state.index];
   const page = state.index + 1;
   const count = entries.length;
+  const steps = entry?.steps ?? 0;
 
   return (
     <div
@@ -223,7 +243,17 @@ export function AudienceView({
             press.current = null;
           }}
         >
-          {entry && <DeckSlide entry={entry} index={state.index} errorLabel={labels.slideError} />}
+          {entry && (
+            // Keyed by the slide: a new slide is mounted fresh, a step only reveals.
+            <DeckSlide
+              key={entry.key}
+              entry={entry}
+              index={state.index}
+              step={state.step}
+              live
+              errorLabel={labels.slideError}
+            />
+          )}
         </Stage>
       )}
 
@@ -239,20 +269,23 @@ export function AudienceView({
           type="button"
           className={iconButton}
           aria-label={labels.previous}
-          aria-disabled={state.index === 0 ? true : undefined}
+          aria-disabled={atStart(state) ? true : undefined}
           onClick={() => act("previous")}
         >
           <Icon icon={ArrowLeft01Icon} size={18} />
         </button>
         <p className="min-w-16 px-1 text-center text-sm font-medium text-fg tabular-nums">
           <span aria-hidden="true">{fill(labels.position, { page, count })}</span>
-          <span className="sr-only">{fill(labels.slide, { page, count })}</span>
+          <span className="sr-only">
+            {fill(labels.slide, { page, count })}
+            {steps > 0 && `, ${fill(labels.step, { step: state.step, steps })}`}
+          </span>
         </p>
         <button
           type="button"
           className={iconButton}
           aria-label={labels.next}
-          aria-disabled={page === count ? true : undefined}
+          aria-disabled={atEnd(state) ? true : undefined}
           onClick={() => act("next")}
         >
           <Icon icon={ArrowRight01Icon} size={18} />
