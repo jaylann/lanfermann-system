@@ -12,9 +12,10 @@ export type Stage = {
   highlight?: boolean;
   marker?: number;
   lines?: number;
+  step?: number;
 };
 
-export type StageReturn = { from: number; to: number; label?: ReactNode };
+export type StageReturn = { from: number; to: number; label?: ReactNode; step?: number };
 
 export type StagesLayout = {
   /** Five and six stages are set small: titles at 24px. */
@@ -35,6 +36,11 @@ export type StagesLayout = {
  * A return path enters its stage 32px from the left edge. When that stage itself sends a path
  * back, the two would meet there: the arriving path then enters 32px from the right edge and
  * carries its label on the line under the row.
+ *
+ * Steps: a stage's box and marker come at its `step`. The connector into a stage, with its
+ * checkpoint, names no step, so the canvas brings it with the later of its two stages: with the
+ * stage it leads into, when the stages are told in order. A return path comes at its own `step`,
+ * or likewise with the later of its two stages.
  */
 export function stagesLayout(
   items: readonly Stage[],
@@ -61,6 +67,7 @@ export function stagesLayout(
     tone: item.highlight ? "accent" : undefined,
     marker: item.marker,
     icon: item.icon,
+    step: item.step,
   }));
 
   const edges: DiagramCanvasEdge[] = [
@@ -81,6 +88,7 @@ export function stagesLayout(
         toX: meetsReturn ? width - 32 : 32,
         labelAt: meetsReturn ? "bus" : undefined,
         labelWidth: width - 48 + (meetsReturn ? SLIDE_GUTTER : 0),
+        step: path.step,
       };
     }),
   ];

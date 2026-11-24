@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { type CSSProperties, Fragment, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import {
@@ -13,10 +13,12 @@ import {
   markerPosition,
   type Placement,
 } from "@/slides/diagram/geometry";
+import { drawOrder, edgeSteps } from "@/slides/diagram/steps";
 import { Icon } from "@/slides/icon/icon";
 import type { IconGlyph } from "@/slides/icon/icons";
 import { SLIDE_COLUMN, span } from "@/slides/lib/grid";
 import { Marker } from "@/slides/marker/marker";
+import { stepAttributes } from "@/slides/step/steps";
 
 /** What a box, or one section of a box, says. */
 type NodeContent = {
@@ -46,6 +48,8 @@ export type DiagramCanvasNode = Placement &
     center?: boolean;
     /** Overrides the diagram's `dense` and the choice by width. */
     dense?: boolean;
+    /** The step the box (and its marker) appears at; there from the start without one. */
+    step?: number;
   };
 
 /** A connector as `Diagram` takes it, with what `Stages` adds: a checkpoint and a steered return. */
@@ -60,6 +64,11 @@ export type DiagramCanvasEdge = EdgeRouting & {
   gate?: string | boolean;
   /** Width of the label in px, 240 by default. */
   labelWidth?: number;
+  /**
+   * The step the connector appears at. Without one it comes with the later of its two boxes, and
+   * it never comes before them (`edgeStep` in `steps.ts`).
+   */
+  step?: number;
 };
 
 export type DiagramCanvasProps = {
@@ -67,7 +76,7 @@ export type DiagramCanvasProps = {
   slot: string;
   nodes: DiagramCanvasNode[];
   edges?: DiagramCanvasEdge[];
-  bands?: Array<Placement & { pad?: number }>;
+  bands?: Array<Placement & { pad?: number; step?: number }>;
   heads?: Array<{ span: number; text: ReactNode }>;
   cols?: number;
   rowHeight?: number;
@@ -93,6 +102,19 @@ function paired<A, B>(first: readonly A[], second: readonly B[]): Array<[A, B]> 
     const other = second[index];
     return other === undefined ? [] : [[item, other]];
   });
+}
+
+/**
+ * The style of a connector's group: its step's, and `--draw-order` from the second connector
+ * of a step on, which `slides.css` turns into a later start. Nothing for a connector without a
+ * step.
+ */
+function edgeStyle(
+  step: CSSProperties | undefined,
+  order: number,
+): (CSSProperties & { "--draw-order"?: number }) | undefined {
+  if (step === undefined) return undefined;
+  return order > 0 ? { ...step, "--draw-order": order } : step;
 }
 
 type NodeBodyProps = {
@@ -142,6 +164,14 @@ function NodeBody({ content, dense, centered = false, heading }: NodeBodyProps) 
  * the markers. The numbers come from `geometry.ts`.
  *
  * The boxes are real text. The SVG holds only the lines and carries `alt` as its name.
+ *
+ * Built up by steps, every box, band and marker is marked with `stepAttributes` and arrives as
+ * any plain markup does. A connector is marked too (`slide-diagram-edge`), with its labels; a
+ * solid one also carries `data-draw` and a line of `pathLength="1"`, so that `slides.css` can
+ * draw it from its start to its end while the slide is presented, its arrowhead last, and
+ * `--draw-order` when several connectors draw at one step. A dashed connector fades: its dashes
+ * are the dash array the drawing would need. Without steps nothing is marked and nothing is
+ * split: the drawing is the still picture it always was.
  */
 export function DiagramCanvas({
   slot,
@@ -160,7 +190,14 @@ export function DiagramCanvas({
   const layout = diagramLayout(nodes, edges, bands, rowHeight ?? (dense ? 104 : 136), rowGap);
   const { height } = layout;
   const boxes = paired(nodes, layout.boxes);
-  const routes = paired(edges, layout.routes);
+  const steps = edgeSteps(nodes, edges);
+  const orders = drawOrder(steps);
+  const routes = paired(edges, layout.routes).map(([edge, route], index) => ({
+    edge,
+    route,
+    at: steps[index] ?? 0,
+    order: orders[index] ?? 0,
+  }));
 
   return (
     <div data-slot={slot} className="flex flex-none flex-col gap-4" style={{ width }}>
@@ -181,9 +218,18 @@ export function DiagramCanvas({
         </div>
       ) : null}
       <div className="relative flex-none" style={{ width, height }}>
-        {layout.bands.map((rect, index) => (
-          <div key={`b${index}`} className="absolute rounded-[4px] bg-surface-quiet" style={rect} />
-        ))}
+        {layout.bands.map((rect, index) => {
+          const step = stepAttributes(bands[index]?.step);
+          return (
+            <div
+              key={`b${index}`}
+              data-slot="slide-diagram-band"
+              {...step}
+              className="absolute rounded-[4px] bg-surface-quiet"
+              style={{ ...step.style, ...rect }}
+            />
+          );
+        })}
         <svg
           role="img"
           aria-label={alt}
@@ -193,38 +239,55 @@ export function DiagramCanvas({
           fill="none"
           className="absolute top-0 left-0"
         >
-          {routes.map(([edge, route], index) => (
-            <g
-              key={index}
-              className={edge.accent ? "stroke-accent" : "stroke-line"}
-              strokeWidth={2}
-            >
-              <path d={route.path} strokeDasharray={edge.dashed ? DASH : undefined} />
-              {edge.plain ? null : <path d={route.head} />}
-              {edge.gate ? (
-                <circle
-                  cx={route.gate.x}
-                  cy={route.gate.y}
-                  r={GATE_RADIUS}
-                  className="fill-ground stroke-accent"
+          {routes.map(({ edge, route, at, order }, index) => {
+            const step = stepAttributes(at);
+            const draws = at > 0 && !edge.dashed;
+            return (
+              <g
+                key={index}
+                data-slot="slide-diagram-edge"
+                data-draw={draws ? "" : undefined}
+                {...step}
+                style={edgeStyle(step.style, order)}
+                className={edge.accent ? "stroke-accent" : "stroke-line"}
+                strokeWidth={2}
+              >
+                <path
+                  data-slot="slide-diagram-line"
+                  d={route.path}
+                  strokeDasharray={edge.dashed ? DASH : undefined}
+                  pathLength={draws ? 1 : undefined}
                 />
-              ) : null}
-            </g>
-          ))}
+                {edge.plain ? null : <path data-slot="slide-diagram-head" d={route.head} />}
+                {edge.gate ? (
+                  <circle
+                    data-slot="slide-diagram-gate"
+                    cx={route.gate.x}
+                    cy={route.gate.y}
+                    r={GATE_RADIUS}
+                    className="fill-ground stroke-accent"
+                  />
+                ) : null}
+              </g>
+            );
+          })}
         </svg>
         {boxes.map(([node, box], index) => {
           const denseBox = node.dense ?? dense ?? isNarrow(box.w);
           const tone = node.tone ?? "plain";
+          const step = stepAttributes(node.step);
           return (
             <div
               key={`n${index}`}
+              data-slot="slide-diagram-node"
+              {...step}
               className={cn(
                 "absolute flex flex-col gap-2",
                 tone !== "none" && (denseBox ? "p-4" : "p-6"),
                 node.center && "items-center justify-center",
                 TONES[tone],
               )}
-              style={{ left: box.x, top: box.y, width: box.w, height: box.h }}
+              style={{ ...step.style, left: box.x, top: box.y, width: box.w, height: box.h }}
             >
               {node.items ? (
                 <>
@@ -253,18 +316,22 @@ export function DiagramCanvas({
             </div>
           );
         })}
-        {routes.map(([edge, route], index) => {
+        {routes.map(({ edge, route, at }, index) => {
           const labelWidth = edge.labelWidth ?? LABEL_WIDTH;
+          const step = stepAttributes(at);
           return (
             <Fragment key={`l${index}`}>
               {edge.label != null ? (
                 <p
+                  data-slot="slide-diagram-label"
+                  {...step}
                   className={cn(
                     "absolute text-slide-meta",
                     route.label.align === "center" ? "text-center" : "text-left",
                     edge.accent ? "text-accent" : "text-fg-muted",
                   )}
                   style={{
+                    ...step.style,
                     left: labelLeft(route.label, labelWidth),
                     top: route.label.y,
                     width: labelWidth,
@@ -275,8 +342,11 @@ export function DiagramCanvas({
               ) : null}
               {typeof edge.gate === "string" && edge.gate !== "" ? (
                 <p
+                  data-slot="slide-diagram-gate-label"
+                  {...step}
                   className="absolute text-center text-slide-meta font-semibold text-accent"
                   style={{
+                    ...step.style,
                     left: route.gate.x - GATE_LABEL_WIDTH / 2,
                     top: route.gate.y - 52,
                     width: GATE_LABEL_WIDTH,
@@ -288,15 +358,29 @@ export function DiagramCanvas({
             </Fragment>
           );
         })}
-        {boxes.map(([node, box], index) =>
-          node.marker ? (
+        {boxes.map(([node, box], index) => {
+          if (!node.marker) return null;
+          const step = stepAttributes(node.step);
+          // A marker of a box that comes at a step is held by a box that carries the step: the
+          // disc itself takes no attributes but its place.
+          return step["data-step"] === undefined ? (
             <Marker
               key={`m${index}`}
               n={node.marker}
               style={{ position: "absolute", ...markerPosition(box) }}
             />
-          ) : null,
-        )}
+          ) : (
+            <div
+              key={`m${index}`}
+              data-slot="slide-diagram-marker"
+              {...step}
+              className="absolute"
+              style={{ ...step.style, ...markerPosition(box) }}
+            >
+              <Marker n={node.marker} />
+            </div>
+          );
+        })}
       </div>
       {children}
     </div>

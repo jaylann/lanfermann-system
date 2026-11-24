@@ -3,7 +3,18 @@
  * stands here once (a test checks it): adding a part means adding its name.
  */
 export const slideGroups = {
-  Scaffold: ["Deck", "Slide", "Stage", "Spacer", "Split", "Footer", "Wordmark", "CoBrand", "Forms"],
+  Scaffold: [
+    "Deck",
+    "Slide",
+    "Stage",
+    "Spacer",
+    "Step",
+    "Split",
+    "Footer",
+    "Wordmark",
+    "CoBrand",
+    "Forms",
+  ],
   Text: ["Title", "Lead", "Body", "Meta", "Source", "Takeaway", "Tag", "Tags"],
   Lists: [
     "List",

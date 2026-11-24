@@ -1,12 +1,19 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { maxStep, stepAttributes, type StepCounter } from "@/slides/step/steps";
 
 export type PriceTableProps = {
-  /** Three positions at most on a slide; a longer offer is a document. */
-  items: Array<{ title: ReactNode; text?: ReactNode; qty?: ReactNode; price: ReactNode }>;
-  /** Label and amount of each total row. The last row is the sum and is set strong under the 2px rule. */
-  totals?: Array<[ReactNode, ReactNode]>;
+  /** Three positions at most on a slide; a longer offer is a document. `step` is the step a position appears at, with its line; without it the position is there from the start, and so is the head. */
+  items: Array<{
+    title: ReactNode;
+    text?: ReactNode;
+    qty?: ReactNode;
+    price: ReactNode;
+    step?: number;
+  }>;
+  /** Label and amount of each total row. The last row is the sum and is set strong under the 2px rule. An optional third entry is the step the row appears at, the sum with its rule: give the totals a step after the last position, or the sum stands before what it adds up. */
+  totals?: Array<[ReactNode, ReactNode, number?]>;
   /** Column heads. German by default: "Leistung", "Umfang", "Preis". */
   labels?: [string, string, string];
 };
@@ -17,6 +24,8 @@ export type PriceTableProps = {
  * Prices are written the way an invoice writes them: `1.900,00 €` in German, `€1,900.00` in
  * English, with a narrow no-break space before the euro sign in German. Net, VAT and total always
  * appear together. Nothing here is highlighted in the accent: a price is not a selling point.
+ * Positions can come one by one when each is explained, the totals after them; an offer the
+ * reader checks as a whole stands whole.
  */
 export function PriceTable({
   items,
@@ -27,7 +36,8 @@ export function PriceTable({
   // wide as a content box plus the 64px gutter as right padding; the price has no width and takes
   // what is left, its three columns on a full slide. A position is its row's header, which may
   // hold no heading, so its title is a paragraph. The totals are pairs of label and amount on the
-  // five columns under scope and price.
+  // five columns under scope and price. A position's step is marked on its `<tr>`: its line is the
+  // bottom border of its cells (the borders are separate), so it waits with the row.
   return (
     <div data-slot="slide-price-table" className="flex flex-col">
       <table className="w-full table-fixed border-separate border-spacing-0">
@@ -55,7 +65,7 @@ export function PriceTable({
         </thead>
         <tbody>
           {items.map((item, index) => (
-            <tr key={index}>
+            <tr key={index} {...stepAttributes(item.step)}>
               <th
                 scope="row"
                 className="border-b border-line py-6 pr-16 text-left align-baseline font-normal"
@@ -78,7 +88,7 @@ export function PriceTable({
       {totals.length > 0 ? (
         <div className="flex justify-end pt-4">
           <dl className="flex slide-span-5 flex-col">
-            {totals.map(([label, amount], index) => {
+            {totals.map(([label, amount, step], index) => {
               const sum = index === totals.length - 1;
               const type = sum
                 ? "text-slide-body leading-[1.3] font-semibold text-fg"
@@ -90,6 +100,7 @@ export function PriceTable({
                     "flex items-baseline justify-between",
                     sum ? "border-t-2 border-rule pt-4" : "py-2",
                   )}
+                  {...stepAttributes(step)}
                 >
                   <dt className={type}>{label}</dt>
                   <dd className={cn(type, "text-right tabular-nums")}>{amount}</dd>
@@ -102,3 +113,10 @@ export function PriceTable({
     </div>
   );
 }
+
+/** The highest step among the positions and the total rows. */
+PriceTable.slideSteps = ((props) =>
+  Math.max(
+    maxStep(props.items),
+    maxStep(props.totals?.map(([, , step]) => ({ step }))),
+  )) satisfies StepCounter<PriceTableProps>;

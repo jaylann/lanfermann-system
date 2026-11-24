@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 
+import { PinnedMarker } from "@/slides/browser-frame/pinned-marker";
 import { Wireframe } from "@/slides/browser-frame/wireframe";
 import { span } from "@/slides/lib/grid";
-import { Marker } from "@/slides/marker/marker";
+import { maxStep, type StepCounter } from "@/slides/step/steps";
 
 /** The address bar in px: 12px above and below one line of code type, and its 1px line. */
 const BAR = 60;
@@ -18,8 +19,8 @@ export type BrowserFrameProps = {
   width?: number;
   /** Frame height in px, 520 by default. */
   height?: number;
-  /** Marker number and its position in px from the frame's top left corner. */
-  markers?: Array<{ n: number; x: number; y: number }>;
+  /** Marker number and its position in px from the frame's top left corner. `step` lets a marker appear at that step of the slide, so the findings can be pointed out one after the other. */
+  markers?: Array<{ n: number; x: number; y: number; step?: number }>;
   /** Your own content in place of the screenshot. */
   children?: ReactNode;
 };
@@ -32,7 +33,8 @@ export type BrowserFrameProps = {
  * at the top of the page unless a finding is further down. Blur personal data before it goes on a
  * slide. The frame is always a light page with a 1px `line` edge and `radius-4`. Markers sit on
  * the spot itself, never beside it with an arrow. If the page under a marker is busy, move the
- * marker a few px, not the finding.
+ * marker a few px, not the finding. When the talk goes through the findings one at a time, let
+ * each marker appear at the step its finding does; the screenshot itself stands from the start.
  */
 export function BrowserFrame({
   url,
@@ -68,12 +70,12 @@ export function BrowserFrame({
         (children ?? <Wireframe width={pageWidth} height={pageHeight} />)
       )}
       {markers.map((marker) => (
-        <Marker
-          key={marker.n}
-          n={marker.n}
-          style={{ position: "absolute", left: marker.x, top: marker.y }}
-        />
+        <PinnedMarker key={marker.n} {...marker} />
       ))}
     </div>
   );
 }
+
+/** The highest `step` among the markers. */
+BrowserFrame.slideSteps = ((props) =>
+  maxStep(props.markers)) satisfies StepCounter<BrowserFrameProps>;

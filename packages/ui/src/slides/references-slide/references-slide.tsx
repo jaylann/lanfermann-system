@@ -17,6 +17,11 @@ export type ReferencesSlideProps = {
   id?: string;
   /** What the presenter says here. Never drawn on the slide. */
   notes?: ReactNode;
+  /**
+   * How many steps the slide shows click by click. Only needed when a component of your own
+   * inside it uses steps: the kit's parts are counted.
+   */
+  steps?: number;
 };
 
 /**

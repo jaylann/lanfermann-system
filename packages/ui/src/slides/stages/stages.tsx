@@ -2,11 +2,13 @@ import type { ReactNode } from "react";
 
 import { DiagramCanvas } from "@/slides/diagram/diagram-canvas";
 import { arrowHead, DASH, GATE_RADIUS } from "@/slides/diagram/geometry";
+import { diagramStepCount } from "@/slides/diagram/steps";
 import type { IconGlyph } from "@/slides/icon/icons";
 import { stagesLayout } from "@/slides/stages/layout";
+import type { StepCounter } from "@/slides/step/steps";
 
 export type StagesProps = {
-  /** The stages in order. `icon` sets one of `ICONS` before the title. The label counts them unless you name it. `highlight` gives one stage the accent edge. `lines` is how many lines the text takes, 2 by default. */
+  /** The stages in order. `icon` sets one of `ICONS` before the title. The label counts them unless you name it. `highlight` gives one stage the accent edge. `lines` is how many lines the text takes, 2 by default. `step` is the click at which the stage arrives, with its marker and the connector into it (and that connector's checkpoint); without one it is there from the start. */
   items: Array<{
     title: ReactNode;
     text?: ReactNode;
@@ -15,11 +17,12 @@ export type StagesProps = {
     highlight?: boolean;
     marker?: number;
     lines?: number;
+    step?: number;
   }>;
   /** One entry per gap between two stages: `true` draws a checkpoint on the connector, a name of two or three characters („G1“) writes it above; `null` leaves the connector plain. */
   gates?: Array<string | boolean | null>;
-  /** Paths back to an earlier stage, counted from 1, drawn dashed in the accent under the row. Paths from the same stage share one line. */
-  returns?: Array<{ from: number; to: number; label?: ReactNode }>;
+  /** Paths back to an earlier stage, counted from 1, drawn dashed in the accent under the row. Paths from the same stage share one line. `step` is the click at which a path back fades in, with its label; without one it comes with the later of its two stages, and it never comes before them. */
+  returns?: Array<{ from: number; to: number; label?: ReactNode; step?: number }>;
   /** What a checkpoint means, as the legend's first entry. */
   gateNote?: ReactNode;
   /** What a return path means, as the legend's second entry. */
@@ -40,6 +43,10 @@ const SAMPLE = 48;
  * paths run under the row, dashed, and each says in two words why it is taken. With six stages
  * keep every text to two lines of 18 characters. The legend explains the disc and the dashed line
  * once; do not explain them in the title.
+ *
+ * Built up by steps, the stages are told in the order they are walked, one click a stage, and a
+ * path back once the stage it leaves is there; no more steps than there are things to say. The
+ * legend stands from the start.
  */
 export function Stages({
   items,
@@ -105,3 +112,11 @@ export function Stages({
     </DiagramCanvas>
   );
 }
+
+// The connectors between stages name no step and come with their stages, so the highest step is
+// among the stages and the paths back.
+Stages.slideSteps = ((props) =>
+  diagramStepCount({
+    nodes: props.items,
+    edges: props.returns,
+  })) satisfies StepCounter<StagesProps>;
