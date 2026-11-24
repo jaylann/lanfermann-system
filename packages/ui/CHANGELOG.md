@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.0](https://github.com/jaylann/lanfermann-system/compare/v0.11.0...v0.12.0) (2026-11-24)
+
+
+### Features
+
+* **ui:** add useMediaQuery ([#79](https://github.com/jaylann/lanfermann-system/issues/79)) ([e71c9da](https://github.com/jaylann/lanfermann-system/commit/e71c9daa3e5198e2fb0758c027c47092fea1ae6d))
+* **ui:** parts for a file browser's search, details pane and list ([#80](https://github.com/jaylann/lanfermann-system/issues/80)) ([5a28a7b](https://github.com/jaylann/lanfermann-system/commit/5a28a7b7c1b7b923ddef1b8a5a480624a4805c20))
+
 ## [0.11.0](https://github.com/jaylann/lanfermann-system/compare/v0.10.0...v0.11.0) (2026-11-23)
 
 
