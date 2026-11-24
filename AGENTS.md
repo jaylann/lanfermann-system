@@ -31,6 +31,15 @@ The rules per concern (components, tokens, motion, slides, visual verification) 
     `compare.ts` and `docker.ts` diff them against `visual-baseline/` (the committed pictures).
   - `vitest.config.ts` — two projects: `unit` (`bun run test`) and `storybook`
     (`bun run test:stories`: every story in a browser, axe at `error`, `play` functions).
+- `packages/slides` — the deck tool, published as `@lanfermann/slides`: the commands `check`,
+  `dev`, `build` and `pack` of `slides`. Plain Node, no React: `src/index.ts` is the library, and
+  its `bundleDeck`, `typecheckDeck` and `deckHtml` are the contract the hub builds on (issue
+  #90), so their names and shapes are not changed here alone; `src/cli.ts` only maps arguments
+  (`src/run.ts`).
+  `fixtures/` holds the decks it is tested on, some wrong on purpose, so ESLint, tsc and the
+  spell check leave them out. The format of a deck is `docs/deck-format.md`. It reads the
+  built `packages/ui/player/` and `dist/`: build the library first. `bun run slides:e2e` runs
+  the built tool and opens what it wrote in the system's Chrome, outside the sandbox.
 - `apps/docs` — Next.js App Router app consuming the built `dist` via `workspace:*`: the consumer
   smoke test, not the place to look at components. `apps/docs/AGENTS.md` is managed by `next dev`;
   leave it, and read `apps/docs/node_modules/next/dist/docs/` before changing Next code.

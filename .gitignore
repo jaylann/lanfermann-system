@@ -43,3 +43,6 @@ next-env.d.ts
 storybook-static/
 .visual/
 debug-storybook.log
+
+# What `slides build` and `slides pack` write when they are run from this repository
+slides-out/

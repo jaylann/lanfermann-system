@@ -16,6 +16,9 @@ written down in [`packages/ui/DESIGN.md`](packages/ui/DESIGN.md).
   - `scripts/visual/capture.ts` takes screenshots, state strips and motion strips of every story.
   - Every story is also a test (accessibility, and a `play` function for its keyboard path), and
     its picture is compared with a committed baseline.
+- **`packages/slides`** — `@lanfermann/slides`, the command-line tool that checks, previews,
+  builds and packs a slide deck written with the library's slide parts (see [Decks](#decks)).
+  A package of its own, so the library does not carry a bundler and a compiler.
 - **`apps/docs`** — a Next.js (App Router) app that consumes the built library through the
   workspace. It is the consumer smoke test, not the place to look at components.
 - bun workspaces · ESLint + Prettier · Vitest · GitHub Actions.
@@ -40,6 +43,7 @@ bun run storybook                  # the workshop, http://127.0.0.1:6006
 | `bun run format` / `format:check` | Prettier                                                     |
 | `bun run typecheck`               | `tsc --noEmit` in every workspace                            |
 | `bun run test`                    | Vitest (class merging, token contrast, generated-file drift) |
+| `bun run slides:e2e`              | The deck tool from end to end, in the system's Chrome        |
 
 In `packages/ui`, with a browser:
 
@@ -211,8 +215,14 @@ import { Player } from "@lanfermann/ui/slides/player";
 - `mode="print"` stacks the slides one a page, for Chromium's `page.pdf()` with
   `preferCSSPageSize` and `printBackground`. `mode="check"` measures them and writes a report to
   `window.__slidesReport`: parts beyond the content box or the canvas, boxes that cut off their
-  content, a text on more lines than its `data-lines` allows, a slide that threw. In both,
-  `window.__slidesReady` resolves once fonts and pictures are there.
+  content, a text on more lines than its `data-lines` allows, a slide that threw.
+- `window.__slidesReady` is `true`, in every mode, once fonts and pictures are there and a frame
+  has been drawn; in check mode the report is on the window by then. Every slide is
+  `[data-slot="slide"]` with `data-slide-index` and, where it has one, `data-slide-id`.
+- In a frame of another page (`window.parent !== window`, or `embed`) the player speaks to that
+  page over `postMessage`: it says `ready` and then its `state` on every change, takes `go` and
+  `intent` from the parent only, opens no window and asks for no full screen. The messages are
+  in `src/slides/player/embed.ts`.
 - `labels` replaces the player's own words, which are German by default.
 
 A deck that is **one HTML file** uses the prebuilt player instead, which the package ships in
@@ -307,6 +317,39 @@ export async function persistConsent(value: string, maxAge: number) {
   Revoking deletes the first-party storage a service lists; its cookies on other domains are out
   of reach.
 
+## Decks
+
+A deck is a folder with a `deck.tsx` whose default export is a `<Deck>` element, with `notes`
+on each slide for the presenter. `@lanfermann/slides` (`packages/slides`) turns it into one HTML
+file that runs from a disk without a network:
+
+```bash
+slides check <dir>                    # imports, notes, classes, types, and the layout of every slide
+slides dev <dir>                      # the presenter's view on 127.0.0.1, built again on change
+slides build <dir> --audience --pdf   # <slug>.html without the notes, and <slug>.pdf
+slides build <dir> --presenter        # <slug>.presenter.html, with the notes
+slides pack <dir>                     # the source as one JSON file for the hub
+```
+
+- A deck imports React, `@lanfermann/ui/slides` and its own files, and nothing else. `check`
+  names anything else by file, line and column.
+- The file for an audience holds no notes: they are taken out of the source before it is
+  compiled, and the finished script is searched for their words. A deck whose notes cannot be
+  left out for certain gets no file.
+- Every built file carries a policy that lets it load nothing, and the notices of what the
+  player contains.
+- `check` and `--pdf` draw the deck in the system's Chrome through `playwright-core`; nothing is
+  downloaded. `SLIDES_BROWSER` picks another browser.
+
+The format, the rules for notes and pictures, and every code the check prints:
+[`packages/slides/docs/deck-format.md`](packages/slides/docs/deck-format.md). The library
+behind the commands (`bundleDeck`, `typecheckDeck`, `deckHtml`), which the hub uses as well:
+[`packages/slides/README.md`](packages/slides/README.md).
+
+In this repository the tool runs from its source folder after `bun run build`
+(`node packages/slides/dist/cli.js check packages/slides/fixtures/sample`), and
+`bun run slides:e2e` walks all of it through a browser.
+
 ## Adding a component
 
 1. Read `packages/ui/DESIGN.md` and the rule files in `.claude/rules/` (tokens, components,
@@ -324,14 +367,17 @@ export async function persistConsent(value: string, maxAge: number) {
 ## Conventions
 
 - **Branches:** `stage` is the working branch; `main` is release/tag-only.
-- **Releases:** a push to `main` makes release-please open a release PR with the next version and
-  the changelog, read from the commit messages. Merging it publishes `@lanfermann/ui` to npm from
-  CI, with provenance (`.github/workflows/release.yml`), and brings the release commit back to
-  `stage`: a fast-forward, or a `main` → `stage` PR if `stage` moved on in the meantime.
+- **Releases:** a push to `main` makes release-please open a release PR per package with the
+  next version and the changelog, read from the commit messages that touched it. Merging one
+  publishes that package to npm from CI, with provenance (`.github/workflows/release.yml`), and
+  brings the release commit back to `stage`: a fast-forward, or a `main` → `stage` PR if `stage`
+  moved on in the meantime. `@lanfermann/ui` is tagged `vX.Y.Z`, `@lanfermann/slides`
+  `slides-vX.Y.Z`.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/), enforced by the
   `commit-msg` hook and the `pr-title` CI check.
 - **Linting/format:** staged files are fixed on commit; CI runs lint, typecheck, test, build, the
-  Storybook build, the story tests, the visual check and a spell check.
+  Storybook build, the story tests, the deck tool's end-to-end run, the visual check and a spell
+  check.
 
 ## License
 
