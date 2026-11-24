@@ -535,6 +535,11 @@ chart, a `RollingNumber` and a sentence say the same value the same way.
   `formatRelativeTime`): „gerade eben“, „vor 5 Minuten“, hours within the day, then the days
   of the calendar („gestern“ is yesterday, not 24 hours ago), and from a week on the date, as a
   `Timeline` writes it. It keeps up on one clock for the whole page and changes without motion.
+- **A date written out** (`formatDate`) has its day, the short month and the year: „30. Nov.
+  2026“, „Nov 30, 2026“ in English, „30. Nov. 2026, 14:05“ with `withTime`. A date without a
+  time (`"2026-11-30"`) is a day of the calendar and stays that day in every time zone; a
+  moment is written in the reader's zone unless `timeZone` names one, which a page rendered on
+  a server does.
 - **The server has no clock.** A page rendered ahead of time cannot read the time, and does
   not know the reader's day or zone. What depends on today (`RelativeTime`, the presets of a
   range, the ring of a `Calendar`) is worked out in the browser, unless the page passes the

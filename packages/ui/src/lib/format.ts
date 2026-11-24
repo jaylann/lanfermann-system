@@ -14,11 +14,14 @@
 /** A moment: a `Date`, milliseconds, or an ISO string. An ISO date alone is local midnight. */
 export type TimeValue = Date | string | number;
 
+/** An ISO date without a time: `2026-11-14`. */
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 /** A moment as milliseconds. An ISO date without a time (`2026-11-14`) is local midnight. */
 export function toTime(value: TimeValue): number {
   if (typeof value === "number") return value;
   if (value instanceof Date) return value.getTime();
-  const date = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const date = ISO_DATE.exec(value);
   if (date) return new Date(Number(date[1]), Number(date[2]) - 1, Number(date[3])).getTime();
   return new Date(value).getTime();
 }
@@ -113,6 +116,54 @@ export function formatMoney(
  */
 export function formatPercent(share: number, { locale, ...options }: FormatOptions = {}): string {
   return numberFormatter(locale, { style: "percent", ...options }).format(share);
+}
+
+export type DateOptions = {
+  /** German unless given. */
+  locale?: Intl.LocalesArgument;
+  /**
+   * The time zone a moment is written in: the reader's unless given, as `formatRelativeTime`
+   * does. A page rendered on a server passes one (`"Europe/Berlin"`), so the server and the
+   * browser write the same day. A date without a time ignores it.
+   */
+  timeZone?: string;
+  /** The time of day after the date: „30. Nov. 2026, 14:05“. Not for a date without a time. */
+  withTime?: boolean;
+};
+
+const DAY_PARTS = { day: "numeric", month: "short", year: "numeric" } as const;
+const TIME_PARTS = { hour: "2-digit", minute: "2-digit" } as const;
+
+/**
+ * A date written out, the same in every place it is read: „30. Nov. 2026“ in German, „Nov 30,
+ * 2026“ in English (`locale: "en-US"`). With `withTime`, „30. Nov. 2026, 14:05“, as a
+ * `RelativeTime` writes a moment before it has a clock.
+ *
+ * An ISO date without a time (`"2026-11-30"`) is a day of the calendar, not a moment: it is
+ * written as that day in every time zone, so a due date never moves to the 29th in New York.
+ * Everything else (a `Date`, milliseconds, an ISO string with a time) is a moment, written as
+ * the day it falls on in `timeZone`. `""` for what is no date.
+ */
+export function formatDate(
+  value: TimeValue,
+  { locale = DEFAULT_LOCALE, timeZone, withTime = false }: DateOptions = {},
+): string {
+  const day = typeof value === "string" ? ISO_DATE.exec(value) : null;
+  if (day) {
+    // The day as midnight in UTC, written in UTC: the same day wherever this runs.
+    const month = Number(day[2]) - 1;
+    const date = new Date(Date.UTC(Number(day[1]), month, Number(day[3])));
+    // `2026-02-30` would roll over into March: it is no date.
+    if (date.getUTCMonth() !== month || date.getUTCDate() !== Number(day[3])) return "";
+    return dateFormatter(locale, { ...DAY_PARTS, timeZone: "UTC" }).format(date);
+  }
+  const time = toTime(value);
+  if (!Number.isFinite(time)) return "";
+  return dateFormatter(locale, {
+    ...DAY_PARTS,
+    ...(withTime ? TIME_PARTS : {}),
+    ...(timeZone === undefined ? {} : { timeZone }),
+  }).format(time);
 }
 
 export type RelativeTimeOptions = {

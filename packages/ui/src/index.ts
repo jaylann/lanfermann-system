@@ -766,6 +766,8 @@ export {
 } from "./components/waterfall/waterfall";
 export { cn, mergeClassName } from "./lib/cn";
 export {
+  type DateOptions,
+  formatDate,
   formatMoney,
   formatNumber,
   type FormatOptions,
