@@ -4,10 +4,10 @@ import { defineConfig } from "tsdown";
 // and consumers only pull in the components they import. dependencies + peerDependencies stay
 // external by default.
 //
-// Two entries: the library, and the slide parts (`@lanfermann/ui/slides`), which an app that shows
-// no deck never loads.
+// Three entries: the library; the slide parts (`@lanfermann/ui/slides`), which an app that shows
+// no deck never loads; and their catalog as plain data (`@lanfermann/ui/slides/catalog`).
 export default defineConfig({
-  entry: ["src/index.ts", "src/slides/index.ts"],
+  entry: ["src/index.ts", "src/slides/index.ts", "src/slides/catalog/index.ts"],
   format: "esm",
   platform: "neutral",
   unbundle: true,

@@ -9,8 +9,11 @@ extend-exclude = [
   "storybook-static/",
   ".visual/",
   "*.generated.css",
+  "*.generated.ts",
   # German sample copy: the checker knows English only.
   "*.stories.tsx",
+  # The example slide beside a slide part, shown in its story and in the catalog.
+  "*.example.tsx",
   # The sample content stories share (an answer, its sources, files).
   "story-*.ts",
   "story-*.tsx",

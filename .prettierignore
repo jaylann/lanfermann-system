@@ -9,6 +9,7 @@ bun.lockb
 storybook-static
 .visual
 *.generated.css
+*.generated.ts
 # Written by `bun run visual:baseline`: kept as the tool writes it, so a run changes nothing.
 packages/ui/visual-baseline
 # Written by release-please on every release: kept as it writes it, or each release PR fails lint.
