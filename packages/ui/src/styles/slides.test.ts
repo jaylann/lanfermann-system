@@ -146,7 +146,9 @@ describe("steps and motion", () => {
 
   it("a step is shown or hidden by one rule that needs no live slide", () => {
     const reveal = all.find(
-      (rule) => rule.selector === "[data-step]" && rule.within.join() === "@layer components",
+      (rule) =>
+        rule.selector === '[data-slot="slide"] [data-step]' &&
+        rule.within.join() === "@layer components",
     );
     expect(value(reveal, "--step-on")).toBe(
       "clamp(0, calc(var(--slide-step, 9999) - var(--step-at, 0) + 1), 1)",
@@ -154,6 +156,16 @@ describe("steps and motion", () => {
     expect(value(reveal, "opacity")).toBe("var(--step-on)");
     expect(value(reveal, "translate")).toBe("0 calc((1 - var(--step-on)) * 16px)");
     expect(reveal?.declarations.map(([name]) => name)).not.toContain("display");
+  });
+
+  it("a rule about steps names a slide or one of its parts", () => {
+    // `data-step` and `data-draw` are plain names. A page may use them for something of its
+    // own (the workshop's stories do), and this stylesheet is loaded beside it.
+    const marked = all.filter((rule) => /\[data-(step|draw)\]/.test(rule.selector));
+    expect(marked.length).toBeGreaterThan(0);
+    for (const rule of marked)
+      for (const selector of selectorsOf(rule.selector))
+        expect(selector, rule.selector).toMatch(/\[data-slot="slide[-"]/);
   });
 
   it("everything that moves is live, on a screen, and has a reduced-motion answer", () => {
@@ -241,7 +253,9 @@ describe("steps and motion", () => {
 
   it("a print shows every step", () => {
     const print = all.find(
-      (rule) => rule.selector === "[data-step]" && rule.within.at(-1) === "@media print",
+      (rule) =>
+        rule.selector === '[data-slot="slide"] [data-step]' &&
+        rule.within.at(-1) === "@media print",
     );
     expect(value(print, "--step-on")).toBe("1");
   });

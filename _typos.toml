@@ -70,5 +70,9 @@ paket = "paket"
 modell = "modell"
 # German sample copy quoted in a slide part's doc comment („lokale Geschäfte“).
 lokale = "lokale"
+# German sample copy in a slide part's doc comment and its test („Ein Tipp startet den Anruf.“,
+# the month „Juni“).
+startet = "startet"
+juni = "juni"
 # How a deck's name writes the umlaut ü (ä is ae, ö is oe, ü is ue).
 ue = "ue"

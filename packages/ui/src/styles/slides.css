@@ -246,8 +246,11 @@
    * fallback shows everything. A step that is not reached keeps its place: nothing reflows.
    * Never `display: none`. A marked element is a stacking context and the frame of its absolutely
    * placed children, shown or not (its `translate` is never `none`).
+   *
+   * Every rule here names a slide or one of its parts: `data-step` is a plain name, and a page
+   * that uses it for something of its own must not be touched (a test checks it).
    */
-  [data-step] {
+  [data-slot="slide"] [data-step] {
     --step-on: clamp(0, calc(var(--slide-step, 9999) - var(--step-at, 0) + 1), 1); /* 0 or 1 */
     opacity: var(--step-on);
     translate: 0 calc((1 - var(--step-on)) * 16px);
@@ -261,7 +264,7 @@
    * `data-motion="none"` comes on standing still.
    */
   @media screen and (prefers-reduced-motion: no-preference) {
-    [data-slides-live] [data-step] {
+    [data-slides-live] [data-slot="slide"] [data-step] {
       transition:
         opacity var(--slide-step-duration) ease,
         translate var(--slide-step-duration) var(--slide-ease);
@@ -338,7 +341,7 @@
    * slide's blocks and forms fade in together, without a stagger.
    */
   @media screen and (prefers-reduced-motion: reduce) {
-    [data-slides-live] [data-step] {
+    [data-slides-live] [data-slot="slide"] [data-step] {
       translate: none;
       transition: opacity var(--slide-step-duration) ease;
     }
@@ -483,7 +486,7 @@
    * Every step shown, whatever step the page stood at. Nothing moves in print: the motion above
    * is for screens only.
    */
-  [data-step] {
+  [data-slot="slide"] [data-step] {
     --step-on: 1;
   }
 }
