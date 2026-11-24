@@ -50,6 +50,26 @@ The parts a deck is made of, with their props and an example each, are in the ki
   or named before the deck runs, so the check refuses them.
 - `id` on a slide is what `#/<id>` in an address opens. It is also how the check names a slide.
 
+## Steps
+
+A slide can show its content click by click. What has not appeared yet keeps its place, so
+nothing moves when it comes. A print, the PDF and the check show every step.
+
+- `<Step at={1}>` around any block makes it appear at the first press, `at={2}` at the second.
+- The parts that list things take `step` on an item instead: `Columns`, `Steps`, `Findings`,
+  `List`, `FigureRow`, `BarList`, the boxes of a `Diagram` and more (the catalog names it on
+  each). A diagram's connector comes with the later of its two boxes and draws itself.
+- A `Scene` is one drawing looked at in beats: each beat names what the camera shows, and each
+  beat after the first is a step. Two slides can share a world; the second names the view the
+  first ended on as `from`, and the camera travels on.
+- The address carries the step: `#/7.1`, `#/ablauf.2`. Stepping back from a slide lands on
+  the last step of the one before.
+- A part of the deck's own that uses steps inside says how many where it is used
+  (`<Aufgabe steps={2}>`, passed on to its `<Slide steps={…}>`): the player counts a slide's
+  steps before it draws it, and the check reports a step the slide does not have.
+- Motion belongs to the slide being presented, on a screen. `data-motion="none"` on a slide
+  keeps it still.
+
 ## Notes
 
 What the presenter says on a slide is its `notes` prop. The player shows the notes in the

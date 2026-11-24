@@ -13,10 +13,12 @@ canvas, type, grounds, forms) is `packages/ui/DESIGN.md`, "Slides"; the values a
 - Parts keep the artifact's names and props, with its wording as JSDoc on every prop: that text
   is what the author of a deck reads.
 - Plain markup: no hooks, no Base UI, no `"use client"`. The exceptions are the parts that read
-  the deck (`Deck`, `Footer`) or measure a box (`Stage`).
+  the deck (`Deck`, `Footer`), measure a box (`Stage`) or fly a camera (`Scene`, which reads
+  the step it is at through `useSlideStep()`).
 - `data-slot="slide-<part>"` on every part; `data-lines="<n>"` on a text part that may take at
   most `n` lines (the player's check reports more); `data-bleed` on a part that may leave the
-  canvas.
+  canvas; `data-crop` on a box that shows a part of something larger on purpose (a scene's
+  view), so the check does not call it cut off.
 
 ## Style
 

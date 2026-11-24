@@ -1204,7 +1204,24 @@ the check. Three things move, and only while a deck is presented live:
   120ms three deep, and the circles of its forms grow from 60% one after the other. The footer
   row stands in the same place on every slide, so it does not move. A slide with
   `data-motion="none"` comes on standing still.
-- _A scene's camera_, on a scene slide only.
+- _A connector._ In a diagram that builds up, a solid connector draws itself from its start to
+  its end in 600ms once its box has begun to arrive, a checkpoint on it as the line passes, the
+  arrowhead last. A dashed one fades in, since its dashes are the dash array.
+- _A scene's camera_, on a scene slide only. `Scene` is one drawing (a world of boxes on a grid,
+  in groups, joined by wires) that a slide looks at in beats: each beat names the view, what is
+  lit, and one caption at the foot. The camera flies there in 900ms, eased in and out, zooming
+  evenly in the logarithm so that a move in and a move out feel the same. Line weights, group
+  labels and the text of a box keep their size on screen at every zoom; below three quarters of
+  full size a box is a block without text. What a view does not hold whole is not drawn; what
+  it holds but does not mean is dimmed. A beat can name a loop, which is marked by a dashed
+  line that marches and a mark that walks from box to box. Two slides can look at the same
+  world: the second names where the first ended (`from`) and the camera travels on, where a new
+  drawing would arrive from nothing. The camera is flown by script, since CSS cannot ease a
+  zoom in the logarithm; everything else is a transition. Under reduced motion it cuts.
+
+Open, Justin's to judge: wires as the S-curve of the deck they come from or as the right
+angles of `Diagram` (`route`, stories `Paper` and `Elbow`); lit boxes with an accent edge and
+the rest dimmed, against the rule of one accent a slide; the loop's weight.
 
 Everything else stands still. The motion keeps to one curve, the kit's
 `cubic-bezier(0.16, 0.84, 0.2, 1)`, which leaves fast and settles long, and to `translate`,

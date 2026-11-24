@@ -29,7 +29,7 @@ export const slideGroups = {
   ],
   Tables: ["Table", "PriceTable"],
   Figures: ["Figure", "FigureRow", "BarList", "ColumnChart"],
-  Diagrams: ["Flow", "Diagram", "Stages", "Loop"],
+  Diagrams: ["Flow", "Diagram", "Stages", "Loop", "Scene"],
   Proof: [
     "Findings",
     "Marker",

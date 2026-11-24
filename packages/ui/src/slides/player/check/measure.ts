@@ -178,11 +178,15 @@ function overflowIssues(slide: Element, slideBox: Box, scale: number): SlideIssu
   return issues;
 }
 
-/** Boxes inside the slide that hide a part of their own content. */
+/**
+ * Boxes inside the slide that hide a part of their own content. Not a box that shows a part of
+ * something larger on purpose (`data-crop`: a scene's view onto its world), nor anything inside
+ * one: what the camera leaves out is meant to be out.
+ */
 function clippedIssues(slide: Element): SlideIssue[] {
   const issues: SlideIssue[] = [];
   for (const element of slide.querySelectorAll("*")) {
-    if (!(element instanceof HTMLElement) || element.closest("[data-bleed]")) continue;
+    if (!(element instanceof HTMLElement) || element.closest("[data-bleed], [data-crop]")) continue;
     const style = getComputedStyle(element);
     const cutX = style.overflowX !== "visible" && cutsOff(element.scrollWidth, element.clientWidth);
     const cutY =
