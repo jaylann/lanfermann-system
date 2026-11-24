@@ -6,6 +6,7 @@ import type { DeckProps } from "@/slides/deck/deck";
 import { DeckProvider } from "@/slides/deck/deck-context";
 import { flattenSlides } from "@/slides/deck/flatten-slides";
 
+import { useEmbedded } from "./embed";
 import type { PlayerStart } from "./hooks";
 import { defaultLabels, type PlayerLabels } from "./labels";
 import type { PlayerMode } from "./mode";
@@ -37,6 +38,13 @@ export type PlayerProps = {
   start?: PlayerStart;
   /** Whether the address (`#/7`) follows the slide and moves it. True by default. */
   hash?: boolean;
+  /**
+   * Whether the player runs in a frame of another page. By default the page is asked
+   * (`window.parent !== window`). In a frame the player tells that page where the deck is and
+   * does what it is told, over `postMessage` (the messages are in `embed.ts`); it opens no window
+   * and asks for no full screen, and the console's „Publikumsfenster öffnen“ asks the page for it.
+   */
+  embed?: boolean;
   /** The time in ms since the epoch, `Date.now` by default. A test hands in a clock that stands. */
   now?: () => number;
 };
@@ -57,8 +65,10 @@ export function Player({
   session,
   start,
   hash = true,
+  embed,
   now = Date.now,
 }: PlayerProps): ReactNode {
+  const embedded = useEmbedded(embed);
   const { title, lang = "de", children } = deck.props;
   const entries = useMemo(() => flattenSlides(children), [children]);
   const words = useMemo(() => ({ ...defaultLabels, ...labels }), [labels]);
@@ -81,10 +91,20 @@ export function Player({
             start={start}
             now={now}
             hash={hash}
+            embedded={embedded}
           />
         );
       case "presenter":
-        return <PresenterView {...shared} session={session} start={start} now={now} hash={hash} />;
+        return (
+          <PresenterView
+            {...shared}
+            session={session}
+            start={start}
+            now={now}
+            hash={hash}
+            embedded={embedded}
+          />
+        );
       case "print":
         return <PrintView {...shared} />;
       case "check":

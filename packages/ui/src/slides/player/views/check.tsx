@@ -3,7 +3,13 @@
 import { isValidElement, type ReactNode, useEffect, useRef } from "react";
 
 import { measureEntry } from "@/slides/player/check/measure";
-import { collectErrors, fontsOfPage, publish, whenSettled } from "@/slides/player/check/ready";
+import {
+  collectErrors,
+  fontsOfPage,
+  publish,
+  unpublish,
+  whenSettled,
+} from "@/slides/player/check/ready";
 import { buildReport, type SlideIssue } from "@/slides/player/check/report";
 import { DeckSlide } from "@/slides/player/deck-slide";
 import { version } from "@/slides/player/version";
@@ -26,9 +32,9 @@ function textOf(node: ReactNode): string {
 
 /**
  * The deck laid out as it prints, then measured: once the fonts and pictures are there, every
- * slide is checked (see check/measure.ts) and the report is written to `window.__slidesReport`;
- * `window.__slidesReady` resolves with it. Each child of the deck stands in a box that takes no
- * space (`data-slides-entry`), so the report can say which child is not one slide.
+ * slide is checked (see check/measure.ts), the report is written to `window.__slidesReport`, and
+ * `window.__slidesReady` turns true. Each child of the deck stands in a box that takes no space
+ * (`data-slides-entry`, from `DeckSlide`), so the report can say which child is not one slide.
  */
 export function CheckView({ entries, labels, lang, title }: CheckViewProps) {
   const deck = useRef<HTMLDivElement>(null);
@@ -61,15 +67,14 @@ export function CheckView({ entries, labels, lang, title }: CheckViewProps) {
     return () => {
       current = false;
       page.stop();
+      unpublish();
     };
   }, [entries, lang, title]);
 
   return (
     <div ref={deck} data-slot="deck" lang={lang} className="flex w-max flex-col">
       {entries.map((entry, index) => (
-        <div key={entry.key} data-slides-entry={index} className="contents">
-          <DeckSlide entry={entry} index={index} errorLabel={labels.slideError} />
-        </div>
+        <DeckSlide key={entry.key} entry={entry} index={index} errorLabel={labels.slideError} />
       ))}
     </div>
   );

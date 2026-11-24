@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { keyBelongsToTarget } from "./actions";
+import { publish, unpublish, whenSettled } from "./check/ready";
 import { hashOfSlide, slideFromHash } from "./hash";
 import { intentOfKey, type PlayerIntent } from "./input";
 import { initialState, type PlayerAction, type PlayerState, reduce } from "./state";
@@ -180,8 +181,28 @@ export function useFullscreen(): { available: boolean; active: boolean; toggle: 
   return { available, active, toggle };
 }
 
-function subscribeToNothing(): () => void {
+/** For a value read from the page once: it has nothing to tell of later. */
+export function subscribeToNothing(): () => void {
   return () => {};
+}
+
+/**
+ * Says the page is ready (`window.__slidesReady`, see check/ready.ts) once what `root` holds has
+ * its fonts and pictures, and takes that back when the view goes.
+ */
+export function useReady(root: { readonly current: ParentNode | null }): void {
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    let current = true;
+    void whenSettled(element).then(() => {
+      if (current) publish(undefined);
+    });
+    return () => {
+      current = false;
+      unpublish();
+    };
+  }, [root]);
 }
 
 /** A value that is always the latest, for a handler that must not be set up again when it changes. */

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
-import { publish, whenSettled } from "@/slides/player/check/ready";
 import { DeckSlide } from "@/slides/player/deck-slide";
+import { useReady } from "@/slides/player/hooks";
 
 import type { ViewProps } from "./chrome";
 
@@ -22,23 +22,12 @@ export function useSlidesDocument(): void {
 /**
  * The deck as it prints: every slide at its own size, one under the other, one a page
  * (`page.pdf({ preferCSSPageSize: true, printBackground: true })` in Chromium). Nothing else is
- * on the page. `window.__slidesReady` resolves once the fonts and pictures are there.
+ * on the page. `window.__slidesReady` turns true once the fonts and pictures are there.
  */
 export function PrintView({ entries, labels, lang }: ViewProps) {
   const deck = useRef<HTMLDivElement>(null);
   useSlidesDocument();
-
-  useEffect(() => {
-    const element = deck.current;
-    if (!element) return;
-    let current = true;
-    void whenSettled(element).then(() => {
-      if (current) publish(undefined);
-    });
-    return () => {
-      current = false;
-    };
-  }, [entries]);
+  useReady(deck);
 
   return (
     <div ref={deck} data-slot="deck" lang={lang} className="flex w-max flex-col">

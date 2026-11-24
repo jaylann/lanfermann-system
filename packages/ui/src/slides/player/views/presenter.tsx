@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icon/icon";
 import { actionOfIntent } from "@/slides/player/actions";
 import { DeckSlide } from "@/slides/player/deck-slide";
+import { askForAudienceWindow, useEmbed } from "@/slides/player/embed";
 import {
   type PlayerStart,
   useHash,
@@ -13,6 +14,7 @@ import {
   useLatest,
   useNow,
   usePlayerState,
+  useReady,
 } from "@/slides/player/hooks";
 import type { PlayerIntent } from "@/slides/player/input";
 import { fill } from "@/slides/player/labels";
@@ -41,6 +43,11 @@ type PresenterViewProps = ViewProps & {
   now: () => number;
   /** Whether the address follows the slide, and moves it. */
   hash: boolean;
+  /**
+   * In a frame: the framing page owns the audience's window. It is told where the deck is, may
+   * move it, and is asked for the window when the button is pressed (see embed.ts).
+   */
+  embedded: boolean;
 };
 
 /** What the console says under its buttons about the audience's window. */
@@ -59,15 +66,20 @@ export function PresenterView({
   start,
   now,
   hash,
+  embedded,
 }: PresenterViewProps) {
   const [state, dispatch] = usePlayerState(entries.length, start);
   const ids = useMemo(() => entries.map((entry) => entry.id), [entries]);
   const time = useNow(now, 1000);
   const [notice, setNotice] = useState<Notice>(null);
   // Made in the browser only: a server has no tab to keep it in, and nothing drawn depends on it.
-  const [session] = useState(
+  const [ownSession] = useState(
     () => given ?? (typeof window === "undefined" ? "" : sessionOfWindow()),
   );
+  // A frame has no second window to speak to: its page relays (embed.ts).
+  const session = embedded ? "" : ownSession;
+  const root = useRef<HTMLDivElement>(null);
+  useReady(root);
 
   const audience = useRef<Window | null>(null);
   const link = useRef<Link | null>(null);
@@ -134,6 +146,18 @@ export function PresenterView({
   const go = useCallback((index: number) => dispatch({ type: "go", index }), [dispatch]);
   useHash(state.index, ids, go, hash);
 
+  useEmbed({
+    enabled: embedded,
+    ids,
+    index: state.index,
+    blackout: state.blackout,
+    onCommand(command) {
+      if (command.type === "intent") act(command.intent);
+      else if (command.blackout === undefined) go(command.index);
+      else dispatch({ type: "sync", index: command.index, blackout: command.blackout });
+    },
+  });
+
   // When the grid closes, the focus goes back to the button that opened it.
   const gridButton = useRef<HTMLButtonElement>(null);
   const gridWasOpen = useRef(state.grid);
@@ -143,6 +167,11 @@ export function PresenterView({
   }, [state.grid]);
 
   const openAudience = () => {
+    if (embedded) {
+      // A frame can open no window: the page around it does, and relays the state.
+      askForAudienceWindow();
+      return;
+    }
     const url = new URL(window.location.href);
     url.searchParams.set("mode", "audience");
     url.searchParams.set("session", session);
@@ -165,6 +194,7 @@ export function PresenterView({
 
   return (
     <div
+      ref={root}
       data-slot="player"
       data-mode="presenter"
       data-theme="ink"

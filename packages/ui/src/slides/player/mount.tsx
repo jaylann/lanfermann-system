@@ -24,6 +24,11 @@ export type MountOptions = {
   pdf?: string;
   /** The player's own words, where they differ from the German defaults. */
   labels?: Partial<PlayerLabels>;
+  /**
+   * Whether the page is a frame of another page, which then moves the deck and owns the
+   * audience's window (see `Player`). By default the page is asked.
+   */
+  embed?: boolean;
 };
 
 const TARGET_ID = "lf-slides";
@@ -37,7 +42,7 @@ const DEFAULT_MODES: readonly PlayerMode[] = ["audience", "print", "check"];
  */
 export function mount(
   deck: ReactElement<DeckProps>,
-  { target, mode = "audience", modes = DEFAULT_MODES, pdf, labels }: MountOptions = {},
+  { target, mode = "audience", modes = DEFAULT_MODES, pdf, labels, embed }: MountOptions = {},
 ): { unmount(): void } {
   let added: Element | undefined;
   let element = target ?? document.getElementById(TARGET_ID);
@@ -56,6 +61,7 @@ export function mount(
       pdf={pdf}
       labels={labels}
       session={sessionFromSearch(search)}
+      embed={embed}
     />,
   );
   return {
