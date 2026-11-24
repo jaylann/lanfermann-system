@@ -102,7 +102,13 @@ function ToastList({ closeLabel }: { closeLabel: string }) {
           )}
         </div>
         {item.actionProps && (
-          <ToastPrimitive.Action data-slot="toast-action" render={<Button size="sm" />} />
+          // The keys stand in the middle of the toast's height, whether it has one line or two;
+          // the tone's icon stays with the title.
+          <ToastPrimitive.Action
+            data-slot="toast-action"
+            className="self-center"
+            render={<Button size="sm" />}
+          />
         )}
         <ToastPrimitive.Close
           data-slot="toast-close"
@@ -112,7 +118,7 @@ function ToastList({ closeLabel }: { closeLabel: string }) {
               size="sm"
               variant="quiet"
               aria-label={closeLabel}
-              className="-mt-0.5 text-fg-muted"
+              className="self-center text-fg-muted"
             />
           }
         >
