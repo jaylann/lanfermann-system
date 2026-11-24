@@ -762,4 +762,5 @@ export {
   toTime,
 } from "./lib/format";
 export { type Platform } from "./lib/shortcut";
+export { useMediaQuery } from "./lib/use-media-query";
 export { type SpringName, springs, transitions } from "./motion/springs";

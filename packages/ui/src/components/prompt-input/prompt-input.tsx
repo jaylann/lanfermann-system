@@ -17,7 +17,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 
 import { AttachmentVariantContext } from "@/components/attachment/attachment";
@@ -31,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/to
 import { fieldShellGrowing, focusFieldControl } from "@/internal/field";
 import { StopGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 import { promptKey, TOUCH_ONLY } from "./keys";
 
@@ -58,21 +58,6 @@ function usePrompt(part: string) {
   const context = useContext(PromptContext);
   if (!context) throw new Error(`${part} belongs inside a PromptInput.`);
   return context;
-}
-
-function subscribeTouch(notify: () => void) {
-  const query = window.matchMedia(TOUCH_ONLY);
-  query.addEventListener("change", notify);
-  return () => query.removeEventListener("change", notify);
-}
-
-/** Whether the screen is only touched (no mouse, no trackpad). False on the server. */
-function useTouchOnly() {
-  return useSyncExternalStore(
-    subscribeTouch,
-    () => window.matchMedia(TOUCH_ONLY).matches,
-    () => false,
-  );
 }
 
 export type PromptInputProps = Omit<
@@ -153,7 +138,8 @@ export function PromptInput({
   }, []);
   const [dragging, setDragging] = useState(false);
   const drags = useRef(0);
-  const touchOnly = useTouchOnly();
+  // A screen that is only touched (no mouse, no trackpad). False on the server.
+  const touchOnly = useMediaQuery(TOUCH_ONLY);
   const textareaId = useId();
   const canSend = !disabled && (value.trim() !== "" || attachments > 0);
 
