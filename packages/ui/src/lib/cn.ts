@@ -16,6 +16,7 @@ export const depthNames = [
   "plug",
   "socket",
   "trough",
+  "trough-control",
   "field",
   "field-focus",
   "field-invalid",
@@ -50,6 +51,7 @@ const shadowNames = [
   "floating",
   "overlay",
   "bar",
+  "trough-control",
 ];
 const insetShadowNames = [
   "raised",
@@ -57,6 +59,7 @@ const insetShadowNames = [
   "flat",
   "socket",
   "trough",
+  "trough-control",
   "field",
   "card",
   "bevel",

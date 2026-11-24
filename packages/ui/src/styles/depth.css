@@ -480,6 +480,11 @@
      edge is quiet and sits inside. */
   --inset-shadow-trough:
     inset 0 1px 2px 0 var(--depth-trough-shade), inset 0 0 0 1px var(--depth-trough-edge);
+  /* A trough that stands in a row of controls (the track of a segmented control) keeps its edge
+     outside its box, as a field and a key do: inside, it stood 2px shorter to the eye than a
+     field of the same height beside it (Justin, 2026-11-24: "feels a bit uneven"). */
+  --shadow-trough-control: 0 0 0 1px var(--depth-trough-edge);
+  --inset-shadow-trough-control: inset 0 1px 2px 0 var(--depth-trough-shade);
 
   /* Text fields: a hairline and a faint contact shadow. Focus swaps them for an accent edge and a
      4px halo; the halo grows out of the contact shadow because the layers line up. */
@@ -592,6 +597,13 @@
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
     outline-offset: -1px;
+  }
+}
+@utility depth-trough-control {
+  @apply shadow-trough-control inset-shadow-trough-control;
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: 0;
   }
 }
 @utility depth-field {

@@ -516,7 +516,8 @@ export function SegmentedControl({
       className={mergeClassName(
         [
           // `isolate`: the labels lie under the thumb (`-z-1`) without leaving the trough.
-          "group/track relative isolate inline-flex h-(--control-md) items-center bg-trough depth-trough",
+          // Its edge outside, as a field's and a key's: beside them it stands as tall to the eye.
+          "group/track relative isolate inline-flex h-(--control-md) items-center bg-trough depth-trough-control",
           round ? "rounded-full" : "gap-0.5 rounded-md p-[3px]",
           // A sideways pull on a touch screen is the thumb's, not the page's.
           inertia && "touch-pan-y data-dragging:cursor-grabbing",
