@@ -61,3 +61,6 @@ signatur = "signatur"
 diagramm = "diagramm"
 # A folder, as a file tile names it to assistive tech and a file grid labels its section.
 ordner = "ordner"
+# The German names of two slide pictograms, as a screen reader says them („Paket“, „Modell“).
+paket = "paket"
+modell = "modell"
