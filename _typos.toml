@@ -20,6 +20,8 @@ extend-exclude = [
   "apps/docs/src/app/",
   # Pictures.
   "packages/ui/visual-baseline/",
+  # The prebuilt slide player: a minified script, stylesheets and fonts as data.
+  "packages/ui/player/",
 ]
 
 [default]

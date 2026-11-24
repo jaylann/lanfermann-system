@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @import "../src/styles.css";
 @import "../src/styles/slides.css";
+@import "../src/slides/player/chrome.css";
 
 @source "../src";
 @source "../stories";

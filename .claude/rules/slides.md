@@ -69,3 +69,18 @@ canvas, type, grounds, forms) is `packages/ui/DESIGN.md`, "Slides"; the values a
   because inside a `Deck` they are filled in.
 - Prop types are written out (`"title" | "statement"`, not `keyof typeof sizes`): the catalog
   shows them as they stand in the source.
+
+## The player
+
+- `src/slides/player/` is the one corner of the slide kit with hooks and `"use client"`. Its
+  chrome is interface, not a slide: the library's tokens and `text-sm` to `text-3xl` under
+  `data-theme="ink"`, flat, plain `<button>` and `<a>`, no Base UI.
+- All of its words are in `labels.ts` (German, Justin's to word). What utilities cannot say is
+  in `chrome.css`, which no script imports (`@lanfermann/ui/slides/player.css`).
+- State changes only through `reduce` (`state.ts`); keys, swipes, the hash and the second
+  window all send its actions. Keep those modules pure and tested.
+- Its stories are `stories/slides/player.stories.tsx`, with `hash={false}` and a fixed `now`.
+  No story opens a window.
+- A class a deck may use must be in `player/classes.json`: the bundle's stylesheet holds only
+  what the kit's own sources use. Add a family through `@source inline(...)` in
+  `scripts/slides/build-player.ts`.

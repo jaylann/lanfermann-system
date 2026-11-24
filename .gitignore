@@ -6,6 +6,8 @@ dist/
 build/
 out/
 *.tsbuildinfo
+# The prebuilt slide player (`bun run build` writes it). Anchored: src/slides/player is source.
+/packages/ui/player/
 
 # Testing / coverage
 coverage/

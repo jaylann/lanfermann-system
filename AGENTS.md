@@ -9,11 +9,16 @@ The rules per concern (components, tokens, motion, slides, visual verification) 
 ## Layout
 
 - `packages/ui` — the library, published to npm as `@lanfermann/ui`. Source in `src/`, built by
-  tsdown (`unbundle`, ESM + d.ts) to `dist/`. Public API is two entries and nothing else:
-  `src/index.ts` (the library) and `src/slides/index.ts` (`@lanfermann/ui/slides`).
+  tsdown (`unbundle`, ESM + d.ts) to `dist/`. Public API is four entries and nothing else:
+  `src/index.ts` (the library), `src/slides/index.ts` (`@lanfermann/ui/slides`),
+  `src/slides/catalog/index.ts` (`…/slides/catalog`, generated) and
+  `src/slides/player/index.ts` (`…/slides/player`).
   - `src/styles.css` + `src/styles/*.css` — tokens: grounds, status, type, radius, depth, motion.
   - `src/slides/<name>/<name>.tsx` — the parts of a deck on the 1920 by 1080 canvas, styled by
     `src/styles/slides.css` (`@lanfermann/ui/slides.css`). Flat, in px, on grounds of their own.
+  - `src/slides/player/` — what presents a deck: audience view, presenter console, print and
+    check. The build also writes it as one script with its styles and fonts to `player/`
+    (`scripts/slides/build-player.ts`; not in git, published), for a deck that is a single file.
   - `src/motion/springs.ts` — the spring table; `bun run gen:motion` writes
     `src/styles/motion.generated.css` from it (a test fails when they drift).
   - `src/components/<name>/<name>.tsx` with `<name>.stories.tsx` beside it; shared bits in

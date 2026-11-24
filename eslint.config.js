@@ -26,6 +26,8 @@ export default defineConfig(
     "**/next-env.d.ts",
     "**/storybook-static/**",
     "**/.visual/**",
+    // The prebuilt slide player (`bun run build`); its source is packages/ui/src/slides/player.
+    "packages/ui/player/**",
     // ESLint skips dot-folders by default; the Storybook config is code we own.
     "!**/.storybook",
   ]),
