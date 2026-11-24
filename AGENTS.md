@@ -3,14 +3,17 @@
 Component library (`@lanfermann/ui`) for Next.js + Tailwind CSS v4 on Base UI (`@base-ui/react`),
 plus a Storybook workshop and a Next.js consumer app. bun workspaces. See README.md for scripts
 and the consumer contract, and `packages/ui/DESIGN.md` for the design language and its decisions.
-The rules per concern (components, tokens, motion, visual verification) are in `.claude/rules/`;
-read the one for what you change.
+The rules per concern (components, tokens, motion, slides, visual verification) are in
+`.claude/rules/`; read the one for what you change.
 
 ## Layout
 
 - `packages/ui` — the library, published to npm as `@lanfermann/ui`. Source in `src/`, built by
-  tsdown (`unbundle`, ESM + d.ts) to `dist/`. Public API is `src/index.ts` only.
+  tsdown (`unbundle`, ESM + d.ts) to `dist/`. Public API is two entries and nothing else:
+  `src/index.ts` (the library) and `src/slides/index.ts` (`@lanfermann/ui/slides`).
   - `src/styles.css` + `src/styles/*.css` — tokens: grounds, status, type, radius, depth, motion.
+  - `src/slides/<name>/<name>.tsx` — the parts of a deck on the 1920 by 1080 canvas, styled by
+    `src/styles/slides.css` (`@lanfermann/ui/slides.css`). Flat, in px, on grounds of their own.
   - `src/motion/springs.ts` — the spring table; `bun run gen:motion` writes
     `src/styles/motion.generated.css` from it (a test fails when they drift).
   - `src/components/<name>/<name>.tsx` with `<name>.stories.tsx` beside it; shared bits in

@@ -150,6 +150,41 @@ What the app provides, and what it gets:
 - **Density:** controls are compact by default; `data-density="comfortable"` on `<html>` or on a
   subtree gives the larger set.
 
+### Slides
+
+The parts of a deck are a second entry, so an app that shows none does not load them. Import the
+stylesheet after the library's, and the parts from `@lanfermann/ui/slides`:
+
+```css
+@import "tailwindcss";
+@import "@lanfermann/ui/styles.css";
+@import "@lanfermann/ui/slides.css";
+```
+
+```tsx
+import { Deck, Slide, Spacer, Stage } from "@lanfermann/ui/slides";
+
+<Stage>
+  <Slide ground="ink" deck="Der digitale Handschlag" page={4}>
+    <h2 className="slide-span-12 text-slide-statement font-medium text-fg">
+      Vertrauen entsteht,
+      <br />
+      bevor das Telefon klingelt.
+    </h2>
+    <Spacer />
+  </Slide>
+</Stage>;
+```
+
+- A slide is a fixed canvas of 1920 by 1080px. `Stage` scales it to the box it is given; a
+  `Deck` on its own stacks its slides at that size, which is also how it prints (one slide a
+  page, through a named `@page`, so the app's other pages print as before). A page that is
+  nothing but a deck, such as the source of a PDF, sets `data-slides-document` on `<html>`, or
+  Chromium ends the PDF on one empty page.
+- A slide has grounds of its own (`ground="paper | tint | ink | indigo"`). `data-theme` and dark
+  mode do not reach it: a deck is the same picture on a dark page.
+- The rules of a slide (type, grid, one accent, sources) are in `packages/ui/DESIGN.md`, "Slides".
+
 ### Consent (cookie banner)
 
 `ConsentProvider` asks before anything that stores or reads data in the browser is loaded, keeps
@@ -239,7 +274,9 @@ export async function persistConsent(value: string, maxAge: number) {
 2. `packages/ui/src/components/<name>/<name>.tsx` — wrap the Base UI part, style with the
    semantic tokens, put `data-slot` on every part. Add `"use client"` when it uses hooks or Base
    UI parts.
-3. `<name>.stories.tsx` beside it, and an export in `packages/ui/src/index.ts`.
+3. `<name>.stories.tsx` beside it, and an export in `packages/ui/src/index.ts`. A slide part
+   lives in `packages/ui/src/slides/<name>/` instead and is exported from `src/slides/index.ts`
+   (`.claude/rules/slides.md`).
 4. Give it a `Keyboard` story with a `play` function for its keyboard path.
 5. Look at it: `bun run build-storybook`, then the capture script, on all four grounds, in the
    three engines and at phone width. Then `bun run test:stories` and `bun run visual:check`.
