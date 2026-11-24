@@ -1,14 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-
-const QUERY = "(prefers-reduced-motion: reduce)";
-
-function subscribe(notify: () => void) {
-  const query = window.matchMedia(QUERY);
-  query.addEventListener("change", notify);
-  return () => query.removeEventListener("change", notify);
-}
+import { useMediaQuery } from "@/lib/use-media-query";
 
 /**
  * Whether the person asked for less motion. False on the server.
@@ -17,9 +9,5 @@ function subscribe(notify: () => void) {
  * starts by itself, on a timer, which no stylesheet can switch off.
  */
 export function useReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(QUERY).matches,
-    () => false,
-  );
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
 }
