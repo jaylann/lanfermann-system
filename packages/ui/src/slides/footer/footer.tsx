@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 
 import { useDeck, useSlidePosition } from "@/slides/deck/deck-context";
+import { span } from "@/slides/lib/grid";
+import { Wordmark } from "@/slides/wordmark/wordmark";
 
 export type FooterProps = {
   /** The deck's title, in sentence case. Inside a `Deck` it is the deck's own. */
@@ -23,9 +25,7 @@ export function Footer({ deck, page }: FooterProps) {
   const number = page ?? (position ? position.index + 1 : undefined);
   return (
     <footer data-slot="slide-footer" className="contents text-slide-meta leading-none">
-      <p className="absolute bottom-16 left-32 slide-span-4 font-bold tracking-[-0.1px] text-fg">
-        Lanfermann<span className="text-accent">.</span>dev
-      </p>
+      <Wordmark style={{ position: "absolute", left: 128, bottom: 64, width: span(4) }} />
       {title != null && (
         <p className="absolute right-52 bottom-16 slide-span-6 text-right text-fg-muted">{title}</p>
       )}

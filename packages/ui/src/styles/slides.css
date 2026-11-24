@@ -83,6 +83,14 @@
     --lf-on-accent: #ffffff;
     --lf-surface: #ffffff;
     --lf-surface-quiet: #f2f2f7;
+
+    /* The colours of the forms on this ground, by role (see the theme block under the grounds). */
+    --slide-form-large: #edeafc;
+    --slide-form-tone: #e3dff8;
+    --slide-form-second: #5f50d0;
+    --slide-form-nest: #e3dff8;
+    --slide-form-dot: #5f50d0;
+    --slide-form-spark: #5f50d0;
   }
 
   [data-slide-ground="tint"] {
@@ -98,6 +106,13 @@
     --lf-on-accent: #ffffff;
     --lf-surface: #ffffff;
     --lf-surface-quiet: #e3dff8;
+
+    --slide-form-large: #ffffff;
+    --slide-form-tone: #e3dff8;
+    --slide-form-second: #5f50d0;
+    --slide-form-nest: #e3dff8;
+    --slide-form-dot: #5f50d0;
+    --slide-form-spark: #5f50d0;
   }
 
   [data-slide-ground="ink"] {
@@ -113,6 +128,13 @@
     --lf-on-accent: #13121c;
     --lf-surface: #1d1c28;
     --lf-surface-quiet: #1d1c28;
+
+    --slide-form-large: #5f50d0;
+    --slide-form-tone: #5244c2;
+    --slide-form-second: #edeafc;
+    --slide-form-nest: #edeafc;
+    --slide-form-dot: #ffffff;
+    --slide-form-spark: #a6a1fd;
   }
 
   [data-slide-ground="indigo"] {
@@ -128,7 +150,29 @@
     --lf-on-accent: #5f50d0;
     --lf-surface: #5244c2;
     --lf-surface-quiet: #5244c2;
+
+    --slide-form-large: #13121c;
+    --slide-form-tone: #1d1c28;
+    --slide-form-second: #edeafc;
+    --slide-form-nest: #edeafc;
+    --slide-form-dot: #a6a1fd;
+    --slide-form-spark: #ffffff;
   }
+}
+
+/*
+ * Forms: the colours of the discs and rings (`Forms`), by the role a circle has in its
+ * composition. Each is a colour of the kit, but often of another ground (on Paper the large form
+ * is Tint's ground, on Ink it is Indigo's), so they stand as values in the ground blocks above:
+ * tone on tone on Paper and Tint, full colour on Ink and Indigo, one small disc in the accent.
+ */
+@theme inline {
+  --color-slide-form-large: var(--slide-form-large);
+  --color-slide-form-tone: var(--slide-form-tone);
+  --color-slide-form-second: var(--slide-form-second);
+  --color-slide-form-nest: var(--slide-form-nest);
+  --color-slide-form-dot: var(--slide-form-dot);
+  --color-slide-form-spark: var(--slide-form-spark);
 }
 
 @layer components {

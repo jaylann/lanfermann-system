@@ -40,7 +40,23 @@ canvas, type, grounds, forms) is `packages/ui/DESIGN.md`, "Slides"; the values a
   (`src/slides/story-slide.tsx`): the capture is the canvas at its own size, taken once. A story
   that leaves the ground open follows the toolbar (`toolbarGround`); a ground a part looks
   different on gets a story of its own.
+- No doc comment (`/** */`) above `const meta`: Storybook writes it into the meta as a second
+  `parameters` key (the docs description), which replaces `parameters: slideParameters`. The
+  story then renders, but centred and captured at 720 by 480. Use `//` there.
 - German sample copy as a deck would carry it: a title that is a sentence with a full stop, a
   source under every figure, no dashes.
 - Read the 1920 by 1080 capture before calling a part done, then compare it with the artifact's
   render of the same content.
+
+## Example and catalog
+
+- Every part has `<name>.example.tsx` with `function <Name>Example()`: one whole slide that uses
+  the part as a deck would. Its story's `Default` renders it, and `bun run gen:slides-catalog`
+  writes it, with the part's doc comment and its props, into
+  `src/slides/catalog/catalog.generated.ts` (`@lanfermann/ui/slides/catalog`). A test fails when
+  the file is out of date, when a part is missing from `catalog/groups.ts`, or when a prop has
+  no doc comment.
+- An example names `deck` and `page` so that it can stand alone; the catalog leaves both out,
+  because inside a `Deck` they are filled in.
+- Prop types are written out (`"title" | "statement"`, not `keyof typeof sizes`): the catalog
+  shows them as they stand in the source.
