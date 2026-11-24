@@ -197,6 +197,7 @@ import { Figures } from "./figures";
 import { Inputs } from "./inputs";
 import { QuoteForm } from "./quote-form";
 import { Selection } from "./selection";
+import { Slides } from "./slides";
 import { Theme } from "./theme";
 
 const GROUNDS: GroundName[] = ["paper", "tint", "ink", "indigo"];
@@ -779,6 +780,8 @@ export default function Home() {
             </div>
           </Ground>
         ))}
+        {/* The second entry and its stylesheet: slides, on grounds of their own. */}
+        <Slides />
       </main>
       {/* Consent: a video that loads only with consent, and the way back to the settings. */}
       <footer className="flex flex-col gap-6 border-t border-line px-6 py-10">
