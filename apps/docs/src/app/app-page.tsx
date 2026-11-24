@@ -7,6 +7,7 @@ import {
   Field,
   FieldDescription,
   FieldLabel,
+  formatDate,
   formatMoney,
   formatPercent,
   formatRelativeTime,
@@ -67,6 +68,7 @@ export function AppPage({ ground }: { ground: string }) {
       <Text tone="muted">
         {formatRelativeTime("2026-11-20T18:00:00+01:00", { now: "2026-11-21T14:00:00+01:00" })}
       </Text>
+      <Text tone="muted">Fällig am {formatDate("2026-11-30")}.</Text>
     </div>
   );
 }
