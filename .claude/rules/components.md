@@ -14,8 +14,9 @@ How a component in `packages/ui/src/components/<name>/` is built. Base UI docs a
   `"use client"` (see `button/button-variants.ts`).
 - Variants with `class-variance-authority`. Merge the caller's `className` with
   `mergeClassName()` on Base UI parts and `cn()` on plain elements.
-- Every export goes through `src/index.ts`. Document the component with a short comment that
-  says when to use it and how to word it, not what the code does.
+- Every export goes through `src/index.ts` (a slide part through `src/slides/index.ts`, see
+  `slides.md`). Document the component with a short comment that says when to use it and how to
+  word it, not what the code does.
 
 ## Behaviour
 

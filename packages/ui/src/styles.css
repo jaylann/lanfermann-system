@@ -11,7 +11,8 @@
  * alias for Ink. Dark mode switches with `data-mode="dark"` on <html>: every ground turns into its
  * dark counterpart (`ThemeScript` and `useTheme` set it). Control size switches with
  * `data-density="compact|comfortable"` (compact is the default). The partials are private: import
- * this file only.
+ * this file only. The one exception is `@lanfermann/ui/slides.css` (./styles/slides.css), which an
+ * app that shows decks imports after this file.
  */
 
 @import "./styles/grounds.css";
@@ -49,8 +50,12 @@
 @import "./styles/assistant.css";
 @import "./styles/base.css";
 
-/* Let the consumer's Tailwind see the class names used in the compiled components. */
-@source "../dist";
+/*
+ * Let the consumer's Tailwind see the class names used in the compiled components. The folders are
+ * named one by one so that the slide parts stay out: `dist/slides` is registered by slides.css,
+ * and an app that shows no deck gets none of their classes (styles.test.ts checks the list).
+ */
+@source "../dist/{components,internal,lib,motion}";
 
 /* For app code that wants a dark variant: it follows the Ink ground, and everything in dark mode. */
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="ink"], [data-theme="ink"] *, [data-mode="dark"], [data-mode="dark"] *));

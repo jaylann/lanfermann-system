@@ -1115,6 +1115,84 @@ Whole screens built from these are the `Patterns` stories (sign in, settings, qu
 site, docs, app, dashboard, billing, team, onboarding, API keys, assistant): judge a change to a
 recipe there, not on a single component.
 
+## Slides
+
+A slide is print, not interface. The parts in `@lanfermann/ui/slides` are the kit itself, not its
+interactive layer: nothing on a slide is pressed, so nothing is raised, and the rules above about
+depth and motion do not apply. What applies instead is the kit's own rule book, ported from the
+**Lanfermann Freelance** artifact (the inventory is in issue #85). Values live in
+`src/styles/slides.css`.
+
+**The ten rules.**
+
+1. No claim without its proof. Every figure, chart and finding carries its source line.
+2. A title is a sentence. It names the result, ends in a full stop, starts top left and is broken
+   by hand at a clause boundary.
+3. The ground says who is speaking. Paper: evidence. Tint: someone else's words. Ink: the claim.
+   Indigo: the ask, once, at the end.
+4. One accent a slide. It marks the one datum the title is about, or the numbered markers. Never
+   a word in a title, a label, a unit, a line or an icon. On Indigo the accent is white, so
+   nothing is highlighted there.
+5. Sofia Sans in four weights; JetBrains Mono only for literal code. Sentence case everywhere.
+6. Seven sizes: 24, 32, 48, 72, 108, 162 and 243px. Nothing smaller and nothing in between. Text
+   that does not fit is a second slide, never smaller type.
+7. Rules instead of boxes. A 2px rule opens a block, 1px lines separate its rows. Only
+   screenshots, photos and code stand in a frame. No cards, shadows, gradients or emoji.
+8. Twelve columns of 80px with 64px gutters inside 128px margins. The title stands on the top
+   margin, the evidence on the bottom margin, and the space between them stays empty.
+9. Markers tie a screenshot to its findings. Page numbers and steps in time count. Nothing else
+   is numbered.
+10. German first: „deutsche Anführungszeichen“, a narrow space before a unit (`96 %`), `7,2` and
+    `3.400`, dates as `11.11.2026`, and no dashes (a range is „11.11. bis 12.12.“, an aside takes
+    a comma or a colon).
+
+**Canvas.** 1920 by 1080px, always. A slide is drawn in px and scaled as a whole (`Stage`), so a
+line breaks in the same place on a phone, a projector and in the PDF. Padding is `128 128 160`,
+blocks are 32px apart (48 on the cover and the closing slide), flow content ends at y 920, and
+the footer row (wordmark, deck title, page number) is pinned 64px above the foot. A span of `n`
+columns is `n × 80 + (n − 1) × 64` px (`slide-span-<n>`): a title is ten columns wide (1376), a
+paragraph of body copy six at most (800), a split is 4|8, 5|7, 6|6, 7|5 or 8|4.
+
+**Three frames** cover every content slide. Stack: the title, a `Spacer`, wide evidence. Split:
+the title, a `Spacer`, the evidence beside its reading. Statement: one sentence on Ink. Nothing
+is centred but the numeral in a marker.
+
+**Type.** `text-slide-meta` 24 (source lines, labels, the footer), `text-slide-body` 32 (and row
+heads at 600), `text-slide-lead` 48, `text-slide-title` 72, `text-slide-statement` 108,
+`text-slide-cover` 162, `text-slide-figure` 243, `text-slide-code` 24 in the mono face. Display
+sizes are tracked negatively, text sizes not at all. 400 text, 500 display, 600 row heads and the
+highlighted datum, 700 the wordmark and `<b>`. Italic appears in one place, a customer's
+objection. A 72px title has two lines of about 40 characters, a 108px statement three of about
+26, a 162px cover two of about 16.
+
+**Grounds of their own.** A slide carries `data-slide-ground`, not `data-theme`. Dark mode turns
+every `data-theme` into its dark counterpart, and a deck has to be the same picture on a dark
+page as on a light one, on a projector and on paper. So `slides.css` holds the kit's ten colours
+per ground once more, under an attribute no mode reaches (a test keeps them equal to the light
+blocks of `grounds.css`). Ink on a slide is the kit's `#13121c`, not the dark page's `#1c1b26`.
+A part that is always light, such as a screenshot's frame, sets the attribute on itself.
+
+**No shadows, for a second reason.** The canonical output of a deck is a PDF, and Chromium's PDF
+drops blurred shadows or draws them as bitmaps. Radii are 4px on media frames and code blocks,
+2px on tags and placeholder blocks, 50% on markers and discs, and 0 everywhere else. Indigo
+prints mid grey: nothing depends on colour alone.
+
+**Forms** are the kit's one ornament: large discs and rings cropped by the slide's edge, in nine
+fixed compositions, tone on tone with one small disc in the accent. One composition a slide, of
+the content slides about every third and only those with room, and never the same on two
+neighbouring slides. No text may run under a form. No forms on a slide with a table, a chart, a
+diagram, a screenshot, code or a list of more than four rows.
+
+**A deck** runs: cover on Ink; an agenda only from fifteen slides; content on Paper, with Tint
+for objections and quotes; one or two statements on Ink; the profile; the closing ask on Indigo,
+not „Vielen Dank“; then the appendix behind a section slide „Anhang.“, with „Quellen.“ last.
+There are no transitions and no builds.
+
+**Names.** The slide parts keep the kit's names (`Title`, `Table`, `Steps`, `Figure`, …), although
+the library's main entry has parts of the same name. They are different things for a different
+medium, a deck imports from `@lanfermann/ui/slides` only, and the names are the ones decks are
+already written in.
+
 ## Logo
 
 `Wordmark` and `Logomark` draw the kit's outlines (`src/components/logo/logo-paths.ts`, copied
@@ -1158,8 +1236,10 @@ by eye (`VISUAL_BROWSER=chrome,webkit,firefox`). What differs, and is accepted:
 - Status colours exist; the kit says severity in words only.
 - Checked states use the accent many times per screen; the kit allows one accent per slide.
 - Icons are Hugeicons; the kit's deck pictograms are Phosphor Bold.
+- Dark mode exists; the kit has four grounds and no mode.
 
-These are not yet written back into the kit (`lanfermann-design`, the artifact).
+These are not yet written back into the kit (`lanfermann-design`, the artifact). None of them
+reaches a slide: the parts in `@lanfermann/ui/slides` follow the kit (see "Slides").
 
 ## How decisions get made here
 
