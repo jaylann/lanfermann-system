@@ -200,6 +200,7 @@ export {
   type CopyButtonLabels,
   type CopyButtonProps,
 } from "./components/copy-button/copy-button";
+export { CopyField, type CopyFieldProps } from "./components/copy-field/copy-field";
 export { CopyPage, type CopyPageProps } from "./components/copy-page/copy-page";
 export { CopyPill, CopyPillMark, type CopyPillProps } from "./components/copy-pill/copy-pill";
 export {
@@ -221,12 +222,24 @@ export {
 } from "./components/date-range-field/date-range-field";
 export { type DateRangePreset, lastDays } from "./components/date-range-field/presets";
 export {
+  DescriptionGrid,
+  DescriptionGridItem,
+  type DescriptionGridItemProps,
+  type DescriptionGridProps,
+} from "./components/description-grid/description-grid";
+export {
   DescriptionDetails,
   type DescriptionDetailsProps,
   DescriptionList,
   type DescriptionListProps,
   DescriptionTerm,
 } from "./components/description-list/description-list";
+export {
+  DetailPane,
+  DetailPaneLayout,
+  type DetailPaneLayoutProps,
+  type DetailPaneProps,
+} from "./components/detail-pane/detail-pane";
 export {
   Dialog,
   DialogBody,
@@ -307,6 +320,7 @@ export {
   type FileKindSymbolProps,
   type FileSymbolKind,
 } from "./components/file-kind-symbol/file-kind-symbol";
+export { FileThumb, type FileThumbProps } from "./components/file-thumb/file-thumb";
 export {
   FileTile,
   type FileTileProps,
@@ -490,6 +504,7 @@ export { RollingNumber, type RollingNumberProps } from "./components/rolling-num
 export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
 export { useScrollEdges } from "./components/scroll-fade/use-scroll-edges";
 export { Seam, type SeamProps } from "./components/seam/seam";
+export { SearchField, type SearchFieldProps } from "./components/search-field/search-field";
 export { SecretField, type SecretFieldProps } from "./components/secret-field/secret-field";
 export { Section, type SectionProps } from "./components/section/section";
 export {
@@ -762,4 +777,5 @@ export {
   toTime,
 } from "./lib/format";
 export { type Platform } from "./lib/shortcut";
+export { useMediaQuery } from "./lib/use-media-query";
 export { type SpringName, springs, transitions } from "./motion/springs";

@@ -105,6 +105,26 @@ export const Stack: Story = { render: () => <Seed /> };
 /** The same stack with the focus in it: spread into a list. */
 export const Expanded: Story = { render: () => <Seed expanded /> };
 
+function SeedUndo() {
+  useEffect(() => {
+    toast({
+      id: "undo",
+      title: "In den Papierkorb gelegt.",
+      timeout: 0,
+      action: { label: "Rückgängig", onClick: () => undefined },
+    });
+    return () => toast.dismiss();
+  }, []);
+  return (
+    <div className="min-h-[420px]">
+      <Toaster />
+    </div>
+  );
+}
+
+/** One line with its way back: the key and the cross stand in the middle of its height. */
+export const WithUndo: Story = { render: () => <SeedUndo /> };
+
 /**
  * The keyboard path, as a test: a toast does not take the focus, F6 jumps to the stack, Tab
  * reaches the toast and its close button, and dismissing it puts the focus back where it was.

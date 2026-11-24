@@ -1,6 +1,8 @@
 "use client";
 
-import { createContext, useSyncExternalStore } from "react";
+import { createContext } from "react";
+
+import { useMediaQuery } from "@/lib/use-media-query";
 
 /**
  * Whether the sidebar is open, kept by the `AppShell` so that a `SidebarTrigger` in the page's
@@ -26,17 +28,7 @@ export const SidebarStateContext = createContext<SidebarState | null>(null);
 /** From this width on the sidebar stands beside the page (Tailwind's `md`). */
 export const SIDEBAR_WIDE = "(min-width: 48rem)";
 
-function subscribe(notify: () => void) {
-  const query = window.matchMedia(SIDEBAR_WIDE);
-  query.addEventListener("change", notify);
-  return () => query.removeEventListener("change", notify);
-}
-
 /** Whether the window is wide enough for the sidebar to stand beside the page. Yes on the server. */
 export function useWideWindow(): boolean {
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(SIDEBAR_WIDE).matches,
-    () => true,
-  );
+  return useMediaQuery(SIDEBAR_WIDE, true);
 }
