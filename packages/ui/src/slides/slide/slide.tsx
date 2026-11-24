@@ -2,6 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { Footer } from "@/slides/footer/footer";
+import { Forms } from "@/slides/forms/forms";
 
 /** Who is speaking on a slide. */
 export type SlideGround = "paper" | "tint" | "ink" | "indigo";
@@ -22,6 +23,12 @@ export type SlideProps = ComponentProps<"section"> & {
   footer?: boolean;
   /** Space between the slide's blocks in px, 32 by default (48 on cover and closing). */
   gap?: number;
+  /**
+   * A composition of forms behind the content: `corner` or `bend` when the evidence starts below
+   * y 432, `edge` or `halo` when it ends left of x 1536. Not with tables, charts, diagrams,
+   * screenshots or code.
+   */
+  forms?: "corner" | "bend" | "edge" | "halo";
   /** Title first, then a `Spacer`, then the evidence and its source line. */
   children?: ReactNode;
 };
@@ -44,6 +51,7 @@ export function Slide({
   page,
   footer = true,
   gap = 32,
+  forms,
   className,
   style,
   children,
@@ -60,6 +68,7 @@ export function Slide({
       style={{ gap, ...style }}
       {...props}
     >
+      {forms && <Forms name={forms} />}
       {children}
       {footer && <Footer deck={deck} page={page} />}
     </section>
