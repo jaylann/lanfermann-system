@@ -21,7 +21,9 @@ Then Read the PNGs it lists (`.visual/sheets/*.png`, or one shot under `.visual/
   width before showing it to anyone**: a layout that only works at 1500px is broken.
 - `--scale 3` for edge and shadow detail, `--smoke` to render everything and fail on errors,
   `--verbose` to see where a run hangs, `--url http://127.0.0.1:6006` to shoot the dev server.
-- Stories steer the capture with `parameters.visual` (`viewport`, `clip`, `target`, `motion`).
+- Stories steer the capture with `parameters.visual` (`viewport`, `clip`, `target`, `motion`,
+  and `grounds` to be drawn only in some entries of `--grounds`: a slide brings its own ground
+  and is taken once).
 
 ## Beyond one browser at one size
 
