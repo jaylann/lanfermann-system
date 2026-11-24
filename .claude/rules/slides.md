@@ -31,7 +31,16 @@ canvas, type, grounds, forms) is `packages/ui/DESIGN.md`, "Slides"; the values a
   changes. Never put `data-theme` on a slide part, and never use a UI-layer token there
   (`hairline`, `sheet`, `raised`, the status and series colours follow the page, not the slide).
 - No `depth-*`, no shadow, no gradient, no blur, no transition. Radii: 4px on media frames and
-  code, 2px on tags and placeholder blocks, full on markers and discs, 0 elsewhere.
+  code, 2px on tags and placeholder blocks, 36px on the phone's frame, full on markers and
+  discs, 0 elsewhere.
+- A frame that shows someone's screen or photo (`BrowserFrame`, `PhoneFrame`, `Media`,
+  `Profile`) is always light: it sets `data-slide-ground="paper"` on itself, and what stands
+  inside it (a `Marker`, the wireframe) uses the normal tokens. The stand-in for a missing
+  picture is `bg-slide-placeholder` and `bg-slide-placeholder-strong`.
+- A chart is a list (`<ol>` with one `<li>` per bar or column) whose values are written out; a
+  diagram's boxes are real text and only its connector drawing is an image with a label.
+- Typography in sample copy and examples: a narrow no-break space (` `) before a unit
+  („68 %“, „1.900 €“). Write it as the escape: a pasted one gets lost.
 - A 2px `border-rule` opens a block, 1px `border-line` separates its rows.
 
 ## Stories

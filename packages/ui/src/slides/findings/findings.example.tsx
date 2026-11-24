@@ -1,3 +1,4 @@
+import { BrowserFrame } from "@/slides/browser-frame/browser-frame";
 import { Findings } from "@/slides/findings/findings";
 import { Slide } from "@/slides/slide/slide";
 import { Source } from "@/slides/source/source";
@@ -12,8 +13,14 @@ export function FindingsExample() {
       <Title>Drei Stellen kosten Sie heute Anfragen.</Title>
       <Spacer />
       <Split ratio="7|5" align="stretch">
-        {/* The wide side takes the `BrowserFrame` of ihr-betrieb.de with the markers 1 to 3 (#85). */}
-        <div />
+        <BrowserFrame
+          url="ihr-betrieb.de"
+          markers={[
+            { n: 1, x: 776, y: 76 },
+            { n: 2, x: 448, y: 212 },
+            { n: 3, x: 96, y: 412 },
+          ]}
+        />
         <Findings
           items={[
             {
