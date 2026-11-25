@@ -1194,6 +1194,21 @@ the library's main entry has parts of the same name. They are different things f
 medium, a deck imports from `@lanfermann/ui/slides` only, and the names are the ones decks are
 already written in.
 
+**The player** (`@lanfermann/ui/slides/player`) is the one interactive corner of the slide kit,
+and it is interface, not slide: its controls use the library's tokens and its UI type scale, not
+the slide sizes. It stays flat all the same (no depth, no shadow, no transition), because it
+stands beside slides and must not look more important than they do. Both the audience's bar and
+the presenter's console are on Ink, whatever the page's ground: a console is read in a dark room
+beside a bright slide. The console is built like a slide: a 2px rule opens each block (the
+current slide, the next one, the notes, the two clocks), a 1px line parts the buttons from them,
+and the one accent marks what is on (the black screen, the current tile of the grid). Slides
+shown in it stand in a 1px frame, as a screenshot does, so an Ink slide has an edge on the Ink
+console. The current slide is as large as the window allows in both directions and is never
+letterboxed, so its edges stand on its block's rule. The audience's bar sits at the top right,
+away from the footer row, and leaves after 2.5 seconds without input. Slides change at once:
+there are no transitions between them. The player's own words are in
+`src/slides/player/labels.ts`; like every interface string, their wording is Justin's to decide.
+
 ## Logo
 
 `Wordmark` and `Logomark` draw the kit's outlines (`src/components/logo/logo-paths.ts`, copied

@@ -130,7 +130,7 @@ export const slidesCatalog: SlideCatalogEntry[] = [
   {
     "name": "Footer",
     "group": "Scaffold",
-    "summary": "The single footer row of a content slide: the wordmark as live text on the left, the deck's title and the page number on the right, all on one line 64px above the foot. `Slide` draws it; the cover and the closing slide have none.",
+    "summary": "The single footer row of a content slide: the drawn wordmark at 24px on the left, the deck's title and the page number on the right, all on one line 64px above the foot. `Slide` draws it; the cover and the closing slide have none.",
     "notes": "",
     "props": [
       {
@@ -150,8 +150,8 @@ export const slidesCatalog: SlideCatalogEntry[] = [
   {
     "name": "Wordmark",
     "group": "Scaffold",
-    "summary": "The wordmark in the two sizes a deck uses: drawn at 32px, live text in the footer row.",
-    "notes": "Always the full word `Lanfermann.dev`, sentence case, the dot in the accent. At 32px it is the drawn logo, an inline `<svg>` of two paths (letters in the text colour, dot in the accent), and both follow the slide's ground. In the footer row it is live text in weight 700. Never capitals, never tracked, never a second colour, never beside the symbol. Outside a deck use the `Wordmark` of the main entry or the SVG files of the brand.",
+    "summary": "The wordmark in the two sizes a deck uses: 24px in the footer row, 32px on a cover or closing.",
+    "notes": "Always the full word `Lanfermann.dev`, sentence case, the dot in the accent. It is the drawn logo at both sizes, an inline `<svg>` of two paths (letters in the text colour, dot in the accent), and both follow the slide's ground. Never set in a font, never capitals, never tracked, never a second colour, never beside the symbol. Outside a deck use the `Wordmark` of the main entry or the SVG files of the brand.\n\nA departure from the kit, which types the word in the footer row: there the drawn L with its cut corner was missing on every slide but the first and the last.",
     "props": [
       {
         "name": "size",

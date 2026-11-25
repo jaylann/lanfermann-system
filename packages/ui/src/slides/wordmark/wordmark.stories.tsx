@@ -48,7 +48,7 @@ export const Closing: Story = {
   ),
 };
 
-/** Live text at 24px in the footer row of a content slide, where `Slide` draws it. */
+/** The drawn word at 24px in the footer row of a content slide, where `Slide` draws it. */
 export const FooterRow: Story = {
   render: () => (
     <Slide deck="Der digitale Handschlag" page={2}>

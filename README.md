@@ -185,6 +185,46 @@ import { Deck, Slide, Spacer, Stage } from "@lanfermann/ui/slides";
   mode do not reach it: a deck is the same picture on a dark page.
 - The rules of a slide (type, grid, one accent, sources) are in `packages/ui/DESIGN.md`, "Slides".
 
+#### Presenting a deck
+
+The player is a third entry, `@lanfermann/ui/slides/player`. It takes a `<Deck>` element and is
+the whole page:
+
+```css
+@import "@lanfermann/ui/slides.css";
+@import "@lanfermann/ui/slides/player.css";
+```
+
+```tsx
+"use client";
+import { Player } from "@lanfermann/ui/slides/player";
+
+<Player deck={deck} mode="presenter" />;
+```
+
+- `mode="audience"` (default) shows one slide as large as the window: arrows, Space, PageUp and
+  PageDown (a clicker), Home and End, a swipe, a click on either half, `F` for the full screen,
+  `B` for a black screen, and `#/7` or `#/<id>` as a deep link. `pdf="…"` adds „PDF laden“.
+- `mode="presenter"` is the console: the current and the next slide, the notes (`notes` on a
+  slide), the time since the first step and the time of day, the grid of all slides (`G`), and a
+  second window for the audience that follows this one.
+- `mode="print"` stacks the slides one a page, for Chromium's `page.pdf()` with
+  `preferCSSPageSize` and `printBackground`. `mode="check"` measures them and writes a report to
+  `window.__slidesReport`: parts beyond the content box or the canvas, boxes that cut off their
+  content, a text on more lines than its `data-lines` allows, a slide that threw. In both,
+  `window.__slidesReady` resolves once fonts and pictures are there.
+- `labels` replaces the player's own words, which are German by default.
+
+A deck that is **one HTML file** uses the prebuilt player instead, which the package ships in
+`@lanfermann/ui/slides/player/*`: `player.global.js` (React, the slide parts and the player as
+one script that sets `globalThis.__LF_SLIDES__`), `player.css`, `fonts.inline.css` (or `fonts.css`
+with `fonts/`), `classes.json` (the class names `player.css` defines: what a deck may use),
+`manifest.json` and `NOTICES.txt`. The deck's own script is compiled with `react`,
+`react/jsx-runtime` and `@lanfermann/ui/slides` mapped to `__LF_SLIDES__.React`, `.jsxRuntime` and
+`.slides`, and calls `__LF_SLIDES__.mount(deck, { mode, modes, pdf, labels })`. `?mode=` in the
+address picks another mode if `modes` allows it; by default that is every mode but the presenter's.
+The file runs from disk without a network.
+
 ### Consent (cookie banner)
 
 `ConsentProvider` asks before anything that stores or reads data in the browser is loaded, keeps
