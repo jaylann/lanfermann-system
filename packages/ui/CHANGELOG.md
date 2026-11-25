@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.0](https://github.com/jaylann/lanfermann-system/compare/v0.12.0...v0.13.0) (2026-11-25)
+
+
+### Features
+
+* **ui:** add formatDate for absolute dates ([#83](https://github.com/jaylann/lanfermann-system/issues/83)) ([33ce7b8](https://github.com/jaylann/lanfermann-system/commit/33ce7b8af7a8a47d8005bfcfa8c3fbb259f5e37c))
+* **ui:** add slide foundations: deck, slide, stage, tokens and print ([#91](https://github.com/jaylann/lanfermann-system/issues/91)) ([047e2e0](https://github.com/jaylann/lanfermann-system/commit/047e2e078de4d706de707183d6e9999ed378012e))
+* **ui:** add slide parts for text, lists, tables and slide kinds, with a catalog ([#92](https://github.com/jaylann/lanfermann-system/issues/92)) ([aa8347d](https://github.com/jaylann/lanfermann-system/commit/aa8347d1eec2d18a1fd825654ea3a5a795475cc8))
+
 ## [0.12.0](https://github.com/jaylann/lanfermann-system/compare/v0.11.0...v0.12.0) (2026-11-24)
 
 
