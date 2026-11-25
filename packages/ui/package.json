@@ -1,6 +1,6 @@
 {
   "name": "@lanfermann/ui",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Lanfermann design system components for Next.js + Tailwind CSS v4, built on Base UI.",
   "license": "MIT",
   "author": "Justin Lanfermann",
