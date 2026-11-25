@@ -64,3 +64,5 @@ ordner = "ordner"
 # The German names of two slide pictograms, as a screen reader says them („Paket“, „Modell“).
 paket = "paket"
 modell = "modell"
+# German sample copy quoted in a slide part's doc comment („lokale Geschäfte“).
+lokale = "lokale"

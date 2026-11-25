@@ -60,6 +60,9 @@
     --slide-gutter: 64px;
     /* Spacing utilities count in px here: `p-32` is 128px whatever the page's root size is. */
     --spacing: 4px;
+    /* The two tones of a wireframe that stands in for a missing screenshot, on every ground. */
+    --slide-placeholder: #e6e3f7;
+    --slide-placeholder-strong: #d9d6ee;
   }
 
   /*
@@ -173,6 +176,8 @@
   --color-slide-form-nest: var(--slide-form-nest);
   --color-slide-form-dot: var(--slide-form-dot);
   --color-slide-form-spark: var(--slide-form-spark);
+  --color-slide-placeholder: var(--slide-placeholder);
+  --color-slide-placeholder-strong: var(--slide-placeholder-strong);
 }
 
 @layer components {

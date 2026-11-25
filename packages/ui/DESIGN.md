@@ -1174,7 +1174,8 @@ A part that is always light, such as a screenshot's frame, sets the attribute on
 
 **No shadows, for a second reason.** The canonical output of a deck is a PDF, and Chromium's PDF
 drops blurred shadows or draws them as bitmaps. Radii are 4px on media frames and code blocks,
-2px on tags and placeholder blocks, 50% on markers and discs, and 0 everywhere else. Indigo
+2px on tags and placeholder blocks, 36px on the phone's frame (with its 12px bezel the one drawn
+device), 50% on markers and discs, and 0 everywhere else. Indigo
 prints mid grey: nothing depends on colour alone.
 
 **Forms** are the kit's one ornament: large discs and rings cropped by the slide's edge, in nine
