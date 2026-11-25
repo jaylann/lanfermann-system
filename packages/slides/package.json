@@ -1,6 +1,6 @@
 {
   "name": "@lanfermann/slides",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "Checks, previews, builds and packs a slide deck written with @lanfermann/ui/slides.",
   "license": "MIT",
   "author": "Justin Lanfermann",
