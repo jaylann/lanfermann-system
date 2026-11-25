@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatDate,
   formatMoney,
   formatNumber,
   formatPercent,
@@ -49,6 +50,52 @@ describe("numbers", () => {
     expect(numberFormatter("de-DE", { style: "percent" })).toBe(
       numberFormatter("de-DE", { style: "percent" }),
     );
+  });
+});
+
+describe("dates", () => {
+  it("writes a German date", () => {
+    expect(formatDate(new Date(2026, 10, 30, 14, 5))).toBe("30. Nov. 2026");
+    expect(formatDate(at(2026, 3, 1))).toBe("1. März 2026");
+    expect(formatDate("2026-11-30T14:05:00+01:00", { timeZone: "Europe/Berlin" })).toBe(
+      "30. Nov. 2026",
+    );
+  });
+
+  it("writes in another language when asked", () => {
+    expect(formatDate(new Date(2026, 10, 30), { locale: "en-US" })).toBe("Nov 30, 2026");
+    expect(formatDate("2026-11-30", { locale: new Intl.Locale("en-US") })).toBe("Nov 30, 2026");
+  });
+
+  it("writes the time of day when asked", () => {
+    const moment = Date.UTC(2026, 10, 30, 13, 5);
+    expect(formatDate(moment, { withTime: true, timeZone: "Europe/Berlin" })).toBe(
+      "30. Nov. 2026, 14:05",
+    );
+  });
+
+  it("writes a date without a time as that day in every time zone", () => {
+    expect(formatDate("2026-11-30")).toBe("30. Nov. 2026");
+    for (const timeZone of ["America/Los_Angeles", "UTC", "Pacific/Kiritimati"]) {
+      expect(formatDate("2026-11-30", { timeZone })).toBe("30. Nov. 2026");
+      expect(formatDate("2026-11-30", { timeZone, withTime: true })).toBe("30. Nov. 2026");
+    }
+  });
+
+  it("writes a moment as the day it falls on in the time zone it is given", () => {
+    // 23:30 in UTC is half past midnight in Berlin and the afternoon in Los Angeles.
+    const late = Date.UTC(2026, 10, 30, 23, 30);
+    expect(formatDate(late, { timeZone: "UTC" })).toBe("30. Nov. 2026");
+    expect(formatDate(late, { timeZone: "Europe/Berlin" })).toBe("1. Dez. 2026");
+    expect(formatDate("2026-12-01T00:30:00+01:00", { timeZone: "America/Los_Angeles" })).toBe(
+      "30. Nov. 2026",
+    );
+  });
+
+  it("says nothing for what is no date", () => {
+    expect(formatDate("kein Datum")).toBe("");
+    expect(formatDate("2026-02-30")).toBe("");
+    expect(formatDate(Number.NaN)).toBe("");
   });
 });
 

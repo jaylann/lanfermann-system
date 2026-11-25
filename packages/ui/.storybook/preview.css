@@ -1,6 +1,7 @@
 /* Workshop stylesheet: Tailwind + the library's tokens, scanning source instead of dist. */
 @import "tailwindcss";
 @import "../src/styles.css";
+@import "../src/styles/slides.css";
 
 @source "../src";
 @source "../stories";

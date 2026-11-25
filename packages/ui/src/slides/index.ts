@@ -1,0 +1,40 @@
+// Public API of @lanfermann/ui/slides: the parts of a deck on the 1920 by 1080 canvas. A second
+// entry, so an app that shows no deck does not load it. Styles: @lanfermann/ui/slides.css.
+// Every part exported here is also named in ./catalog/groups.ts (a test checks it).
+export { Agenda, type AgendaProps } from "./agenda/agenda";
+export { Body, type BodyProps } from "./body/body";
+export { ClosingSlide, type ClosingSlideProps } from "./closing-slide/closing-slide";
+export { CoBrand, type CoBrandProps } from "./co-brand/co-brand";
+export { Columns, type ColumnsProps } from "./columns/columns";
+export { Compare, type CompareProps } from "./compare/compare";
+export { Contacts, type ContactsProps } from "./contacts/contacts";
+export { CoverSlide, type CoverSlideProps } from "./cover-slide/cover-slide";
+export { Deck, type DeckProps } from "./deck/deck";
+export { flattenSlides, type SlideEntry } from "./deck/flatten-slides";
+export { Findings, type FindingsProps } from "./findings/findings";
+export { Footer, type FooterProps } from "./footer/footer";
+export { Forms, type FormsName, type FormsProps } from "./forms/forms";
+export { Icon, type IconProps } from "./icon/icon";
+export { type IconGlyph, type IconName, ICONS, type MarkName, MARKS } from "./icon/icons";
+export { KeyValue, type KeyValueProps } from "./key-value/key-value";
+export { Lead, type LeadProps } from "./lead/lead";
+export { List, type ListProps } from "./list/list";
+export { Marker, type MarkerProps } from "./marker/marker";
+export { Meta, type MetaProps } from "./meta/meta";
+export { Objections, type ObjectionsProps } from "./objections/objections";
+export { PriceTable, type PriceTableProps } from "./price-table/price-table";
+export { ReferencesSlide, type ReferencesSlideProps } from "./references-slide/references-slide";
+export { SectionSlide, type SectionSlideProps } from "./section-slide/section-slide";
+export { Slide, type SlideGround, type SlideProps } from "./slide/slide";
+export { Source, type SourceProps } from "./source/source";
+export { Spacer } from "./spacer/spacer";
+export { Split, type SplitProps } from "./split/split";
+export { SLIDE_HEIGHT, SLIDE_WIDTH, Stage, type StageProps } from "./stage/stage";
+export { StatementSlide, type StatementSlideProps } from "./statement-slide/statement-slide";
+export { Steps, type StepsProps } from "./steps/steps";
+export { Table, type TableProps } from "./table/table";
+export { Tag, type TagProps, Tags, type TagsProps } from "./tag/tag";
+export { Takeaway, type TakeawayProps } from "./takeaway/takeaway";
+export { Tiers, type TiersProps } from "./tiers/tiers";
+export { Title, type TitleProps } from "./title/title";
+export { Wordmark, type WordmarkProps } from "./wordmark/wordmark";

@@ -44,6 +44,9 @@
  *             `then: { click, at }` clicks a second selector `at` ms into the first change, while
  *             it is still moving: the strip shows the change retargeted from where it stood
  *   skip      true                    leave the story out
+ *   grounds   ["paper"]               draw the story only in these entries of `--grounds`. For a
+ *                                     story that brings its own ground (a slide), which would
+ *                                     look the same in every one of them
  *
  * Stories with a `play` function (Storybook tags them `play-fn`) are interaction tests, not
  * pictures: they are left out, as are stories tagged `visual-skip`.
@@ -90,9 +93,11 @@ type VisualParams = {
   target?: string;
   motion?: MotionSpec[];
   skip?: boolean;
+  grounds?: string[];
 };
 type IndexEntry = { id: string; title: string; name: string; type: string; tags?: string[] };
-type Variant = { label: string; globals: Record<string, string> };
+/** `ground` is the `--grounds` entry the variant was built from. */
+type Variant = { label: string; ground: string; globals: Record<string, string> };
 type Tile = { label: string; png: Buffer; width: number };
 /** A strip of tiles (states, motion frames) that still has to be laid out as one image. */
 type Strip = { file: string; title: string; tiles: Tile[] };
@@ -234,12 +239,14 @@ function groundGlobals(entry: string): Record<string, string> {
 function buildVariants(options: ReturnType<typeof parseArgs>): Variant[] {
   let variants: Variant[] = options.grounds.map((ground) => ({
     label: ground,
+    ground,
     globals: { ...options.set, ...groundGlobals(ground) },
   }));
   for (const { key, values } of options.vary) {
     variants = variants.flatMap((variant) =>
       values.map((value) => ({
         label: `${variant.label} ${value}`,
+        ground: variant.ground,
         globals: { ...variant.globals, [key]: value },
       })),
     );
@@ -723,6 +730,8 @@ for (const [engineIndex, engine] of engines.entries()) {
           const visual = await openStory(page, storyUrl(origin, story.id, variant.globals));
           motionOf.set(story.id, visual.skip ? [] : (visual.motion ?? []));
           if (visual.skip) continue;
+          // A story that brings its own ground is drawn once, not once per page ground.
+          if (visual.grounds && !visual.grounds.includes(variant.ground)) continue;
 
           if (pass === "motion") {
             for (const [specIndex, spec] of (visual.motion ?? []).entries()) {

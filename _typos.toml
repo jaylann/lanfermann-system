@@ -9,8 +9,11 @@ extend-exclude = [
   "storybook-static/",
   ".visual/",
   "*.generated.css",
+  "*.generated.ts",
   # German sample copy: the checker knows English only.
   "*.stories.tsx",
+  # The example slide beside a slide part, shown in its story and in the catalog.
+  "*.example.tsx",
   # The sample content stories share (an answer, its sources, files).
   "story-*.ts",
   "story-*.tsx",
@@ -58,3 +61,6 @@ signatur = "signatur"
 diagramm = "diagramm"
 # A folder, as a file tile names it to assistive tech and a file grid labels its section.
 ordner = "ordner"
+# The German names of two slide pictograms, as a screen reader says them („Paket“, „Modell“).
+paket = "paket"
+modell = "modell"

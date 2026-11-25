@@ -70,11 +70,24 @@ const insetShadowNames = [
 ];
 const springKeys = springNames.map((name) => `spring-${name}`);
 
+/** The slide type scale of src/styles/slides.css (`text-slide-title`, …). A test keeps the two together. */
+export const slideTextNames = [
+  "meta",
+  "code",
+  "body",
+  "lead",
+  "title",
+  "statement",
+  "cover",
+  "figure",
+] as const;
+
 const twMerge = extendTailwindMerge<"depth" | "depth-tone" | "spring">({
   extend: {
     theme: {
-      // `text-control` is a font size (density.css); unregistered it would count as a colour.
-      text: ["control"],
+      // `text-control` is a font size (density.css), and so are the slide sizes; unregistered
+      // they would count as colours.
+      text: ["control", ...slideTextNames.map((name) => `slide-${name}`)],
       shadow: shadowNames,
       "inset-shadow": insetShadowNames,
       ease: springKeys,
