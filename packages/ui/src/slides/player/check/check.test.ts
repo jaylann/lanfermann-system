@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { countLines, excerpt } from "./lines";
-import { beyond, CANVAS, clipTo, CONTENT, cutsOff, lineBox, toCanvas, union } from "./measure";
+import {
+  beyond,
+  CANVAS,
+  clipTo,
+  CONTENT,
+  cutsOff,
+  lineBox,
+  stepIssue,
+  toCanvas,
+  union,
+} from "./measure";
 import { buildReport } from "./report";
 
 describe("counting the lines of a text", () => {
@@ -108,6 +118,28 @@ describe("the boxes of a slide", () => {
     expect(cutsOff(400, 400)).toBe(false);
     expect(cutsOff(401, 400)).toBe(false);
     expect(cutsOff(402, 400)).toBe(true);
+  });
+});
+
+describe("the steps a slide's parts ask for", () => {
+  it("lets parts pass that ask for no more steps than the slide has", () => {
+    expect(stepIssue([], 0)).toBeUndefined();
+    expect(stepIssue([1, 2, 2], 2)).toBeUndefined();
+    expect(stepIssue([1], 3)).toBeUndefined();
+    expect(stepIssue([Number.NaN], 0)).toBeUndefined();
+  });
+
+  it("calls a part a structure issue when it asks for a step the slide does not have", () => {
+    expect(stepIssue([1, 3, 2], 2)).toEqual({
+      kind: "structure",
+      message: "A part asks for step 3, but the slide has 2 steps: name `steps` on the slide.",
+    });
+    expect(stepIssue([2], 1)?.message).toBe(
+      "A part asks for step 2, but the slide has 1 step: name `steps` on the slide.",
+    );
+    expect(stepIssue([1], 0)?.message).toBe(
+      "A part asks for step 1, but the slide has 0 steps: name `steps` on the slide.",
+    );
   });
 });
 

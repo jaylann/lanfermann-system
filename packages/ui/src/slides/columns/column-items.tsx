@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/slides/icon/icon";
 import type { IconGlyph } from "@/slides/icon/icons";
+import { stepAttributes } from "@/slides/step/steps";
 
 /** What `Columns` and `Steps` draw of an item; each adds the field its label comes from. */
 export type ColumnItem = {
@@ -10,6 +11,7 @@ export type ColumnItem = {
   text?: ReactNode;
   icon?: IconGlyph;
   more?: ReactNode;
+  step?: number;
 };
 
 type ColumnItemsProps<Item extends ColumnItem> = {
@@ -24,7 +26,8 @@ type ColumnItemsProps<Item extends ColumnItem> = {
  * The shared base of `Columns` and `Steps`: equal columns under 2px rules, each with a label, a
  * title and a text. Up to three items are set large (48px titles over 32px text), four and five
  * small (32px strong over 24px). The `more` blocks form a second row of the same grid, so they
- * start on one line whatever the texts above them run to.
+ * start on one line whatever the texts above them run to. An item with a `step` appears at it
+ * with its rule, and its `more` block with it.
  */
 export function ColumnItems<Item extends ColumnItem>({
   slot,
@@ -55,6 +58,7 @@ export function ColumnItems<Item extends ColumnItem>({
           <div
             key={index}
             className={cn("flex flex-col border-t-2 border-rule pt-6", large ? "gap-4" : "gap-2")}
+            {...stepAttributes(item.step)}
           >
             {label != null ? <p className="text-slide-meta text-fg-muted">{label}</p> : null}
             {item.icon ? (
@@ -77,7 +81,7 @@ export function ColumnItems<Item extends ColumnItem>({
       })}
       {hasMore
         ? items.map((item, index) => (
-            <div key={`more-${index}`} className="flex flex-col">
+            <div key={`more-${index}`} className="flex flex-col" {...stepAttributes(item.step)}>
               {item.more}
             </div>
           ))

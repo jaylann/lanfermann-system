@@ -46,7 +46,10 @@ export type SlideIssue =
   | { kind: "wrap"; target: string; lines: number; maxLines: number; text: string }
   /** The slide threw while it was drawn. */
   | { kind: "render-error"; message: string }
-  /** A child of the deck is not exactly one slide. */
+  /**
+   * A child of the deck is not exactly one slide, or a part of it asks for a step the slide does
+   * not have.
+   */
   | { kind: "structure"; message: string };
 
 type ReportParts = {

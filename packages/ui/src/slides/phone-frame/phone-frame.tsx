@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
+import { PinnedMarker } from "@/slides/browser-frame/pinned-marker";
 import { Wireframe } from "@/slides/browser-frame/wireframe";
-import { Marker } from "@/slides/marker/marker";
+import { maxStep, type StepCounter } from "@/slides/step/steps";
 
 /** The bezel's weight in px, the same on all four sides. */
 const BEZEL = 12;
@@ -15,8 +16,8 @@ export type PhoneFrameProps = {
   width?: number;
   /** Outer height in px, 496 by default: the tallest a phone can be under a two-line title with a source line. */
   height?: number;
-  /** Marker number and its position in px from the frame's top left corner. */
-  markers?: Array<{ n: number; x: number; y: number }>;
+  /** Marker number and its position in px from the frame's top left corner. `step` lets a marker appear at that step of the slide, so the findings can be pointed out one after the other. */
+  markers?: Array<{ n: number; x: number; y: number; step?: number }>;
   /** Your own content in place of the screenshot. */
   children?: ReactNode;
 };
@@ -26,7 +27,8 @@ export type PhoneFrameProps = {
  *
  * A plain dark bezel with `radius-device`: no notch, no status bar, no brand of phone. Most local
  * searches happen on a phone, so when a finding is about the mobile page, show the phone, not the
- * desktop.
+ * desktop. When the talk goes through the findings one at a time, let each marker appear at the
+ * step its finding does; the screenshot itself stands from the start.
  */
 export function PhoneFrame({
   src,
@@ -58,12 +60,11 @@ export function PhoneFrame({
         (children ?? <Wireframe width={screenWidth} height={screenHeight} compact />)
       )}
       {markers.map((marker) => (
-        <Marker
-          key={marker.n}
-          n={marker.n}
-          style={{ position: "absolute", left: marker.x, top: marker.y }}
-        />
+        <PinnedMarker key={marker.n} {...marker} />
       ))}
     </div>
   );
 }
+
+/** The highest `step` among the markers. */
+PhoneFrame.slideSteps = ((props) => maxStep(props.markers)) satisfies StepCounter<PhoneFrameProps>;

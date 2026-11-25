@@ -4,7 +4,7 @@ import { span } from "@/slides/lib/grid";
 import { Slide } from "@/slides/slide/slide";
 import { Source } from "@/slides/source/source";
 import { Spacer } from "@/slides/spacer/spacer";
-import { onStage, slideParameters } from "@/slides/story-slide";
+import { atStep, onStage, slideParameters } from "@/slides/story-slide";
 import { Title } from "@/slides/title/title";
 
 import { ColumnChart } from "./column-chart";
@@ -51,6 +51,56 @@ export const Groups: Story = {
             items: [
               { label: "vorher", value: 9 },
               { label: "nachher", value: 11, strong: true },
+            ],
+          },
+        ]}
+      />
+      <Source>
+        Anfragen über das Kontaktformular, je drei Monate vor und nach dem Relaunch am 1.8.2026,
+        Schreinerei Mustermann
+      </Source>
+    </Slide>
+  ),
+};
+
+/**
+ * Three groups at step 1: „Smartphone“ stands with both columns, „Desktop“ has appeared with
+ * its first column only, „Tablet“ keeps its place unseen. The baseline runs under all three.
+ */
+export const StepByStep: Story = {
+  decorators: [atStep(1)],
+  render: () => (
+    <Slide deck="Der digitale Handschlag" page={6}>
+      <Title>
+        Der Zuwachs kommt vom Smartphone,
+        <br />
+        nicht vom Schreibtisch.
+      </Title>
+      <Spacer />
+      <ColumnChart
+        height={320}
+        groups={[
+          {
+            label: "Smartphone",
+            items: [
+              { label: "vorher", value: 6 },
+              { label: "nachher", value: 21, highlight: true, step: 1 },
+            ],
+          },
+          {
+            label: "Desktop",
+            step: 1,
+            items: [
+              { label: "vorher", value: 9 },
+              { label: "nachher", value: 11, strong: true, step: 2 },
+            ],
+          },
+          {
+            label: "Tablet",
+            step: 3,
+            items: [
+              { label: "vorher", value: 2 },
+              { label: "nachher", value: 3, strong: true },
             ],
           },
         ]}

@@ -13,33 +13,39 @@ import {
 
 import { keyBelongsToTarget } from "./actions";
 import { publish, unpublish, whenSettled } from "./check/ready";
-import { hashOfSlide, slideFromHash } from "./hash";
+import { addressFromHash, hashToWrite } from "./hash";
 import { intentOfKey, type PlayerIntent } from "./input";
 import { initialState, type PlayerAction, type PlayerState, reduce } from "./state";
 
-/** Where a player starts, for an app that brings a talk back and for the workshop's stories. */
-export type PlayerStart = Partial<Pick<PlayerState, "index" | "blackout" | "grid" | "startedAt">>;
+/**
+ * Where a player starts, for an app that brings a talk back and for the workshop's stories: the
+ * slide (from 0), its step, the black screen, the grid, the talk's clock.
+ */
+export type PlayerStart = Partial<
+  Pick<PlayerState, "index" | "step" | "blackout" | "grid" | "startedAt">
+>;
 
-/** The deck's state, from where `start` says. */
+/** The deck's state, from where `start` says. `steps` holds the step count of each slide. */
 export function usePlayerState(
-  count: number,
+  steps: readonly number[],
   start: PlayerStart | undefined,
 ): [PlayerState, Dispatch<PlayerAction>] {
   return useReducer(reduce, undefined, () => {
-    const { index, ...rest } = start ?? {};
-    return { ...initialState(count, index), ...rest };
+    const { index, step, ...rest } = start ?? {};
+    return { ...initialState(steps, index, step), ...rest };
   });
 }
 
 /**
- * Keeps the address and the slide together: the hash at load and a hash typed or linked to move
- * the deck, and from the first step on the hash follows the slide (replaced, so the back button
- * leaves the deck instead of walking it).
+ * Keeps the address and the deck together: the hash at load and a hash typed or linked move the
+ * deck, and from the first move on the hash follows the slide and its step (replaced, so the back
+ * button leaves the deck instead of walking it). How an address is read and written: hash.ts.
  */
 export function useHash(
   index: number,
+  step: number,
   ids: readonly (string | undefined)[],
-  go: (index: number) => void,
+  go: (index: number, step: number) => void,
   enabled: boolean,
 ): void {
   const mounted = useRef(false);
@@ -49,8 +55,8 @@ export function useHash(
   useLayoutEffect(() => {
     if (!enabled) return;
     const read = () => {
-      const linked = slideFromHash(window.location.hash, ids);
-      if (linked !== undefined) go(linked);
+      const linked = addressFromHash(window.location.hash, ids);
+      if (linked !== undefined) go(linked.index, linked.step);
     };
     read();
     window.addEventListener("hashchange", read);
@@ -60,16 +66,16 @@ export function useHash(
   useEffect(() => {
     // Not at load: the address is left as it was opened until the deck moves.
     if (!enabled || !mounted.current) return;
-    // An id in the address stays while it names this slide: it is the better link.
-    if (slideFromHash(window.location.hash, ids) === index) return;
+    const hash = hashToWrite(window.location.hash, ids, index, step);
+    if (hash === undefined) return;
     try {
-      window.history.replaceState(window.history.state, "", hashOfSlide(index));
+      window.history.replaceState(window.history.state, "", hash);
     } catch (error) {
       // Some browsers refuse to rewrite the address of a file opened from disk. The deck goes
       // on without its deep link; anything else is a real error.
       if (!(error instanceof DOMException)) throw error;
     }
-  }, [index, ids, enabled]);
+  }, [index, step, ids, enabled]);
 
   // After the effect above, so that one skips its first run (also when effects run twice).
   useEffect(() => {

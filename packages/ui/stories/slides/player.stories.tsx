@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ReactNode, useEffect } from "react";
 import { expect } from "storybook/test";
 
+import { Body, Deck, Slide, Title } from "@/slides";
 import { Player, type PlayerProps } from "@/slides/player";
+import { Step } from "@/slides/step/step";
 
 import { handschlag } from "./story-handschlag";
 
@@ -28,10 +30,40 @@ const NOW = Date.UTC(2026, 10, 24, 13, 32, 0);
 const STARTED = NOW - 725_000;
 const now = () => NOW;
 
-function player(props: Omit<PlayerProps, "deck">) {
+function player(props: Omit<PlayerProps, "deck"> & { deck?: PlayerProps["deck"] }) {
   // `embed={false}`: a story stands in Storybook's frame, and shows the player as it stands alone.
   return <Player deck={handschlag} hash={false} embed={false} now={now} {...props} />;
 }
+
+// A short deck whose middle slide builds its point in two steps: the first line stands, the
+// second and third appear click by click.
+const stepped = (
+  <Deck title="Der digitale Handschlag">
+    <Slide id="suche" notes="Kurz fragen, wer heute schon etwas gegoogelt hat.">
+      <Title>Jeder Auftrag beginnt mit einer Suche.</Title>
+      <Body>Bevor jemand anruft, hat er Ihren Namen schon einmal eingetippt.</Body>
+    </Slide>
+    <Slide
+      id="weg"
+      notes="Erst das Profil. Klick: der Rückruf. Klick: der Termin. Bei jedem Schritt eine Pause."
+    >
+      <Title>So wird aus einer Suche ein Termin.</Title>
+      <Body>Ein Kunde findet Ihr Google-Profil und liest drei Bewertungen.</Body>
+      <Step at={1}>
+        <Body>Er schreibt eine Anfrage, und Sie rufen noch am selben Tag zurück.</Body>
+      </Step>
+      <Step at={2}>
+        <Body>Am Telefon vereinbaren Sie einen Termin für die nächste Woche.</Body>
+      </Step>
+    </Slide>
+    <Slide
+      id="angebot"
+      notes="Das Angebot ist der Moment, in dem die Website ihre Arbeit getan hat."
+    >
+      <Title>Das Angebot schicken Sie am Morgen danach.</Title>
+    </Slide>
+  </Deck>
+);
 
 /**
  * Keeps the audience's controls in the picture: they leave after 2.5 seconds without input, and
@@ -152,6 +184,104 @@ export const AudienceKeyboard: Story = {
       await expect(canvasElement.querySelector('[data-slot="slide"]')).toBeNull();
       await userEvent.keyboard("{Escape}");
       await expect(canvasElement.querySelector('[data-slot="slide"]')).not.toBeNull();
+    });
+  },
+};
+
+/** A slide with steps at its first step: the first two lines stand, the third keeps its place. */
+export const AudienceAtStep: Story = {
+  parameters: {
+    visual: { viewport: { width: 1280, height: 720 }, clip: "viewport", grounds: ["paper"] },
+  },
+  render: () => (
+    <Awake>{player({ deck: stepped, mode: "audience", start: { index: 1, step: 1 } })}</Awake>
+  ),
+};
+
+/**
+ * The console at the first of two steps: the head says the step, and the preview is the same
+ * slide one step on.
+ */
+export const PresenterAtStep: Story = {
+  render: () =>
+    player({ deck: stepped, mode: "presenter", start: { index: 1, step: 1, startedAt: STARTED } }),
+};
+
+/** The console walks a slide's steps before it leaves it, and comes back to its last step. */
+export const PresenterSteps: Story = {
+  render: () => player({ deck: stepped, mode: "presenter" }),
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    const stepLine = () => canvasElement.querySelector('[data-slot="player-step"]');
+    const shownStep = () =>
+      canvasElement
+        .querySelector('[data-slot="player-console-current"] [data-slides-step]')
+        ?.getAttribute("data-slides-step");
+    const current = () =>
+      canvasElement.querySelector('[data-slot="player-console-current"] [data-slot="slide"]');
+
+    await step("a slide without steps says none", async () => {
+      await expect(canvas.getByRole("heading", { name: "Folie 1 von 3" })).toBeVisible();
+      await expect(stepLine()).toBeNull();
+      await expect(canvas.getByRole("heading", { name: "Nächste Folie" })).toBeVisible();
+    });
+
+    await step("ArrowRight walks the steps, and the preview shows the next one", async () => {
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(
+        canvas.getByRole("heading", { name: "Folie 2 von 3 Schritt 0 von 2" }),
+      ).toBeVisible();
+      await expect(canvas.getByRole("heading", { name: "Nächster Schritt" })).toBeVisible();
+      const slide = current();
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(stepLine()).toHaveTextContent("Schritt 1 von 2");
+      await expect(shownStep()).toBe("1");
+      // A step reveals; the slide is not drawn anew.
+      await expect(current()).toBe(slide);
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(stepLine()).toHaveTextContent("Schritt 2 von 2");
+      await expect(canvas.getByRole("heading", { name: "Nächste Folie" })).toBeVisible();
+    });
+
+    await step("after the last step comes the next slide, and back is the last step", async () => {
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(canvas.getByRole("heading", { name: "Folie 3 von 3" })).toBeVisible();
+      await expect(stepLine()).toBeNull();
+      await userEvent.keyboard("{ArrowLeft}");
+      await expect(
+        canvas.getByRole("heading", { name: "Folie 2 von 3 Schritt 2 von 2" }),
+      ).toBeVisible();
+      await expect(shownStep()).toBe("2");
+    });
+  },
+};
+
+/** The audience's window walks the same steps; its counter stays on the slide meanwhile. */
+export const AudienceSteps: Story = {
+  render: () => player({ deck: stepped, mode: "audience" }),
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    const shownStep = () =>
+      canvasElement.querySelector("[data-slides-step]")?.getAttribute("data-slides-step");
+    const slide = () => canvasElement.querySelector('[data-slot="stage"] [data-slot="slide"]');
+
+    await step("ArrowRight walks the steps of the second slide", async () => {
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(canvas.getByText("Folie 2 von 3, Schritt 0 von 2")).toBeInTheDocument();
+      const before = slide();
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(canvas.getByText("Folie 2 von 3, Schritt 1 von 2")).toBeInTheDocument();
+      await expect(canvas.getByText("2 / 3")).toBeInTheDocument();
+      await expect(shownStep()).toBe("1");
+      await expect(slide()).toBe(before);
+      await userEvent.keyboard("{ArrowRight}");
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(canvas.getByText("Folie 3 von 3")).toBeInTheDocument();
+      await expect(slide()).not.toBe(before);
+    });
+
+    await step("ArrowLeft goes back into the slide at its last step", async () => {
+      await userEvent.keyboard("{ArrowLeft}");
+      await expect(canvas.getByText("Folie 2 von 3, Schritt 2 von 2")).toBeInTheDocument();
+      await expect(shownStep()).toBe("2");
     });
   },
 };

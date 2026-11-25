@@ -26,13 +26,22 @@ describe("messages between the two windows", () => {
   it("reads the three shapes of its own session", () => {
     expect(parseMessage({ lfSlides: "a1", type: "hello" }, "a1")).toEqual({ type: "hello" });
     expect(
-      parseMessage({ lfSlides: "a1", type: "state", seq: 4, index: 2, blackout: true }, "a1"),
-    ).toEqual({ type: "state", seq: 4, index: 2, blackout: true });
+      parseMessage(
+        { lfSlides: "a1", type: "state", seq: 4, index: 2, step: 1, blackout: true },
+        "a1",
+      ),
+    ).toEqual({ type: "state", seq: 4, index: 2, step: 1, blackout: true });
     expect(parseMessage({ lfSlides: "a1", type: "intent", seq: 9, intent: "next" }, "a1")).toEqual({
       type: "intent",
       seq: 9,
       intent: "next",
     });
+  });
+
+  it("reads a state of an older build, which knows no steps, as step 0", () => {
+    expect(
+      parseMessage({ lfSlides: "a1", type: "state", seq: 4, index: 2, blackout: false }, "a1"),
+    ).toEqual({ type: "state", seq: 4, index: 2, step: 0, blackout: false });
   });
 
   it("drops what belongs to another session or to another script", () => {
@@ -49,6 +58,10 @@ describe("messages between the two windows", () => {
     expect(parseMessage({ ...state, index: -1 }, "a1")).toBeUndefined();
     expect(parseMessage({ ...state, index: 1.5 }, "a1")).toBeUndefined();
     expect(parseMessage({ ...state, blackout: "yes" }, "a1")).toBeUndefined();
+    expect(parseMessage({ ...state, step: -1 }, "a1")).toBeUndefined();
+    expect(parseMessage({ ...state, step: 0.5 }, "a1")).toBeUndefined();
+    expect(parseMessage({ ...state, step: "1" }, "a1")).toBeUndefined();
+    expect(parseMessage({ ...state, step: null }, "a1")).toBeUndefined();
     const intent = { lfSlides: "a1", type: "intent", seq: 1, intent: "next" };
     expect(parseMessage({ ...intent, seq: undefined }, "a1")).toBeUndefined();
     // The grid and the full screen are a window's own; a second window cannot ask for them.

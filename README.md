@@ -187,6 +187,12 @@ import { Deck, Slide, Spacer, Stage } from "@lanfermann/ui/slides";
   Chromium ends the PDF on one empty page.
 - A slide has grounds of its own (`ground="paper | tint | ink | indigo"`). `data-theme` and dark
   mode do not reach it: a deck is the same picture on a dark page.
+- A slide may show its blocks click by click: `<Step at={1}>…</Step>` around a block, or `step`
+  on an item of a part that lists things. What appears keeps its place, so nothing reflows. The
+  player counts the steps from the parts; a component of your own that uses steps inside names
+  them where it is used (`steps={2}`). Presented live, a step fades in and the blocks of a new
+  slide rise in; everywhere else (a `Deck` on its own, a print, a preview) every step is shown and
+  nothing moves. `data-motion="none"` on a `Slide` keeps it still.
 - The rules of a slide (type, grid, one accent, sources) are in `packages/ui/DESIGN.md`, "Slides".
 
 #### Presenting a deck

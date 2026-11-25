@@ -34,9 +34,15 @@ export type PlayerProps = {
    * presenter instead of moving itself; a presenter's window makes its own.
    */
   session?: string;
-  /** Where the deck starts: the slide (from 0), the black screen, the grid, the talk's clock. */
+  /**
+   * Where the deck starts: the slide (from 0), its step, the black screen, the grid, the talk's
+   * clock.
+   */
   start?: PlayerStart;
-  /** Whether the address (`#/7`) follows the slide and moves it. True by default. */
+  /**
+   * Whether the address (`#/7`, `#/7.1` at a step) follows the slide and moves it. True by
+   * default.
+   */
   hash?: boolean;
   /**
    * Whether the player runs in a frame of another page. By default the page is asked

@@ -3,9 +3,10 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/slides/icon/icon";
 import type { IconGlyph } from "@/slides/icon/icons";
+import { maxStep, stepAttributes, type StepCounter } from "@/slides/step/steps";
 
 export type FigureRowProps = {
-  /** Two to four figures. `highlight` puts one of them in `accent`; leave it off the others. `title` names the figure in a muted line above it („Genauigkeit“), with an `icon` from `ICONS` before it if every figure has one; `prefix` is a word or two before a threshold („mehr als“, „unter“). */
+  /** Two to four figures. `highlight` puts one of them in `accent`; leave it off the others. `title` names the figure in a muted line above it („Genauigkeit“), with an `icon` from `ICONS` before it if every figure has one; `prefix` is a word or two before a threshold („mehr als“, „unter“). `step` lets a figure appear at that step of the slide, with its rule, label and source; the others keep their places. */
   items: Array<{
     value: ReactNode;
     unit?: ReactNode;
@@ -15,6 +16,7 @@ export type FigureRowProps = {
     title?: ReactNode;
     icon?: IconGlyph;
     prefix?: ReactNode;
+    step?: number;
   }>;
 };
 
@@ -23,7 +25,9 @@ export type FigureRowProps = {
  *
  * For figures that belong together and are read against each other. Each keeps its own source
  * under its label, because each comes from somewhere else. At most one is highlighted. Four
- * figures is the limit: with more, use a `Table` or a `BarList`.
+ * figures is the limit: with more, use a `Table` or a `BarList`. Reveal the figures one by one
+ * only when the talk explains each in turn; figures meant to be read against each other stand
+ * together from the start.
  */
 export function FigureRow({ items }: FigureRowProps) {
   return (
@@ -33,7 +37,11 @@ export function FigureRow({ items }: FigureRowProps) {
       style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}
     >
       {items.map((item, index) => (
-        <div key={index} className="flex flex-col gap-4 border-t-2 border-rule pt-6">
+        <div
+          key={index}
+          className="flex flex-col gap-4 border-t-2 border-rule pt-6"
+          {...stepAttributes(item.step)}
+        >
           {item.title ? (
             <div className="flex items-center gap-3">
               {item.icon ? <Icon icon={item.icon} size={28} /> : null}
@@ -61,3 +69,6 @@ export function FigureRow({ items }: FigureRowProps) {
     </div>
   );
 }
+
+/** The highest `step` among the figures. */
+FigureRow.slideSteps = ((props) => maxStep(props.items)) satisfies StepCounter<FigureRowProps>;

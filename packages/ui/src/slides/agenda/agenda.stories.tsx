@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Slide } from "@/slides/slide/slide";
 import { Spacer } from "@/slides/spacer/spacer";
-import { onStage, slideParameters } from "@/slides/story-slide";
+import { atStep, onStage, slideParameters } from "@/slides/story-slide";
 import { Title } from "@/slides/title/title";
 
 import { Agenda } from "./agenda";
@@ -36,6 +36,25 @@ export const BeforePartTwo: Story = {
           ["Was Ihre Website dabei über Sie sagt", 7],
           ["Drei Stellen, an denen Anfragen verloren gehen", 11],
           ["Was eine neue Seite kostet und bringt", 15],
+        ]}
+      />
+    </Slide>
+  ),
+};
+
+/** At step 1: the first part stands from the start under the rule, the second has appeared with its line, the last two keep their places unseen. */
+export const StepByStep: Story = {
+  decorators: [atStep(1)],
+  render: () => (
+    <Slide deck="Der digitale Handschlag" page={2}>
+      <Title>Worum es heute geht.</Title>
+      <Spacer />
+      <Agenda
+        items={[
+          ["Wie Kunden heute einen Betrieb auswählen", 3],
+          ["Was Ihre Website dabei über Sie sagt", 7, 1],
+          ["Drei Stellen, an denen Anfragen verloren gehen", 11, 2],
+          ["Was eine neue Seite kostet und bringt", 15, 3],
         ]}
       />
     </Slide>

@@ -47,6 +47,16 @@ export { Split, type SplitProps } from "./split/split";
 export { SLIDE_HEIGHT, SLIDE_WIDTH, Stage, type StageProps } from "./stage/stage";
 export { Stages, type StagesProps } from "./stages/stages";
 export { StatementSlide, type StatementSlideProps } from "./statement-slide/statement-slide";
+export { Step, type StepProps } from "./step/step";
+export { type SlideStep, useSlideStep } from "./step/step-context";
+export {
+  countSteps,
+  maxStep,
+  type StepAttributes,
+  stepAttributes,
+  type StepCounter,
+  stepsOfSlide,
+} from "./step/steps";
 export { Steps, type StepsProps } from "./steps/steps";
 export { Table, type TableProps } from "./table/table";
 export { Tag, type TagProps, Tags, type TagsProps } from "./tag/tag";

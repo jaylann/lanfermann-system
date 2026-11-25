@@ -4,8 +4,19 @@ import type { DiagramCanvasEdge, DiagramCanvasNode } from "@/slides/diagram/diag
 import type { Point } from "@/slides/diagram/geometry";
 import { span } from "@/slides/lib/grid";
 
-export type LoopStep = { title: ReactNode; highlight?: boolean; marker?: number };
-export type LoopCenter = { label?: ReactNode; title?: ReactNode; text?: ReactNode };
+/** `appearsAt`: the slide's step (click) at which the step of the loop arrives. */
+export type LoopStep = {
+  title: ReactNode;
+  highlight?: boolean;
+  marker?: number;
+  appearsAt?: number;
+};
+export type LoopCenter = {
+  label?: ReactNode;
+  title?: ReactNode;
+  text?: ReactNode;
+  appearsAt?: number;
+};
 
 export type LoopLayout = { nodes: DiagramCanvasNode[]; edges: DiagramCanvasEdge[] };
 
@@ -34,6 +45,10 @@ const CENTER_MARGIN = 32;
  * The rows of the ring stand `rowGap` apart. A ring without steps on its sides (four steps)
  * keeps at least 226px between its two rows: the centre's 162px with 32px above and below. The
  * centre is text without a box, between the side columns and in the middle of the ring's height.
+ *
+ * Steps: a step of the loop and the centre come at their `appearsAt`. The ring's connectors name
+ * none, so each comes with the later of the two steps it joins: the connector into a step with
+ * that step, and the one that closes the ring with the last.
  *
  * @throws When there are more steps than the ring has places.
  */
@@ -79,10 +94,12 @@ export function loopLayout(
       tone: step.highlight ? "accent" : undefined,
       accent: step.highlight,
       marker: step.marker,
+      step: step.appearsAt,
     };
   });
 
   if (center) {
+    const { appearsAt, ...content } = center;
     const ringHeight = rowY(rows - 1) + STEP_HEIGHT;
     nodes.push({
       id: "center",
@@ -93,7 +110,8 @@ export function loopLayout(
       tone: "none",
       center: true,
       dense: false,
-      ...center,
+      ...content,
+      step: appearsAt,
     });
   }
 

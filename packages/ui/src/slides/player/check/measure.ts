@@ -234,10 +234,32 @@ export function measureSlide(slide: Element): SlideIssue[] {
 }
 
 /**
- * The issues of one child of the deck, from the box the check mode puts around it
- * (`data-slides-entry`): it has to be exactly one slide, and that slide has to hold.
+ * A part that asks for a step the slide does not have, given the steps its parts are marked
+ * with (`data-step`, read from the page) and the steps the player counted for the slide. Such a
+ * part would never be shown: the player stops at the slide's last step. It happens where a deck's
+ * own component draws a stepped part inside and the slide does not name `steps`.
  */
-export function measureEntry(entry: Element): SlideIssue[] {
+export function stepIssue(
+  marked: readonly number[],
+  steps: number,
+): Extract<SlideIssue, { kind: "structure" }> | undefined {
+  const highest = marked.reduce(
+    (most, step) => (Number.isFinite(step) ? Math.max(most, step) : most),
+    0,
+  );
+  if (highest <= steps) return undefined;
+  return {
+    kind: "structure",
+    message: `A part asks for step ${highest}, but the slide has ${steps} ${steps === 1 ? "step" : "steps"}: name \`steps\` on the slide.`,
+  };
+}
+
+/**
+ * The issues of one child of the deck, from the box the check mode puts around it
+ * (`data-slides-entry`): it has to be exactly one slide, that slide has to hold, and no part of it
+ * may ask for more steps than the player counted for it (`steps`).
+ */
+export function measureEntry(entry: Element, steps: number): SlideIssue[] {
   const failed = entry.querySelector('[data-slot="player-slide-error-message"]');
   if (failed) return [{ kind: "render-error", message: failed.textContent ?? "" }];
   const slides = entry.querySelectorAll('[data-slot="slide"]');
@@ -246,6 +268,11 @@ export function measureEntry(entry: Element): SlideIssue[] {
     return [{ kind: "structure", message: 'The child renders no element with data-slot="slide".' }];
   }
   const issues = measureSlide(slide);
+  const marked = Array.from(entry.querySelectorAll("[data-step]"), (element) =>
+    Number(element.getAttribute("data-step")),
+  );
+  const unreachable = stepIssue(marked, steps);
+  if (unreachable) issues.unshift(unreachable);
   if (slides.length > 1) {
     issues.unshift({
       kind: "structure",

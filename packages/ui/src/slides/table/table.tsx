@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { span } from "@/slides/lib/grid";
+import { maxStep, stepAttributes, type StepCounter } from "@/slides/step/steps";
 
 export type TableProps = {
   /** `span` is the number of grid columns; the spans add up to 12 (or to the columns of the Split side the table sits in). `numeric` right-aligns with tabular figures. `mono` sets literal strings in the mono face. */
@@ -18,6 +19,8 @@ export type TableProps = {
   dense?: boolean;
   /** Row index and column key of the one cell the title is about. */
   highlight?: [number, string];
+  /** The step each row appears at, by its index, with its line: `[0, 1, 2]` shows the first row from the start and brings the others click by click. A row without an entry is there from the start, and so is the head. */
+  rowSteps?: number[];
 };
 
 /**
@@ -27,13 +30,17 @@ export type TableProps = {
  * figures and their column head is right-aligned too. Exactly one cell may carry the accent: the
  * datum the title talks about. No zebra bands, no tinted row, no vertical lines, no icons in
  * cells. Write values the way a person says them („18 von 20“, not „18/20“). A method line
- * follows directly under the last row.
+ * follows directly under the last row. A table is read as a whole; bring its rows in one by one
+ * only when each is a result the talk takes in turn.
  */
-export function Table({ columns, rows, dense = false, highlight }: TableProps) {
+export function Table({ columns, rows, dense = false, highlight, rowSteps }: TableProps) {
   // A real table laid out on the slide's grid. A head cell's width is its span as a content box,
   // and the 64px gutter is the right padding of every cell but the last, so a column starts where
   // its grid track would. The last column has no width and takes what is left: its own span when
-  // the spans add up to the block the table stands in.
+  // the spans add up to the block the table stands in. A row's step is marked on its `<tr>`: its
+  // line is the bottom border of its cells (the borders are separate), so it waits with the row.
+  // The rows are records keyed by the author's columns, so their steps are a list of their own
+  // rather than a reserved key that a column could be named.
   const last = columns.length - 1;
   return (
     <table data-slot="slide-table" className="w-full table-fixed border-separate border-spacing-0">
@@ -56,7 +63,7 @@ export function Table({ columns, rows, dense = false, highlight }: TableProps) {
       </thead>
       <tbody>
         {rows.map((row, rowIndex) => (
-          <tr key={rowIndex}>
+          <tr key={rowIndex} {...stepAttributes(rowSteps?.[rowIndex])}>
             {columns.map((column, columnIndex) => {
               const first = columnIndex === 0;
               const highlighted =
@@ -89,3 +96,7 @@ export function Table({ columns, rows, dense = false, highlight }: TableProps) {
     </table>
   );
 }
+
+/** The highest step in `rowSteps`. */
+Table.slideSteps = ((props) =>
+  maxStep(props.rowSteps?.map((step) => ({ step })))) satisfies StepCounter<TableProps>;

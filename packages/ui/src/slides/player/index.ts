@@ -3,7 +3,7 @@
 // deck loads neither. The same player ships prebuilt for a deck that is one HTML file
 // (@lanfermann/ui/slides/player/player.global.js and its stylesheets, see ./global.ts).
 export type { SlideIssue, SlideReport, SlidesReport } from "./check/report";
-export type { EmbedCommand, EmbedIntent, EmbedState } from "./embed";
+export type { EmbedCommand, EmbedIntent, EmbedSlide, EmbedState } from "./embed";
 export type { PlayerStart } from "./hooks";
 export { defaultLabels, type PlayerLabels } from "./labels";
 export type { PlayerMode } from "./mode";

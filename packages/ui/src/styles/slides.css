@@ -7,8 +7,8 @@
  *   @import "@lanfermann/ui/slides.css";
  *
  * A slide is print, not interface: it is drawn in px on a fixed canvas and scaled as a whole
- * (`Stage`), it has no depth, and it looks the same wherever it is shown. The rules are in
- * DESIGN.md, "Slides".
+ * (`Stage`), it has no depth, and it looks the same wherever it is shown. It moves only while it
+ * is presented ("Steps and motion" below). The rules are in DESIGN.md, "Slides".
  */
 
 /* The class names of the compiled slide parts (styles.css leaves this folder out). */
@@ -63,6 +63,23 @@
     /* The two tones of a wireframe that stands in for a missing screenshot, on every ground. */
     --slide-placeholder: #e6e3f7;
     --slide-placeholder-strong: #d9d6ee;
+    /*
+     * Motion, for a slide that is presented live (see "Steps and motion" below). One curve that
+     * leaves fast and settles long; a deck may tune these on its slides.
+     */
+    --slide-ease: cubic-bezier(0.16, 0.84, 0.2, 1);
+    --slide-step-duration: 500ms; /* a step appears: fade and rise */
+    --slide-enter-duration: 700ms; /* the blocks of a slide rise in */
+    --slide-enter-rise: 24px;
+    --slide-enter-stagger: 120ms; /* from one block to the next, three at most */
+    --slide-forms-duration: 900ms; /* the forms grow */
+    --slide-forms-stagger: 110ms; /* from one circle to the next */
+    --slide-draw-duration: 600ms; /* a connector draws itself from start to end */
+    --slide-draw-lead: 150ms; /* it starts once its box has begun to arrive */
+    --slide-draw-stagger: 110ms; /* from one connector of a step to the next */
+    --slide-draw-fade: 250ms; /* a checkpoint and the arrowhead fade in */
+    --slide-draw-gate: 450ms; /* the checkpoint, as the line passes it */
+    --slide-draw-head: 650ms; /* the arrowhead, as the line arrives */
   }
 
   /*
@@ -215,6 +232,224 @@
   :root[data-slides-document] {
     page: slide;
   }
+
+  /*
+   * Steps and motion. A slide is still a picture: nothing on it moves but three things, and only
+   * while it is presented live, which the player says with `data-slides-live` on a box around the
+   * slide. The three: a step appearing, the slide's own blocks rising in when it comes on (and its
+   * forms growing), and a scene's camera (the scene's own rules). A preview, a tile of the grid,
+   * a print, the check and a capture have no such box, so they stand still and show the end state.
+   * What moves is `translate`, `scale` and `opacity`, never a size or an inset.
+   *
+   * A step: an element marked with `data-step` and `--step-at` (`stepAttributes`) is seen once
+   * `--slide-step` reaches it. Without `--slide-step` (a plain `Deck`, a print, the check) the
+   * fallback shows everything. A step that is not reached keeps its place: nothing reflows.
+   * Never `display: none`. A marked element is a stacking context and the frame of its absolutely
+   * placed children, shown or not (its `translate` is never `none`).
+   *
+   * Every rule here names a slide or one of its parts: `data-step` is a plain name, and a page
+   * that uses it for something of its own must not be touched (a test checks it).
+   */
+  [data-slot="slide"] [data-step] {
+    --step-on: clamp(0, calc(var(--slide-step, 9999) - var(--step-at, 0) + 1), 1); /* 0 or 1 */
+    opacity: var(--step-on);
+    translate: 0 calc((1 - var(--step-on)) * 16px);
+  }
+
+  /*
+   * Live, on a screen, for someone who has not asked for less motion: the step fades in and rises
+   * 16px; the slide's blocks rise in once, when it is mounted, staggered three deep; the circles
+   * of its forms grow from 60% one after the other. Not the footer row (it stays where it is from
+   * slide to slide), not a step (it has its own), not a scene (it has its camera). A slide with
+   * `data-motion="none"` comes on standing still.
+   */
+  @media screen and (prefers-reduced-motion: no-preference) {
+    [data-slides-live] [data-slot="slide"] [data-step] {
+      transition:
+        opacity var(--slide-step-duration) ease,
+        translate var(--slide-step-duration) var(--slide-ease);
+    }
+
+    [data-slides-live]
+      [data-slot="slide"]:not([data-motion="none"])
+      > :not(
+        [data-slot="slide-footer"],
+        [data-slot="slide-forms"],
+        [data-step],
+        [data-slot="slide-scene"]
+      ) {
+      /*
+       * `backwards`, not `both`: the keyframes only say where a block comes from, so once it has
+       * arrived nothing is animated any more. With `both` the block would stay on a layer of its
+       * own for good, and its text would be drawn a little differently from a slide at rest.
+       */
+      animation: slide-rise var(--slide-enter-duration) var(--slide-ease) backwards;
+    }
+
+    [data-slides-live] [data-slot="slide"]:not([data-motion="none"]) > :nth-child(2) {
+      animation-delay: var(--slide-enter-stagger);
+    }
+
+    [data-slides-live] [data-slot="slide"]:not([data-motion="none"]) > :nth-child(3) {
+      animation-delay: calc(2 * var(--slide-enter-stagger));
+    }
+
+    [data-slides-live] [data-slot="slide"]:not([data-motion="none"]) > :nth-child(n + 4) {
+      animation-delay: calc(3 * var(--slide-enter-stagger));
+    }
+
+    [data-slides-live]
+      [data-slot="slide"]:not([data-motion="none"])
+      [data-slot="slide-forms"]
+      circle {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: slide-grow var(--slide-forms-duration) var(--slide-ease) backwards;
+    }
+
+    [data-slides-live]
+      [data-slot="slide"]:not([data-motion="none"])
+      [data-slot="slide-forms"]
+      circle:nth-child(2) {
+      animation-delay: var(--slide-forms-stagger);
+    }
+
+    [data-slides-live]
+      [data-slot="slide"]:not([data-motion="none"])
+      [data-slot="slide-forms"]
+      circle:nth-child(3) {
+      animation-delay: calc(2 * var(--slide-forms-stagger));
+    }
+
+    [data-slides-live]
+      [data-slot="slide"]:not([data-motion="none"])
+      [data-slot="slide-forms"]
+      circle:nth-child(4) {
+      animation-delay: calc(3 * var(--slide-forms-stagger));
+    }
+
+    [data-slides-live]
+      [data-slot="slide"]:not([data-motion="none"])
+      [data-slot="slide-forms"]
+      circle:nth-child(n + 5) {
+      animation-delay: calc(4 * var(--slide-forms-stagger));
+    }
+  }
+
+  /*
+   * Reduced motion: nothing travels and nothing grows. A step only fades in, without rising; the
+   * slide's blocks and forms fade in together, without a stagger.
+   */
+  @media screen and (prefers-reduced-motion: reduce) {
+    [data-slides-live] [data-slot="slide"] [data-step] {
+      translate: none;
+      transition: opacity var(--slide-step-duration) ease;
+    }
+
+    [data-slides-live]
+      [data-slot="slide"]:not([data-motion="none"])
+      > :not(
+        [data-slot="slide-footer"],
+        [data-slot="slide-forms"],
+        [data-step],
+        [data-slot="slide-scene"]
+      ),
+    [data-slides-live] [data-slot="slide"]:not([data-motion="none"]) [data-slot="slide-forms"] {
+      animation: slide-fade var(--slide-step-duration) ease backwards;
+    }
+  }
+
+  /*
+   * A connector that comes at a step (`Diagram`, `Stages`, `Loop`, `Flow`) and its labels belong
+   * to the boxes they join and do not rise with them: still, and with reduced motion, they fade
+   * in place; live, a solid connector draws itself (below).
+   */
+  :is(
+    [data-slot="slide-diagram-edge"],
+    [data-slot="slide-flow-arrow"],
+    [data-slot="slide-diagram-label"],
+    [data-slot="slide-diagram-gate-label"]
+  )[data-step] {
+    translate: 0 0;
+  }
+
+  @media screen and (prefers-reduced-motion: no-preference) {
+    /*
+     * Live. A connector starts once its box has begun to arrive; several of one step start one
+     * after another, in the order they are written (`--draw-order`). Every delay is multiplied
+     * by `--step-on`, so a step taken back goes at once.
+     */
+    [data-slides-live]
+      :is([data-slot="slide-diagram-edge"], [data-slot="slide-flow-arrow"])[data-step] {
+      --draw-delay: calc(var(--step-on) * var(--draw-order, 0) * var(--slide-draw-stagger));
+    }
+
+    /*
+     * A solid connector (`data-draw`, its line of `pathLength="1"`) is drawn from its start to
+     * its end; a checkpoint on it appears as the line passes, the arrowhead last.
+     */
+    [data-slides-live]
+      :is([data-slot="slide-diagram-edge"], [data-slot="slide-flow-arrow"])[data-draw] {
+      opacity: 1;
+      transition: none;
+    }
+
+    [data-slides-live]
+      [data-draw]
+      > :is([data-slot="slide-diagram-line"], [data-slot="slide-flow-line"]) {
+      stroke-dasharray: 1 1;
+      stroke-dashoffset: calc(1 - var(--step-on));
+      transition: stroke-dashoffset var(--slide-draw-duration) ease
+        calc(var(--step-on) * var(--slide-draw-lead) + var(--draw-delay));
+    }
+
+    [data-slides-live] [data-draw] > [data-slot="slide-diagram-gate"] {
+      opacity: var(--step-on);
+      transition: opacity var(--slide-draw-fade) ease
+        calc(var(--step-on) * var(--slide-draw-gate) + var(--draw-delay));
+    }
+
+    [data-slides-live]
+      [data-draw]
+      > :is([data-slot="slide-diagram-head"], [data-slot="slide-flow-head"]) {
+      opacity: var(--step-on);
+      transition: opacity var(--slide-draw-fade) ease
+        calc(var(--step-on) * var(--slide-draw-head) + var(--draw-delay));
+    }
+
+    /* A dashed connector cannot be drawn (its dashes are the dash array): it fades in. */
+    [data-slides-live] [data-slot="slide-diagram-edge"][data-step]:not([data-draw]) {
+      transition: opacity var(--slide-step-duration) ease
+        calc(var(--step-on) * var(--slide-draw-lead) + var(--draw-delay));
+    }
+
+    /* A connector's label and a checkpoint's name fade in as the line arrives. */
+    [data-slides-live]
+      :is([data-slot="slide-diagram-label"], [data-slot="slide-diagram-gate-label"])[data-step] {
+      transition: opacity var(--slide-step-duration) ease
+        calc(var(--step-on) * var(--slide-draw-gate));
+    }
+  }
+}
+
+@keyframes slide-rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--slide-enter-rise);
+  }
+}
+
+@keyframes slide-grow {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes slide-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 @page slide {
@@ -245,5 +480,13 @@
     position: static;
     translate: none;
     scale: none;
+  }
+
+  /*
+   * Every step shown, whatever step the page stood at. Nothing moves in print: the motion above
+   * is for screens only.
+   */
+  [data-slot="slide"] [data-step] {
+    --step-on: 1;
   }
 }
