@@ -1,20 +1,25 @@
 name: Release
 
-# On every push to main, release-please opens or updates the release PR: the next version of
-# @lanfermann/ui and its CHANGELOG, read from the Conventional Commits since the last release.
-# Merging that PR tags vX.Y.Z and creates the GitHub release; then
+# On every push to main, release-please opens or updates one release PR per package: the next
+# version of @lanfermann/ui or of @lanfermann/slides and its CHANGELOG, read from the
+# Conventional Commits that touched the package since its last release. Merging such a PR tags
+# vX.Y.Z (the library) or slides-vX.Y.Z (the deck tool) and creates the GitHub release; then,
+# for each package that was released,
 #   build    installs, builds and packs the package, without privileges (contents: read)
 #   publish  publishes that tarball with npm trusted publishing and provenance (no NPM_TOKEN),
 #            in the `release` environment (main only), installing nothing
+# and once for the push
 #   sync     brings the release commit back to stage: a fast-forward, or a main → stage PR when
 #            stage moved on in the meantime
 #
-# npm trusts exactly this file name and that environment (the package's trusted publisher), so
-# renaming either breaks publishing.
+# npm trusts exactly this file name and that environment (each package's trusted publisher), so
+# renaming either breaks publishing. Every package needs a trusted publisher of its own on npm:
+# @lanfermann/slides must be given one (this repository, this workflow file, the `release`
+# environment) before its first release, or that release's publish job fails.
 #
-# The release PR is opened with GITHUB_TOKEN, so GitHub runs no CI on it: it changes only the
-# version and the changelog. That needs the repository setting "Allow GitHub Actions to create and
-# approve pull requests".
+# The release PRs are opened with GITHUB_TOKEN, so GitHub runs no CI on them: they change only
+# the version and the changelog. That needs the repository setting "Allow GitHub Actions to
+# create and approve pull requests".
 on:
   push:
     branches: [main]
@@ -37,12 +42,14 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write # release commits, tags and GitHub releases
-      pull-requests: write # the release PR
-      issues: write # the release PR's labels
+      pull-requests: write # the release PRs
+      issues: write # the release PRs' labels
     outputs:
-      release_created: ${{ steps.release.outputs['packages/ui--release_created'] }}
-      tag_name: ${{ steps.release.outputs['packages/ui--tag_name'] }}
-      version: ${{ steps.release.outputs['packages/ui--version'] }}
+      # What this push released, as the matrix of the build and publish jobs: a list of
+      # { name, dir, tarball, tag, version }. "[]" when nothing was released.
+      packages: ${{ steps.packages.outputs.packages }}
+      # The tags of those releases, for the words of the sync job.
+      tags: ${{ steps.packages.outputs.tags }}
     steps:
       - name: Run release-please
         id: release
@@ -53,6 +60,35 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+      - name: List the released packages
+        id: packages
+        env:
+          UI_CREATED: ${{ steps.release.outputs['packages/ui--release_created'] }}
+          UI_TAG: ${{ steps.release.outputs['packages/ui--tag_name'] }}
+          UI_VERSION: ${{ steps.release.outputs['packages/ui--version'] }}
+          SLIDES_CREATED: ${{ steps.release.outputs['packages/slides--release_created'] }}
+          SLIDES_TAG: ${{ steps.release.outputs['packages/slides--tag_name'] }}
+          SLIDES_VERSION: ${{ steps.release.outputs['packages/slides--version'] }}
+        run: |
+          packages='[]'
+          tags=''
+          add() {
+            packages="$(jq -c \
+              --arg name "$1" --arg dir "$2" --arg tarball "$3" --arg tag "$4" --arg version "$5" \
+              '. + [{name: $name, dir: $dir, tarball: $tarball, tag: $tag, version: $version}]' \
+              <<<"$packages")"
+            tags="${tags:+$tags, }$4"
+          }
+          if [ "$UI_CREATED" = "true" ]; then
+            add "@lanfermann/ui" packages/ui lanfermann-ui "$UI_TAG" "$UI_VERSION"
+          fi
+          if [ "$SLIDES_CREATED" = "true" ]; then
+            add "@lanfermann/slides" packages/slides lanfermann-slides "$SLIDES_TAG" "$SLIDES_VERSION"
+          fi
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+          echo "released: ${tags:-nothing}"
+
   # main now carries the release commit (version, CHANGELOG, manifest), and stage needs it before
   # the next stage → main merge. Usually stage is an ancestor of main, so stage is fast-forwarded.
   # If something landed on stage while the release was cut, nothing is overwritten: a main → stage
@@ -60,14 +96,14 @@ jobs:
   sync:
     name: Bring the release back to stage
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: ${{ needs.release-please.outputs.tags != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: write # fast-forward stage
       pull-requests: write # or open the main → stage PR
     env:
-      TAG: ${{ needs.release-please.outputs.tag_name }}
+      TAG: ${{ needs.release-please.outputs.tags }}
     steps:
       - name: Check out main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -90,43 +126,82 @@ jobs:
               --body "stage moved on while $TAG was cut, so it could not be fast-forwarded. Merge this to bring the release commit (version, CHANGELOG, manifest) to stage."
           fi
 
-  # Dependency code runs here, in a job that holds no token worth stealing.
+  # Dependency code runs here, in a job that holds no token worth stealing. Once per package
+  # that was released; one that fails does not stop the other.
   build:
-    name: Build the package
+    name: Build ${{ matrix.package.name }}
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: ${{ needs.release-please.outputs.tags != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.release-please.outputs.packages) }}
     env:
-      VERSION: ${{ needs.release-please.outputs.version }}
+      NAME: ${{ matrix.package.name }}
+      TARBALL: ${{ matrix.package.tarball }}
+      VERSION: ${{ matrix.package.version }}
+      DIR: ${{ matrix.package.dir }}
     steps:
       - name: Check out the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ matrix.package.tag }}
           persist-credentials: false
 
-      # bun install builds @lanfermann/ui (postinstall); the build below makes it explicit.
+      # bun install builds @lanfermann/ui (postinstall); the build below makes it explicit, and
+      # builds the deck tool when that is what was released.
       - name: Set up toolchain
         uses: ./.github/actions/setup
 
       - name: Build
-        run: bun run --filter @lanfermann/ui build
+        run: |
+          bun run --filter @lanfermann/ui build
+          if [ "$NAME" != "@lanfermann/ui" ]; then bun run --filter "$NAME" build; fi
+
+      # The deck tool names the library as `workspace:*`. npm would publish that range as it
+      # stands, and `bun pm pack` fills in the version of bun.lock, which a release does not
+      # move (it wrote 0.9.0 for a library at 0.12.0). So the real version is written here, from
+      # the library's own package.json at this tag. Only this checkout is changed.
+      - name: Write the versions of workspace dependencies
+        run: node packages/slides/scripts/pin-workspace.ts "$DIR"
 
       - name: Pack
-        working-directory: packages/ui
+        working-directory: ${{ matrix.package.dir }}
         run: |
           mkdir -p ../../build/npm
           npm pack --pack-destination ../../build/npm
-          test -f "../../build/npm/lanfermann-ui-$VERSION.tgz"
+          test -f "../../build/npm/$TARBALL-$VERSION.tgz"
+
+      # A range of this workspace means nothing on npm, and a version of the library that was
+      # never released would not install: the tarball must name the library as it is at this tag.
+      - name: Check the tarball's dependencies
+        run: |
+          tar -xOzf "build/npm/$TARBALL-$VERSION.tgz" package/package.json > build/npm/packed.json
+          if grep -q '"workspace:' build/npm/packed.json; then
+            echo "::error::The packed package.json of $NAME still holds a workspace: range."
+            exit 1
+          fi
+          node -e '
+            const read = (file) => JSON.parse(require("node:fs").readFileSync(file, "utf8"));
+            const wanted = read("packages/ui/package.json").version;
+            const named = (read("build/npm/packed.json").dependencies ?? {})["@lanfermann/ui"];
+            if (named !== undefined && named !== wanted) {
+              console.log("::error::The tarball depends on @lanfermann/ui " + named + ", the library is at " + wanted + ".");
+              process.exit(1);
+            }
+            console.log(named === undefined ? "no dependency on the library" : "@lanfermann/ui " + named);
+          '
+          rm build/npm/packed.json
 
       - name: Hand the tarball to the publish job
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: npm-package
-          path: build/npm/lanfermann-ui-*.tgz
+          name: npm-package-${{ matrix.package.tarball }}
+          path: build/npm/${{ matrix.package.tarball }}-*.tgz
           if-no-files-found: error
           retention-days: 1
 
@@ -134,24 +209,31 @@ jobs:
   # job's OIDC token; it names this workflow and the release tag. Plain Node and the npm it
   # bundles, scripts off, nothing installed.
   publish:
-    name: Publish to npm
+    name: Publish ${{ matrix.package.name }} to npm
     needs: [release-please, build]
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: ${{ needs.release-please.outputs.tags != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.release-please.outputs.packages) }}
     environment:
       name: release
-      url: https://www.npmjs.com/package/@lanfermann/ui
+      url: https://www.npmjs.com/package/${{ matrix.package.name }}
     permissions:
       contents: read # check out the release tag (Node version, package name)
       id-token: write # OIDC for npm trusted publishing and provenance
     env:
-      VERSION: ${{ needs.release-please.outputs.version }}
+      NAME: ${{ matrix.package.name }}
+      DIR: ${{ matrix.package.dir }}
+      TARBALL: ${{ matrix.package.tarball }}
+      VERSION: ${{ matrix.package.version }}
     steps:
       - name: Check out the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ matrix.package.tag }}
           persist-credentials: false
 
       - name: Set up Node.js
@@ -163,20 +245,20 @@ jobs:
       - name: Download the tarball
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: npm-package
+          name: npm-package-${{ matrix.package.tarball }}
           path: build/npm
 
       - name: Check the tarball's name and version
         run: |
-          expected="$(node -p 'require("./packages/ui/package.json").name')@$VERSION"
-          tarball="build/npm/lanfermann-ui-$VERSION.tgz"
+          expected="$(node -p 'require(process.argv[1]).name' "./$DIR/package.json")@$VERSION"
+          tarball="build/npm/$TARBALL-$VERSION.tgz"
           test -f "$tarball"
           packed="$(tar -xOzf "$tarball" package/package.json | node -e '
             const pkg = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
             console.log(pkg.name + "@" + pkg.version);
           ')"
-          if [ "$packed" != "$expected" ]; then
-            echo "::error::The tarball holds $packed, expected $expected."
+          if [ "$packed" != "$expected" ] || [ "$expected" != "$NAME@$VERSION" ]; then
+            echo "::error::The tarball holds $packed, expected $NAME@$VERSION."
             exit 1
           fi
 
@@ -196,8 +278,8 @@ jobs:
 
       - name: Publish to npm
         run: |
-          if [ -n "$(npm view "@lanfermann/ui@$VERSION" version --prefer-online 2>/dev/null)" ]; then
-            echo "@lanfermann/ui@$VERSION is already on npm; skipping (re-run)."
+          if [ -n "$(npm view "$NAME@$VERSION" version --prefer-online 2>/dev/null)" ]; then
+            echo "$NAME@$VERSION is already on npm; skipping (re-run)."
           else
-            npm publish "build/npm/lanfermann-ui-$VERSION.tgz" --provenance --access public --ignore-scripts
+            npm publish "build/npm/$TARBALL-$VERSION.tgz" --provenance --access public --ignore-scripts
           fi

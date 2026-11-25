@@ -28,6 +28,9 @@ export default defineConfig(
     "**/.visual/**",
     // The prebuilt slide player (`bun run build`); its source is packages/ui/src/slides/player.
     "packages/ui/player/**",
+    // Decks the command-line tool is tested on, some of them wrong on purpose (an import of a
+    // package that is not installed). They belong to no tsconfig; the tool's own check reads them.
+    "packages/slides/fixtures/**",
     // ESLint skips dot-folders by default; the Storybook config is code we own.
     "!**/.storybook",
   ]),

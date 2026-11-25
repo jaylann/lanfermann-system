@@ -126,9 +126,10 @@ describe("the report", () => {
   it("is fine when nothing is wrong", () => {
     const report = buildReport(parts);
     expect(report).toMatchObject({ version: 1, kit: "1.2.3", ok: true });
+    const none = { issues: [], overflow: [], wraps: [], errors: [] };
     expect(report.slides).toEqual([
-      { index: 0, id: "cover", ok: true, issues: [] },
-      { index: 1, ok: true, issues: [] },
+      { index: 0, id: "cover", ok: true, ...none },
+      { index: 1, ok: true, ...none },
     ]);
   });
 

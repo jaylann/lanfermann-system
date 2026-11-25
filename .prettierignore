@@ -16,3 +16,4 @@ storybook-static
 packages/ui/visual-baseline
 # Written by release-please on every release: kept as it writes it, or each release PR fails lint.
 packages/ui/CHANGELOG.md
+packages/slides/CHANGELOG.md

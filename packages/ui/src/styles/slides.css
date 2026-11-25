@@ -230,7 +230,9 @@
     print-color-adjust: exact;
   }
 
-  [data-slot="deck"] > [data-slot="slide"]:last-child {
+  /* The second form is the player's: each slide stands in a box that takes no space. */
+  [data-slot="deck"] > [data-slot="slide"]:last-child,
+  [data-slot="deck"] > [data-slides-entry]:last-child > [data-slot="slide"]:last-child {
     break-after: auto;
   }
 

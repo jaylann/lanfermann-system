@@ -20,7 +20,16 @@ export type SlideReport = {
   index: number;
   id?: string;
   ok: boolean;
+  /** Everything found on the slide, in the order it was found. */
   issues: SlideIssue[];
+  /**
+   * The same issues by kind, the shape the hub reads (issue #88): what leaves its box or is cut
+   * off, what runs to too many lines, and what kept the slide from being drawn as one slide.
+   * Each is empty on a slide that is fine.
+   */
+  overflow: Extract<SlideIssue, { kind: "overflow" | "clipped" }>[];
+  wraps: Extract<SlideIssue, { kind: "wrap" }>[];
+  errors: Extract<SlideIssue, { kind: "render-error" | "structure" }>[];
 };
 
 export type PageError = { kind: "error" | "unhandledrejection"; message: string };
@@ -51,7 +60,17 @@ type ReportParts = {
 /** Puts the report together and draws its conclusions: a slide is fine without issues, a deck
  * when every slide is, nothing threw and no face is missing. */
 export function buildReport({ kit, deck, fonts, slides, errors }: ReportParts): SlidesReport {
-  const checked = slides.map((slide) => ({ ...slide, ok: slide.issues.length === 0 }));
+  const checked = slides.map((slide): SlideReport => {
+    const overflow: SlideReport["overflow"] = [];
+    const wraps: SlideReport["wraps"] = [];
+    const failures: SlideReport["errors"] = [];
+    for (const issue of slide.issues) {
+      if (issue.kind === "overflow" || issue.kind === "clipped") overflow.push(issue);
+      else if (issue.kind === "wrap") wraps.push(issue);
+      else failures.push(issue);
+    }
+    return { ...slide, ok: slide.issues.length === 0, overflow, wraps, errors: failures };
+  });
   return {
     version: 1,
     kit,

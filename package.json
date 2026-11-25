@@ -26,7 +26,8 @@
     "format:check": "prettier --check .",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",
-    "test:stories": "bun run --filter @lanfermann/ui test:stories"
+    "test:stories": "bun run --filter @lanfermann/ui test:stories",
+    "slides:e2e": "bun run --filter @lanfermann/slides build && bun run --filter @lanfermann/slides e2e"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [

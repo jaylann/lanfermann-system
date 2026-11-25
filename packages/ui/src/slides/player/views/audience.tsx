@@ -18,6 +18,7 @@ import {
 import { Icon } from "@/components/icon/icon";
 import { actionOfIntent, intentOfClick } from "@/slides/player/actions";
 import { DeckSlide } from "@/slides/player/deck-slide";
+import { useEmbed } from "@/slides/player/embed";
 import {
   type PlayerStart,
   useActivity,
@@ -25,6 +26,7 @@ import {
   useHash,
   useKeys,
   usePlayerState,
+  useReady,
 } from "@/slides/player/hooks";
 import { intentOfSwipe, type PlayerIntent } from "@/slides/player/input";
 import { fill } from "@/slides/player/labels";
@@ -57,6 +59,8 @@ type AudienceViewProps = ViewProps & {
   now: () => number;
   /** Whether the address follows the slide, and moves it. */
   hash: boolean;
+  /** In a frame: the framing page is told where the deck is and may move it (see embed.ts). */
+  embedded: boolean;
 };
 
 /**
@@ -65,24 +69,29 @@ type AudienceViewProps = ViewProps & {
  * half of the slide step the deck. There are no transitions between slides.
  *
  * In a session (the second window of a presenter) it shows what the presenter's window says and
- * sends its own keys there instead of moving.
+ * sends its own keys there instead of moving. In a frame there is no session and no full screen:
+ * the framing page is told where the deck is and moves it (embed.ts).
  */
 export function AudienceView({
   entries,
   labels,
   lang,
   pdf,
-  session,
+  session: givenSession,
   start,
   now,
   hash,
+  embedded,
 }: AudienceViewProps) {
+  // A frame cannot reach a presenter's window: its page relays instead.
+  const session = embedded ? undefined : givenSession;
   const [state, dispatch] = usePlayerState(entries.length, start);
   const ids = useMemo(() => entries.map((entry) => entry.id), [entries]);
   const { available, active: filled, toggle } = useFullscreen();
   const shown = useActivity(IDLE);
   const root = useRef<HTMLDivElement>(null);
   const remote = useRef<((intent: RemoteIntent) => void) | null>(null);
+  useReady(root);
 
   useEffect(() => {
     if (!session) return;
@@ -120,7 +129,8 @@ export function AudienceView({
   const act = useCallback(
     (intent: PlayerIntent) => {
       if (intent === "fullscreen") {
-        toggle();
+        // A frame may not ask for the full screen; its page has the window.
+        if (!embedded) toggle();
         return;
       }
       if (session) {
@@ -132,12 +142,24 @@ export function AudienceView({
       const action = actionOfIntent(intent, now());
       if (action) dispatch(action);
     },
-    [session, toggle, now, dispatch],
+    [session, embedded, toggle, now, dispatch],
   );
   useKeys(act);
 
   const go = useCallback((index: number) => dispatch({ type: "go", index }), [dispatch]);
   useHash(state.index, ids, go, hash && !session);
+
+  useEmbed({
+    enabled: embedded,
+    ids,
+    index: state.index,
+    blackout: state.blackout,
+    onCommand(command) {
+      if (command.type === "intent") act(command.intent);
+      else if (command.blackout === undefined) go(command.index);
+      else dispatch({ type: "sync", index: command.index, blackout: command.blackout });
+    },
+  });
 
   // The window around the slide takes the slide's ground, so the bands beside a slide that does
   // not fill the window are its own colour. Read from what is drawn: a slide kind knows its
@@ -235,7 +257,7 @@ export function AudienceView({
         >
           <Icon icon={ArrowRight01Icon} size={18} />
         </button>
-        {available && (
+        {available && !embedded && (
           <button
             type="button"
             className={iconButton}

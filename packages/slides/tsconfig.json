@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    // scripts/ runs under Node's type stripping, which needs explicit `.ts` import specifiers.
+    "allowImportingTsExtensions": true
+  },
+  // fixtures/ holds decks, some wrong on purpose: the tool reads them, the compiler does not.
+  "include": ["src", "scripts", "tsdown.config.ts", "vitest.config.ts"]
+}

@@ -23,7 +23,8 @@ updates:
         patterns: ["vitest", "@vitest/*"]
       # A new Playwright is a new browser build: it needs the image tag in
       # packages/ui/scripts/visual/image.ts and a redrawn baseline, so it is never auto-merged.
+      # playwright-core (the deck tool's) moves with it: one version, one browser to cache.
       playwright:
-        patterns: ["playwright", "@playwright/*"]
+        patterns: ["playwright", "playwright-core", "@playwright/*"]
       deps:
         update-types: [minor, patch]

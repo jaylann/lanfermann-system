@@ -1,37 +1,47 @@
 /**
- * How a tool that drives the page (the one that prints a deck, the one that checks it) knows the
- * page is done: `window.__slidesReady`, a promise that exists as soon as this module has loaded
- * and resolves once the print or the check view stands with its fonts and pictures. It resolves
- * with the report in check mode (also on `window.__slidesReport`) and with `undefined` in print
- * mode; `data-slides-ready` on <html> says the same to a selector. In the other modes it never
- * resolves: they have no moment at which they are done.
+ * How a tool that drives the page (the one that prints a deck, the one that checks it, an app
+ * that takes a picture of it) knows the page is done: `window.__slidesReady`. It is `false` as
+ * soon as this module has loaded and `true`, in every mode, once the view stands with its fonts
+ * and pictures and a frame has been drawn since. `data-slides-ready` on <html> says the same to a
+ * selector.
+ *
+ * In check mode `window.__slidesReport` is written first, whole, in the same task: whoever sees
+ * `__slidesReady === true` finds the report there. The hub's render spoke waits on this global
+ * (the contract is on issue #88): do not turn it into a promise or an event.
  */
 import type { PageError, SlidesReport } from "./report";
 
 type SlidesGlobals = {
-  __slidesReady?: Promise<SlidesReport | undefined>;
+  __slidesReady?: boolean;
   __slidesReport?: SlidesReport;
 };
 
 /** The two faces of the kit, by the family names of their `@font-face` rules. */
 export const KIT_FONTS = ["Sofia Sans Variable", "JetBrains Mono Variable"] as const;
 
-let resolveReady: ((report: SlidesReport | undefined) => void) | undefined;
-
 // Not on a server: there is no page to be ready.
 if (typeof window !== "undefined") {
   const host: Window & SlidesGlobals = window;
-  host.__slidesReady = new Promise((resolve) => {
-    resolveReady = resolve;
-  });
+  host.__slidesReady = false;
 }
 
 /** Says the page is done, with the check's report if there is one. */
 export function publish(report: SlidesReport | undefined): void {
   const host: Window & SlidesGlobals = window;
   if (report) host.__slidesReport = report;
+  host.__slidesReady = true;
   document.documentElement.setAttribute("data-slides-ready", "");
-  resolveReady?.(report);
+}
+
+/**
+ * Says the page is not done again: a view was taken away, and the next one has to settle first.
+ * Without it a tool that changes the mode would read the readiness of the view before.
+ */
+export function unpublish(): void {
+  const host: Window & SlidesGlobals = window;
+  host.__slidesReady = false;
+  delete host.__slidesReport;
+  document.documentElement.removeAttribute("data-slides-ready");
 }
 
 function nextFrame(): Promise<void> {

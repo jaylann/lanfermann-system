@@ -29,7 +29,8 @@ const STARTED = NOW - 725_000;
 const now = () => NOW;
 
 function player(props: Omit<PlayerProps, "deck">) {
-  return <Player deck={handschlag} hash={false} now={now} {...props} />;
+  // `embed={false}`: a story stands in Storybook's frame, and shows the player as it stands alone.
+  return <Player deck={handschlag} hash={false} embed={false} now={now} {...props} />;
 }
 
 /**

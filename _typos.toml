@@ -22,6 +22,8 @@ extend-exclude = [
   "packages/ui/visual-baseline/",
   # The prebuilt slide player: a minified script, stylesheets and fonts as data.
   "packages/ui/player/",
+  # The decks the command-line tool is tested on: German copy, as a deck carries it.
+  "packages/slides/fixtures/",
 ]
 
 [default]
@@ -68,3 +70,5 @@ paket = "paket"
 modell = "modell"
 # German sample copy quoted in a slide part's doc comment („lokale Geschäfte“).
 lokale = "lokale"
+# How a deck's name writes the umlaut ü (ä is ae, ö is oe, ü is ue).
+ue = "ue"
