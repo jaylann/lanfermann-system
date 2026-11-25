@@ -189,6 +189,13 @@ const readJson = (text: string): unknown => {
     slides("build", fixture("broken"), "--audience").code === 0,
   );
   check("build pictures: builds", slides("build", fixture("pictures"), "--audience").code === 0);
+  const motion = slides("check", fixture("motion"));
+  check(
+    "check motion: steps, a diagram that builds up and two scenes pass the layout",
+    motion.stdout.trim() === "check passed: 7 slides, 0 errors, 0 warnings",
+    `${motion.stdout.trim()} ${motion.stderr.trim()}`,
+  );
+  check("build motion: builds", slides("build", fixture("motion"), "--audience").code === 0);
   check(
     "build bad-import: is refused, exit 1",
     slides("build", fixture("bad-import"), "--audience").code === 1,
@@ -237,6 +244,7 @@ const audienceFile = join(out, "slides-out", `${SLUG}.html`);
 const presenterFile = join(out, "slides-out", `${SLUG}.presenter.html`);
 const brokenFile = join(out, "slides-out", "kaputt.html");
 const picturesFile = join(out, "slides-out", "bilder-und-eigene-bauteile.html");
+const motionFile = join(out, "slides-out", "vom-suchen-zum-auftrag.html");
 const pdfFile = join(out, "slides-out", `${SLUG}.pdf`);
 const audienceUrl = pathToFileURL(audienceFile).href;
 const presenterUrl = pathToFileURL(presenterFile).href;
@@ -507,6 +515,69 @@ const context = await newContext();
   check(
     "check: data-slides-ready is set",
     (await page.getAttribute("html", "data-slides-ready")) !== null,
+  );
+  await page.close();
+}
+
+// The deck that moves: a key takes a step before it takes a slide, the address carries the
+// step, and a scene's camera has arrived where its beat points.
+if (existsSync(motionFile)) {
+  const page = await context.newPage();
+  const motionUrl = pathToFileURL(motionFile).href;
+  await page.goto(`${motionUrl}#/rueckruf`);
+  await whenReady(page);
+  const opacityOf = (selector: string) =>
+    page.locator(selector).evaluate((element) => getComputedStyle(element).opacity);
+  const settled = async (read: () => Promise<string>, wanted: string) => {
+    for (let tries = 0; tries < 20; tries += 1) {
+      if ((await read()) === wanted) return true;
+      await page.waitForTimeout(100);
+    }
+    return false;
+  };
+  // The block a `Step` wraps carries the step; the part inside it knows nothing of it.
+  const takeaway = '[data-slot="stage"] [data-step="2"]';
+  check(
+    "motion: what comes at a later step is not shown yet, and keeps its place",
+    (await opacityOf(takeaway)) === "0" &&
+      ((await page.locator(takeaway).boundingBox())?.height ?? 0) > 0,
+  );
+  await page.keyboard.press("ArrowRight");
+  check("motion: ArrowRight takes a step first", await hashIs(page, "#/rueckruf.1"), page.url());
+  await page.keyboard.press("ArrowRight");
+  check("motion: and the next", await hashIs(page, "#/rueckruf.2"), page.url());
+  check(
+    "motion: the last step is shown once its transition has run",
+    await settled(() => opacityOf(takeaway), "1"),
+  );
+  await page.keyboard.press("ArrowRight");
+  check("motion: after the last step comes the next slide", await shows(page, "leistungen"));
+  await page.keyboard.press("ArrowLeft");
+  check(
+    "motion: stepping back lands on the last step of the slide before",
+    // By number: only an address that was opened by id keeps the id.
+    await hashIs(page, "#/2.2"),
+    page.url(),
+  );
+
+  // A scene: at its first beat the whole world is drawn small, at the second the camera is
+  // close. The transform is written by the camera's flight, so it is read once it has landed.
+  await page.goto(`${motionUrl}#/weg`);
+  await page.reload();
+  await whenReady(page);
+  const scaleOf = () =>
+    page
+      .locator('[data-slot="stage"] [data-slot="slide-scene-world"]')
+      .evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).a.toFixed(2));
+  const far = await scaleOf();
+  await page.keyboard.press("ArrowRight");
+  check("motion: a scene's beat is a step", await hashIs(page, "#/weg.1"), page.url());
+  await page.waitForTimeout(1400);
+  const near = await scaleOf();
+  check(
+    "motion: the camera has moved in on the group the beat names",
+    Number(near) > Number(far) && Number(near) >= 0.75,
+    `${far} -> ${near}`,
   );
   await page.close();
 }

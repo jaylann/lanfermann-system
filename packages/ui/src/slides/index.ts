@@ -39,6 +39,8 @@ export { PriceTable, type PriceTableProps } from "./price-table/price-table";
 export { Profile, type ProfileProps } from "./profile/profile";
 export { Quote, type QuoteProps } from "./quote/quote";
 export { ReferencesSlide, type ReferencesSlideProps } from "./references-slide/references-slide";
+export { Scene, type SceneProps } from "./scene/scene";
+export type { SceneView, SceneWorld } from "./scene/world";
 export { SectionSlide, type SectionSlideProps } from "./section-slide/section-slide";
 export { Slide, type SlideGround, type SlideProps } from "./slide/slide";
 export { Source, type SourceProps } from "./source/source";
