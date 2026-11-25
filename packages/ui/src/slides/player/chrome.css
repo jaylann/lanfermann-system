@@ -1,0 +1,28 @@
+/*
+ * The player's own interface (`@lanfermann/ui/slides/player`): the few rules its utilities cannot
+ * say. Opt-in, like slides.css. An app that shows the player imports it after that file:
+ *   @import "@lanfermann/ui/slides.css";
+ *   @import "@lanfermann/ui/slides/player.css";
+ * The prebuilt player's stylesheet (`player/player.css`) has it inside.
+ */
+
+@layer components {
+  /* The black screen is black on every ground: a projector then shows nothing at all. */
+  [data-slot="player-blackout"] {
+    background-color: #000;
+  }
+
+  /*
+   * The console's two columns. The current slide is as large as the console's area allows, both
+   * ways: 70% of its width, or what its height leaves once the head above the slide and the two
+   * clocks below it are taken off (11rem), whichever is less. So the slide is never letterboxed
+   * and its edges stand on the head's rule. The next slide and the notes take the rest.
+   */
+  [data-slot="player-console-main"] {
+    container-type: size;
+  }
+
+  [data-slot="player-console-columns"] {
+    grid-template-columns: min(70cqw, (100cqh - 11rem) * 16 / 9) minmax(0, 1fr);
+  }
+}

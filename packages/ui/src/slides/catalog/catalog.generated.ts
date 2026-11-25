@@ -33,7 +33,7 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Slide",
     "group": "Scaffold",
     "summary": "The slide frame: a 1920 by 1080 canvas on one ground, with the 128px margins, the 12-column measure and the footer row.",
-    "notes": "Three frames cover every content slide. Stack: title across the top, a `Spacer`, wide evidence on the bottom. Split: title, a `Spacer`, then a `Split` with the evidence beside its reading. Statement: one sentence on Ink, nothing else. The title starts top left and the evidence stands on the bottom margin, so the empty space sits in the middle and not at the foot. Flow content ends at y 920; what does not fit is a second slide, never smaller type.",
+    "notes": "Three frames cover every content slide. Stack: title across the top, a `Spacer`, wide evidence on the bottom. Split: title, a `Spacer`, then a `Split` with the evidence beside its reading. Statement: one sentence on Ink, nothing else. The title starts top left and the evidence stands on the bottom margin, so the empty space sits in the middle and not at the foot. Flow content ends at y 920; what does not fit is a second slide, never smaller type.\n\nPresented live, the blocks of a slide rise in when it comes on and its forms grow; a print, a preview and the check stand still. A slide that has to stand still from its first frame takes `data-motion=\"none\"`.",
     "props": [
       {
         "name": "ground",
@@ -78,6 +78,12 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "description": "A composition of forms behind the content: `corner` or `bend` when the evidence starts below y 432, `edge` or `halo` when it ends left of x 1536. Not with tables, charts, diagrams, screenshots or code."
       },
       {
+        "name": "steps",
+        "type": "number",
+        "required": false,
+        "description": "How many steps the slide shows click by click. Only needed when a component of your own inside it uses steps: the kit's parts are counted."
+      },
+      {
         "name": "children",
         "type": "ReactNode",
         "required": false,
@@ -99,6 +105,27 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "summary": "An empty flexible block between the title and the evidence. One per slide, directly after the title (or the lead): it is what makes the evidence stand on the bottom margin.",
     "notes": "",
     "props": []
+  },
+  {
+    "name": "Step",
+    "group": "Scaffold",
+    "summary": "Marks a block of a slide to appear at a step, when the presenter clicks.",
+    "notes": "For a slide that builds an argument: the observation stands, the consequence appears on the next click, the conclusion on the one after. Three steps a slide at most, as a rule of thumb; what needs more is two slides. A part with steps of its own (columns, rows, a diagram) takes them in its props and needs no `Step`; this one is for your own markup and for parts without.\n\nWhat appears keeps its place: it is there from the start, only invisible, so nothing around it moves when it shows. Never hide a slide's whole content behind clicks for suspense: the title and the evidence the title is about stand from the start, and only what the presenter says in turn is held back. A print, a preview and the check show every step at once, so the slide has to read well with all of them shown.\n\nA block that is placed absolutely is marked one by one (each `Step` around one element): a wrapped block becomes the frame its absolute children are placed in.",
+    "props": [
+      {
+        "name": "at",
+        "type": "number",
+        "required": true,
+        "description": "The step it appears at, counted from 1. Until then it keeps its place and cannot be seen. Several blocks may share a step; they appear together."
+      },
+      {
+        "name": "children",
+        "type": "ReactNode",
+        "required": true,
+        "description": "What appears. One plain element (`<p>`, `<div>`, …) is marked itself, so the layout stays as it is; anything else (text, several children, a part) is wrapped in a block of its own."
+      }
+    ],
+    "example": "import { Body, Slide, Spacer, Step, Takeaway, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    Wer nicht zurückruft,\n    <br />\n    gibt die Anfrage an den Nächsten weiter.\n  </Title>\n  <Spacer />\n  <Body>\n    Die Anfrage kommt am Abend, der Rückruf erst nach zwei Tagen. Bis dahin hat der Kunde beim\n    nächsten Betrieb auf der Liste angerufen.\n  </Body>\n  <Step at={1}>\n    <Body>\n      Ein fester Rückruf am selben Tag, eingetragen wie ein Termin, hält die Anfrage bei Ihnen.\n    </Body>\n  </Step>\n  <Step at={2}>\n    <Takeaway>Der schnelle Rückruf ist Ihre günstigste Werbung.</Takeaway>\n  </Step>\n</Slide>"
   },
   {
     "name": "Split",
@@ -130,7 +157,7 @@ export const slidesCatalog: SlideCatalogEntry[] = [
   {
     "name": "Footer",
     "group": "Scaffold",
-    "summary": "The single footer row of a content slide: the wordmark as live text on the left, the deck's title and the page number on the right, all on one line 64px above the foot. `Slide` draws it; the cover and the closing slide have none.",
+    "summary": "The single footer row of a content slide: the drawn wordmark at 24px on the left, the deck's title and the page number on the right, all on one line 64px above the foot. `Slide` draws it; the cover and the closing slide have none.",
     "notes": "",
     "props": [
       {
@@ -150,8 +177,8 @@ export const slidesCatalog: SlideCatalogEntry[] = [
   {
     "name": "Wordmark",
     "group": "Scaffold",
-    "summary": "The wordmark in the two sizes a deck uses: drawn at 32px, live text in the footer row.",
-    "notes": "Always the full word `Lanfermann.dev`, sentence case, the dot in the accent. At 32px it is the drawn logo, an inline `<svg>` of two paths (letters in the text colour, dot in the accent), and both follow the slide's ground. In the footer row it is live text in weight 700. Never capitals, never tracked, never a second colour, never beside the symbol. Outside a deck use the `Wordmark` of the main entry or the SVG files of the brand.",
+    "summary": "The wordmark in the two sizes a deck uses: 24px in the footer row, 32px on a cover or closing.",
+    "notes": "Always the full word `Lanfermann.dev`, sentence case, the dot in the accent. It is the drawn logo at both sizes, an inline `<svg>` of two paths (letters in the text colour, dot in the accent), and both follow the slide's ground. Never set in a font, never capitals, never tracked, never a second colour, never beside the symbol. Outside a deck use the `Wordmark` of the main entry or the SVG files of the brand.\n\nA departure from the kit, which types the word in the footer row: there the drawn L with its cut corner was missing on every slide but the first and the last.",
     "props": [
       {
         "name": "size",
@@ -361,13 +388,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Tags",
     "group": "Text",
     "summary": "A row of tags with a muted label in front: what varies, what counts, what is included.",
-    "notes": "For a short enumeration that belongs under a table or a diagram and does not deserve rows of its own: the parameters that vary, the kinds of error that are counted. The label is a phrase without a colon.",
+    "notes": "For a short enumeration that belongs under a table or a diagram and does not deserve rows of its own: the parameters that vary, the kinds of error that are counted. The label is a phrase without a colon. Reveal tags one by one only when each is named as the talk reaches it; a row that is read at a glance stands whole.",
     "props": [
       {
         "name": "items",
-        "type": "ReactNode[]",
+        "type": "Array<ReactNode | { label: ReactNode; step?: number }>",
         "required": true,
-        "description": "The tags, one or two words each. Eight at most in a row."
+        "description": "The tags, one or two words each. Eight at most in a row. A tag written as `{ label, step }` appears at that step of the slide; the others keep their places."
       },
       {
         "name": "label",
@@ -382,13 +409,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "List",
     "group": "Lists",
     "summary": "Up to five plain rows separated by hairlines.",
-    "notes": "The kit's bullet list: rows and lines, no bullets, no numbers, no icons. Rows are parallel in form (all sentences, or all noun phrases) and none runs past two lines. When the rows are steps in time, use `Steps`; when each has a term, use `KeyValue`.",
+    "notes": "The kit's bullet list: rows and lines, no bullets, no numbers, no icons. Rows are parallel in form (all sentences, or all noun phrases) and none runs past two lines. When the rows are steps in time, use `Steps`; when each has a term, use `KeyValue`. Rows that build one argument can come one by one; a list the room should scan at once stands whole.",
     "props": [
       {
         "name": "items",
-        "type": "ReactNode[]",
+        "type": "Array<ReactNode | { text: ReactNode; step?: number }>",
         "required": true,
-        "description": "One sentence per row. Open a row with <b>two or three words</b> when the rows need names."
+        "description": "One sentence per row. Open a row with <b>two or three words</b> when the rows need names. A row written as `{ text, step }` appears at that step of the slide, with its line; a row written plainly is there from the start."
       }
     ],
     "example": "import { List, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Was eine gute Handwerker-Seite leistet.</Title>\n  <Spacer />\n  <List\n    items={[\n      <>\n        <b>Sie sagt sofort, was Sie tun und wo.</b> Ohne Scrollen, ohne Slogan.\n      </>,\n      <>\n        <b>Sie macht den Anruf leicht.</b> Die Nummer steht oben und lässt sich antippen.\n      </>,\n      <>\n        <b>Sie zeigt Ihre Arbeit.</b> Echte Fotos von echten Projekten, keine Agenturbilder.\n      </>,\n      <>\n        <b>Sie lädt schnell.</b> Auch im Mobilfunknetz auf der Baustelle.\n      </>,\n    ]}\n  />\n</Slide>"
@@ -397,13 +424,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Columns",
     "group": "Lists",
     "summary": "Two to four parallel items as columns under rules.",
-    "notes": "For things of equal rank that have no order: services, audiences, principles. No numbers. An icon, when the set has a fitting one for every item, stands small before the title, never above it. If the items happen in sequence, use `Steps`.",
+    "notes": "For things of equal rank that have no order: services, audiences, principles. No numbers. An icon, when the set has a fitting one for every item, stands small before the title, never above it. If the items happen in sequence, use `Steps`. Bring the columns in one by one only when the talk takes each in turn; when the point is that they belong together, they stand together.",
     "props": [
       {
         "name": "items",
-        "type": "Array<{ title: ReactNode; text?: ReactNode; label?: ReactNode; icon?: IconGlyph; more?: ReactNode; }>",
+        "type": "Array<{ title: ReactNode; text?: ReactNode; label?: ReactNode; icon?: IconGlyph; more?: ReactNode; step?: number; }>",
         "required": true,
-        "description": "Title and one or two sentences each. `icon` sets one of `ICONS` before the title. `label` is an optional line above the title (a place, a trade, a date). `more` is one block under the text, usually a `Code`. The blocks of all columns start on one line; give them the same number of lines so they end on one too."
+        "description": "Title and one or two sentences each. `icon` sets one of `ICONS` before the title. `label` is an optional line above the title (a place, a trade, a date). `more` is one block under the text, usually a `Code`. The blocks of all columns start on one line; give them the same number of lines so they end on one too. `step` is the step a column appears at, with its rule and its `more` block; without it the column is there from the start."
       }
     ],
     "example": "import { Columns, ICONS, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide forms=\"corner\">\n  <Title>Drei Dinge, die ich für Betriebe übernehme.</Title>\n  <Spacer />\n  <Columns\n    items={[\n      {\n        icon: ICONS.browser,\n        title: \"Website\",\n        text: \"Eine schnelle, klare Seite, die Anfragen bringt und auf dem Smartphone funktioniert.\",\n      },\n      {\n        icon: ICONS.search,\n        title: \"Sichtbarkeit\",\n        text: \"Google-Profil, Bewertungen und lokale Suche, damit man Sie in Ihrem Viertel findet.\",\n      },\n      {\n        icon: ICONS.cycle,\n        title: \"Automatisierung\",\n        text: \"Terminanfragen, Angebote und Rückrufe, die ohne Zettelwirtschaft laufen.\",\n      },\n    ]}\n  />\n</Slide>"
@@ -412,13 +439,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Steps",
     "group": "Lists",
     "summary": "Two to five steps in order, each with when it happens.",
-    "notes": "Only for a real sequence: the order must matter. The label says when („Woche 1“, „bis 15.12.“) or counts the step. With five steps keep each text to one sentence.",
+    "notes": "Only for a real sequence: the order must matter. The label says when („Woche 1“, „bis 15.12.“) or counts the step. With five steps keep each text to one sentence. A process can be told as it happens: give the steps one click each (`step`), in their order.",
     "props": [
       {
         "name": "items",
-        "type": "Array<{ title: ReactNode; text?: ReactNode; when?: ReactNode; icon?: IconGlyph; more?: ReactNode; }>",
+        "type": "Array<{ title: ReactNode; text?: ReactNode; when?: ReactNode; icon?: IconGlyph; more?: ReactNode; step?: number; }>",
         "required": true,
-        "description": "Steps in order. `icon` sets one of `ICONS` before the title. `when` replaces the default label \"Schritt n\": a week, a date, a duration. `more` is one block under the text: the `Code` of a command. The blocks of all steps start on one line; give them the same number of lines so they end on one too."
+        "description": "Steps in order. `icon` sets one of `ICONS` before the title. `when` replaces the default label \"Schritt n\": a week, a date, a duration. `more` is one block under the text: the `Code` of a command. The blocks of all steps start on one line; give them the same number of lines so they end on one too. `step` is the click of the slide at which this one appears, with its rule and its `more` block; without it the step is there from the start."
       }
     ],
     "example": "import { Slide, Spacer, Steps, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    In vier Wochen von der Analyse\n    <br />\n    zur neuen Seite.\n  </Title>\n  <Spacer />\n  <Steps\n    items={[\n      { when: \"Woche 1\", title: \"Analyse\", text: \"Ich prüfe Ihre Seite und drei Mitbewerber.\" },\n      {\n        when: \"Woche 2\",\n        title: \"Entwurf\",\n        text: \"Sie sehen die Startseite mit Ihren Texten und Fotos.\",\n      },\n      { when: \"Woche 3\", title: \"Umsetzung\", text: \"Alle Seiten entstehen, Sie geben frei.\" },\n      {\n        when: \"Woche 4\",\n        title: \"Start\",\n        text: \"Die Seite geht live, das Google-Profil zieht mit.\",\n      },\n    ]}\n  />\n</Slide>"
@@ -427,7 +454,7 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Compare",
     "group": "Lists",
     "summary": "Two columns read against each other, row by row.",
-    "notes": "Each row compares one thing, so both cells of a row answer the same question. The left side steps back into `text-muted`, the right side stands in `text`. No ticks, no crosses, no red and green.",
+    "notes": "Each row compares one thing, so both cells of a row answer the same question. The left side steps back into `text-muted`, the right side stands in `text`. No ticks, no crosses, no red and green. A comparison is read as a whole; let the rows come one by one only when each is argued on its own, under heads that stand from the start.",
     "props": [
       {
         "name": "left",
@@ -443,9 +470,9 @@ export const slidesCatalog: SlideCatalogEntry[] = [
       },
       {
         "name": "rows",
-        "type": "Array<[ReactNode, ReactNode]>",
+        "type": "Array<[ReactNode, ReactNode, number?]>",
         "required": true,
-        "description": "Pairs that answer the same question. Four rows at most."
+        "description": "Pairs that answer the same question. Four rows at most. An optional third entry is the step the row appears at, both cells and its line together (`[\"Die Nummer steht im Impressum.\", \"Ein Tipp startet den Anruf.\", 1]`); without it the row is there from the start. The heads are always there."
       }
     ],
     "example": "import { Compare, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Was sich für Ihre Kunden ändert.</Title>\n  <Spacer />\n  <Compare\n    left=\"Heute\"\n    right=\"Mit der neuen Seite\"\n    rows={[\n      [\"Die Telefonnummer steht im Impressum.\", \"Ein Tipp auf die Nummer startet den Anruf.\"],\n      [\"Die Startseite lädt in sieben Sekunden.\", \"Sie lädt in unter zwei.\"],\n      [\n        \"Anfragen kommen nur zu den Öffnungszeiten.\",\n        \"Das Formular nimmt sie rund um die Uhr an.\",\n      ],\n    ]}\n  />\n</Slide>"
@@ -454,13 +481,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "KeyValue",
     "group": "Lists",
     "summary": "Rows of term and description under one rule.",
-    "notes": "For what a thing consists of: the scope of an offer, the facts of a project, the conditions. The term is two or three words, the description one sentence.",
+    "notes": "For what a thing consists of: the scope of an offer, the facts of a project, the conditions. The term is two or three words, the description one sentence. Rows can come one by one when each is explained in turn; a scope the reader should take in at once stands whole.",
     "props": [
       {
         "name": "items",
-        "type": "Array<[ReactNode, ReactNode]>",
+        "type": "Array<[ReactNode, ReactNode, number?]>",
         "required": true,
-        "description": "Pairs of term and description. Five rows at most."
+        "description": "Pairs of term and description. Five rows at most. An optional third entry is the step the row appears at, with its line (`[\"Vergleich\", \"Drei Betriebe aus Ihrer Nähe.\", 1]`); without it the row is there from the start."
       },
       {
         "name": "termSpan",
@@ -481,13 +508,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Agenda",
     "group": "Lists",
     "summary": "The parts of a deck, each with the page it starts on.",
-    "notes": "Only for decks of fifteen slides or more. Each row starts with a 32px disc, one per part, the same discs that stand in the top left corner of a section opener. With `current`, the parts up to the current one are filled and the coming ones are open rings. The numbers are page numbers, the one case where a list carries numerals without being a sequence of steps: they point at something. Part titles are sentences or noun phrases in sentence case, without a full stop.",
+    "notes": "Only for decks of fifteen slides or more. Each row starts with a 32px disc, one per part, the same discs that stand in the top left corner of a section opener. With `current`, the parts up to the current one are filled and the coming ones are open rings. The numbers are page numbers, the one case where a list carries numerals without being a sequence of steps: they point at something. Part titles are sentences or noun phrases in sentence case, without a full stop. An agenda is an overview and stands whole; bring its parts in one by one only when each gets a sentence of its own before the next.",
     "props": [
       {
         "name": "items",
-        "type": "Array<[ReactNode, ReactNode]>",
+        "type": "Array<[ReactNode, ReactNode, number?]>",
         "required": true,
-        "description": "Part title and page number. Five parts at most."
+        "description": "Part title and page number. Five parts at most. An optional third entry is the step the part appears at, with its line (`[\"Was eine neue Seite kostet\", 15, 2]`); without it the part is there from the start."
       },
       {
         "name": "current",
@@ -502,13 +529,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Objections",
     "group": "Lists",
     "summary": "A customer's objections in their own words, each beside its answer.",
-    "notes": "Someone else's voice, so the slide stands on Tint. The objection is set in italics inside German quotation marks („ “); the answer in upright body text. Italic appears nowhere else in a deck: it marks words that are not ours.",
+    "notes": "Someone else's voice, so the slide stands on Tint. The objection is set in italics inside German quotation marks („ “); the answer in upright body text. Italic appears nowhere else in a deck: it marks words that are not ours. Objections can come one at a time, so the room hears each answer before it reads the next objection.",
     "props": [
       {
         "name": "items",
-        "type": "Array<{ quote: ReactNode; answer: ReactNode }>",
+        "type": "Array<{ quote: ReactNode; answer: ReactNode; step?: number }>",
         "required": true,
-        "description": "The objection as the customer says it, in quotation marks, and a one-sentence answer. Three rows at most."
+        "description": "The objection as the customer says it, in quotation marks, and a one-sentence answer. Three rows at most. `step` is the step a row appears at, objection and answer together with their line; without it the row is there from the start."
       }
     ],
     "example": "import { Objections, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide ground=\"tint\">\n  <Title>Was ich in fast jedem Gespräch höre.</Title>\n  <Spacer />\n  <Objections\n    items={[\n      {\n        quote: \"„Wir leben von Empfehlungen.“\",\n        answer:\n          \"Auch wer empfohlen wird, wird gesucht. Die Empfehlung endet auf Ihrer Website.\",\n      },\n      {\n        quote: \"„Wir haben doch schon eine Seite.“\",\n        answer: \"Die Frage ist, ob sie auf dem Smartphone in drei Sekunden sagt, was Sie tun.\",\n      },\n      {\n        quote: \"„Dafür haben wir keine Zeit.“\",\n        answer: \"Ich brauche von Ihnen zwei Stunden: ein Gespräch und eine Freigabe.\",\n      },\n    ]}\n  />\n</Slide>"
@@ -517,13 +544,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Tiers",
     "group": "Lists",
     "summary": "Two or three offers as ruled columns: name, price, what is included.",
-    "notes": "Columns under rules, not cards: no boxes, no badges, no tick icons, no „most popular“ ribbon. The recommended tier is marked by its price in the accent and by saying so in its `text` line. Every tier lists the same kind of thing in the same order so the columns can be read across.",
+    "notes": "Columns under rules, not cards: no boxes, no badges, no tick icons, no „most popular“ ribbon. The recommended tier is marked by its price in the accent and by saying so in its `text` line. Every tier lists the same kind of thing in the same order so the columns can be read across. Offers are compared, so they stand together; one tier per step suits only a talk that builds from the smallest offer to the largest.",
     "props": [
       {
         "name": "items",
-        "type": "Array<{ name: ReactNode; price: ReactNode; unit?: ReactNode; text?: ReactNode; includes: ReactNode[]; recommended?: boolean; }>",
+        "type": "Array<{ name: ReactNode; price: ReactNode; unit?: ReactNode; text?: ReactNode; includes: ReactNode[]; recommended?: boolean; step?: number; }>",
         "required": true,
-        "description": "`unit` says how the price is charged („einmalig“, „pro Monat“). `includes` lists up to five lines. `recommended` puts one price in `accent`."
+        "description": "`unit` says how the price is charged („einmalig“, „pro Monat“). `includes` lists up to five lines. `recommended` puts one price in `accent`. `step` is the step a tier appears at, whole and with its rule; without it the tier is there from the start."
       }
     ],
     "example": "import { Slide, Spacer, Tiers, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Drei Wege, je nachdem, wo Sie stehen.</Title>\n  <Spacer />\n  <Tiers\n    items={[\n      {\n        name: \"Auffrischung\",\n        price: \"1.900 €\",\n        unit: \"einmalig\",\n        text: \"Ihre Seite bleibt, sie wird schnell und mobil.\",\n        includes: [\n          \"Ladezeit und Mobilansicht\",\n          \"Telefon und Anfrage im Kopf\",\n          \"Google-Profil eingerichtet\",\n        ],\n      },\n      {\n        name: \"Neue Website\",\n        price: \"3.400 €\",\n        unit: \"einmalig\",\n        text: \"Meine Empfehlung für die meisten Betriebe.\",\n        recommended: true,\n        includes: [\n          \"Alles aus der Auffrischung\",\n          \"Neue Gestaltung, fünf Seiten\",\n          \"Texte und Fotos vor Ort\",\n        ],\n      },\n      {\n        name: \"Website mit Abläufen\",\n        price: \"5.800 €\",\n        unit: \"einmalig\",\n        text: \"Wenn Anfragen heute auf Zetteln landen.\",\n        includes: [\n          \"Alles aus der neuen Website\",\n          \"Terminanfrage mit Kalender\",\n          \"Angebote aus einer Vorlage\",\n        ],\n      },\n    ]}\n  />\n</Slide>"
@@ -532,13 +559,13 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Contacts",
     "group": "Lists",
     "summary": "Up to three contact routes under rules: a label and the address itself.",
-    "notes": "Addresses are written out so they can be read from the back of a room and typed from a printout. A small icon may stand before each label; no buttons, no arrows.",
+    "notes": "Addresses are written out so they can be read from the back of a room and typed from a printout. A small icon may stand before each label; no buttons, no arrows. The routes are read together at the close, so they rarely need steps.",
     "props": [
       {
         "name": "items",
-        "type": "Array<[ReactNode, ReactNode, IconGlyph?]>",
+        "type": "Array<[ReactNode, ReactNode, IconGlyph?, number?]>",
         "required": true,
-        "description": "Label, value and optionally an icon from `ICONS` before the label (`ICONS.mail`, `ICONS.globe`, `ICONS.call`, `ICONS.pin`): E-Mail, Web, Telefon, Vor Ort. Three at most."
+        "description": "Label, value and optionally an icon from `ICONS` before the label (`ICONS.mail`, `ICONS.globe`, `ICONS.call`, `ICONS.pin`): E-Mail, Web, Telefon, Vor Ort. Three at most. An optional fourth entry is the step the contact appears at, with its rule (`[\"Web\", \"lanfermann.dev\", ICONS.globe, 1]`, or `undefined` in place of the icon); without it the contact is there from the start."
       }
     ],
     "example": "import { Contacts, ICONS, Lead, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide ground=\"indigo\" footer={false} gap={48}>\n  <Spacer />\n  <Title size=\"cover\">\n    Eine kostenlose\n    <br />\n    Analyse.\n  </Title>\n  <Lead>\n    Ich schaue mir an, was Sie haben, was die Konkurrenz macht\n    <br />\n    und wo die Lücken sind. Unverbindlich.\n  </Lead>\n  <Contacts\n    items={[\n      [\"E-Mail\", \"justin@lanfermann.dev\", ICONS.mail],\n      [\"Web\", \"lanfermann.dev\", ICONS.globe],\n      [\"Vor Ort\", \"München, direkt bei Ihnen\", ICONS.pin],\n    ]}\n  />\n</Slide>"
@@ -547,7 +574,7 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "Table",
     "group": "Tables",
     "summary": "A data table on the 12-column grid with one highlighted cell.",
-    "notes": "The first column names the row and is set strong. Numbers are right-aligned with tabular figures and their column head is right-aligned too. Exactly one cell may carry the accent: the datum the title talks about. No zebra bands, no tinted row, no vertical lines, no icons in cells. Write values the way a person says them („18 von 20“, not „18/20“). A method line follows directly under the last row.",
+    "notes": "The first column names the row and is set strong. Numbers are right-aligned with tabular figures and their column head is right-aligned too. Exactly one cell may carry the accent: the datum the title talks about. No zebra bands, no tinted row, no vertical lines, no icons in cells. Write values the way a person says them („18 von 20“, not „18/20“). A method line follows directly under the last row. A table is read as a whole; bring its rows in one by one only when each is a result the talk takes in turn.",
     "props": [
       {
         "name": "columns",
@@ -572,6 +599,12 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "type": "[number, string]",
         "required": false,
         "description": "Row index and column key of the one cell the title is about."
+      },
+      {
+        "name": "rowSteps",
+        "type": "number[]",
+        "required": false,
+        "description": "The step each row appears at, by its index, with its line: `[0, 1, 2]` shows the first row from the start and brings the others click by click. A row without an entry is there from the start, and so is the head."
       }
     ],
     "example": "import { Slide, Source, Spacer, Table, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Erst das größere Modell trifft zuverlässig.</Title>\n  <Spacer />\n  <Table\n    highlight={[3, \"score\"]}\n    columns={[\n      { key: \"model\", label: \"Modell\", span: 4 },\n      { key: \"task\", label: \"Aufgabe\", span: 3 },\n      { key: \"score\", label: \"Richtig\", span: 2, numeric: true },\n      { key: \"quant\", label: \"Quantisierung\", span: 3, mono: true },\n    ]}\n    rows={[\n      { model: \"Qwen 3.5, 0,8 Mrd.\", task: \"Notizen\", score: \"9 von 20\", quant: \"Q4_K_M\" },\n      { model: \"Qwen 3.5, 4 Mrd.\", task: \"Notizen\", score: \"16 von 20\", quant: \"Q4_K_M\" },\n      { model: \"Qwen 3.5, 0,8 Mrd.\", task: \"Belege\", score: \"4 von 20\", quant: \"Q4_K_M\" },\n      { model: \"Qwen 3.5, 4 Mrd.\", task: \"Belege\", score: \"18 von 20\", quant: \"Q4_K_M\" },\n    ]}\n  />\n  <Source>Messung vom 28.10.2026, ohne Training, MacBook M2 Pro, je 20 Aufgaben</Source>\n</Slide>"
@@ -580,19 +613,19 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "name": "PriceTable",
     "group": "Tables",
     "summary": "An offer's positions with scope and price, and the totals on the right.",
-    "notes": "Prices are written the way an invoice writes them: `1.900,00 €` in German, `€1,900.00` in English, with a narrow no-break space before the euro sign in German. Net, VAT and total always appear together. Nothing here is highlighted in the accent: a price is not a selling point.",
+    "notes": "Prices are written the way an invoice writes them: `1.900,00 €` in German, `€1,900.00` in English, with a narrow no-break space before the euro sign in German. Net, VAT and total always appear together. Nothing here is highlighted in the accent: a price is not a selling point. Positions can come one by one when each is explained, the totals after them; an offer the reader checks as a whole stands whole.",
     "props": [
       {
         "name": "items",
-        "type": "Array<{ title: ReactNode; text?: ReactNode; qty?: ReactNode; price: ReactNode }>",
+        "type": "Array<{ title: ReactNode; text?: ReactNode; qty?: ReactNode; price: ReactNode; step?: number; }>",
         "required": true,
-        "description": "Three positions at most on a slide; a longer offer is a document."
+        "description": "Three positions at most on a slide; a longer offer is a document. `step` is the step a position appears at, with its line; without it the position is there from the start, and so is the head."
       },
       {
         "name": "totals",
-        "type": "Array<[ReactNode, ReactNode]>",
+        "type": "Array<[ReactNode, ReactNode, number?]>",
         "required": false,
-        "description": "Label and amount of each total row. The last row is the sum and is set strong under the 2px rule."
+        "description": "Label and amount of each total row. The last row is the sum and is set strong under the 2px rule. An optional third entry is the step the row appears at, the sum with its rule: give the totals a step after the last position, or the sum stands before what it adds up."
       },
       {
         "name": "labels",
@@ -604,16 +637,349 @@ export const slidesCatalog: SlideCatalogEntry[] = [
     "example": "import { PriceTable, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Ein Festpreis, in zwei Schritten.</Title>\n  <Spacer />\n  <PriceTable\n    items={[\n      {\n        title: \"Neue Website\",\n        text: \"Konzept, Gestaltung, Umsetzung, fünf Seiten\",\n        qty: \"einmalig\",\n        price: \"3.400,00 €\",\n      },\n      {\n        title: \"Pflege und Hosting\",\n        text: \"Updates, Sicherung, kleine Änderungen\",\n        qty: \"12 Monate\",\n        price: \"588,00 €\",\n      },\n    ]}\n    totals={[\n      [\"Zwischensumme\", \"3.988,00 €\"],\n      [\"Umsatzsteuer 19 %\", \"757,72 €\"],\n      [\"Gesamt\", \"4.745,72 €\"],\n    ]}\n  />\n</Slide>"
   },
   {
-    "name": "Findings",
-    "group": "Proof",
-    "summary": "Numbered findings whose markers repeat on the evidence beside them.",
-    "notes": "The reading side of an annotated screenshot: put it in the narrow side of a `Split` beside a `BrowserFrame` or `PhoneFrame` whose `markers` carry the same numbers. A finding names what is wrong in plain words („Die Telefonnummer fehlt im Kopf.“); the line under it says why that matters to a customer.",
+    "name": "Figure",
+    "group": "Figures",
+    "summary": "One hero figure with its unit, what it measures and where it comes from.",
+    "notes": "One figure per slide, as plain type on the ground: never inside a disc, a ring or a coloured field. The title says what the number means, the caption completes the sentence the number begins („96 % … aller Verbraucher recherchieren lokale Geschäfte online“). The figure is the slide's one accent. Figures use the face's proportional numerals; tabular numerals are for table columns only. Never glue the unit to the figure and never colour the unit.",
+    "props": [
+      {
+        "name": "value",
+        "type": "ReactNode",
+        "required": true,
+        "description": "The figure alone, e.g. \"96\". At most four characters."
+      },
+      {
+        "name": "unit",
+        "type": "ReactNode",
+        "required": false,
+        "description": "The unit beside it: \"%\", \"Sek.\", \"von 20\". Set apart, smaller, in regular weight and in `text`."
+      },
+      {
+        "name": "source",
+        "type": "ReactNode",
+        "required": false,
+        "description": "The source line under the hairline. A figure without a source is not shown."
+      },
+      {
+        "name": "align",
+        "type": "\"start\" | \"end\"",
+        "required": false,
+        "description": "`start` (default) stands the block on the bottom left, under its title. `end` sets it on the right seven columns; then the slide takes no forms."
+      },
+      {
+        "name": "highlight",
+        "type": "boolean",
+        "required": false,
+        "description": "The figure in `accent` (default). Set false when another datum on the slide carries the accent."
+      },
+      {
+        "name": "children",
+        "type": "ReactNode",
+        "required": false,
+        "description": "What the figure measures, as the rest of the sentence the figure starts."
+      }
+    ],
+    "example": "import { Figure, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide forms=\"edge\">\n  <Title>\n    Ihre Kunden prüfen Sie,\n    <br />\n    bevor sie anrufen.\n  </Title>\n  <Spacer />\n  <Figure value=\"96\" unit=\"%\" source=\"Quelle: BrightLocal, Local Consumer Review Survey 2024\">\n    aller Verbraucher recherchieren lokale Geschäfte online, bevor sie einen Fuß vor die Tür\n    setzen.\n  </Figure>\n</Slide>"
+  },
+  {
+    "name": "FigureRow",
+    "group": "Figures",
+    "summary": "Two to four figures in a row, each with its label and its own source.",
+    "notes": "For figures that belong together and are read against each other. Each keeps its own source under its label, because each comes from somewhere else. At most one is highlighted. Four figures is the limit: with more, use a `Table` or a `BarList`. Reveal the figures one by one only when the talk explains each in turn; figures meant to be read against each other stand together from the start.",
     "props": [
       {
         "name": "items",
-        "type": "Array<{ title: ReactNode; text?: ReactNode }>",
+        "type": "Array<{ value: ReactNode; unit?: ReactNode; label: ReactNode; source?: ReactNode; highlight?: boolean; title?: ReactNode; icon?: IconGlyph; prefix?: ReactNode; step?: number; }>",
         "required": true,
-        "description": "The finding as a sentence, and what it costs the reader. Four rows at most."
+        "description": "Two to four figures. `highlight` puts one of them in `accent`; leave it off the others. `title` names the figure in a muted line above it („Genauigkeit“), with an `icon` from `ICONS` before it if every figure has one; `prefix` is a word or two before a threshold („mehr als“, „unter“). `step` lets a figure appear at that step of the slide, with its rule, label and source; the others keep their places."
+      }
+    ],
+    "example": "import { FigureRow, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide forms=\"bend\">\n  <Title>\n    Der erste Eindruck entsteht online,\n    <br />\n    und er entsteht schnell.\n  </Title>\n  <Spacer />\n  <FigureRow\n    items={[\n      {\n        value: \"96\",\n        unit: \"%\",\n        label: \"recherchieren lokale Betriebe online, bevor sie Kontakt aufnehmen.\",\n        source: \"BrightLocal 2024\",\n        highlight: true,\n      },\n      {\n        value: \"0,05\",\n        unit: \"Sek.\",\n        label: \"genügen für ein erstes Urteil über eine Website.\",\n        source: \"Lindgaard et al. 2006\",\n      },\n      {\n        value: \"53\",\n        unit: \"%\",\n        label: \"verlassen eine mobile Seite, die länger als drei Sekunden lädt.\",\n        source: \"Google 2016\",\n      },\n    ]}\n  />\n</Slide>"
+  },
+  {
+    "name": "BarList",
+    "group": "Figures",
+    "summary": "Ranked horizontal bars with the value written at the end of each row.",
+    "notes": "The default chart: most comparisons are a ranking, and a ranking reads fastest as bars with their values written out. Bars are `line`, the one bar the title talks about is `accent`. No axis, no gridlines, no legend: the value stands at the end of its row. Sort by value unless the order is itself the message. Bars start at zero, always. A ranking is compared as a whole, so its rows stand together; reveal a row only when the talk builds up to it (the accent bar last).",
+    "props": [
+      {
+        "name": "items",
+        "type": "Array<{ label: ReactNode; value: number; display?: ReactNode; highlight?: boolean; step?: number; }>",
+        "required": true,
+        "description": "Up to seven rows, sorted by value. `display` is the value as written, with its unit. `step` lets a row appear at that step of the slide, its label, bar and value together; the scale stays that of all rows, so no bar changes when another appears."
+      },
+      {
+        "name": "max",
+        "type": "number",
+        "required": false,
+        "description": "The value of a full-width bar. The largest value by default."
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "description": "Width of the block in px. Twelve columns by default; pass the column width inside a Split."
+      },
+      {
+        "name": "labelSpan",
+        "type": "number",
+        "required": false,
+        "description": "Grid columns the labels take, 4 by default."
+      }
+    ],
+    "example": "import { BarList, Slide, Source, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    Gesucht wird am Telefon,\n    <br />\n    nicht am Schreibtisch.\n  </Title>\n  <Spacer />\n  <BarList\n    items={[\n      // A narrow no-break space before the unit, as German sets it.\n      { label: \"Smartphone\", value: 68, display: \"68 %\", highlight: true },\n      { label: \"Desktop\", value: 27, display: \"27 %\" },\n      { label: \"Tablet\", value: 5, display: \"5 %\" },\n    ]}\n  />\n  <Source>\n    Anteil der Suchen nach lokalen Betrieben je Gerät, eigene Auswertung von 12 Kundenseiten,\n    Oktober 2026\n  </Source>\n</Slide>"
+  },
+  {
+    "name": "ColumnChart",
+    "group": "Figures",
+    "summary": "Columns on a baseline, each with its value above and its label below.",
+    "notes": "For an ordered scale, usually time, or with `groups` for two series compared in a few categories. For a ranking use `BarList`. In groups the series differ by tone, never by hue: the first is `line`, the second takes `strong` (the text colour), and one column may take the accent instead; the label under each column names its series, so there is no legend. The 2px rule is the baseline at zero; there is no y-axis and no gridline, because every column carries its value. One column may take the accent. Lines, areas and pies are not part of the kit: a line chart is drawn as an inline `<svg>` with a 2px `text` stroke, one `accent` series at most, and labels set as `<p>` over it. A chart is compared as a whole, so its columns stand together; reveal a column or a group only when the talk builds up to it (the month after the relaunch, the second series).",
+    "props": [
+      {
+        "name": "items",
+        "type": "Array<{ label: ReactNode; value: number; display?: ReactNode; highlight?: boolean; strong?: boolean; step?: number; }>",
+        "required": false,
+        "description": "Three to twelve columns in their natural order (months, weeks, steps). `step` lets a column appear at that step of the slide, its value, bar and label together; the baseline and the scale stay those of all columns."
+      },
+      {
+        "name": "groups",
+        "type": "Array<{ label: ReactNode; step?: number; items: Array<{ label: ReactNode; value: number; display?: ReactNode; highlight?: boolean; strong?: boolean; step?: number; }>; }>",
+        "required": false,
+        "description": "Instead of `items`: two to four groups of two or three columns each, for two series read against each other (before and after, small and large). Every group has the same columns in the same order; the group's name stands under it. `step` on a group lets its name and its columns appear at that step, on a baseline that is there from the start; `step` on a column inside lets it appear on its own, never before its group."
+      },
+      {
+        "name": "max",
+        "type": "number",
+        "required": false,
+        "description": "The value of a full-height column. The largest value by default."
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": "Height of the plot in px, 400 by default."
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "description": "Width of the block in px. Twelve columns by default."
+      }
+    ],
+    "example": "import { ColumnChart, Slide, Source, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    Seit dem Relaunch kommen\n    <br />\n    dreimal so viele Anfragen.\n  </Title>\n  <Spacer />\n  <ColumnChart\n    items={[\n      { label: \"Mai\", value: 4 },\n      { label: \"Juni\", value: 5 },\n      { label: \"Juli\", value: 4 },\n      { label: \"August\", value: 9 },\n      { label: \"September\", value: 12 },\n      { label: \"Oktober\", value: 14, highlight: true },\n    ]}\n  />\n  <Source>\n    Anfragen über das Kontaktformular je Monat, Schreinerei Mustermann, Relaunch am 1.8.2026\n  </Source>\n</Slide>"
+  },
+  {
+    "name": "Flow",
+    "group": "Diagrams",
+    "summary": "Three to five boxes joined by arrows, one of them highlighted.",
+    "notes": "The look every diagram in a deck follows, whatever its shape. Nodes are boxes on `surface` with a 1px `line` edge and `radius-4`; text inside at 32px strong and 24px muted, 32px padding. Connectors are 2px lines in `line` with an open arrowhead, straight or with one right angle, never curved, never crossing a box. One node may carry the 2px `accent` edge: the one the title is about. Different kinds of node differ by a label inside, not by fill colour or shape. For a plain row of steps; a process with checkpoints or return paths is `Stages`, one that repeats is `Loop`, and anything that is not a row is `Diagram`.\n\nBuilt up by steps, the row is told in the order it is walked, left to right, one box a click at most; the arrow into a box draws itself as the box arrives.",
+    "props": [
+      {
+        "name": "nodes",
+        "type": "Array<{ title: ReactNode; text?: ReactNode; icon?: IconGlyph; highlight?: boolean; step?: number; }>",
+        "required": true,
+        "description": "Boxes in reading order. `icon` sets one of `ICONS` or `MARKS` before the title. `highlight` draws one box with the 2px accent edge. `step` is the click at which the box arrives, with the arrow that leads into it; without one it is there from the start."
+      }
+    ],
+    "example": "import { Flow, Slide, Source, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Aus einem Satz wird ein Eintrag in Ihrer Notiz.</Title>\n  <Spacer />\n  <Flow\n    nodes={[\n      { title: \"Sprache\", text: \"„Setz Milch auf die Liste“\" },\n      { title: \"Transkript\", text: \"Whisper, auf dem Gerät\" },\n      { title: \"Werkzeugaufruf\", text: \"Qwen 3.5 wählt update()\", highlight: true },\n      { title: \"Notiz\", text: \"Obsidian, Ordner Haushalt\" },\n    ]}\n  />\n  <Source>Ablauf des Sprachagenten, alle Schritte laufen lokal</Source>\n</Slide>"
+  },
+  {
+    "name": "Diagram",
+    "group": "Diagrams",
+    "summary": "Boxes and connectors on the slide's 12-column grid: an architecture, a data flow, any structure that is not a plain row.",
+    "notes": "The look every diagram of the kit follows. Boxes stand on the slide grid, on `surface` with a 1px `line` edge and a 4px radius; a title at 32px strong (24px in a narrow box) and one muted line. All boxes of a kind have the same size. Connectors are 2px lines in `line` with an open arrowhead, straight or with one right angle, never curved, never crossing a box; draw only the paths the slide talks about. One box may take the 2px `accent` edge and one path the accent colour. Kinds of box differ by a label or by the quiet fill, not by colour or shape.\n\nIcons. Give the boxes an `icon` before their titles: a box that names a product takes that product's mark in its own colour, from `MARKS` (Postgres, Python, Claude); any other box takes a pictogram in the accent, from `ICONS` (a lock, a gear, a database). Every box of a diagram carries one, or only the products do. The same thing gets the same icon across a deck.\n\nWhat needs a sentence stands beside the diagram: put a `marker` on the box and the sentence in `Findings` with the same number, in a `Split`, instead of a callout with an arrow. At most twelve boxes; a diagram with more is two slides. No forms on a slide with a diagram.\n\nBuilt up by steps, a diagram is told in the order its path is walked: give the boxes a `step` as you would say them, and no more steps than there are things to say.",
+    "props": [
+      {
+        "name": "nodes",
+        "type": "Array<{ id: string; col: number; row: number; span?: number; rows?: number; title?: ReactNode; text?: ReactNode; label?: ReactNode; code?: string; icon?: IconGlyph; items?: Array<{ title?: ReactNode; text?: ReactNode; code?: string; icon?: IconGlyph }>; tone?: \"plain\" | \"accent\" | \"quiet\" | \"none\"; marker?: number; center?: boolean; step?: number; }>",
+        "required": true,
+        "description": "The boxes. `col` and `row` count from 1 on the grid; `span` is the width in grid columns (3 by default), `rows` the height in rows. `items` splits one box into sections under hairlines (with a `title`, the box gets a head above them). `icon` (an `Icon` is `{ name: string; color: string | null; path: string; box?: number }`) sets a small picture before the title: a technology's mark from `MARKS` (`MARKS.postgresql`, `MARKS.python`, …) or a pictogram from `ICONS` (`ICONS.lock`, `ICONS.database`, …). `tone`: `accent` gives the one box the title talks about a 2px accent edge, `quiet` fills a box that stands apart (a person, an external service), `none` sets text without a box. `marker` puts a numbered disc on the corner. `step` is the click at which the box arrives, with its marker; without one it is there from the start."
+      },
+      {
+        "name": "edges",
+        "type": "Array<{ from: string; to: string; label?: ReactNode; dashed?: boolean; accent?: boolean; plain?: boolean; via?: \"below\" | \"above\"; step?: number; }>",
+        "required": false,
+        "description": "The connectors, by node id. The route is found from where the boxes stand: a straight line between boxes that face each other, otherwise one right angle. `dashed` for what happens only sometimes, `accent` for the one path the title talks about, `plain` for a line without arrowhead, `via` for a return path that runs under or over the row. `step` is the click at which the connector draws itself, with its label; without one it comes with the later of its two boxes, and it never comes before them."
+      },
+      {
+        "name": "bands",
+        "type": "Array<{ col: number; row: number; span: number; rows?: number; pad?: number; step?: number; }>",
+        "required": false,
+        "description": "Quiet fields behind a group of boxes that belong together (a zone, a machine, a trust boundary). A band reaches `pad` px (16 by default) past its cells; it must not start in the first column or the first row with a pad, because a deck cannot place anything at a negative offset. `step` is the click at which the band arrives; without one it is there from the start."
+      },
+      {
+        "name": "heads",
+        "type": "Array<{ span: number; text: ReactNode }>",
+        "required": false,
+        "description": "A line of column heads above the diagram; the spans add up to `cols`."
+      },
+      {
+        "name": "cols",
+        "type": "number",
+        "required": false,
+        "description": "Width of the diagram in grid columns, 12 by default; 7 or 8 inside a Split."
+      },
+      {
+        "name": "rowHeight",
+        "type": "number",
+        "required": false,
+        "description": "Height of a row in px: 136 by default (104 when `dense`), room for a title and one line of text."
+      },
+      {
+        "name": "rowGap",
+        "type": "number",
+        "required": false,
+        "description": "Space between rows in px, 48 by default."
+      },
+      {
+        "name": "dense",
+        "type": "boolean",
+        "required": false,
+        "description": "Titles at 24px instead of 32px. Chosen for you when a box is narrower than three columns."
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "required": false,
+        "description": "What the diagram shows, in one sentence, for screen readers and exports."
+      }
+    ],
+    "example": "import { Diagram, ICONS, MARKS, Slide, Source, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Nur das Training verlässt das Gerät.</Title>\n  <Spacer />\n  <Diagram\n    alt=\"Architektur des Sprachagenten: App, Modell und Notizen auf dem Gerät, das Training in der Cloud\"\n    heads={[\n      { span: 3, text: \"Eingabe\" },\n      { span: 5, text: \"Auf dem Gerät\" },\n      { span: 4, text: \"Ergebnis\" },\n    ]}\n    nodes={[\n      {\n        id: \"voice\",\n        col: 1,\n        row: 1,\n        icon: ICONS.microphone,\n        title: \"Sprache\",\n        text: \"„Setz Milch auf die Liste“\",\n      },\n      {\n        id: \"text\",\n        col: 1,\n        row: 2,\n        icon: ICONS.phone,\n        title: \"Text\",\n        text: \"getippt in der App\",\n      },\n      {\n        id: \"agent\",\n        col: 4,\n        row: 1,\n        span: 5,\n        rows: 2,\n        tone: \"accent\",\n        items: [\n          { icon: ICONS.file, title: \"Transkript\", text: \"Whisper, 39 Mio. Parameter\" },\n          {\n            icon: ICONS.tools,\n            title: \"Werkzeugaufruf\",\n            text: \"Qwen 3.5 mit 4 Mrd. Parametern, 4 Bit\",\n          },\n        ],\n      },\n      {\n        id: \"note\",\n        col: 9,\n        row: 1,\n        span: 4,\n        icon: MARKS.obsidian,\n        title: \"Obsidian\",\n        text: \"Notiz im Ordner Haushalt\",\n      },\n      {\n        id: \"log\",\n        col: 9,\n        row: 2,\n        span: 4,\n        icon: ICONS.database,\n        title: \"Protokoll\",\n        text: \"jeder Aufruf, lokal gespeichert\",\n      },\n      {\n        id: \"train\",\n        col: 4,\n        row: 3,\n        span: 5,\n        tone: \"quiet\",\n        icon: ICONS.cloud,\n        title: \"Training\",\n        text: \"einmalig, auf einer gemieteten GPU\",\n      },\n    ]}\n    edges={[\n      { from: \"voice\", to: \"agent\" },\n      { from: \"text\", to: \"agent\" },\n      { from: \"agent\", to: \"note\" },\n      { from: \"agent\", to: \"log\" },\n      { from: \"train\", to: \"agent\", dashed: true, label: \"Modell als Datei\" },\n    ]}\n  />\n  <Source>Aufbau des Sprachagenten, Stand November 2026</Source>\n</Slide>"
+  },
+  {
+    "name": "Stages",
+    "group": "Diagrams",
+    "summary": "Three to six stages in a row, with the checkpoints between them and the paths that lead back.",
+    "notes": "For a process whose order matters and whose checkpoints or loops are the point; a process without them is `Steps`. Stages are equal boxes across the twelve columns. A checkpoint is a small open disc in the accent on the connector, with its name above when it has one. Return paths run under the row, dashed, and each says in two words why it is taken. With six stages keep every text to two lines of 18 characters. The legend explains the disc and the dashed line once; do not explain them in the title.\n\nBuilt up by steps, the stages are told in the order they are walked, one click a stage, and a path back once the stage it leaves is there; no more steps than there are things to say. The legend stands from the start.",
+    "props": [
+      {
+        "name": "items",
+        "type": "Array<{ title: ReactNode; text?: ReactNode; label?: ReactNode; icon?: IconGlyph; highlight?: boolean; marker?: number; lines?: number; step?: number; }>",
+        "required": true,
+        "description": "The stages in order. `icon` sets one of `ICONS` before the title. The label counts them unless you name it. `highlight` gives one stage the accent edge. `lines` is how many lines the text takes, 2 by default. `step` is the click at which the stage arrives, with its marker and the connector into it (and that connector's checkpoint); without one it is there from the start."
+      },
+      {
+        "name": "gates",
+        "type": "Array<string | boolean | null>",
+        "required": false,
+        "description": "One entry per gap between two stages: `true` draws a checkpoint on the connector, a name of two or three characters („G1“) writes it above; `null` leaves the connector plain."
+      },
+      {
+        "name": "returns",
+        "type": "Array<{ from: number; to: number; label?: ReactNode; step?: number }>",
+        "required": false,
+        "description": "Paths back to an earlier stage, counted from 1, drawn dashed in the accent under the row. Paths from the same stage share one line. `step` is the click at which a path back fades in, with its label; without one it comes with the later of its two stages, and it never comes before them."
+      },
+      {
+        "name": "gateNote",
+        "type": "ReactNode",
+        "required": false,
+        "description": "What a checkpoint means, as the legend's first entry."
+      },
+      {
+        "name": "returnNote",
+        "type": "ReactNode",
+        "required": false,
+        "description": "What a return path means, as the legend's second entry."
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": "Height of the stage boxes in px, when the default does not fit the text."
+      }
+    ],
+    "example": "import { Slide, Spacer, Stages, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    Sie geben jede Stufe frei,\n    <br />\n    bevor die nächste beginnt.\n  </Title>\n  <Spacer />\n  <Stages\n    gates={[true, true, true]}\n    returns={[{ from: 3, to: 2, label: \"Änderungswunsch\" }]}\n    gateNote=\"Sie geben frei\"\n    returnNote=\"zurück, wenn etwas nicht passt\"\n    items={[\n      { label: \"Woche 1\", title: \"Analyse\", text: \"Ihre Seite und drei Mitbewerber\" },\n      { label: \"Woche 2\", title: \"Entwurf\", text: \"die Startseite mit Ihren Texten\" },\n      { label: \"Woche 3\", title: \"Umsetzung\", text: \"alle Seiten, auf allen Geräten\" },\n      { label: \"Woche 4\", title: \"Start\", text: \"live, mit Google-Profil\", highlight: true },\n    ]}\n  />\n</Slide>"
+  },
+  {
+    "name": "Loop",
+    "group": "Diagrams",
+    "summary": "Four to twelve steps that repeat, set around a rectangle, with what one round is in the middle.",
+    "notes": "For a process that comes round again: measure, change, measure. A loop has no first step, so the steps carry no numbers; the one that decides about the next round takes the accent. The corners are right angles like every connector of the kit: no circle, no curved arrows. Who or what drives the loop from outside is not drawn as another box with an arrow: mark the step it acts on and say it in `Findings` beside the loop.\n\nBuilt up by clicks, the ring is told in the order it is walked, clockwise from where the talk starts, with what one round is last or first; no more clicks than there are things to say. The click is `appearsAt`, not `step`, because the loop's own steps already have that name.",
+    "props": [
+      {
+        "name": "steps",
+        "type": "Array<{ title: ReactNode; highlight?: boolean; marker?: number; appearsAt?: number }>",
+        "required": true,
+        "description": "An even number of steps, clockwise from the top left. Two or three words each. `highlight` marks the step where the loop is steered; `marker` ties a step to a finding beside the loop. `appearsAt` is the click of the slide at which the step arrives, with the connector of the ring that leads into it (the one that closes the ring comes with the last); without it the step is there from the start."
+      },
+      {
+        "name": "center",
+        "type": "{ label?: ReactNode; title?: ReactNode; text?: ReactNode; appearsAt?: number }",
+        "required": false,
+        "description": "What one round is: a label, a sentence of two short lines, one muted line. `appearsAt` is the click at which it arrives; without it it is there from the start."
+      },
+      {
+        "name": "cols",
+        "type": "number",
+        "required": false,
+        "description": "Width in grid columns: 8 by default, beside four columns of findings; 12 on its own."
+      },
+      {
+        "name": "nodeSpan",
+        "type": "number",
+        "required": false,
+        "description": "Width of a step in grid columns, 2 by default."
+      },
+      {
+        "name": "rowGap",
+        "type": "number",
+        "required": false,
+        "description": "Space between the rows in px, 64 by default."
+      }
+    ],
+    "example": "import { Findings, Loop, Slide, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    Nach dem Start wird gemessen\n    <br />\n    und nachgebessert.\n  </Title>\n  <Spacer />\n  <Split ratio=\"8|4\" align=\"end\">\n    <Loop\n      center={{\n        label: \"Jeden Monat\",\n        title: (\n          <>\n            Ein Durchlauf,\n            <br />\n            eine Änderung.\n          </>\n        ),\n        text: \"gemessen an den Anfragen\",\n      }}\n      steps={[\n        { title: \"Messen\" },\n        { title: \"Auswerten\" },\n        { title: \"Entscheiden\", highlight: true, marker: 1 },\n        { title: \"Entwerfen\" },\n        { title: \"Umsetzen\" },\n        { title: \"Prüfen\", marker: 2 },\n        { title: \"Veröffentlichen\" },\n        { title: \"Beobachten\" },\n      ]}\n    />\n    <Findings\n      items={[\n        {\n          title: \"Sie entscheiden.\",\n          text: \"Ich schlage eine Änderung vor, Sie sagen ja oder nein.\",\n        },\n        {\n          title: \"Nichts geht ungeprüft live.\",\n          text: \"Smartphone, Tablet, Rechner, jedes Mal.\",\n        },\n      ]}\n    />\n  </Split>\n</Slide>"
+  },
+  {
+    "name": "Scene",
+    "group": "Diagrams",
+    "summary": "One large diagram that a camera moves over, beat by beat: the part for a system the talk walks through (how an inquiry becomes an appointment, what happens behind a website), where the audience should see the whole, then each part close up, and never lose its place.",
+    "notes": "Each click is a beat: the camera travels to what the beat looks at (0.9 seconds, eased in and out), what the beat brings in arrives (boxes rise in column by column, wires draw themselves once both their ends are there), what the beat talks about stands out and the rest dims, and the caption under the scene changes. Nothing outside the current beat is removed, only dimmed or left outside the picture, so the world stays one place. Without a presenter (a plain `Deck`, the print, the check) the scene shows its last beat, standing still; the presenter's preview and a PDF of one beat show that beat, standing still.\n\nWhen not. Anything that fits one still diagram is a `Diagram`; a sequence of steps without a place is `Steps` or `Flow`. A scene is for one world that several slides (or many beats) share: define the world once and give it to each slide, with `from` on the slides that continue the one before. At most about eight beats on a slide, and every beat gets a caption.\n\nHow. Lay the world out left to right on its grid, nodes of one kind the same size, groups side by side. Open each slide wide (`\"all\"` or a group), then go close. The title says what the whole slide shows; the captions say what each beat adds. The world is one picture for screen readers (`alt`); the captions are read as text.",
+    "props": [
+      {
+        "name": "world",
+        "type": "{ nodes: ReadonlyArray<{ id: string; label: string; detail?: string; icon?: IconGlyph; tone?: \"plain\" | \"quiet\" | \"solid\" | \"ghost\"; col?: number; row?: number; span?: number; rows?: number; x?: number; y?: number; w?: number; h?: number; }>; groups?: ReadonlyArray<{ id: string; label: string; detail?: string; nodes: readonly string[]; }>; wires?: ReadonlyArray<{ from: string; to: string; id?: string; dashed?: boolean; via?: \"below\" | \"above\"; }>; route?: \"curve\" | \"elbow\"; }",
+        "required": true,
+        "description": "The diagram the camera moves over: define it once as a const of the deck and give the same world to every slide that walks through it, so the audience keeps its bearings. `nodes`: a box each, with an `id` (anything but `\"all\"`), a `label` of about 14 characters and a `detail` line of about 18 (both 24px; what is longer is cut off), an optional `icon` from `ICONS` or `MARKS` (`{ name: string; color: string | null; path: string; box?: number }`). Place it on the world's grid with `col` and `row` (from 1; a column every 416 units, a row every 144, a node 320 by 112) and `span` / `rows` for a larger one, or in world units with `x`, `y`, `w`, `h`. `tone`: `plain` (default), `quiet` for what stands apart (a person, an outside service), `solid` for what a part of the system hands on (a result, a document), `ghost` (dashed) for something shown in full elsewhere. `groups`: a frame with a `label` (and a muted `detail`) around some nodes, 24 units past them, its label above its top left corner. Groups side by side may take neighbouring columns; a group under another needs a free row above it, where its label stands. `wires`: lines between nodes, by id. They leave the right edge and enter the left edge, so lay the world out to read from left to right; a wire back (to a node further left) runs under the boxes (`via: \"above\"` over them), and a wire to a node below runs down. `dashed` for what happens only sometimes; `id` names a wire for a beat's `show`. `route`: `curve` (default) draws smooth curves, `elbow` right angles."
+      },
+      {
+        "name": "beats",
+        "type": "ReadonlyArray<{ view?: string | readonly string[] | { x: number; y: number; w: number; h: number }; align?: \"start\" | \"center\" | \"end\"; show?: readonly string[]; highlight?: readonly string[]; loop?: readonly string[]; caption?: ReactNode; }>",
+        "required": true,
+        "description": "The clicks of the slide: the first beat is how the slide opens, each further beat one click. Each should make a good still picture on its own: the presenter's preview and a PDF of one beat are stills. `view`: where the camera looks: `\"all\"`, the id of a node or group, several ids (the camera fits them all), or a rectangle `{ x, y, w, h }` in world units. Without one the camera stays where the beat before left it (the first beat looks at `\"all\"`). The view stands at the top left of the scene (`align`: `\"center\"` or `\"end\"` moves it across); what else fits wholly in the scene is drawn too, and what would be cut by its edge is not. A world unit is never drawn larger than a px, and below three quarters of that the nodes lose their text and become blocks: zoom in to read, out to show the shape. `show`: node, group or wire ids that arrive at this beat and stay. What no beat shows is there from the start; a group comes with its first node, a wire when both its ends are there. `highlight`: node or group ids that stand out with an accent edge while the rest dims. Name what the caption talks about, nothing more. `loop`: node ids in order around a cycle; the wires between them (and from the last back to the first) turn into a dashed accent line that marches while the slide is presented, and a mark walks from node to node. `caption`: one or two lines (32px) under the scene that say what this beat shows. Start with the point in `<b>`."
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "required": true,
+        "description": "What the whole world shows, in one or two sentences, for screen readers and exports."
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": "Height of the scene in px, 464 by default: room for a two-line title and two caption lines."
+      },
+      {
+        "name": "from",
+        "type": "string | readonly string[] | { x: number; y: number; w: number; h: number }",
+        "required": false,
+        "description": "Where the camera stands when the slide comes on (a view, as in `beats`), when this slide continues the one before on the same world: give the view the slide before ended on, and the camera travels on from there instead of everything arriving anew."
+      }
+    ],
+    "example": "import { ICONS, Scene, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide ground=\"ink\">\n  <Title>\n    Aus der Suche wird ein Auftrag,\n    <br />\n    aus dem Auftrag die nächste Suche.\n  </Title>\n  <Spacer />\n  <Scene\n    alt=\"Der Weg eines Kunden in drei Stationen: gefunden werden über Google-Profil, Bewertungen und Website; die Anfrage über Formular oder Anruf, mit Rückruf und Termin; der Abschluss mit Angebot, Zusage und Rechnung, danach die Bitte um eine Bewertung, die zur nächsten Suche führt.\"\n    world={{\n      nodes: [\n        {\n          id: \"google\",\n          label: \"Google-Profil\",\n          detail: \"Karte, Zeiten, Fotos\",\n          icon: ICONS.pin,\n          col: 1,\n          row: 1,\n        },\n        {\n          id: \"bewertungen\",\n          label: \"Bewertungen\",\n          detail: \"4,8 Sterne aus 63\",\n          icon: ICONS.star,\n          col: 1,\n          row: 2,\n        },\n        {\n          id: \"website\",\n          label: \"Website\",\n          detail: \"Leistungen, Preise\",\n          icon: ICONS.browser,\n          col: 2,\n          row: 1,\n        },\n        {\n          id: \"referenzen\",\n          label: \"Referenzen\",\n          detail: \"echte Baustellen\",\n          icon: ICONS.image,\n          col: 2,\n          row: 2,\n        },\n        {\n          id: \"formular\",\n          label: \"Formular\",\n          detail: \"drei Felder\",\n          icon: ICONS.mail,\n          col: 3,\n          row: 1,\n        },\n        {\n          id: \"anruf\",\n          label: \"Anruf\",\n          detail: \"Nummer im Kopf\",\n          icon: ICONS.phone,\n          col: 3,\n          row: 2,\n        },\n        {\n          id: \"rueckruf\",\n          label: \"Rückruf\",\n          detail: \"am selben Werktag\",\n          icon: ICONS.call,\n          col: 4,\n          row: 1,\n        },\n        {\n          id: \"termin\",\n          label: \"Termin\",\n          detail: \"online gebucht\",\n          icon: ICONS.calendar,\n          col: 4,\n          row: 2,\n        },\n        {\n          id: \"angebot\",\n          label: \"Angebot\",\n          detail: \"als PDF am Abend\",\n          icon: ICONS.file,\n          tone: \"solid\",\n          col: 5,\n          row: 1,\n        },\n        {\n          id: \"nachfrage\",\n          label: \"Nachfrage\",\n          detail: \"eine Woche danach\",\n          icon: ICONS.chat,\n          col: 5,\n          row: 2,\n        },\n        {\n          id: \"zusage\",\n          label: \"Zusage\",\n          detail: \"per Klick im PDF\",\n          icon: ICONS.handshake,\n          col: 6,\n          row: 1,\n        },\n        {\n          id: \"rechnung\",\n          label: \"Rechnung\",\n          detail: \"mit Zahllink\",\n          icon: ICONS.euro,\n          col: 6,\n          row: 2,\n        },\n      ],\n      groups: [\n        {\n          id: \"gefunden\",\n          label: \"Gefunden werden\",\n          nodes: [\"google\", \"bewertungen\", \"website\", \"referenzen\"],\n        },\n        { id: \"anfrage\", label: \"Anfrage\", nodes: [\"formular\", \"anruf\", \"rueckruf\", \"termin\"] },\n        {\n          id: \"abschluss\",\n          label: \"Abschluss\",\n          nodes: [\"angebot\", \"nachfrage\", \"zusage\", \"rechnung\"],\n        },\n      ],\n      wires: [\n        { from: \"google\", to: \"website\" },\n        { from: \"bewertungen\", to: \"website\" },\n        { from: \"referenzen\", to: \"website\" },\n        { from: \"website\", to: \"formular\" },\n        { from: \"website\", to: \"anruf\" },\n        { from: \"formular\", to: \"rueckruf\" },\n        { from: \"anruf\", to: \"termin\" },\n        { from: \"rueckruf\", to: \"termin\" },\n        { from: \"rueckruf\", to: \"angebot\" },\n        { from: \"termin\", to: \"angebot\" },\n        { from: \"angebot\", to: \"zusage\" },\n        { from: \"zusage\", to: \"rechnung\" },\n        { from: \"rechnung\", to: \"nachfrage\" },\n        { from: \"nachfrage\", to: \"bewertungen\", dashed: true },\n      ],\n    }}\n    beats={[\n      {\n        view: \"all\",\n        caption: (\n          <>\n            <b>Drei Stationen.</b> Gefunden werden, die Anfrage annehmen, den Auftrag\n            abschließen.\n          </>\n        ),\n      },\n      {\n        view: \"anfrage\",\n        highlight: [\"formular\", \"rueckruf\"],\n        caption: (\n          <>\n            <b>Die Anfrage</b> kommt über drei Felder, der Rückruf noch am selben Werktag.\n          </>\n        ),\n      },\n      {\n        view: \"all\",\n        loop: [\n          \"bewertungen\",\n          \"website\",\n          \"formular\",\n          \"rueckruf\",\n          \"angebot\",\n          \"zusage\",\n          \"rechnung\",\n          \"nachfrage\",\n        ],\n        caption: (\n          <>\n            <b>Der Kreis schließt sich:</b> Eine Woche nach der Rechnung bittet der Betrieb um\n            eine Bewertung, und die nächste Suche findet ihn.\n          </>\n        ),\n      },\n    ]}\n  />\n</Slide>"
+  },
+  {
+    "name": "Findings",
+    "group": "Proof",
+    "summary": "Numbered findings whose markers repeat on the evidence beside them.",
+    "notes": "The reading side of an annotated screenshot: put it in the narrow side of a `Split` beside a `BrowserFrame` or `PhoneFrame` whose `markers` carry the same numbers. A finding names what is wrong in plain words („Die Telefonnummer fehlt im Kopf.“); the line under it says why that matters to a customer. Findings can be walked through one at a time, each with its marker on the screenshot; a short list the room should take in at a glance stands whole.",
+    "props": [
+      {
+        "name": "items",
+        "type": "Array<{ title: ReactNode; text?: ReactNode; step?: number }>",
+        "required": true,
+        "description": "The finding as a sentence, and what it costs the reader. Four rows at most. `step` is the step a finding appears at, with its marker and its line; give its marker on the frame the same step. Without it the finding is there from the start."
       },
       {
         "name": "start",
@@ -622,7 +988,7 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "description": "Number of the first marker, 1 by default (continue the count on a second slide)."
       }
     ],
-    "example": "import { Findings, Slide, Source, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Drei Stellen kosten Sie heute Anfragen.</Title>\n  <Spacer />\n  <Split ratio=\"7|5\" align=\"stretch\">\n    {/* The wide side takes the `BrowserFrame` of ihr-betrieb.de with the markers 1 to 3 (#85). */}\n    <div />\n    <Findings\n      items={[\n        {\n          title: \"Die Telefonnummer fehlt im Kopf.\",\n          text: \"Wer mobil sucht, will sofort anrufen.\",\n        },\n        {\n          title: \"Das Startbild lädt unkomprimiert.\",\n          text: \"Auf dem Smartphone bleibt die Seite lange leer.\",\n        },\n        {\n          title: \"Kein Weg zur Terminanfrage.\",\n          text: \"Interessenten finden kein Formular und keine Zeiten.\",\n        },\n      ]}\n    />\n  </Split>\n  <Source>Analyse vom 11.11.2026, Smartphone und Desktop</Source>\n</Slide>"
+    "example": "import { BrowserFrame, Findings, Slide, Source, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Drei Stellen kosten Sie heute Anfragen.</Title>\n  <Spacer />\n  <Split ratio=\"7|5\" align=\"stretch\">\n    <BrowserFrame\n      url=\"ihr-betrieb.de\"\n      markers={[\n        { n: 1, x: 776, y: 76 },\n        { n: 2, x: 448, y: 212 },\n        { n: 3, x: 96, y: 412 },\n      ]}\n    />\n    <Findings\n      items={[\n        {\n          title: \"Die Telefonnummer fehlt im Kopf.\",\n          text: \"Wer mobil sucht, will sofort anrufen.\",\n        },\n        {\n          title: \"Das Startbild lädt unkomprimiert.\",\n          text: \"Auf dem Smartphone bleibt die Seite lange leer.\",\n        },\n        {\n          title: \"Kein Weg zur Terminanfrage.\",\n          text: \"Interessenten finden kein Formular und keine Zeiten.\",\n        },\n      ]}\n    />\n  </Split>\n  <Source>Analyse vom 11.11.2026, Smartphone und Desktop</Source>\n</Slide>"
   },
   {
     "name": "Marker",
@@ -649,7 +1015,7 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "description": "A pinned position inside a frame: `position: absolute`, `left`, `top`."
       }
     ],
-    "example": "import { Body, Marker, Slide, Source, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Drei Stellen kosten Sie heute Anfragen.</Title>\n  <Spacer />\n  <Split ratio=\"7|5\">\n    <div className=\"relative flex h-[520px] flex-col gap-6 rounded-[4px] border border-line bg-surface p-8\">\n      <div className=\"h-8 w-48 rounded-[2px] bg-surface-quiet\" />\n      <div className=\"min-h-0 flex-1 rounded-[2px] bg-surface-quiet\" />\n      <div className=\"h-4 w-96 rounded-[2px] bg-surface-quiet\" />\n      <Marker n={1} style={{ position: \"absolute\", left: 824, top: 24 }} />\n      <Marker n={2} style={{ position: \"absolute\", left: 448, top: 243 }} />\n      <Marker n={3} style={{ position: \"absolute\", left: 432, top: 454 }} />\n    </div>\n    <div className=\"flex flex-col gap-6\">\n      <div className=\"flex items-start gap-6\">\n        <Marker n={1} />\n        <Body width={512}>Die Telefonnummer fehlt im Kopf.</Body>\n      </div>\n      <div className=\"flex items-start gap-6\">\n        <Marker n={2} />\n        <Body width={512}>Das Startbild lädt unkomprimiert.</Body>\n      </div>\n      <div className=\"flex items-start gap-6\">\n        <Marker n={3} />\n        <Body width={512}>Kein Weg zur Terminanfrage.</Body>\n      </div>\n    </div>\n  </Split>\n  <Source>Analyse vom 11.11.2026, Smartphone und Desktop</Source>\n</Slide>"
+    "example": "import { Findings, PhoneFrame, Slide, Source, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Am Smartphone bremsen drei Stellen.</Title>\n  <Spacer />\n  <Split ratio=\"4|8\" align=\"end\">\n    <PhoneFrame\n      markers={[\n        { n: 1, x: 152, y: 12 },\n        { n: 2, x: 88, y: 152 },\n        { n: 3, x: 88, y: 376 },\n      ]}\n    />\n    <Findings\n      items={[\n        {\n          title: \"Das Menü ist kleiner als ein Finger.\",\n          text: \"Wer daneben tippt, landet auf der falschen Seite.\",\n        },\n        {\n          title: \"Das Startbild zeigt keine Arbeit von Ihnen.\",\n          text: \"Ein Agenturfoto sagt nichts über Ihren Betrieb.\",\n        },\n        {\n          title: \"Der Text ist zu klein zum Lesen.\",\n          text: \"Wer zoomen muss, geht zur nächsten Seite.\",\n        },\n      ]}\n    />\n  </Split>\n  <Source>Aufnahme vom 11.11.2026, iPhone, Mobilfunknetz</Source>\n</Slide>"
   },
   {
     "name": "Icon",
@@ -671,6 +1037,330 @@ export const slidesCatalog: SlideCatalogEntry[] = [
       }
     ],
     "example": "import { ICONS, Icon, MARKS, Meta, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Ein Satz Piktogramme, sieben Marken.</Title>\n  <Spacer />\n  <div className=\"flex slide-span-12 flex-wrap gap-8\">\n    {[...Object.values(ICONS), ...Object.values(MARKS)].map((icon) => (\n      <Icon key={icon.name} icon={icon} size={48} />\n    ))}\n  </div>\n  <Meta>\n    Piktogramme: Phosphor Icons, bold. Marken: Simple Icons. Beide stehen klein vor einem Titel,\n    nie allein.\n  </Meta>\n</Slide>"
+  },
+  {
+    "name": "BrowserFrame",
+    "group": "Proof",
+    "summary": "A desktop screenshot in a browser frame with numbered markers.",
+    "notes": "Screenshots are evidence, so they are shown whole and unstyled: no tilt, no shadow, no device glow, no crop that hides the address. Take them at 1440px wide for desktop and 390px for phone, at the top of the page unless a finding is further down. Blur personal data before it goes on a slide. The frame is always a light page with a 1px `line` edge and `radius-4`. Markers sit on the spot itself, never beside it with an arrow. If the page under a marker is busy, move the marker a few px, not the finding. When the talk goes through the findings one at a time, let each marker appear at the step its finding does; the screenshot itself stands from the start.",
+    "props": [
+      {
+        "name": "url",
+        "type": "ReactNode",
+        "required": true,
+        "description": "The address shown in the bar, without protocol: `ihr-betrieb.de`."
+      },
+      {
+        "name": "src",
+        "type": "string",
+        "required": false,
+        "description": "The screenshot file. Without it a wireframe stands in."
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "required": false,
+        "description": "What the screenshot shows."
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "description": "Frame width in px, seven columns (944) by default."
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": "Frame height in px, 520 by default."
+      },
+      {
+        "name": "markers",
+        "type": "Array<{ n: number; x: number; y: number; step?: number }>",
+        "required": false,
+        "description": "Marker number and its position in px from the frame's top left corner. `step` lets a marker appear at that step of the slide, so the findings can be pointed out one after the other."
+      },
+      {
+        "name": "children",
+        "type": "ReactNode",
+        "required": false,
+        "description": "Your own content in place of the screenshot."
+      }
+    ],
+    "example": "import { Body, BrowserFrame, Slide, Source, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>So sieht ein Besucher Ihre Startseite.</Title>\n  <Spacer />\n  <Split ratio=\"7|5\">\n    <BrowserFrame url=\"ihr-betrieb.de\" />\n    <Body width={656}>\n      Ein großes Bild und drei Zeilen Text. Was Sie anbieten, steht erst weiter unten.\n    </Body>\n  </Split>\n  <Source>Aufnahme vom 11.11.2026, Desktop, 1440 px</Source>\n</Slide>"
+  },
+  {
+    "name": "PhoneFrame",
+    "group": "Proof",
+    "summary": "A phone screenshot in a plain bezel with numbered markers.",
+    "notes": "A plain dark bezel with `radius-device`: no notch, no status bar, no brand of phone. Most local searches happen on a phone, so when a finding is about the mobile page, show the phone, not the desktop. When the talk goes through the findings one at a time, let each marker appear at the step its finding does; the screenshot itself stands from the start.",
+    "props": [
+      {
+        "name": "src",
+        "type": "string",
+        "required": false,
+        "description": "The screenshot file (390px wide capture). Without it a wireframe stands in."
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "required": false,
+        "description": "What the screenshot shows."
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "description": "Outer width in px, 248 by default."
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": "Outer height in px, 496 by default: the tallest a phone can be under a two-line title with a source line."
+      },
+      {
+        "name": "markers",
+        "type": "Array<{ n: number; x: number; y: number; step?: number }>",
+        "required": false,
+        "description": "Marker number and its position in px from the frame's top left corner. `step` lets a marker appear at that step of the slide, so the findings can be pointed out one after the other."
+      },
+      {
+        "name": "children",
+        "type": "ReactNode",
+        "required": false,
+        "description": "Your own content in place of the screenshot."
+      }
+    ],
+    "example": "import { Findings, PhoneFrame, Slide, Source, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    Auf dem Smartphone fehlt\n    <br />\n    der Weg zum Anruf.\n  </Title>\n  <Spacer />\n  <Split ratio=\"4|8\" align=\"end\">\n    <PhoneFrame\n      markers={[\n        { n: 1, x: 152, y: 12 },\n        { n: 2, x: 88, y: 152 },\n      ]}\n    />\n    <Findings\n      items={[\n        {\n          title: \"Keine Telefonnummer im Kopf.\",\n          text: \"Das Menü verbirgt sie hinter zwei Tipps.\",\n        },\n        {\n          title: \"Das Startbild füllt den ganzen Bildschirm.\",\n          text: \"Was der Betrieb anbietet, steht erst darunter.\",\n        },\n      ]}\n    />\n  </Split>\n  <Source>Aufnahme vom 11.11.2026, iPhone, Mobilfunknetz</Source>\n</Slide>"
+  },
+  {
+    "name": "BeforeAfter",
+    "group": "Proof",
+    "summary": "Two browser frames of the same page: before and after.",
+    "notes": "Same page, same viewport, same scroll position on both sides, so the eye compares like with like. Old on the left, new on the right. Markers on the right side only, where they point at what changed. When the talk goes through the changes one at a time, let each marker appear at its step; the two pages stand from the start, because they are compared as a whole.",
+    "props": [
+      {
+        "name": "before",
+        "type": "{ url: ReactNode; src?: string; alt?: string; markers?: Array<{ n: number; x: number; y: number; step?: number }>; }",
+        "required": true,
+        "description": "The old state, with the same props as BrowserFrame."
+      },
+      {
+        "name": "after",
+        "type": "{ url: ReactNode; src?: string; alt?: string; markers?: Array<{ n: number; x: number; y: number; step?: number }>; }",
+        "required": true,
+        "description": "The new state. A marker's `step` lets it appear at that step of the slide, so the changes can be pointed out one after the other."
+      },
+      {
+        "name": "labels",
+        "type": "[ReactNode, ReactNode]",
+        "required": false,
+        "description": "The two labels. „Vorher“ and „Nachher“ by default."
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": "Height of both frames in px, 440 by default."
+      }
+    ],
+    "example": "import { BeforeAfter, Slide, Source, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Dieselbe Startseite, vier Wochen später.</Title>\n  <Spacer />\n  <BeforeAfter\n    before={{ url: \"schreinerei-mustermann.de\" }}\n    after={{ url: \"schreinerei-mustermann.de\", markers: [{ n: 1, x: 640, y: 76 }] }}\n  />\n  <Source>Aufnahmen vom 1.7. und 1.8.2026, Desktop, 1440 px</Source>\n</Slide>"
+  },
+  {
+    "name": "Media",
+    "group": "Proof",
+    "summary": "A photo or image in a hairline frame, with a caption under it.",
+    "notes": "Photos show real work, real places and real people: the client's workshop, a finished piece, Justin on site. No stock photos, no generated images, no illustrations of abstract ideas. Photos are used in full colour and uncropped to their subject; no duotone, no indigo overlay, no rounded avatar circles. Every photo has a caption that says what it shows.",
+    "props": [
+      {
+        "name": "src",
+        "type": "string",
+        "required": false,
+        "description": "The image file. Without it the frame shows `children` as a placeholder note."
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "required": false,
+        "description": "What the image shows."
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "description": "Frame width in px, six columns (800) by default."
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": "Frame height in px, 450 by default (16:9 at the default width)."
+      },
+      {
+        "name": "caption",
+        "type": "ReactNode",
+        "required": false,
+        "description": "One line under the frame: what, where, when."
+      },
+      {
+        "name": "children",
+        "type": "ReactNode",
+        "required": false,
+        "description": "Placeholder note while the image is missing, e.g. what to photograph."
+      }
+    ],
+    "example": "import { Body, Media, Slide, Spacer, Split, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Echte Fotos schlagen jedes Agenturbild.</Title>\n  <Spacer />\n  <Split ratio=\"6|6\" align=\"end\">\n    <Media caption=\"Werkstatt der Schreinerei Mustermann, Oktober 2026\">\n      Foto: Werkstatt, Querformat\n    </Media>\n    <Body>\n      Wer Ihre Werkstatt sieht, weiß in einer Sekunde, mit wem er es zu tun hat. Ich\n      fotografiere bei Ihnen vor Ort, an einem Vormittag.\n    </Body>\n  </Split>\n</Slide>"
+  },
+  {
+    "name": "Code",
+    "group": "Proof",
+    "summary": "A few lines of literal code in the mono face.",
+    "notes": "The only place the mono face appears at length. No syntax colours: code is `text` on `surface-quiet`, and one line may take the accent. Indentation is kept; long lines are shortened by hand, never wrapped. Each line is its own `<p>` with `white-space:nowrap`, and leading spaces are no-break spaces. Reveal lines by step when the talk explains a listing part by part (the first call, then the second); a listing read at a glance stands whole.",
+    "props": [
+      {
+        "name": "code",
+        "type": "string",
+        "required": true,
+        "description": "The code. Twelve lines at most, each under 70 characters at full width."
+      },
+      {
+        "name": "caption",
+        "type": "ReactNode",
+        "required": false,
+        "description": "One line under the block: the file, the command, what it does."
+      },
+      {
+        "name": "highlight",
+        "type": "number",
+        "required": false,
+        "description": "Index of the one line set in `accent`."
+      },
+      {
+        "name": "plain",
+        "type": "boolean",
+        "required": false,
+        "description": "Sets the lines in the text face: for a listing that is not literal code (the parts of a prompt, the sections of a file) standing beside code blocks."
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "description": "Block width in px."
+      },
+      {
+        "name": "reveal",
+        "type": "Array<{ from: number; to?: number; step: number }>",
+        "required": false,
+        "description": "Lines that appear at a step: `[{ from: 4, to: 8, step: 1 }]`. Lines not named are there from the start."
+      }
+    ],
+    "example": "import { Code, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>\n    Das Modell ruft ein Werkzeug auf,\n    <br />\n    statt zu antworten.\n  </Title>\n  <Spacer />\n  <Code\n    highlight={1}\n    caption=\"Antwort auf „Setz Milch auf die Einkaufsliste“, Qwen 3.5 mit 4 Mrd. Parametern\"\n    code={[\n      \"{\",\n      '  \"tool\": \"update\",',\n      '  \"notiz\": \"Einkaufsliste\",',\n      '  \"ordner\": \"Haushalt\",',\n      '  \"anhang\": \"Milch\"',\n      \"}\",\n    ].join(\"\\n\")}\n  />\n</Slide>"
+  },
+  {
+    "name": "Example",
+    "group": "Proof",
+    "summary": "One input in the user's words and the literal output it becomes: a sentence and its tool call.",
+    "notes": "Makes an abstract claim about a system concrete with one real pair of input and output. The input is set as speech, the output as code on `surface-quiet`; nothing is drawn between them, the order says it. One example per slide, on the bottom, under the claim it proves. Use a sentence a user would really say, not a tidy one. Let the output appear a step later when the room should guess what the sentence becomes; when the pair only proves a claim already made, show both at once.",
+    "props": [
+      {
+        "name": "input",
+        "type": "ReactNode",
+        "required": true,
+        "description": "What someone says or types, in quotation marks, at 48px. One line."
+      },
+      {
+        "name": "output",
+        "type": "string",
+        "required": true,
+        "description": "What the system makes of it, as literal code: a call, a query, a command. Three lines at most."
+      },
+      {
+        "name": "label",
+        "type": "ReactNode",
+        "required": false,
+        "description": "The line above, \"Beispiel\" by default. Pass `null` to leave it out."
+      },
+      {
+        "name": "caption",
+        "type": "ReactNode",
+        "required": false,
+        "description": "One muted line under the output: which model, which setting."
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "description": "Block width in px; the measure of the slide by default."
+      },
+      {
+        "name": "outputStep",
+        "type": "number",
+        "required": false,
+        "description": "The step the output appears at, with the caption under it, so the input can stand alone first. Without it both are there from the start."
+      }
+    ],
+    "example": "import { Example, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide ground=\"ink\">\n  <Title>\n    Die App versteht den Satz\n    <br />\n    und führt ihn aus.\n  </Title>\n  <Spacer />\n  <Example\n    input=\"„Schieb die Einkaufsliste in den Ordner Haushalt.“\"\n    output='update(notiz: \"Einkaufsliste\", ordner: \"Haushalt\")'\n    caption=\"Qwen 3.5 mit 4 Mrd. Parametern, lokal auf dem Smartphone\"\n  />\n</Slide>"
+  },
+  {
+    "name": "Quote",
+    "group": "Proof",
+    "summary": "A customer's sentence in display size, signed with name and role.",
+    "notes": "Someone else's voice, so the slide stands on Tint and has no title of its own: the quote is the title. Real quotes from real people, with permission, word for word. No oversized decorative quotation mark, no portrait in a circle.",
+    "props": [
+      {
+        "name": "name",
+        "type": "ReactNode",
+        "required": true,
+        "description": "Who said it."
+      },
+      {
+        "name": "role",
+        "type": "ReactNode",
+        "required": false,
+        "description": "Role and company, and the date if it matters."
+      },
+      {
+        "name": "size",
+        "type": "\"title\" | \"lead\"",
+        "required": false,
+        "description": "72px for up to three lines (default), 48px for a longer quote."
+      },
+      {
+        "name": "children",
+        "type": "ReactNode",
+        "required": true,
+        "description": "The quote, inside quotation marks: „ “ in German, “ ” in English."
+      }
+    ],
+    "example": "import { Quote, Slide, Spacer } from \"@lanfermann/ui/slides\";\n\n<Slide ground=\"tint\" forms=\"corner\">\n  <Spacer />\n  <Quote name=\"Max Mustermann\" role=\"Inhaber, Schreinerei Mustermann\">\n    „Seit der neuen Seite rufen Leute an,\n    <br />\n    die uns vorher nie gefunden hätten.“\n  </Quote>\n</Slide>"
+  },
+  {
+    "name": "Profile",
+    "group": "Proof",
+    "summary": "A portrait beside three facts, under a title that is the person's name.",
+    "notes": "One profile slide per deck, early or just before the ask. The slide's title is the name, its lead the role. The portrait is a rectangle in a hairline frame, in colour, looking into the slide; never a circle. Facts are things a client can check: where, since when, for whom.",
+    "props": [
+      {
+        "name": "src",
+        "type": "string",
+        "required": false,
+        "description": "The portrait file. Without it a placeholder stands in."
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "required": false,
+        "description": "Who the portrait shows."
+      },
+      {
+        "name": "facts",
+        "type": "Array<[ReactNode, ReactNode]>",
+        "required": false,
+        "description": "Up to four pairs of label and fact."
+      }
+    ],
+    "example": "import { Lead, Profile, Slide, Spacer, Title } from \"@lanfermann/ui/slides\";\n\n<Slide>\n  <Title>Justin Lanfermann.</Title>\n  <Lead>Softwareentwickler und KI-Berater in München.</Lead>\n  <Spacer />\n  <Profile\n    facts={[\n      [\"Arbeit\", \"Websites und Automatisierung für Betriebe, die von Empfehlungen leben.\"],\n      [\"Hintergrund\", \"Informatik an der TU München, seit 2019 selbstständig.\"],\n      [\"Vor Ort\", \"Ich komme zu Ihnen in den Betrieb, im Raum München.\"],\n    ]}\n  />\n</Slide>"
   },
   {
     "name": "CoverSlide",
@@ -725,6 +1415,12 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "type": "ReactNode",
         "required": false,
         "description": "What the presenter says here. Never drawn on the slide."
+      },
+      {
+        "name": "steps",
+        "type": "number",
+        "required": false,
+        "description": "How many steps the slide shows click by click. Only needed when a component of your own inside it uses steps: the kit's parts are counted."
       }
     ],
     "example": "import { CoverSlide } from \"@lanfermann/ui/slides\";\n\n<CoverSlide\n  title={\n    <>\n      Der digitale\n      <br />\n      Handschlag.\n    </>\n  }\n  lead={\n    <>\n      Warum Ihre nächsten 100 Kunden Sie googeln,\n      <br />\n      bevor Sie sie je treffen.\n    </>\n  }\n  audience=\"Für Münchner Handwerk und Traditionsbetriebe\"\n  byline=\"Justin Lanfermann, November 2026\"\n/>"
@@ -788,6 +1484,12 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "type": "ReactNode",
         "required": false,
         "description": "What the presenter says here. Never drawn on the slide."
+      },
+      {
+        "name": "steps",
+        "type": "number",
+        "required": false,
+        "description": "How many steps the slide shows click by click. Only needed when a component of your own inside it uses steps: the kit's parts are counted."
       }
     ],
     "example": "import { SectionSlide } from \"@lanfermann/ui/slides\";\n\n<SectionSlide\n  part={2}\n  parts={4}\n  title=\"Was Ihre Website über Sie sagt.\"\n  lead={\n    <>\n      Drei Betriebe aus Ihrer Nachbarschaft,\n      <br />\n      mit den Augen eines Kunden gesehen.\n    </>\n  }\n/>"
@@ -839,6 +1541,12 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "type": "ReactNode",
         "required": false,
         "description": "What the presenter says here. Never drawn on the slide."
+      },
+      {
+        "name": "steps",
+        "type": "number",
+        "required": false,
+        "description": "How many steps the slide shows click by click. Only needed when a component of your own inside it uses steps: the kit's parts are counted."
       }
     ],
     "example": "import { StatementSlide } from \"@lanfermann/ui/slides\";\n\n<StatementSlide>\n  Vertrauen entsteht,\n  <br />\n  bevor das Telefon klingelt.\n</StatementSlide>"
@@ -896,6 +1604,12 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "type": "ReactNode",
         "required": false,
         "description": "What the presenter says here. Never drawn on the slide."
+      },
+      {
+        "name": "steps",
+        "type": "number",
+        "required": false,
+        "description": "How many steps the slide shows click by click. Only needed when a component of your own inside it uses steps: the kit's parts are counted."
       }
     ],
     "example": "import { ClosingSlide, ICONS } from \"@lanfermann/ui/slides\";\n\n<ClosingSlide\n  title={\n    <>\n      Eine kostenlose\n      <br />\n      Analyse.\n    </>\n  }\n  lead={\n    <>\n      Ich schaue mir an, was Sie haben, was die Konkurrenz macht\n      <br />\n      und wo die Lücken sind. Unverbindlich.\n    </>\n  }\n  contacts={[\n    [\"E-Mail\", \"justin@lanfermann.dev\", ICONS.mail],\n    [\"Web\", \"lanfermann.dev\", ICONS.globe],\n    [\"Vor Ort\", \"München, direkt bei Ihnen\", ICONS.pin],\n  ]}\n/>"
@@ -941,6 +1655,12 @@ export const slidesCatalog: SlideCatalogEntry[] = [
         "type": "ReactNode",
         "required": false,
         "description": "What the presenter says here. Never drawn on the slide."
+      },
+      {
+        "name": "steps",
+        "type": "number",
+        "required": false,
+        "description": "How many steps the slide shows click by click. Only needed when a component of your own inside it uses steps: the kit's parts are counted."
       }
     ],
     "example": "import { ReferencesSlide } from \"@lanfermann/ui/slides\";\n\n<ReferencesSlide\n  items={[\n    { by: \"BrightLocal\", title: \"Local Consumer Review Survey\", year: \"2024\" },\n    {\n      by: \"Lindgaard et al.\",\n      title:\n        \"Attention web designers: You have 50 milliseconds to make a good first impression\",\n      year: \"2006\",\n    },\n    { by: \"Google\", title: \"The need for mobile speed\", year: \"2016\" },\n    {\n      by: \"Eigene Auswertung\",\n      title: \"Suchen nach lokalen Betrieben je Gerät, 12 Kundenseiten\",\n      year: \"2026\",\n    },\n  ]}\n/>"

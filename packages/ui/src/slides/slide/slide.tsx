@@ -29,6 +29,11 @@ export type SlideProps = ComponentProps<"section"> & {
    * screenshots or code.
    */
   forms?: "corner" | "bend" | "edge" | "halo";
+  /**
+   * How many steps the slide shows click by click. Only needed when a component of your own
+   * inside it uses steps: the kit's parts are counted.
+   */
+  steps?: number;
   /** Title first, then a `Spacer`, then the evidence and its source line. */
   children?: ReactNode;
 };
@@ -42,11 +47,16 @@ export type SlideProps = ComponentProps<"section"> & {
  * Statement: one sentence on Ink, nothing else. The title starts top left and the evidence stands
  * on the bottom margin, so the empty space sits in the middle and not at the foot. Flow content
  * ends at y 920; what does not fit is a second slide, never smaller type.
+ *
+ * Presented live, the blocks of a slide rise in when it comes on and its forms grow; a print, a
+ * preview and the check stand still. A slide that has to stand still from its first frame takes
+ * `data-motion="none"`.
  */
 export function Slide({
   ground = "paper",
   // Read by a player from the element's props, never rendered here.
   notes: _notes,
+  steps: _steps,
   deck,
   page,
   footer = true,

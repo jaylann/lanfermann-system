@@ -6,6 +6,8 @@ dist/
 build/
 out/
 *.tsbuildinfo
+# The prebuilt slide player (`bun run build` writes it). Anchored: src/slides/player is source.
+/packages/ui/player/
 
 # Testing / coverage
 coverage/
@@ -41,3 +43,6 @@ next-env.d.ts
 storybook-static/
 .visual/
 debug-storybook.log
+
+# What `slides build` and `slides pack` write when they are run from this repository
+slides-out/

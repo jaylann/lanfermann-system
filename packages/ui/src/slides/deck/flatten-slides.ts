@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement, type ReactElement, type ReactNode } from "react";
 
 import type { SlideGround } from "@/slides/slide/slide";
+import { stepsOfSlide } from "@/slides/step/steps";
 
 /** One slide of a deck, as `Deck` and a player lay it out. */
 export type SlideEntry = {
@@ -11,6 +12,12 @@ export type SlideEntry = {
   id?: string;
   notes?: ReactNode;
   ground?: SlideGround;
+  /**
+   * How many steps the slide shows click by click, 0 for a slide that shows everything at once.
+   * Read from the element without drawing it (`stepsOfSlide`): `steps` where the element says so,
+   * otherwise the highest step its parts ask for.
+   */
+  steps: number;
 };
 
 type SlideLikeProps = {
@@ -25,7 +32,8 @@ type SlideLikeProps = {
  * arrays opened up. Text and empty children between slides are dropped.
  *
  * `id`, `notes` and `ground` are read from the element's own props, so a deck's wrapper around
- * `Slide` has to take them where it is used: `<Aufgabe id="aufgabe" notes="…" />`.
+ * `Slide` has to take them where it is used: `<Aufgabe id="aufgabe" notes="…" />`. The same goes
+ * for `steps`, which such a wrapper has to name: what it draws inside is not seen from here.
  */
 export function flattenSlides(children: ReactNode): SlideEntry[] {
   const entries: SlideEntry[] = [];
@@ -43,6 +51,7 @@ export function flattenSlides(children: ReactNode): SlideEntry[] {
         id,
         notes,
         ground,
+        steps: stepsOfSlide(child),
       });
     });
   };

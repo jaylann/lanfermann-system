@@ -2,6 +2,7 @@ import type { Decorator } from "@storybook/react-vite";
 
 import type { SlideGround } from "./slide/slide";
 import { Stage } from "./stage/stage";
+import { SlideStepProvider } from "./step/step-context";
 
 const GROUNDS: readonly string[] = ["paper", "tint", "ink", "indigo"];
 
@@ -32,6 +33,21 @@ export const onStage: Decorator = (Story) => (
     <Story />
   </Stage>
 );
+
+/**
+ * Shows the story's slide at one of its steps, standing still, as a capture needs it:
+ * `decorators: [atStep(1)]` on a story (listed after the meta's `onStage`, so it runs inside the
+ * stage). Without it a story shows the slide with all its steps.
+ */
+export function atStep(step: number, steps = step): Decorator {
+  return function AtStep(Story) {
+    return (
+      <SlideStepProvider step={step} steps={steps}>
+        <Story />
+      </SlideStepProvider>
+    );
+  };
+}
 
 /** The ground chosen in the workshop's toolbar, for a story that leaves the slide's ground open. */
 export function toolbarGround(globals: Record<string, unknown>): SlideGround {

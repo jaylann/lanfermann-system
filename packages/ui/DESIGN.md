@@ -1119,9 +1119,9 @@ recipe there, not on a single component.
 
 A slide is print, not interface. The parts in `@lanfermann/ui/slides` are the kit itself, not its
 interactive layer: nothing on a slide is pressed, so nothing is raised, and the rules above about
-depth and motion do not apply. What applies instead is the kit's own rule book, ported from the
-**Lanfermann Freelance** artifact (the inventory is in issue #85). Values live in
-`src/styles/slides.css`.
+depth and motion do not apply (a slide moves only as "Steps and motion" below says). What applies
+instead is the kit's own rule book, ported from the **Lanfermann Freelance** artifact (the
+inventory is in issue #85). Values live in `src/styles/slides.css`.
 
 **The ten rules.**
 
@@ -1174,7 +1174,8 @@ A part that is always light, such as a screenshot's frame, sets the attribute on
 
 **No shadows, for a second reason.** The canonical output of a deck is a PDF, and Chromium's PDF
 drops blurred shadows or draws them as bitmaps. Radii are 4px on media frames and code blocks,
-2px on tags and placeholder blocks, 50% on markers and discs, and 0 everywhere else. Indigo
+2px on tags and placeholder blocks, 36px on the phone's frame (with its 12px bezel the one drawn
+device), 50% on markers and discs, and 0 everywhere else. Indigo
 prints mid grey: nothing depends on colour alone.
 
 **Forms** are the kit's one ornament: large discs and rings cropped by the slide's edge, in nine
@@ -1186,12 +1187,73 @@ diagram, a screenshot, code or a list of more than four rows.
 **A deck** runs: cover on Ink; an agenda only from fifteen slides; content on Paper, with Tint
 for objections and quotes; one or two statements on Ink; the profile; the closing ask on Indigo,
 not „Vielen Dank“; then the appendix behind a section slide „Anhang.“, with „Quellen.“ last.
-There are no transitions and no builds.
+There are no transitions between slides; a slide may build in steps (below).
+
+**Steps and motion.** A slide is still a picture, and it reads as one in a print, a preview and
+the check. Three things move, and only while a deck is presented live:
+
+- _A step._ A slide may hold back what the presenter says in turn and show it click by click. A
+  part that lists things takes a `step` on each item; anything else is wrapped in `Step`
+  (`<Step at={1}>…</Step>`). What appears is there from the start and keeps its place, only
+  unseen, so nothing reflows when it shows: it fades in and rises 16px. Three steps a slide at
+  most, as a rule of thumb. The title and the evidence it names stand from the start; a step is
+  for the second and third thought, never for suspense. How many steps a slide has is read from
+  its parts without drawing it; a deck's own component that uses steps inside names them where
+  it is used (`steps={2}`), which `Slide` and the slide kinds accept as well.
+- _The entrance._ When a slide comes on, its blocks rise 24px and fade in, once, staggered by
+  120ms three deep, and the circles of its forms grow from 60% one after the other. The footer
+  row stands in the same place on every slide, so it does not move. A slide with
+  `data-motion="none"` comes on standing still.
+- _A connector._ In a diagram that builds up, a solid connector draws itself from its start to
+  its end in 600ms once its box has begun to arrive, a checkpoint on it as the line passes, the
+  arrowhead last. A dashed one fades in, since its dashes are the dash array.
+- _A scene's camera_, on a scene slide only. `Scene` is one drawing (a world of boxes on a grid,
+  in groups, joined by wires) that a slide looks at in beats: each beat names the view, what is
+  lit, and one caption at the foot. The camera flies there in 900ms, eased in and out, zooming
+  evenly in the logarithm so that a move in and a move out feel the same. Line weights, group
+  labels and the text of a box keep their size on screen at every zoom; below three quarters of
+  full size a box is a block without text. What a view does not hold whole is not drawn; what
+  it holds but does not mean is dimmed. A beat can name a loop, which is marked by a dashed
+  line that marches and a mark that walks from box to box. Two slides can look at the same
+  world: the second names where the first ended (`from`) and the camera travels on, where a new
+  drawing would arrive from nothing. The camera is flown by script, since CSS cannot ease a
+  zoom in the logarithm; everything else is a transition. Under reduced motion it cuts.
+
+Open, Justin's to judge: wires as the S-curve of the deck they come from or as the right
+angles of `Diagram` (`route`, stories `Paper` and `Elbow`); lit boxes with an accent edge and
+the rest dimmed, against the rule of one accent a slide; the loop's weight.
+
+Everything else stands still. The motion keeps to one curve, the kit's
+`cubic-bezier(0.16, 0.84, 0.2, 1)`, which leaves fast and settles long, and to `translate`,
+`scale` and `opacity`. Its values are custom properties on the slide (`--slide-ease`,
+`--slide-step-duration` 500ms, `--slide-enter-duration` 700ms, `--slide-forms-duration` 900ms,
+and their staggers), so a deck can tune them in one place. All of it sits behind
+`data-slides-live`, which only the player sets, on a box around the slide it presents: a
+preview, a tile of the grid, the presenter's next slide, a print, the check and a capture show
+the end state. Under reduced motion nothing travels or grows: a step and an entrance only fade.
+In print every step is shown and nothing moves. The numbers are taken from a deck that was
+animated by hand, and are yet to be judged on a projector.
 
 **Names.** The slide parts keep the kit's names (`Title`, `Table`, `Steps`, `Figure`, …), although
 the library's main entry has parts of the same name. They are different things for a different
 medium, a deck imports from `@lanfermann/ui/slides` only, and the names are the ones decks are
 already written in.
+
+**The player** (`@lanfermann/ui/slides/player`) is the one interactive corner of the slide kit,
+and it is interface, not slide: its controls use the library's tokens and its UI type scale, not
+the slide sizes. It stays flat all the same (no depth, no shadow, no transition), because it
+stands beside slides and must not look more important than they do. Both the audience's bar and
+the presenter's console are on Ink, whatever the page's ground: a console is read in a dark room
+beside a bright slide. The console is built like a slide: a 2px rule opens each block (the
+current slide, the next one, the notes, the two clocks), a 1px line parts the buttons from them,
+and the one accent marks what is on (the black screen, the current tile of the grid). Slides
+shown in it stand in a 1px frame, as a screenshot does, so an Ink slide has an edge on the Ink
+console. The current slide is as large as the window allows in both directions and is never
+letterboxed, so its edges stand on its block's rule. The audience's bar sits at the top right,
+away from the footer row, and leaves after 2.5 seconds without input. Slides change at once,
+without a transition between them: the old slide is gone in one frame, and only the new one's
+own blocks rise in ("Steps and motion"). The player's own words are in
+`src/slides/player/labels.ts`; like every interface string, their wording is Justin's to decide.
 
 ## Logo
 

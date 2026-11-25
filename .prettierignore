@@ -10,7 +10,10 @@ storybook-static
 .visual
 *.generated.css
 *.generated.ts
+# The prebuilt slide player, written by `bun run build`.
+/packages/ui/player
 # Written by `bun run visual:baseline`: kept as the tool writes it, so a run changes nothing.
 packages/ui/visual-baseline
 # Written by release-please on every release: kept as it writes it, or each release PR fails lint.
 packages/ui/CHANGELOG.md
+packages/slides/CHANGELOG.md
