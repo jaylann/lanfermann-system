@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.14.0](https://github.com/jaylann/lanfermann-system/compare/v0.13.0...v0.14.0) (2026-11-25)
+
+
+### Features
+
+* **slides:** add the command-line tool for decks ([#95](https://github.com/jaylann/lanfermann-system/issues/95)) ([3dae39d](https://github.com/jaylann/lanfermann-system/commit/3dae39dc9682914783c529fb600a44fd6952cff2))
+* **ui:** add scenes, one drawing a slide looks at in beats ([#98](https://github.com/jaylann/lanfermann-system/issues/98)) ([c1fff9b](https://github.com/jaylann/lanfermann-system/commit/c1fff9bb4123ed7536176071e0be11e6aa0dc733))
+* **ui:** add the slide player ([#94](https://github.com/jaylann/lanfermann-system/issues/94)) ([f22a38d](https://github.com/jaylann/lanfermann-system/commit/f22a38dec1a3f4e1f21275eced43aa63a1527da9))
+* **ui:** let a slide build in steps and move when presented ([#96](https://github.com/jaylann/lanfermann-system/issues/96)) ([32bba35](https://github.com/jaylann/lanfermann-system/commit/32bba35dfec5e928462d78d5b4d5daa9e7362c00))
+
 ## [0.13.0](https://github.com/jaylann/lanfermann-system/compare/v0.12.0...v0.13.0) (2026-11-25)
 
 
