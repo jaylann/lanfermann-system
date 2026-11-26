@@ -1,4 +1,5 @@
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -6,6 +7,8 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { parsePackage } from "./pack";
 import { HELP, run } from "./run";
+import { readDeckDir } from "./source";
+import { deckTemplate } from "./template";
 import { describeWithKit, fixturePath } from "./testing";
 import { version } from "./version";
 
@@ -18,6 +21,11 @@ afterEach(async () => {
 async function slides(...argv: string[]) {
   const cwd = await mkdtemp(join(tmpdir(), "lf-slides-run-"));
   made.push(cwd);
+  return slidesIn(cwd, ...argv);
+}
+
+/** Runs the command line in the given folder, for a test that runs it more than once there. */
+async function slidesIn(cwd: string, ...argv: string[]) {
   const out: string[] = [];
   const err: string[] = [];
   const code = await run(argv, {
@@ -33,7 +41,18 @@ describe("slides, called without a deck", () => {
     const { code, out } = await slides("--help");
     expect(code).toBe(0);
     expect(out).toEqual([HELP]);
-    for (const word of ["check <dir>", "dev <dir>", "build <dir>", "pack <dir>", "--no-browser"]) {
+    for (const word of [
+      "init <dir>",
+      "check <dir>",
+      "dev <dir>",
+      "build <dir>",
+      "pack <dir>",
+      "unpack <file> <dir>",
+      "--no-browser",
+      "--template blank",
+      "--force",
+      "{ file, bytes, sha256 }",
+    ]) {
       expect(HELP).toContain(word);
     }
     expect(HELP).toContain("./slides-out by default");
@@ -54,8 +73,16 @@ describe("slides, called without a deck", () => {
       err: ["slides: check takes one folder: slides check <dir>", "See slides --help."],
     });
     expect((await slides("publish", "x")).err[0]).toBe(
-      "slides: Unknown command. The commands are check, dev, build and pack.",
+      "slides: Unknown command. The commands are init, check, dev, build, pack and unpack.",
     );
+    expect(await slides("unpack", "paket.json")).toMatchObject({
+      code: 2,
+      err: [
+        "slides: unpack takes a package and a folder: slides unpack <file> <dir>",
+        "See slides --help.",
+      ],
+    });
+    expect((await slides("init", "a", "b")).code).toBe(2);
     expect((await slides("check", "a", "b")).code).toBe(2);
     expect(await slides("check", "x", "--fast")).toMatchObject({ code: 2 });
     expect((await slides("dev", fixturePath("sample"), "--port", "http")).err[0]).toBe(
@@ -208,5 +235,104 @@ describeWithKit("slides pack", () => {
     expect(refused.code).toBe(1);
     expect(refused.err.at(-1)).toBe("not packed: the deck has 1 error, 0 warnings");
     expect(await readdir(refused.cwd)).toEqual([]);
+  });
+
+  it("prints the file, its size and its hash as JSON and nothing else with --json", async () => {
+    const { code, out, err, cwd } = await slides("pack", fixturePath("pictures"), "--json");
+    expect(code).toBe(0);
+    expect(err).toEqual([]);
+    expect(out).toHaveLength(1);
+    const file = join(cwd, "slides-out/bilder-und-eigene-bauteile.deck.json");
+    const data = await readFile(file);
+    expect(JSON.parse(out[0] ?? "")).toEqual({
+      file,
+      bytes: data.byteLength,
+      sha256: createHash("sha256").update(data).digest("hex"),
+    });
+  });
+});
+
+describeWithKit("slides unpack", () => {
+  it("writes a package back to a folder that packs to the same bytes", async () => {
+    const { cwd } = await slides("pack", fixturePath("pictures"), "--out", "eins.json");
+    const unpacked = await slidesIn(cwd, "unpack", "eins.json", "deck");
+    expect(unpacked).toMatchObject({ code: 0, out: ["wrote 4 files to deck"], err: [] });
+    expect(await readFile(join(cwd, "deck/bilder/punkt.png"))).toEqual(
+      await readFile(fixturePath("pictures/bilder/punkt.png")),
+    );
+    expect((await slidesIn(cwd, "pack", "deck", "--out", "zwei.json")).code).toBe(0);
+    expect(await readFile(join(cwd, "zwei.json"), "utf8")).toBe(
+      await readFile(join(cwd, "eins.json"), "utf8"),
+    );
+  });
+
+  it("refuses a folder that is not empty unless --force is given", async () => {
+    const { cwd } = await slides("pack", fixturePath("pictures"), "--out", "paket.json");
+    await writeFile(join(cwd, "notizen.md"), "# bleibt");
+    const refused = await slidesIn(cwd, "unpack", "paket.json", ".");
+    expect(refused.code).toBe(2);
+    expect(refused.err[0]).toMatch(/^slides: The folder ".+" is not empty\. --force writes/);
+    expect((await readdir(cwd)).sort()).toEqual(["notizen.md", "paket.json"]);
+    expect((await slidesIn(cwd, "unpack", "paket.json", ".", "--force")).code).toBe(0);
+    expect((await readdir(cwd)).sort()).toEqual([
+      "bilder",
+      "deck.tsx",
+      "notizen.md",
+      "paket.json",
+      "parts",
+    ]);
+  });
+
+  it("says when the file is missing or no package, and writes nothing", async () => {
+    const missing = await slides("unpack", "fehlt.json", "deck");
+    expect(missing).toMatchObject({
+      code: 2,
+      err: ['slides: Cannot read the package "fehlt.json".'],
+    });
+    const { cwd } = missing;
+    await writeFile(join(cwd, "kaputt.json"), "{");
+    expect(await slidesIn(cwd, "unpack", "kaputt.json", "deck")).toMatchObject({
+      code: 2,
+      err: ["slides: The package is not JSON."],
+    });
+    expect(await readdir(cwd)).toEqual(["kaputt.json"]);
+  });
+});
+
+describeWithKit("slides init", () => {
+  it("writes the blank template, which passes the check", async () => {
+    const { code, out, cwd } = await slides("init", "vortrag");
+    expect(code).toBe(0);
+    expect(out).toEqual(["wrote 4 files to vortrag", "next: slides dev vortrag"]);
+    const read = await readDeckDir(join(cwd, "vortrag"));
+    expect(read).toEqual(deckTemplate("blank", { title: "Untitled deck", lang: "en" }));
+    expect(await slidesIn(cwd, "check", "vortrag", "--no-browser")).toMatchObject({
+      code: 0,
+      out: ["check passed: 2 slides, 0 errors, 0 warnings, layout not checked"],
+    });
+  });
+
+  it("takes a title and a language", async () => {
+    const { code, cwd } = await slides("init", "q3", "--title", "Quarterly review", "--lang", "de");
+    expect(code).toBe(0);
+    const text = await readFile(join(cwd, "q3/deck.tsx"), "utf8");
+    expect(text).toContain('<Deck title="Quarterly review" lang="de">');
+  });
+
+  it("refuses a template it does not have, a wrong value and a folder that is not empty", async () => {
+    expect(await slides("init", "x", "--template", "pitch")).toMatchObject({
+      code: 2,
+      err: ["slides: --template takes blank.", "See slides --help."],
+    });
+    expect(await slides("init", "x", "--lang", "en GB")).toMatchObject({
+      code: 2,
+      err: ['slides: The language has to be a tag such as "en" or "de-CH".'],
+    });
+    const { cwd } = await slides("init", "x");
+    const again = await slidesIn(cwd, "init", "x");
+    expect(again.code).toBe(2);
+    expect(again.err[0]).toMatch(/is not empty/);
+    expect((await slidesIn(cwd, "init", "x", "--force", "--title", "Neu")).code).toBe(0);
+    expect(await readFile(join(cwd, "x/deck.tsx"), "utf8")).toContain('title="Neu"');
   });
 });

@@ -1,7 +1,7 @@
-import { lstat, readdir, readFile, realpath } from "node:fs/promises";
-import { join } from "node:path";
+import { lstat, mkdir, readdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { join, relative } from "node:path";
 
-import type { DeckSource } from "./types";
+import { type DeckSource, quote } from "./types";
 
 /** The file whose default export is the deck. */
 export const DECK_ENTRY = "deck.tsx";
@@ -49,7 +49,8 @@ export function isDeckPath(path: string): boolean {
   return path.split("/").every((part) => part !== "" && part !== "." && part !== "..");
 }
 
-function hasControlCharacter(text: string): boolean {
+/** Whether a text holds a character below U+0020, or DEL. */
+export function hasControlCharacter(text: string): boolean {
   for (let index = 0; index < text.length; index += 1) {
     const code = text.charCodeAt(index);
     if (code < 0x20 || code === 0x7f) return true;
@@ -200,4 +201,135 @@ function decode(data: Uint8Array, path: string): string {
   } catch (cause) {
     throw new DeckReadError(`${JSON.stringify(path)} is not valid UTF-8.`, { cause });
   }
+}
+
+/** A deck that cannot be written to a folder. The message says why. */
+export class DeckWriteError extends Error {
+  override readonly name = "DeckWriteError";
+}
+
+export type WriteDeckOptions = {
+  /**
+   * Writes into a folder that is not empty: a file of the same path is replaced, every other
+   * file stays. Without it, a folder that holds anything at all is refused.
+   */
+  force?: boolean;
+};
+
+const hasCode = (error: unknown, code: string) =>
+  error instanceof Error && "code" in error && error.code === code;
+
+/**
+ * Refuses a list of paths that cannot all be written as they are: a path a deck's file may not
+ * have, a file of the wrong kind, or two paths that meet on a disk that ignores case (a Mac's),
+ * as one file or as a file and a folder.
+ */
+function checkPaths(entries: readonly { path: string; kind: "code" | "image" }[]): void {
+  const files = new Set<string>();
+  const folders = new Set<string>();
+  for (const { path, kind } of entries) {
+    if (!isDeckPath(path) || kindOf(path) !== kind) {
+      throw new DeckWriteError(
+        `${quote(path)} is not a path for a deck's ${kind === "code" ? "code" : "picture"}: ` +
+          "paths are relative, with forward slashes, do not step up and end in .ts, .tsx or " +
+          "a picture's extension.",
+      );
+    }
+    const key = path.toLowerCase();
+    if (files.has(key)) throw new DeckWriteError(`${quote(path)} is named twice.`);
+    files.add(key);
+    const parts = key.split("/");
+    for (let end = 1; end < parts.length; end += 1) folders.add(parts.slice(0, end).join("/"));
+  }
+  for (const key of files) {
+    if (folders.has(key)) {
+      throw new DeckWriteError(`${quote(key)} is named as a file and as a folder.`);
+    }
+  }
+}
+
+/**
+ * The folder a file of the deck goes into, made one step at a time below `root`. A step that is
+ * a symbolic link or a file is refused: `mkdir` would follow the link out of the deck's folder.
+ */
+async function folderIn(root: string, parts: readonly string[]): Promise<string> {
+  let folder = root;
+  for (const part of parts) {
+    folder = join(folder, part);
+    const found = await lstat(folder).catch((error: unknown) => {
+      if (hasCode(error, "ENOENT")) return undefined;
+      throw error;
+    });
+    if (found === undefined) await mkdir(folder);
+    else if (!found.isDirectory()) {
+      throw new DeckWriteError(
+        `${quote(relative(root, folder))} is in the way: it is no folder, or a symbolic link.`,
+      );
+    }
+  }
+  return folder;
+}
+
+/**
+ * Writes a deck to a folder, the inverse of `readDeckDir`: code as UTF-8 and pictures as their
+ * bytes, each at its path inside the folder, which is made when it is missing. Returns the
+ * paths it wrote, in order.
+ *
+ * Every path is checked before anything is written (see `isDeckPath`; two paths that differ in
+ * case only are refused). A folder that is not empty is refused unless `force` is given; with
+ * it, no file is written through a symbolic link, and none outside the folder.
+ */
+export async function writeDeckDir(
+  dir: string,
+  source: DeckSource,
+  options: WriteDeckOptions = {},
+): Promise<string[]> {
+  const entries = [
+    ...Object.entries(source.files).map(([path, content]) => ({
+      path,
+      kind: "code" as const,
+      content,
+    })),
+    ...Object.entries(source.images).map(([path, content]) => ({
+      path,
+      kind: "image" as const,
+      content,
+    })),
+  ].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  checkPaths(entries);
+
+  const held = await readdir(dir).catch((error: unknown) => {
+    if (hasCode(error, "ENOENT")) return [];
+    if (hasCode(error, "ENOTDIR")) {
+      throw new DeckWriteError(`${JSON.stringify(dir)} is a file, not a folder.`, {
+        cause: error,
+      });
+    }
+    throw new DeckWriteError(`Cannot read the folder ${JSON.stringify(dir)}.`, { cause: error });
+  });
+  if (held.length > 0 && options.force !== true) {
+    throw new DeckWriteError(
+      `The folder ${JSON.stringify(dir)} is not empty. --force writes into it and replaces ` +
+        "the files of the same name.",
+    );
+  }
+  await mkdir(dir, { recursive: true });
+  const root = await realpath(dir);
+
+  for (const { path, content } of entries) {
+    const parts = path.split("/");
+    const name = parts.pop() ?? path;
+    const file = join(await folderIn(root, parts), name);
+    const found = await lstat(file).catch((error: unknown) => {
+      if (hasCode(error, "ENOENT")) return undefined;
+      throw error;
+    });
+    if (found !== undefined && !found.isFile()) {
+      throw new DeckWriteError(
+        `${quote(path)} is in the way: it is a folder or a symbolic link, not a file.`,
+      );
+    }
+    await writeFile(file, content);
+  }
+  return entries.map(({ path }) => path);
 }

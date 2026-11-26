@@ -1,5 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join, relative, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 import { analyzeDeck } from "./analyze";
@@ -8,8 +9,9 @@ import { buildDeck } from "./build";
 import { checkDeck } from "./check";
 import { startDevServer } from "./dev";
 import { KitError } from "./kit";
-import { PackageError, packDeck, serializePackage, slugOf } from "./pack";
-import { DeckReadError, readDeckDir } from "./source";
+import { PackageError, packDeck, parsePackage, serializePackage, slugOf } from "./pack";
+import { DeckReadError, DeckWriteError, readDeckDir, writeDeckDir } from "./source";
+import { deckTemplate, isTemplateName, TEMPLATE_NAMES, TemplateError } from "./template";
 import {
   type DeckError,
   type DeckSource,
@@ -26,19 +28,25 @@ export type RunIo = {
   cwd: string;
 };
 
-export const HELP = `slides: check, preview, build and pack a slide deck
+export const HELP = `slides: start, check, preview, build and pack a slide deck
 
 A deck is a folder with a deck.tsx whose default export is a <Deck> element
 from @lanfermann/ui/slides. The format: docs/deck-format.md of this package.
 
 Usage
+  slides init <dir> [--template blank] [--title <text>] [--lang <tag>] [--force]
   slides check <dir> [--no-browser] [--json]
   slides dev <dir> [--port 4173] [--audience]
   slides build <dir> (--audience | --presenter) [--pdf] [--out <dir>]
-  slides pack <dir> [--out <file>]
+  slides pack <dir> [--out <file>] [--json]
+  slides unpack <file> <dir> [--force]
   slides --help | --version
 
 Commands
+  init    Writes a new deck into an empty folder: a deck.tsx with a cover
+          and a closing slide, and parts/, data/ and images/, each with a
+          file that says what goes there. --title is the deck's title
+          ("Untitled deck" by default), --lang its language ("en").
   check   Imports, names, notes, classes, types, and (with a browser) the
           layout of every slide. Prints file:line:column lines and exits 1
           on any error. --json prints { ok, diagnostics, report } only.
@@ -52,7 +60,11 @@ Commands
           --out is the folder to write to: ./slides-out by default,
           relative to the current directory.
   pack    Writes the deck's source as one JSON file for the hub:
-          ./slides-out/<slug>.deck.json unless --out names a file.
+          ./slides-out/<slug>.deck.json unless --out names a file. --json
+          prints { file, bytes, sha256 } of the written file and nothing else.
+  unpack  Writes a package back to a folder, pictures included. Like init,
+          it refuses a folder that is not empty; --force writes into it and
+          replaces the files of the same name.
 
 A picture may weigh 2 MB, all pictures of a deck 12 MB.
 
@@ -82,11 +94,21 @@ async function passes(source: DeckSource, io: RunIo, what: string): Promise<bool
   return check.ok;
 }
 
-async function write(file: string, data: string | Uint8Array, io: RunIo): Promise<void> {
+/** A path as the output names it: from the current folder when it is inside it, else whole. */
+function shown(path: string, io: RunIo): string {
+  const inside = relative(io.cwd, path);
+  return inside === "" || inside.startsWith("..") || isAbsolute(inside) ? path : inside;
+}
+
+async function save(file: string, data: string | Uint8Array): Promise<void> {
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, data);
+}
+
+async function write(file: string, data: string | Uint8Array, io: RunIo): Promise<void> {
+  await save(file, data);
   const bytes = typeof data === "string" ? Buffer.byteLength(data) : data.byteLength;
-  io.out(`wrote ${relative(io.cwd, file) || file} (${kilobytes(bytes)})`);
+  io.out(`wrote ${shown(file, io)} (${kilobytes(bytes)})`);
 }
 
 async function check(dir: string, flags: { json: boolean; browser: boolean }, io: RunIo) {
@@ -150,12 +172,49 @@ async function build(
   return 0;
 }
 
-async function pack(dir: string, flags: { out?: string }, io: RunIo) {
+async function pack(dir: string, flags: { out?: string; json: boolean }, io: RunIo) {
   const source = await readDeckDir(resolve(io.cwd, dir));
   if (!(await passes(source, io, "not packed"))) return 1;
   const deck = packDeck(source);
   const file = resolve(io.cwd, flags.out ?? join("slides-out", `${deck.manifest.slug}.deck.json`));
-  await write(file, serializePackage(deck), io);
+  const data = Buffer.from(serializePackage(deck), "utf8");
+  if (!flags.json) {
+    await write(file, data, io);
+    return 0;
+  }
+  await save(file, data);
+  const sha256 = createHash("sha256").update(data).digest("hex");
+  io.out(JSON.stringify({ file, bytes: data.byteLength, sha256 }, null, 2));
+  return 0;
+}
+
+async function unpack(file: string, dir: string, flags: { force: boolean }, io: RunIo) {
+  let json: string;
+  try {
+    json = await readFile(resolve(io.cwd, file), "utf8");
+  } catch (cause) {
+    throw new PackageError(`Cannot read the package ${JSON.stringify(file)}.`, { cause });
+  }
+  const { manifest: _manifest, ...source } = parsePackage(json);
+  const folder = resolve(io.cwd, dir);
+  const written = await writeDeckDir(folder, source, { force: flags.force });
+  io.out(`wrote ${plural(written.length, "file")} to ${shown(folder, io)}`);
+  return 0;
+}
+
+async function init(
+  dir: string,
+  flags: { template: string; title: string; lang: string; force: boolean },
+  io: RunIo,
+) {
+  if (!isTemplateName(flags.template)) {
+    throw new UsageError(`--template takes ${TEMPLATE_NAMES.join(", ")}.`);
+  }
+  const source = deckTemplate(flags.template, { title: flags.title, lang: flags.lang });
+  const folder = resolve(io.cwd, dir);
+  const written = await writeDeckDir(folder, source, { force: flags.force });
+  io.out(`wrote ${plural(written.length, "file")} to ${shown(folder, io)}`);
+  io.out(`next: slides dev ${dir}`);
   return 0;
 }
 
@@ -187,7 +246,8 @@ async function dev(dir: string, flags: { port: string; audience: boolean }, io: 
 /**
  * Runs the command line: `argv` without the program's own two entries. Returns the exit code:
  * 0, 1 when the deck has an error, 2 when the tool was called wrongly or cannot work here (no
- * kit, no browser for a PDF, a folder that is no deck).
+ * kit, no browser for a PDF, a folder that is no deck, a package that does not hold, a folder
+ * to write to that is not empty).
  */
 export async function run(argv: readonly string[], io: RunIo): Promise<number> {
   try {
@@ -204,17 +264,29 @@ export async function run(argv: readonly string[], io: RunIo): Promise<number> {
         pdf: { type: "boolean" },
         out: { type: "string" },
         port: { type: "string" },
+        force: { type: "boolean" },
+        template: { type: "string" },
+        title: { type: "string" },
+        lang: { type: "string" },
       },
     });
     if (values.version) {
       io.out(version);
       return 0;
     }
-    const [command, dir, ...rest] = positionals;
+    const [command, ...operands] = positionals;
     if (values.help || command === undefined) {
       io.out(HELP);
       return values.help ? 0 : 2;
     }
+    if (command === "unpack") {
+      const [file, dir, ...rest] = operands;
+      if (file === undefined || dir === undefined || rest.length > 0) {
+        throw new UsageError("unpack takes a package and a folder: slides unpack <file> <dir>");
+      }
+      return await unpack(file, dir, { force: values.force === true }, io);
+    }
+    const [dir, ...rest] = operands;
     if (dir === undefined || rest.length > 0) {
       throw new UsageError(`${command} takes one folder: slides ${command} <dir>`);
     }
@@ -237,7 +309,22 @@ export async function run(argv: readonly string[], io: RunIo): Promise<number> {
           io,
         );
       case "pack":
-        return await pack(dir, values.out === undefined ? {} : { out: values.out }, io);
+        return await pack(
+          dir,
+          { json: values.json === true, ...(values.out === undefined ? {} : { out: values.out }) },
+          io,
+        );
+      case "init":
+        return await init(
+          dir,
+          {
+            template: values.template ?? "blank",
+            title: values.title ?? "Untitled deck",
+            lang: values.lang ?? "en",
+            force: values.force === true,
+          },
+          io,
+        );
       case "dev":
         return await dev(
           dir,
@@ -245,7 +332,9 @@ export async function run(argv: readonly string[], io: RunIo): Promise<number> {
           io,
         );
       default:
-        throw new UsageError("Unknown command. The commands are check, dev, build and pack.");
+        throw new UsageError(
+          "Unknown command. The commands are init, check, dev, build, pack and unpack.",
+        );
     }
   } catch (error) {
     if (!isExpected(error)) throw error;
@@ -260,6 +349,8 @@ function isExpected(error: unknown): error is Error {
   return (
     error instanceof UsageError ||
     error instanceof DeckReadError ||
+    error instanceof DeckWriteError ||
+    error instanceof TemplateError ||
     error instanceof KitError ||
     error instanceof PackageError ||
     error instanceof BrowserUnavailableError ||

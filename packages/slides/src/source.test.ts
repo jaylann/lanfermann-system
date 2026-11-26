@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -8,10 +8,12 @@ import {
   assetKey,
   dataUrl,
   DeckReadError,
+  DeckWriteError,
   isDeckPath,
   readDeckDir,
   resolveImport,
   resolveInDeck,
+  writeDeckDir,
 } from "./source";
 import { fixturePath } from "./testing";
 
@@ -78,6 +80,85 @@ describe("readDeckDir", () => {
     const dir = await folder({ "deck.tsx": "export default null;" });
     await expect(readDeckDir(join(dir, "fehlt"))).rejects.toThrow(DeckReadError);
     await expect(readDeckDir(join(dir, "deck.tsx"))).rejects.toThrow("is not a folder");
+  });
+});
+
+describe("writeDeckDir", () => {
+  const deck = (files: Record<string, string>, images: Record<string, Uint8Array> = {}) => ({
+    entry: "deck.tsx",
+    files,
+    images,
+  });
+
+  it("writes what readDeckDir reads, into a folder it makes", async () => {
+    const source = await readDeckDir(fixturePath("pictures"));
+    const dir = join(await folder({}), "neu", "deck");
+    expect(await writeDeckDir(dir, source)).toEqual([
+      "bilder/punkt.png",
+      "bilder/werkbank.svg",
+      "deck.tsx",
+      "parts/werkbank.tsx",
+    ]);
+    expect(await readDeckDir(dir)).toEqual(source);
+  });
+
+  it("refuses a folder that is not empty, and with force replaces only what it writes", async () => {
+    const dir = await folder({ "deck.tsx": "alt", "notizen.md": "# bleibt", ".DS_Store": "x" });
+    const source = deck({ "deck.tsx": "export default null;\n" });
+    await expect(writeDeckDir(dir, source)).rejects.toThrow(DeckWriteError);
+    await expect(writeDeckDir(dir, source)).rejects.toThrow("is not empty. --force");
+    expect(await readFile(join(dir, "deck.tsx"), "utf8")).toBe("alt");
+
+    await writeDeckDir(dir, source, { force: true });
+    expect(await readFile(join(dir, "deck.tsx"), "utf8")).toBe("export default null;\n");
+    expect(await readFile(join(dir, "notizen.md"), "utf8")).toBe("# bleibt");
+  });
+
+  it("refuses a folder that is a file", async () => {
+    const dir = await folder({ "deck.tsx": "x" });
+    await expect(writeDeckDir(join(dir, "deck.tsx"), deck({}))).rejects.toThrow(
+      "is a file, not a folder",
+    );
+  });
+
+  it.each<[string, ReturnType<typeof deck>, string]>([
+    ["a path that steps up", deck({ "../deck.tsx": "" }), "is not a path for a deck's code"],
+    ["an absolute path", deck({ "/tmp/deck.tsx": "" }), "is not a path"],
+    ["code of another kind", deck({ "skript.js": "" }), "is not a path for a deck's code"],
+    ["a picture as code", deck({ "bild.png": "" }), "is not a path for a deck's code"],
+    [
+      "code as a picture",
+      deck({}, { "deck.tsx": new Uint8Array() }),
+      "is not a path for a deck's picture",
+    ],
+    ["two paths that differ in case", deck({ "deck.tsx": "", "Deck.tsx": "" }), "named twice"],
+    [
+      "a path that is a file and a folder",
+      deck({ "a.ts": "", "a.ts/b.ts": "" }),
+      "as a file and as a folder",
+    ],
+  ])("refuses %s and writes nothing", async (_name, source, message) => {
+    const dir = join(await folder({}), "deck");
+    await expect(writeDeckDir(dir, source)).rejects.toThrow(DeckWriteError);
+    await expect(writeDeckDir(dir, source)).rejects.toThrow(message);
+    await expect(readdir(dir)).rejects.toThrow("ENOENT");
+  });
+
+  it("writes nothing through a symbolic link, also with force", async () => {
+    const outside = await folder({});
+    const dir = await folder({});
+    await symlink(outside, join(dir, "parts"));
+    await expect(
+      writeDeckDir(dir, deck({ "parts/eins.tsx": "export {};" }), { force: true }),
+    ).rejects.toThrow('"parts" is in the way');
+
+    const other = await folder({ "geheim.ts": "export const geheim = 1;" });
+    await symlink(join(other, "geheim.ts"), join(dir, "deck.tsx"));
+    await expect(
+      writeDeckDir(dir, deck({ "deck.tsx": "export {};" }), { force: true }),
+    ).rejects.toThrow('"deck.tsx" is in the way');
+    expect(await readdir(outside)).toEqual([]);
+    expect(await readFile(join(other, "geheim.ts"), "utf8")).toBe("export const geheim = 1;");
   });
 });
 

@@ -1,6 +1,6 @@
 # @lanfermann/slides
 
-Checks, previews, builds and packs a slide deck written with
+Starts, checks, previews, builds and packs a slide deck written with
 [`@lanfermann/ui/slides`](https://www.npmjs.com/package/@lanfermann/ui). A deck is a folder
 with a `deck.tsx`; what comes out is one HTML file that runs from a disk without a network.
 
@@ -35,12 +35,19 @@ with the rules for notes and pictures and every code the check prints, is in
 ## The commands
 
 ```
+slides init <dir> [--template blank] [--title <text>] [--lang <tag>] [--force]
 slides check <dir> [--no-browser] [--json]
 slides dev <dir> [--port 4173] [--audience]
 slides build <dir> (--audience | --presenter) [--pdf] [--out <dir>]
-slides pack <dir> [--out <file>]
+slides pack <dir> [--out <file>] [--json]
+slides unpack <file> <dir> [--force]
 ```
 
+- **`init`** writes a new deck from the blank template: a `deck.tsx` with a cover and a closing
+  slide, English placeholder text and notes, and the folders `parts/`, `data/` and `images/`,
+  each with an `index.ts` that says what goes there (a deck holds only code and pictures, so an
+  empty folder would not reach a package). `--title` is the deck's title, `Untitled deck` by
+  default; `--lang` its language, `en` by default.
 - **`check`** reads the source (imports, names, notes, classes, pictures), checks the types
   against the kit's, compiles the deck, and draws it in a headless Chrome to measure every
   slide: a part beyond the content box, a box that cuts off its text, a title on too many lines,
@@ -59,6 +66,13 @@ slides pack <dir> [--out <file>]
   `./slides-out` unless `--out` names another folder. `--pdf` also writes `<slug>.pdf`, one
   page per slide, and the audience's file links it. A deck with an error is not built.
 - **`pack`** writes the deck's source as one JSON file for the hub, `<slug>.deck.json`.
+  `--json` prints `{ file, bytes, sha256 }` of the written file and nothing else, for a script
+  that uploads it: `file` is the absolute path, `sha256` the hash of its bytes in hex.
+- **`unpack`** writes a package back to a folder, pictures included. Packing that folder again
+  gives the same bytes.
+
+`init` and `unpack` write only into a folder that is empty or not there yet. `--force` writes
+into one that is not empty: a file of the same name is replaced, every other file stays.
 
 `SLIDES_BROWSER` picks another browser than the system's Chrome: a channel (`chromium`,
 `msedge`) or the path of a program.
@@ -104,8 +118,14 @@ if (bundle.js !== undefined && errors.length === 0) {
 - **`deckCsp(js, options)`** is the strict policy for exactly the file `deckHtml` makes from the
   same input.
 
-Further exports are what the commands are made of: `readDeckDir`, `analyzeDeck`, `checkDeck`,
-`buildDeck`, `measureDeck`, `renderPdf`, `packDeck`, `parsePackage`, `startDevServer`.
+- **`deckTemplate("blank", { title, lang? })`** is the deck `slides init` writes, as files in
+  memory (`{ entry, files, images }`), so a server seeds a new deck from the same template.
+  `lang` is `en` by default. It throws a `TemplateError` for a title without a word or a
+  language that is no tag.
+
+Further exports are what the commands are made of: `readDeckDir`, `writeDeckDir`,
+`analyzeDeck`, `checkDeck`, `buildDeck`, `measureDeck`, `renderPdf`, `packDeck`, `parsePackage`,
+`startDevServer`.
 
 In a page that drives a built file, wait for `window.__slidesReady === true` before a
 screenshot or `page.pdf()`. With a strict policy on the page, hand Playwright a function for

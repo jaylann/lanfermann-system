@@ -20,6 +20,12 @@ handschlag/
   `node_modules`. A folder may therefore carry a `package.json` and a `tsconfig.json` for its
   editor.
 - A symbolic link in the folder is refused. Code has to be UTF-8.
+- An empty folder is no part of a deck: it does not reach a package. `slides init` therefore
+  puts an `index.ts` into each of `parts/`, `data/` and `images/` that says what goes there.
+
+`slides init <dir>` writes a new deck to start from: a `deck.tsx` with a cover and a closing
+slide (`--title`, `--lang`, English placeholders), and the three folders. `deckTemplate` in the
+library is the same deck as files in memory.
 
 ```tsx
 import { Deck, Figure, Slide, Spacer, Title } from "@lanfermann/ui/slides";
@@ -210,3 +216,13 @@ or the path of a program.
 `parsePackage` reads a package back and checks all of it: the format and its version, every
 path (relative, forward slashes, no step up, named once, a kind a deck holds), every size and
 hash, the weight of the pictures, and that `deck.tsx` is there.
+
+`slides pack --json` prints `{ "file", "bytes", "sha256" }` for the file it wrote: its absolute
+path, its size and the hash of its bytes (hex), which an upload can be checked against.
+
+`slides unpack <file> <dir>` reads a package with `parsePackage` and writes its files to a
+folder, pictures included (`writeDeckDir` in the library). Packing that folder again with the
+same kit gives the same bytes. It writes only into a folder that is empty or not there yet;
+`--force` writes into one that is not empty, replaces the files of the same path and leaves
+every other file. It writes no file through a symbolic link and none outside the folder, and
+refuses two paths that differ only in case, which one disk of a Mac cannot hold apart.
