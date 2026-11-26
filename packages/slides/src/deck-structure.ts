@@ -126,7 +126,8 @@ function constOf(file: ts.SourceFile, name: string): ts.Expression | undefined {
   return undefined;
 }
 
-const LANGUAGE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
+/** What `lang` on a `<Deck>` has to look like: `"de"`, `"en-GB"`. */
+export const LANGUAGE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
 
 /**
  * Reads the deck out of its entry file without running it: the `<Deck>` the file exports by

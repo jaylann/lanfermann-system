@@ -31,10 +31,11 @@ The rules per concern (components, tokens, motion, slides, visual verification) 
     `compare.ts` and `docker.ts` diff them against `visual-baseline/` (the committed pictures).
   - `vitest.config.ts` — two projects: `unit` (`bun run test`) and `storybook`
     (`bun run test:stories`: every story in a browser, axe at `error`, `play` functions).
-- `packages/slides` — the deck tool, published as `@lanfermann/slides`: the commands `check`,
-  `dev`, `build` and `pack` of `slides`. Plain Node, no React: `src/index.ts` is the library, and
-  its `bundleDeck`, `typecheckDeck` and `deckHtml` are the contract the hub builds on (issue
-  #90), so their names and shapes are not changed here alone; `src/cli.ts` only maps arguments
+- `packages/slides` — the deck tool, published as `@lanfermann/slides`: the commands `init`,
+  `check`, `dev`, `build`, `pack` and `unpack` of `slides`. Plain Node, no React: `src/index.ts`
+  is the library, and its `bundleDeck`, `typecheckDeck`, `deckHtml` and `deckTemplate` are the
+  contract the hub builds on (issues #90 and #115), so their names and shapes are not changed
+  here alone; `src/cli.ts` only maps arguments
   (`src/run.ts`).
   `fixtures/` holds the decks it is tested on, some wrong on purpose, so ESLint, tsc and the
   spell check leave them out. The format of a deck is `docs/deck-format.md`. It reads the

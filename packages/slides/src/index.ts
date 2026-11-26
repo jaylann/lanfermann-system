@@ -6,7 +6,8 @@
 // shapes do not change without the hub.
 //
 // The rest is what the command line is made of, on top of those three: the static reading of a
-// deck, the layout check through a browser, the PDF, the package, the preview server.
+// deck, the layout check through a browser, the PDF, the package, the preview server, and the
+// template a new deck starts from (`deckTemplate`, which the hub seeds a deck with as well).
 export {
   analyzeDeck,
   type AnalyzeInput,
@@ -44,10 +45,20 @@ export {
   dataUrl,
   DECK_ENTRY,
   DeckReadError,
+  DeckWriteError,
   MAX_DECK_IMAGE_BYTES,
   MAX_IMAGE_BYTES,
   readDeckDir,
+  writeDeckDir,
+  type WriteDeckOptions,
 } from "./source";
+export {
+  deckTemplate,
+  TEMPLATE_NAMES,
+  TemplateError,
+  type TemplateName,
+  type TemplateOptions,
+} from "./template";
 export { typecheckDeck } from "./typecheck";
 export type { BundleResult, DeckError, DeckInput, DeckSource, Diagnostic, Severity } from "./types";
 export { diagnosticOf, formatDiagnostic } from "./types";
