@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/jaylann/lanfermann-system/compare/slides-v0.1.1...slides-v0.2.0) (2026-11-26)
+
+
+### Features
+
+* **slides:** add unpack, init with a blank template, and pack --json ([#116](https://github.com/jaylann/lanfermann-system/issues/116)) ([7f5c30d](https://github.com/jaylann/lanfermann-system/commit/7f5c30de6d796cbe1b552469df77ab27cea5f93a)), closes [#115](https://github.com/jaylann/lanfermann-system/issues/115)
+
 ## 0.1.1 (2026-11-25)
 
 
