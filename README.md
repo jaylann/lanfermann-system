@@ -241,6 +241,24 @@ with `fonts/`), `classes.json` (the class names `player.css` defines: what a dec
 address picks another mode if `modes` allows it; by default that is every mode but the presenter's.
 The file runs from disk without a network.
 
+### Language
+
+Every component says its own words in German and formats numbers and dates with `de-DE`. A
+`LocaleProvider` around the app switches both to English (`en-US`):
+
+```tsx
+import { LocaleProvider } from "@lanfermann/ui";
+
+<LocaleProvider locale="en">{children}</LocaleProvider>;
+```
+
+A label or a `locale` passed to a component still wins. Server-safe parts (`Stat`, `Steps`,
+`Callout`, `Link` and the like) follow the provider for the words they render as text; a label
+that is an attribute (`Chip`'s `removeLabel`, `Breadcrumbs`' `label`, `AnchorHeading`'s
+`anchorLabel`) and the `locale` of `Bullet` and `Funnel` are passed from a Server Component, with
+the words from `getMessages(locale)`. The typed date and time fields read the German formats
+(30.11.2026, 14:30) in both languages.
+
 ### Consent (cookie banner)
 
 `ConsentProvider` asks before anything that stores or reads data in the browser is loaded, keeps
