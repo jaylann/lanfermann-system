@@ -1,6 +1,6 @@
 import { Delete02Icon, Download01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { expect, waitFor } from "storybook/test";
 
 import { Card } from "@/components/card/card";
@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/table/table";
+import { toast, Toaster } from "@/components/toast/toast";
 
 import { ActionBar, ActionBarButton, type ActionBarProps } from "./action-bar";
 
@@ -202,6 +203,110 @@ export const Many: Story = {
 export const Phone: Story = {
   parameters: { visual: { viewport: { width: 390, height: 520 } } },
   render: () => <Selection start={["2026-0421", "2026-0418", "2026-0412"]} narrow />,
+};
+
+/** A toast that tells of the last thing done, there from the start and until it is dismissed. */
+function Told({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    toast({
+      id: "told",
+      title: "Angebot gelöscht.",
+      description: "Elektro Wagner, 2026-0397",
+      timeout: 0,
+      action: { label: "Rückgängig", onClick: () => undefined },
+    });
+    return () => toast.dismiss();
+  }, []);
+  return (
+    <>
+      {children}
+      <Toaster />
+    </>
+  );
+}
+
+/**
+ * A toast shows while rows are ticked: it stands above the bar, 12px clear of it, and never on
+ * the bar's last action. Tick the first row and both rise together.
+ */
+export const WithToast: Story = {
+  parameters: {
+    visual: {
+      target: third,
+      motion: [{ name: "lift", click: third, frames: 8 }],
+    },
+  },
+  render: () => (
+    <Told>
+      <Selection />
+    </Told>
+  ),
+};
+
+/** The same with rows already ticked: the toast above the bar. */
+export const ToastAbove: Story = {
+  render: () => (
+    <Told>
+      <Selection start={["2026-0421", "2026-0418"]} />
+    </Told>
+  ),
+};
+
+/**
+ * In a wide window the bar ends before the toasts' column: the toast stays in its corner, beside
+ * the bar, since nothing is in its way.
+ */
+export const ToastBeside: Story = {
+  parameters: { visual: { viewport: { width: 1440, height: 400 } } },
+  render: () => (
+    <Told>
+      <Selection start={["2026-0421", "2026-0418"]} />
+    </Told>
+  ),
+};
+
+/**
+ * As a test: the toasts' stack rises when the bar comes under it and comes back down when the
+ * bar leaves; the bar says how much room it takes on the page's root, and takes that back.
+ */
+export const LiftsToasts: Story = {
+  render: () => (
+    <Told>
+      <Selection />
+    </Told>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const root = document.documentElement;
+    const stack = () => document.querySelector<HTMLElement>('[data-slot="toast-viewport"]')!;
+    const lifted = () => new DOMMatrixReadOnly(getComputedStyle(stack()).transform).m42;
+    const translate = () => getComputedStyle(stack()).translate;
+    const box = canvas.getByRole("checkbox", { name: "Angebot für Elektro Wagner auswählen" });
+
+    await step("without a bar the stack stands in its corner", async () => {
+      await waitFor(() => expect(stack()).toBeInTheDocument());
+      await expect(root.style.getPropertyValue("--toaster-lift")).toBe("");
+      await expect(lifted()).toBe(0);
+    });
+
+    await step("the bar comes: the stack stands 12px above it", async () => {
+      await userEvent.click(box);
+      const bar = await canvas.findByRole("toolbar", { name: "Auswahl" });
+      await waitFor(() => expect(root.style.getPropertyValue("--toaster-lift")).not.toBe(""));
+      await waitFor(
+        async () => {
+          const gap = bar.getBoundingClientRect().top - stack().getBoundingClientRect().bottom;
+          await expect(Math.round(gap)).toBe(12);
+        },
+        { timeout: 2000 },
+      );
+      await expect(translate()).not.toBe("none");
+    });
+
+    await step("the bar leaves: the stack comes back down", async () => {
+      await userEvent.click(box);
+      await waitFor(() => expect(root.style.getPropertyValue("--toaster-lift")).toBe(""));
+    });
+  },
 };
 
 /**

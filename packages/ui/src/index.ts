@@ -737,6 +737,7 @@ export {
   type ToastOptions,
   type ToastTone,
 } from "./components/toast/toast";
+export { useToasterLift } from "./components/toast/toaster-lift";
 export { Toggle, type ToggleProps } from "./components/toggle/toggle";
 export { ToggleGroup, type ToggleGroupProps } from "./components/toggle-group/toggle-group";
 export {
