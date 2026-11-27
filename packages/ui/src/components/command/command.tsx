@@ -7,9 +7,11 @@ import {
   type ComponentProps,
   createContext,
   type ReactNode,
+  type RefObject,
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -18,6 +20,7 @@ import { useGround } from "@/components/ground/ground";
 import { Grow } from "@/components/grow/grow";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
+import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { Shortcut, useShortcut } from "@/components/shortcut/shortcut";
 import { ChevronRightGlyph } from "@/internal/glyphs";
 import { overlayBackdrop } from "@/internal/overlay";
@@ -30,6 +33,13 @@ export type CommandEntry = {
   value: string;
   /** What is shown and typed against. */
   label: string;
+  /**
+   * What leads up to the label, muted, on the same line: the folders above a folder
+   * („Bewerbung / Check24 / 2026 / “, with its separator and space). Where the row is too
+   * narrow for both it gives way first, from its start, so the label and the nearest of what
+   * leads to it stay readable. It is typed against together with the label.
+   */
+  prefix?: string;
   /** Stands before the label. Give every entry of a list one or none. */
   icon?: IconSvgElement;
   /** Other words it is found by: "neu" and "erstellen" for "Angebot schreiben". */
@@ -47,6 +57,10 @@ export type CommandEntry = {
   page?: CommandItems;
   /** The placeholder of the field while its page is open: an example of one of its entries. */
   pagePlaceholder?: string;
+  /**
+   * Shown, but not to be chosen: where the thing already is, what its state rules out. Say why
+   * in `detail` („Hier“). The highlight never starts on it.
+   */
   disabled?: boolean;
 };
 
@@ -115,7 +129,7 @@ export type CommandProps = {
  *
  * Give it the entries as `items` and put a `CommandContent` inside, with a `CommandInput`, a
  * `CommandList` and a `CommandFooter`. An entry does something (`onSelect`) or opens a list of
- * its own (`page`). Typing filters by label and keywords, ignoring case and accents.
+ * its own (`page`). Typing filters by label, `prefix` and keywords, ignoring case and accents.
  *
  * Word an entry like a button, the thing first and the action last ("Angebot schreiben"), or
  * as the place it leads to ("Einstellungen"). An entry that opens a second list ends in an
@@ -218,6 +232,44 @@ export function CommandTrigger(props: DialogPrimitive.Trigger.Props) {
   return <DialogPrimitive.Trigger data-slot="command-trigger" {...props} />;
 }
 
+/**
+ * Base UI highlights the first row of a list by itself (when the palette opens, after each
+ * letter, on a new page), disabled or not, and Enter then does nothing. It has no prop to steer
+ * the highlight, so the first row that can be taken is pointed at instead: a pointer moving
+ * onto a row is how Base UI sets the highlight anyway (`highlightItemOnHover`).
+ *
+ * Only Base UI's own choice is corrected. A disabled row the reader went to with the arrows or
+ * the pointer keeps the highlight, as it does in every list of Base UI: the arrows stop on
+ * every row, so a screen reader hears the disabled ones and why („Hier“).
+ *
+ * `rows` is an element around the list; what is returned goes to the autocomplete's root as
+ * `onItemHighlighted`.
+ */
+function useFirstEnabledHighlight(rows: RefObject<HTMLElement | null>) {
+  const { query, trail } = useCommand("CommandContent");
+  // The row the reader went to by key or pointer, and the list it was in.
+  const visited = useRef<{ value: string; query: string; page: number } | null>(null);
+  return (entry: CommandEntry | undefined, reason: string) => {
+    const here = { query, page: trail.length };
+    if (reason !== "none") {
+      visited.current = entry ? { value: entry.value, ...here } : null;
+      return;
+    }
+    if (!entry?.disabled) return;
+    const kept = visited.current;
+    if (kept?.value === entry.value && kept.query === here.query && kept.page === here.page) return;
+    // After this commit: Base UI numbers the rows of a new list in a commit of its own.
+    queueMicrotask(() => {
+      const box = rows.current;
+      if (!box?.querySelector('[data-slot="command-item"][data-highlighted][data-disabled]'))
+        return;
+      const row = box.querySelector<HTMLElement>('[data-slot="command-item"]:not([data-disabled])');
+      // WebKit takes a pointer to have moved only if the event says by how much.
+      row?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, movementX: 1 }));
+    });
+  };
+}
+
 export type CommandContentProps = DialogPrimitive.Popup.Props;
 
 /**
@@ -240,14 +292,18 @@ export function CommandContent({ className, children, ...props }: CommandContent
   });
   const matches = useCallback(
     (entry: CommandEntry, typed: string) =>
-      contains(entry.label, typed) ||
+      // With what leads up to it: a folder is found by a folder above it, or by a piece of path.
+      contains((entry.prefix ?? "") + entry.label, typed) ||
       (entry.keywords?.some((keyword) => contains(keyword, typed)) ?? false),
     [contains],
   );
+  const rows = useRef<HTMLDivElement>(null);
+  const highlightFirstEnabled = useFirstEnabledHighlight(rows);
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop data-slot="command-backdrop" className={overlayBackdrop} />
       <DialogPrimitive.Viewport
+        ref={rows}
         data-slot="command-viewport"
         className="fixed inset-0 z-50 flex max-h-dvh items-start justify-center overflow-hidden px-3 pt-[min(18dvh,9rem)] pb-3"
       >
@@ -278,6 +334,9 @@ export function CommandContent({ className, children, ...props }: CommandContent
             // Enter always has something to take, and the pointer leaving the list changes nothing.
             autoHighlight="always"
             keepHighlight
+            onItemHighlighted={(entry: CommandEntry | undefined, details) =>
+              highlightFirstEnabled(entry, details.reason)
+            }
             value={query}
             onValueChange={(value, details) => {
               // Choosing an entry would write its label into the field.
@@ -351,6 +410,74 @@ export function CommandInput({ className, placeholder, onKeyDown, ...props }: Co
   );
 }
 
+/**
+ * How a prefix gives way where the row is too narrow for it and the label. `start`: it keeps its
+ * end and fades out at its start, so the nearest of what leads to the label stays
+ * („…eck24 / 2026 / Zweitgespräch“). `end`: it is cut at its end with an ellipsis, as text
+ * usually is („Bewerbung / Che… Zweitgespräch“), which loses the separator before the label.
+ */
+const PREFIX_GIVES_WAY: "start" | "end" = "start";
+
+/** The prefix, cut at its end: one line with an ellipsis. */
+function PrefixCutAtEnd({ text }: { text: string }) {
+  return (
+    <span
+      data-slot="command-item-prefix"
+      className="min-w-0 truncate whitespace-pre text-fg-muted group-data-disabled:text-on-disabled"
+    >
+      {text}
+    </span>
+  );
+}
+
+/**
+ * The prefix, keeping its end. A box read from the right starts scrolled to its end, so what
+ * does not fit leaves at the left, where the library's own fade says that more came before
+ * (`scroll-fade.css`); a box that fits has no fade.
+ */
+function PrefixFadingAtStart({ text }: { text: string }) {
+  const box = useRef<HTMLSpanElement>(null);
+  useScrollEdges(box, "x", text);
+  return (
+    <span
+      ref={box}
+      dir="rtl"
+      data-slot="command-item-prefix"
+      data-scroll-fade="x"
+      // The fade's side is named here: the stylesheet tells a box read from the right by its
+      // language, and this one has none of its own.
+      className="min-w-0 overflow-hidden whitespace-pre text-fg-muted [--scroll-fade-size:1.5rem] [--scroll-fade-to:left] group-data-disabled:text-on-disabled"
+    >
+      <span dir="ltr" className="inline-block">
+        {text}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * A label with what leads up to it, on one line: the prefix is muted and gives way first, the
+ * label keeps its whole width for as long as the row has it and is cut at its end only when
+ * even it does not fit.
+ */
+function CommandPath({ prefix, label }: { prefix: string; label: string }) {
+  // Cut at its end, the prefix loses its last space to the ellipsis: that one goes with the label.
+  const lead = PREFIX_GIVES_WAY === "start" ? prefix : prefix.trimEnd();
+  return (
+    <span data-slot="command-item-path" className="flex min-w-0 flex-1 overflow-hidden">
+      {PREFIX_GIVES_WAY === "start" ? (
+        <PrefixFadingAtStart text={lead} />
+      ) : (
+        <PrefixCutAtEnd text={lead} />
+      )}
+      <span data-slot="command-item-label" className="max-w-full shrink-0 truncate whitespace-pre">
+        {prefix.slice(lead.length)}
+        {label}
+      </span>
+    </span>
+  );
+}
+
 function CommandRow({ entry }: { entry: CommandEntry }) {
   const { choose } = useCommand("CommandList");
   return (
@@ -369,7 +496,11 @@ function CommandRow({ entry }: { entry: CommandEntry }) {
           className="text-fg-muted group-data-disabled:text-on-disabled group-data-highlighted:text-fg"
         />
       )}
-      <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+      {entry.prefix ? (
+        <CommandPath prefix={entry.prefix} label={entry.label} />
+      ) : (
+        <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+      )}
       {entry.detail !== undefined && <span className={listItemDetail}>{entry.detail}</span>}
       {entry.shortcut && <Shortcut keys={entry.shortcut} className="ml-auto pl-3" />}
       {entry.page && (
@@ -396,9 +527,10 @@ export type CommandListProps = Omit<ComponentProps<"div">, "children"> & {
 };
 
 /**
- * The entries that match what was typed, in their sections. The first one is highlighted, so
- * Enter takes it; the arrows move the highlight, which is instant like a menu's. The list is
- * as tall as what it holds, up to a limit, and the sheet follows it instead of jumping.
+ * The entries that match what was typed, in their sections. The first one that can be chosen is
+ * highlighted, so Enter takes it; the arrows move the highlight, which is instant like a menu's,
+ * and stop on a disabled entry too, so its reason is read. The list is as tall as what it
+ * holds, up to a limit, and the sheet follows it instead of jumping.
  */
 export function CommandList({ empty, className, ...props }: CommandListProps) {
   const { trail, direction } = useCommand("CommandList");
