@@ -143,6 +143,28 @@ so the file still loads nothing.
 
 A picture may weigh 2 MB (2 000 000 bytes), all pictures of a deck together 12 MB.
 
+A server that makes the file itself (`deckHtml` in the library) can publish the pictures beside
+the page instead of putting them into it. Its `assets` maps each picture's name to a value of
+one of three kinds:
+
+- a data URL (`data:image/jpeg;base64,…`), which is what the command line passes;
+- an absolute `https:` address: `https://cdn.example.com/decks/handschlag/a1b2.jpg`;
+- a path on the page's own origin: `/decks/handschlag/a1b2.jpg`, `./assets/a1b2.jpg` or
+  `../assets/a1b2.jpg`.
+
+Anything else is refused with a `TypeError` that names the picture and not the value: `http:`
+and every other scheme, an address without a scheme (`//cdn.example.com/a.jpg`), a bare word,
+an address with a user name, a blank or a backslash in it, and a host a policy cannot name (an
+IPv6 address, a `*`).
+
+`deckCsp` allows pictures from exactly those places: always as data, from the page's own origin
+(`'self'`) when a value is a path, and from the origin of each address
+(`img-src data: 'self' https://cdn.example.com`). With data URLs alone it stays
+`img-src data:`. A file with addresses or paths is for publishing: it shows its pictures only
+where they are served. The layout check and the PDF open a file without a network, so
+`slides check`, `slides build` and `slides dev` keep data URLs, and a server hands them the
+same.
+
 ## What the check says
 
 `slides check` prints one line per finding, `file:line:column severity message (code)`, and

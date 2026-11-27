@@ -114,9 +114,15 @@ if (bundle.js !== undefined && errors.length === 0) {
 - **`deckHtml(js, { mode, title, lang, pdfUrl?, csp?, assets? })`** makes the one file, with the
   player's script, styles and fonts inline. `mode` is `audience`, `presenter`, `print` or
   `check`. `csp` is written as a `<meta>` when given. `assets` maps the name a picture has in
-  the script (an address, or `./bilder/werkstatt.jpg` for a file of the deck) to its data URL.
+  the script (an address, or `./bilder/werkstatt.jpg` for a file of the deck) to where the page
+  finds it: a data URL, an absolute `https:` address, or a path on the page's own origin (`/…`,
+  `./…`, `../…`). Any other value is a `TypeError`. The command line passes data URLs, so its
+  files load nothing; a file with addresses or paths is for a server that publishes the
+  pictures beside the page. The layout check and the PDF open a file without a network: hand
+  them data URLs.
 - **`deckCsp(js, options)`** is the strict policy for exactly the file `deckHtml` makes from the
-  same input.
+  same input. Pictures are allowed as data, from `'self'` when an asset is a path, and from the
+  origin of each `https:` asset, and from nowhere else.
 
 - **`deckTemplate("blank", { title, lang? })`** is the deck `slides init` writes, as files in
   memory (`{ entry, files, images }`), so a server seeds a new deck from the same template.

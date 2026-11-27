@@ -83,7 +83,8 @@ export function isRelative(specifier: string): boolean {
 /**
  * How a picture of the deck is named in its script: its path from the deck's folder, with `./`
  * in front. An import of the picture evaluates to this text, and a deck may write it by hand
- * (`src="./bilder/werkbank.png"`). `deckHtml` puts the picture's data URL in its place.
+ * (`src="./bilder/werkbank.png"`). `deckHtml` puts in its place what its `assets` map it to:
+ * the picture's data URL, or its address.
  */
 export function assetKey(path: string): string {
   return `./${path}`;
