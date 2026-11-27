@@ -49,6 +49,72 @@ export const InText: Story = {
   ),
 };
 
+/**
+ * A link that leaves the site: it opens in a new tab, and an arrow that points out stands after
+ * its last word. Under the pointer the arrow moves a pixel on its way out and seats back.
+ */
+export const External: Story = {
+  parameters: {
+    visual: { motion: [{ name: "point", hover: '[data-slot="link"]', frames: 6 }] },
+  },
+  args: { href: "https://github.com/jaylann/lanfermann-system", external: true },
+  render: (args) => <Link {...args}>Repository auf GitHub</Link>,
+};
+
+/** In running text the arrow stays with the link's last word when the line breaks. */
+export const ExternalInText: Story = {
+  parameters: { visual: { viewport: { width: 440, height: 200 } } },
+  render: () => (
+    <div className="flex w-96 flex-col gap-3">
+      <Text>
+        Die Domain liegt bei{" "}
+        <Link external href="https://example.com/registrar">
+          Ihrem Registrar
+        </Link>
+        , die Abrechnung läuft über das{" "}
+        <Link external href="https://example.com/dashboard">
+          Dashboard des Zahlungsdienstes
+        </Link>
+        .
+      </Text>
+      <Text tone="muted" className="text-sm">
+        Der Quelltext steht im{" "}
+        <Link external variant="quiet" href="https://github.com/jaylann/lanfermann-system">
+          Repository auf GitHub
+        </Link>
+        .
+      </Text>
+    </div>
+  ),
+};
+
+/**
+ * As a test: an external link opens a new tab without a referrer and says so to assistive tech;
+ * a `target` of the caller's still wins.
+ */
+export const ExternalSemantics: Story = {
+  render: () => (
+    <div className="flex flex-col gap-2">
+      <Link external href="https://example.com/a">
+        Statusseite
+      </Link>
+      <Link external target="_self" href="https://example.com/b">
+        Im selben Tab
+      </Link>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole("link", { name: "Statusseite, öffnet in einem neuen Tab" });
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noreferrer");
+    await expect(link.querySelector('[data-slot="link-external-arrow"]')).not.toBeNull();
+    await expect(canvas.getByRole("link", { name: /Im selben Tab/ })).toHaveAttribute(
+      "target",
+      "_self",
+    );
+  },
+};
+
 /** At the end of a card, on the tinted footer strip. */
 export const InCardFooter: Story = {
   parameters: { visual: { viewport: { width: 440, height: 250 } } },
