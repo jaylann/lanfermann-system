@@ -4,7 +4,7 @@
  * refused. What is proven here is what no unit test can: that the one file runs under its own
  * policy without loading anything, that an audience's file holds no notes, that keys, a touch
  * and a second window move the deck, that a framing page can drive it, and that the PDF has
- * one page per slide.
+ * one page per slide, each slide filling its page.
  *
  *   bun run slides:e2e          (from the repository's root; builds the tool first)
  *
@@ -19,6 +19,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { inflateSync } from "node:zlib";
 
 import { type BrowserContext, chromium, type Frame, type Page } from "playwright-core";
 
@@ -63,6 +64,49 @@ const readJson = (text: string): unknown => {
     return undefined;
   }
 };
+
+/**
+ * How wide, in points, each slide's ground is drawn on its page: the fill of a 1920 by 1080
+ * rectangle in a page's content, through the transformations around it. A slide that fills its
+ * page is 1440pt wide. Chromium can shrink every page of a print to fit a document it thinks is
+ * wider (down to 2/3): the page stays 1440 by 810pt, but the slide is drawn smaller in its top
+ * left corner, so the page boxes alone do not show it.
+ */
+function groundWidths(pdf: Buffer): number[] {
+  const text = pdf.toString("latin1");
+  const widths: number[] = [];
+  for (const stream of text.matchAll(/>>\s*stream\r?\n/g)) {
+    const start = stream.index + stream[0].length;
+    let content: string;
+    try {
+      content = inflateSync(pdf.subarray(start, text.indexOf("endstream", start))).toString(
+        "latin1",
+      );
+    } catch {
+      continue; // not deflated, so no page content Chromium writes (a picture)
+    }
+    // The horizontal scale of the transformation, through `q` (save), `Q` (restore) and `cm`.
+    let scale = 1;
+    const saved: number[] = [];
+    let operands: number[] = [];
+    let rectangle: number[] = [];
+    for (const token of content.split(/\s+/)) {
+      if (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(token)) {
+        operands.push(Number(token));
+        continue;
+      }
+      if (token === "q") saved.push(scale);
+      else if (token === "Q") scale = saved.pop() ?? 1;
+      else if (token === "cm" && operands.length === 6)
+        scale *= Math.hypot(operands[0] ?? 0, operands[1] ?? 0);
+      else if ((token === "f" || token === "f*") && rectangle[2] === 1920 && rectangle[3] === 1080)
+        widths.push(Math.round(1920 * scale));
+      rectangle = token === "re" ? operands : [];
+      operands = [];
+    }
+  }
+  return widths;
+}
 
 /*
  * 1. The command line.
@@ -195,7 +239,10 @@ const readJson = (text: string): unknown => {
     motion.stdout.trim() === "check passed: 7 slides, 0 errors, 0 warnings",
     `${motion.stdout.trim()} ${motion.stderr.trim()}`,
   );
-  check("build motion: builds", slides("build", fixture("motion"), "--audience").code === 0);
+  check(
+    "build motion: builds, with its PDF",
+    slides("build", fixture("motion"), "--audience", "--pdf").code === 0,
+  );
   check(
     "build bad-import: is refused, exit 1",
     slides("build", fixture("bad-import"), "--audience").code === 1,
@@ -283,7 +330,24 @@ if (existsSync(audienceFile) && existsSync(presenterFile) && existsSync(pdfFile)
     boxes.join(" "),
   );
   check("pdf: holds no word of the canary", !pdf.includes(CANARY));
+  const grounds = groundWidths(await readFile(pdfFile));
+  check(
+    "pdf: every slide fills its page, 1440pt wide",
+    grounds.length === 10 && grounds.every((width) => width === 1440),
+    grounds.join(" "),
+  );
   note(`pdf ${(pdf.length / 1000).toFixed(1)} kB`);
+
+  // A scene's camera on one part of its world leaves the other parts placed past the slide's
+  // right edge. They are clipped, and the print must not make room for them: Chromium once
+  // shrank every page of such a deck to fit them (slides.css, `contain: size`).
+  const motionPdf = join(out, "slides-out", "vom-suchen-zum-auftrag.pdf");
+  const motionGrounds = existsSync(motionPdf) ? groundWidths(await readFile(motionPdf)) : [];
+  check(
+    "pdf motion: a scene with parts past the slide's edge does not shrink the pages",
+    motionGrounds.length === 7 && motionGrounds.every((width) => width === 1440),
+    motionGrounds.join(" "),
+  );
 } else {
   // Without the files there is nothing to open: say what was looked at so far, and stop.
   check("the files the walk needs were written", false);
