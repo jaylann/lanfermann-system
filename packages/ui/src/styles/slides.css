@@ -458,7 +458,16 @@
 }
 
 @media print {
+  /*
+   * `contain: size`: a slide is its canvas, whatever stands on it. A box placed absolutely past
+   * its right edge (a scene's nodes the camera is not on) is clipped on screen, but while
+   * Chromium breaks the document into pages it still counts toward the document's width, on every
+   * page but the last. Chromium then shrinks every page to fit that width (down to 2/3), and the
+   * PDF shows each slide small in the top left corner. Only size containment stops it; `paint`,
+   * `layout` and `overflow: clip` do not.
+   */
   [data-slot="slide"] {
+    contain: size;
     break-after: page;
     break-inside: avoid;
     -webkit-print-color-adjust: exact;

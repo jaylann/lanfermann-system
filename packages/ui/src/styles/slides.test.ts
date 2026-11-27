@@ -259,6 +259,15 @@ describe("steps and motion", () => {
     );
     expect(value(print, "--step-on")).toBe("1");
   });
+
+  it("a print keeps each slide to its own size, whatever stands past its edges", () => {
+    // Without it Chromium shrinks every page of a deck whose scene reaches past a slide's edge
+    // (the e2e test of @lanfermann/slides prints such a deck and measures it).
+    const print = all.find(
+      (rule) => rule.selector === '[data-slot="slide"]' && rule.within.at(-1) === "@media print",
+    );
+    expect(value(print, "contain")).toBe("size");
+  });
 });
 
 describe("class name sources", () => {
