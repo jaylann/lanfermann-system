@@ -14,6 +14,8 @@ import { mergeRefs } from "@/lib/merge-refs";
 
 /** How many discs stand before the ending: the length is nobody's business. */
 const MASK_DISCS = 8;
+/** The discs that stand where an ending would, when none is known. */
+const UNKNOWN_ENDING_DISCS = 4;
 
 /** How long the tick of a save stands in the Save key before the field turns back, in ms. */
 export const SAVED_SHOWN_MS = 900;
@@ -27,6 +29,12 @@ export type StoredSecretFieldProps = Omit<
    * Without it nothing is stored yet, and the field takes a first one.
    */
   ending?: string;
+  /**
+   * A secret is stored although no ending is known (a server that keeps none for a short value,
+   * so the ending does not give away a third of it). The field then shows discs only and says
+   * that a secret is set, without "endet auf". Left out, an `ending` alone says it is stored.
+   */
+  stored?: boolean;
   /** Whether a new secret is being typed in place of the stored one (controlled). */
   replacing?: boolean;
   /** Whether it is at first. */
@@ -92,6 +100,7 @@ export type StoredSecretFieldProps = Omit<
 export function StoredSecretField({
   ending,
   replacing: replacingProp,
+  stored: storedProp,
   defaultReplacing = false,
   onReplacingChange,
   size = "md",
@@ -114,7 +123,8 @@ export function StoredSecretField({
   onBlur,
   ...props
 }: StoredSecretFieldProps) {
-  const stored = ending !== undefined && ending !== "";
+  const hasEnding = ending !== undefined && ending !== "";
+  const stored = storedProp ?? hasEnding;
   const [own, setOwn] = useState(defaultReplacing);
   const replacing = replacingProp ?? own;
   // Whether something is typed: the Save key stands only then.
@@ -179,7 +189,7 @@ export function StoredSecretField({
   }, [confirming, savedHold]);
 
   // What assistive tech reads in the field, whatever it looks like.
-  const said = `${storedLabel}, ${endingLabel} ${ending ?? ""}`;
+  const said = hasEnding ? `${storedLabel}, ${endingLabel} ${ending}` : storedLabel;
   const saveShown = typing && (filled || confirming);
 
   const field = (
@@ -291,8 +301,12 @@ export function StoredSecretField({
               {/* A SecretField's discs with the end kept instead of the start, chosen over the
                   words „Gesetzt, endet auf …4f2a“ (Justin, 2026-11-21). */}
               <span className="min-w-0 truncate font-mono text-fg">
-                <span className="text-fg-muted">{"•".repeat(MASK_DISCS)}</span>
-                {ending}
+                {/* Without an ending the row is as long as one with four characters at its end,
+                    so the secrets of a list end on one line whether or not their ending is known. */}
+                <span className="text-fg-muted">
+                  {"•".repeat(hasEnding ? MASK_DISCS : MASK_DISCS + UNKNOWN_ENDING_DISCS)}
+                </span>
+                {hasEnding ? ending : null}
               </span>
             </span>
           </span>

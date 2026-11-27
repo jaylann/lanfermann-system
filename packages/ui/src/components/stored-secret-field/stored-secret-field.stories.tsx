@@ -71,6 +71,37 @@ export const NotSet: Story = {
   ),
 };
 
+/**
+ * Stored, but the server keeps no ending (a short secret, whose ending would give too much of it
+ * away): discs only, as long as a row with an ending, and assistive tech hears „Gesetzt“.
+ */
+export const WithoutEnding: Story = {
+  parameters: { visual: { viewport: { width: 460, height: 250 } } },
+  render: () => (
+    <div className="flex w-96 max-w-full flex-col gap-5">
+      <Field>
+        <FieldLabel>API-Schlüssel</FieldLabel>
+        <StoredSecretField ending="4f2a" />
+      </Field>
+      <Field>
+        <FieldLabel>PIN des Kartenlesers</FieldLabel>
+        <StoredSecretField stored ending={undefined} />
+        <FieldDescription>Zu kurz, um ein Ende zu zeigen.</FieldDescription>
+      </Field>
+    </div>
+  ),
+};
+
+/** As a test: stored without an ending reads as set, keeps the Replace key and sends nothing. */
+export const WithoutEndingSaid: Story = {
+  render: () => <StoredSecretField stored ending={undefined} aria-label="PIN" />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByRole("textbox", { name: "PIN" })).toHaveValue("Gesetzt");
+    await userEvent.click(canvas.getByRole("button", { name: "Ersetzen" }));
+    await waitFor(() => expect(canvas.getByLabelText("PIN")).toHaveValue(""));
+  },
+};
+
 /** The three sizes. */
 export const Sizes: Story = {
   parameters: { visual: { viewport: { width: 460, height: 210 } } },
