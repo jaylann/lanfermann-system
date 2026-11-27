@@ -173,7 +173,9 @@ export function Attachment({
         ) : status === "error" ? (
           <span className="text-danger">{error ?? labels.error}</span>
         ) : (
-          [typeWord({ name, type }), sizeWord].filter(Boolean).join(" · ")
+          [typeWord({ name, type }, messages.attachment.kinds), sizeWord]
+            .filter(Boolean)
+            .join(" · ")
         )
       }
       {...props}

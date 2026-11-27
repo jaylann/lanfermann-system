@@ -351,7 +351,7 @@ export function BarChart<Row>({
 
           {data.length === 0 && (
             <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-fg-muted">
-              {empty ?? messages.charts.empty}
+              {empty === undefined ? messages.charts.empty : empty}
             </p>
           )}
 

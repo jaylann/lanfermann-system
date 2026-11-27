@@ -370,7 +370,9 @@ export function MessageError({
     >
       <Icon icon={Alert02Icon} size={16} className="mt-[0.1875rem] shrink-0 text-danger" />
       <div className="flex min-w-0 flex-col items-start gap-2.5">
-        <p className="text-pretty">{children ?? messages.message.stopped}</p>
+        <p className="text-pretty">
+          {children === undefined ? messages.message.stopped : children}
+        </p>
         {onRetry && (
           <Button size="sm" variant="secondary" onClick={onRetry}>
             <Icon icon={RefreshIcon} size={14} />

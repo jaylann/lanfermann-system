@@ -186,7 +186,9 @@ export function MediaPreview({
             )}
           >
             <FileKindSymbol kind="pdf" size={48} className="text-fg-muted" />
-            <span className="text-sm text-fg-muted">{typeWord({ name, type })}</span>
+            <span className="text-sm text-fg-muted">
+              {typeWord({ name, type }, messages.attachment.kinds)}
+            </span>
             {!framed && (
               <Link external href={src} className="mt-1 text-control">
                 {openLabel ?? messages.mediaPreview.open}
@@ -207,7 +209,9 @@ export function MediaPreview({
         <div data-slot="media-preview-symbol" className="flex flex-col items-center gap-2 p-6">
           <FileKindSymbol kind={kind} size={48} className="text-fg-muted" />
           {kind !== "folder" && (
-            <span className="text-sm text-fg-muted">{typeWord({ name, type })}</span>
+            <span className="text-sm text-fg-muted">
+              {typeWord({ name, type }, messages.attachment.kinds)}
+            </span>
           )}
         </div>
       )}

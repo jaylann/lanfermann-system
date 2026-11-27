@@ -371,7 +371,9 @@ export type PromptInputAttachProps = Omit<
  * The paper clip: opens the file picker. What is chosen is sorted like a drop and handed to
  * `onFilesAdded`; the same file can be chosen again.
  */
-export function PromptInputAttach({ label = "Datei anhängen", className }: PromptInputAttachProps) {
+export function PromptInputAttach({ label: labelProp, className }: PromptInputAttachProps) {
+  const { messages } = useLocale();
+  const label = labelProp ?? messages.promptInput.attach;
   const prompt = usePrompt("PromptInputAttach");
   const input = useRef<HTMLInputElement>(null);
   return (

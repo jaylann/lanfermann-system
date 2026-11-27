@@ -31,6 +31,7 @@ const german = {
     send: "Senden",
     stop: "Anhalten",
     attachments: "Anhänge",
+    attach: "Datei anhängen",
   },
   siteHeader: {
     close: "Menü schließen",
@@ -96,6 +97,8 @@ const german = {
     /** The names of the two times under the calendar. */
     from: "Von",
     to: "bis",
+    /** A preset's name, for `lastDays(7, …)`: the helper itself names it in German. */
+    lastDays: (count: number) => `Letzte ${count} Tage`,
   },
   fileTile: {
     retry: "Noch einmal versuchen",
@@ -127,6 +130,8 @@ const german = {
       done: "Hochgeladen",
       error: "Fehlgeschlagen",
     },
+    /** Between what has arrived and the whole: „1,2 von 2,4 MB“. */
+    of: "von",
   },
   drawer: {
     close: "Schließen",
@@ -253,6 +258,18 @@ const german = {
       uploading: "Wird hochgeladen",
       done: "Hochgeladen",
       error: "Fehlgeschlagen",
+    },
+    /** The word for a kind of file where its name has no extension to show. */
+    kinds: {
+      pdf: "PDF",
+      image: "Bild",
+      sheet: "Tabelle",
+      csv: "CSV",
+      document: "Dokument",
+      archive: "Archiv",
+      audio: "Audio",
+      video: "Video",
+      file: "Datei",
     },
   },
   trace: {
@@ -396,6 +413,7 @@ export const en: Messages = {
     send: "Send",
     stop: "Stop",
     attachments: "Attachments",
+    attach: "Attach file",
   },
   siteHeader: {
     close: "Close menu",
@@ -453,6 +471,7 @@ export const en: Messages = {
     sheet: "Choose a date range",
     from: "From",
     to: "to",
+    lastDays: (count) => `Last ${count} days`,
   },
   fileTile: {
     retry: "Try again",
@@ -483,6 +502,7 @@ export const en: Messages = {
       done: "Uploaded",
       error: "Failed",
     },
+    of: "of",
   },
   drawer: {
     close: "Close",
@@ -596,6 +616,17 @@ export const en: Messages = {
       uploading: "Uploading",
       done: "Uploaded",
       error: "Failed",
+    },
+    kinds: {
+      pdf: "PDF",
+      image: "Image",
+      sheet: "Spreadsheet",
+      csv: "CSV",
+      document: "Document",
+      archive: "Archive",
+      audio: "Audio",
+      video: "Video",
+      file: "File",
     },
   },
   trace: {

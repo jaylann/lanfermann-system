@@ -413,7 +413,7 @@ export function FileTile({
                   onClick={onRetry}
                   className="touch-target relative rounded-xs text-sm font-medium text-fg underline decoration-1 underline-offset-[0.25em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
-                  {retryLabel ?? messages.fileTile.retry}
+                  {retryLabel === undefined ? messages.fileTile.retry : retryLabel}
                 </button>
               )}
             </div>

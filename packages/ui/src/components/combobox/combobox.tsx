@@ -539,7 +539,7 @@ export function ComboboxContent({
             data-slot="combobox-empty"
             className="text-control text-fg-muted not-empty:px-2.5 not-empty:py-1.5"
           >
-            {empty ?? messages.combobox.empty}
+            {empty === undefined ? messages.combobox.empty : empty}
           </ComboboxPrimitive.Empty>
           <ComboboxPrimitive.List
             data-slot="combobox-list"

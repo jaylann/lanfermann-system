@@ -220,7 +220,13 @@ export function FileUploadZone({
         data-slot="file-upload-title"
         className="text-control font-medium text-fg group-data-disabled/zone:text-on-disabled"
       >
-        {over ? (dropTitle ?? messages.fileUpload.dropTitle) : (title ?? messages.fileUpload.title)}
+        {over
+          ? dropTitle === undefined
+            ? messages.fileUpload.dropTitle
+            : dropTitle
+          : title === undefined
+            ? messages.fileUpload.title
+            : title}
       </p>
       {description !== undefined && (
         <p
@@ -231,7 +237,7 @@ export function FileUploadZone({
         </p>
       )}
       <Button size="sm" disabled={disabled} onClick={open} className="mt-3">
-        {buttonLabel ?? messages.fileUpload.button}
+        {buttonLabel === undefined ? messages.fileUpload.button : buttonLabel}
       </Button>
     </div>
   );
@@ -435,7 +441,7 @@ export function FileUploadItem({
             className="ml-auto shrink-0 text-sm whitespace-nowrap text-fg-muted tabular-nums"
           >
             {status === "uploading" && progress !== undefined
-              ? formatFileProgress(fraction * size, size, locale ?? tag)
+              ? formatFileProgress(fraction * size, size, locale ?? tag, messages.fileUpload.of)
               : formatFileSize(size, locale ?? tag)}
           </span>
         </div>
@@ -492,7 +498,7 @@ export function FileUploadItem({
                     onClick={onRetry}
                     className="touch-target relative rounded-xs font-medium text-fg underline decoration-1 underline-offset-[0.25em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
-                    {retryLabel ?? messages.fileUpload.retry}
+                    {retryLabel === undefined ? messages.fileUpload.retry : retryLabel}
                   </button>
                 )}
               </div>

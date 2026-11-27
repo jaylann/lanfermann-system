@@ -74,7 +74,7 @@ export function PagerLink({
           )}
         >
           <ActionArrow direction={next ? "right" : "left"} size={14} />
-          {label ?? <Localized ns="pager" name={direction} />}
+          {label === undefined ? <Localized ns="pager" name={direction} /> : label}
         </span>
         <span
           data-slot="pager-title"
