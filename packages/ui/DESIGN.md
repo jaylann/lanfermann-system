@@ -1084,7 +1084,9 @@ Every component belongs to one of the four matters, and takes its treatment from
 - **MediaPreview** shows what a file holds in an inspector: a picture contained on the well,
   fading in once loaded and reporting its own size (one that may be see-through lies on the
   quiet `checker`, behind the picture only, as on a file tile), a video or audio with the
-  browser's own controls and only its length loaded, a PDF in the browser's viewer, and for
+  browser's own controls and only its length loaded, a PDF in the browser's viewer (its symbol
+  and type behind the frame, which has no face, so a browser without a viewer shows them and no
+  empty box; on a touch device a link that opens it in a new tab instead of a frame), and for
   anything else the kind's symbol, large, with its type. **EditableName** changes a name where
   it stands (a tile, a row, an inspector): a seamless field in the name's place, in the name's
   own type, with no edge or halo of its own (what holds it shows it is worked on: a chosen
@@ -1109,9 +1111,22 @@ Every component belongs to one of the four matters, and takes its treatment from
   plus); the copy confirms with the drawn tick. **FileThumb** is a row's small picture in a list
   of files, the image or its kind's symbol; pointed at, with the keyboard on its row, while the
   row is chosen and while anything in the list is chosen, it gives its place to the selection's
-  mark, as a tile shows its own, and a press on the mark adds the row or takes it away.
+  mark, as a tile shows its own, and a press on the mark adds the row or takes it away. A
+  picture in a format that may be see-through lies on the checker (finer here), and one that
+  does not load gives way to the symbol. **FileThumbStack** is several chosen files as one small
+  hand of pictures in the tile's cut, the first upright and the rest turned under it, with a
+  number at its corner for what does not fit; a file that joins seats in (`seat`).
   **BreadcrumbEllipsis** folds the middle of a long trail into „…“, a key that opens a `Menu` of
   the folded places as links; a link of the trail that takes a drop wears the field's halo.
+- **Loading files**: `FileTileSkeleton` is a tile's shapes without its face, from the measures
+  the tile itself is built from (`file-tile-shape.ts`); `FileGridSkeleton` lays them in the
+  grid's own columns and shows whole rows at any width (the rows that are not shown have no
+  height, so no script counts columns). `FileThumbSkeleton` is a row's square, and
+  `TableSkeleton` a table as a shape only: no region, no name, no stop for Tab, so a
+  `SkeletonGroup` around it is the one thing that is announced. `SkeletonGroup as="span"` stands
+  where a `div` may not, as in the line under a page's title.
+- **IconTile** is a small flat plate for a symbol, the one `EmptyMedia` stands its symbol on:
+  the mark of an integration in a list, a kind beside its name.
 - **Sources** keeps an answer's numbered references and their list together, so every number
   leads somewhere. A reference is a small link in tabular digits after its sentence, leading to
   its entry in the list under the answer; one card serves every reference of the answer, opens
