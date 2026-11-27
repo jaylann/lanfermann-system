@@ -571,6 +571,12 @@ export {
   type SideNavSubLinkProps,
 } from "./components/side-nav/side-nav";
 export {
+  SideNavTree,
+  SideNavTreeItem,
+  type SideNavTreeItemProps,
+  type SideNavTreeProps,
+} from "./components/side-nav/side-nav-tree";
+export {
   Sidebar,
   SidebarButton,
   type SidebarButtonProps,
