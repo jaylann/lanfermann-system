@@ -5,6 +5,7 @@ import { AvatarGroup } from "@/components/avatar-group/avatar-group";
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
 import { Icon } from "@/components/icon/icon";
+import { Skeleton, SkeletonGroup } from "@/components/skeleton/skeleton";
 
 import {
   PageHeader,
@@ -35,6 +36,29 @@ export const Default: Story = {
       <PageHeaderTitle>Angebote.</PageHeaderTitle>
       <PageHeaderDescription>
         Zwölf Angebote sind offen, drei davon laufen diese Woche ab.
+      </PageHeaderDescription>
+      <PageHeaderActions>
+        <Button variant="primary">
+          <Icon icon={Add01Icon} />
+          Angebot schreiben
+        </Button>
+      </PageHeaderActions>
+    </PageHeader>
+  ),
+};
+
+/**
+ * The line under the title while its numbers load: the line stays a paragraph, and the group in
+ * it is a `span` (`SkeletonGroup as="span"`), so it waits its fifth of a second like any other.
+ */
+export const DescriptionLoading: Story = {
+  render: () => (
+    <PageHeader>
+      <PageHeaderTitle>Angebote.</PageHeaderTitle>
+      <PageHeaderDescription>
+        <SkeletonGroup as="span" label="Die Zahl der Angebote wird geladen.">
+          <Skeleton className="w-80" />
+        </SkeletonGroup>
       </PageHeaderDescription>
       <PageHeaderActions>
         <Button variant="primary">

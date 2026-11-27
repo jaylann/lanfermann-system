@@ -7,7 +7,9 @@ import {
   FileKindSymbol,
   type FileSymbolKind,
 } from "@/components/file-kind-symbol/file-kind-symbol";
+import { Link } from "@/components/link/link";
 import { cn } from "@/lib/cn";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 /** A picture's or a video's own size in pixels. */
 export type NaturalSize = { width: number; height: number };
@@ -23,6 +25,14 @@ export type MediaPreviewProps = Omit<ComponentProps<"div">, "children"> & {
   kind?: FileSymbolKind;
   /** Called with a picture's or a video's own size once it has loaded: 1600 × 900. */
   onNaturalSize?: (size: NaturalSize) => void;
+  /**
+   * How a PDF is shown. `frame`: in the browser's own viewer. `link`: its symbol with a link
+   * that opens it in a new tab, and no frame at all. `auto` (the default): the link on a touch
+   * device, where browsers draw no PDF inside a page, the frame elsewhere.
+   */
+  pdf?: "auto" | "frame" | "link";
+  /** The words of the link that opens a PDF: „PDF öffnen“. */
+  openLabel?: string;
 };
 
 /**
@@ -101,10 +111,15 @@ export function MediaPreview({
   type,
   kind: kindProp,
   onNaturalSize,
+  pdf = "auto",
+  openLabel = "PDF öffnen",
   className,
   ...props
 }: MediaPreviewProps) {
   const kind = kindProp ?? kindOf({ name, type });
+  // A phone or tablet draws no PDF inside a page: there the frame would stay an empty box.
+  const touch = useMediaQuery("(hover: none) and (pointer: coarse)");
+  const framed = pdf === "frame" || (pdf === "auto" && !touch);
   // The address whose picture failed: a new address is tried again.
   const [failed, setFailed] = useState<string | null>(null);
   const shown = failed === src ? "symbol" : kind;
@@ -157,13 +172,35 @@ export function MediaPreview({
           />
         </div>
       ) : shown === "pdf" ? (
-        <iframe
-          src={src}
-          title={name}
-          loading="lazy"
-          data-slot="media-preview-document"
-          className="size-full min-h-80 border-0 bg-surface"
-        />
+        <>
+          {/* The symbol stands behind the frame, which has no face of its own: while the
+              viewer loads, and where a browser draws none, the box still says what it holds.
+              Without a frame it is what is shown, with the way to open the file. */}
+          <div
+            data-slot="media-preview-symbol"
+            className={cn(
+              "flex flex-col items-center gap-2 p-6",
+              framed && "absolute inset-0 justify-center",
+            )}
+          >
+            <FileKindSymbol kind="pdf" size={48} className="text-fg-muted" />
+            <span className="text-sm text-fg-muted">{typeWord({ name, type })}</span>
+            {!framed && (
+              <Link external href={src} className="mt-1 text-control">
+                {openLabel}
+              </Link>
+            )}
+          </div>
+          {framed && (
+            <iframe
+              src={src}
+              title={name}
+              loading="lazy"
+              data-slot="media-preview-document"
+              className="relative size-full min-h-80 border-0"
+            />
+          )}
+        </>
       ) : (
         <div data-slot="media-preview-symbol" className="flex flex-col items-center gap-2 p-6">
           <FileKindSymbol kind={kind} size={48} className="text-fg-muted" />

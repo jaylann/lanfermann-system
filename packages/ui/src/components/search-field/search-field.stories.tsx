@@ -69,6 +69,46 @@ export const Sizes: Story = {
 };
 
 /**
+ * Disabled (the list it searches is still loading): the keys stay as a hint, set back with the
+ * field, and do nothing, so ⌘F is the browser's own find until the field can take it.
+ */
+export const Disabled: Story = {
+  render: () => (
+    <SearchField
+      disabled
+      value=""
+      onValueChange={() => {}}
+      shortcut="/"
+      aria-label="Kunden suchen"
+      placeholder="Kunden suchen"
+      className="w-72"
+    />
+  ),
+};
+
+/** As a test: a disabled field does not answer its shortcut and lets the key through. */
+export const DisabledShortcut: Story = {
+  render: () => (
+    <SearchField
+      disabled
+      value=""
+      onValueChange={() => {}}
+      shortcut="/"
+      aria-label="Kunden suchen"
+      className="w-72"
+    />
+  ),
+  play: async ({ canvas }) => {
+    const field = canvas.getByRole("searchbox", { name: "Kunden suchen" });
+    const press = new KeyboardEvent("keydown", { key: "/", bubbles: true, cancelable: true });
+    document.body.dispatchEvent(press);
+    await expect(press.defaultPrevented).toBe(false);
+    await expect(field).not.toHaveFocus();
+    await expect(field).toBeDisabled();
+  },
+};
+
+/**
  * The keyboard path, as a test: the keys bring the focus to the field, Escape clears what is
  * typed and pressed again leaves the field, the cross clears and keeps the focus in it.
  */

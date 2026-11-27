@@ -59,6 +59,7 @@ export function SearchField({
   shortcut,
   count,
   clearLabel = "Suche leeren",
+  disabled = false,
   className,
   ref,
   onKeyDown,
@@ -75,7 +76,8 @@ export function SearchField({
       field.current?.focus();
       field.current?.select();
     },
-    { enabled: shortcut !== undefined && !focused },
+    // A disabled field cannot take the focus: its keys stay the browser's (⌘F finds on the page).
+    { enabled: shortcut !== undefined && !focused && !disabled },
   );
   const setRef = (element: HTMLInputElement | null) => {
     field.current = element;
@@ -115,6 +117,7 @@ export function SearchField({
         // The browser's own clearing cross and decorations: the field brings its own.
         className="[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
         {...props}
+        disabled={disabled}
       />
       {typed && count !== undefined ? (
         // Typing does not wait: the count is there in the first frame and changes in place.
@@ -130,6 +133,8 @@ export function SearchField({
             aria-hidden={typed ? true : undefined}
             className={cn(
               "col-start-1 row-start-1 flex pr-(--field-pad) transition-[opacity,scale] motion-reduce:scale-100",
+              // The keys stay as a hint of what will reach the field, set back with the rest.
+              disabled && "[&_kbd]:bg-transparent [&_kbd]:depth-flat [&_kbd]:text-on-disabled",
               typed ? "scale-92 opacity-0 spring-snap" : "scale-100 opacity-100 spring-seat",
             )}
           >

@@ -52,18 +52,42 @@ export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labe
  *
  * Sorting, filtering and paging are the caller's state; the table only provides the slots.
  */
-export function Table({
+export function Table(props: TableProps) {
+  return <TableBox {...props} />;
+}
+
+export type TableSkeletonProps = Omit<
+  ComponentProps<"table">,
+  "aria-label" | "aria-labelledby" | "aria-hidden"
+> &
+  Pick<TableProps, "containerClassName" | "content" | "stack">;
+
+/**
+ * The shape of a table that is still loading: the same box, rule and cells, with `Skeleton`s in
+ * place of the values. It is not a region, has no name and takes no focus, so nothing inside a
+ * `SkeletonGroup` is a tab stop or is read out; the group's `label` says what is on its way.
+ * Build it from the table's own parts, with as many rows as the list usually has.
+ */
+export function TableSkeleton(props: TableSkeletonProps) {
+  return <TableBox skeleton {...props} />;
+}
+
+function TableBox({
   className,
   containerClassName,
   content = "data",
   stack = false,
+  skeleton = false,
   "aria-label": label,
   "aria-labelledby": labelledBy,
   ...props
-}: TableProps) {
+}: Omit<ComponentProps<"table">, "aria-hidden"> &
+  Pick<TableProps, "containerClassName" | "content" | "stack"> & { skeleton?: boolean }) {
   return (
     <div
       data-slot="table-container"
+      data-skeleton={skeleton ? "" : undefined}
+      aria-hidden={skeleton ? true : undefined}
       className={cn(
         // The rule and the focus outline are drawn here, outside the region's edge mask, which
         // would fade them with the columns.
@@ -85,10 +109,10 @@ export function Table({
       <ScrollFade
         axis="x"
         data-slot="table-scroll"
-        role="region"
-        aria-label={label}
-        aria-labelledby={labelledBy}
-        tabIndex={0}
+        // A table that is only a shape is no stop for the keyboard and no region of the page.
+        {...(skeleton
+          ? undefined
+          : { role: "region", "aria-label": label, "aria-labelledby": labelledBy, tabIndex: 0 })}
         className={cn(
           // `relative`: what is positioned inside (a visually hidden column name, a touch target)
           // then belongs to this box and scrolls with it, instead of widening the page.

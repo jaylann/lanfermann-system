@@ -46,6 +46,11 @@ export function Skeleton({ shape = "text", className, ...props }: SkeletonProps)
 
 export type SkeletonGroupProps = Omit<ComponentProps<"div">, "aria-label"> & {
   /**
+   * `span` where a `div` may not stand: inside a paragraph, a heading or a table's cell (the
+   * line under a page's title is a `<p>`). It is laid out as a block all the same.
+   */
+  as?: "div" | "span";
+  /**
    * What is being waited for, as a full sentence in the present ("Die Angebote werden gerade
    * geladen."). It is read out; the shapes themselves are hidden from assistive tech.
    */
@@ -67,6 +72,7 @@ export type SkeletonGroupProps = Omit<ComponentProps<"div">, "aria-label"> & {
  * To let the content fade in over it and to keep it from flickering, use `Loaded`.
  */
 export function SkeletonGroup({
+  as: Tag = "div",
   label,
   light = "breathing",
   className,
@@ -74,7 +80,7 @@ export function SkeletonGroup({
   ...props
 }: SkeletonGroupProps) {
   return (
-    <div
+    <Tag
       role="status"
       aria-busy="true"
       data-slot="skeleton-group"
@@ -83,14 +89,18 @@ export function SkeletonGroup({
       // not the page arriving: it is the page saying that part of it has not arrived.
       className={cn(
         "transition-opacity delay-200 duration-150 ease-out starting:opacity-0",
+        Tag === "span" && "block",
         className,
       )}
       {...props}
     >
       <span className="sr-only">{label}</span>
-      <div data-slot="skeleton-shapes" className={cn(light === "breathing" && "animate-breathe")}>
+      <Tag
+        data-slot="skeleton-shapes"
+        className={cn(Tag === "span" && "block", light === "breathing" && "animate-breathe")}
+      >
         {children}
-      </div>
-    </div>
+      </Tag>
+    </Tag>
   );
 }

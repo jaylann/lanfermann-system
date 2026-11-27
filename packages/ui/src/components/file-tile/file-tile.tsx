@@ -23,6 +23,14 @@ import { Progress, ProgressTrack } from "@/components/progress/progress";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 
+import {
+  fileTileMeta,
+  fileTileName,
+  fileTilePad,
+  fileTileText,
+  fileTileWell,
+} from "./file-tile-shape";
+
 /** Where a file stands: on its way, arrived, or failed. */
 export type FileTileStatus = "uploading" | "done" | "error";
 
@@ -99,7 +107,7 @@ const fileTile = cva(
     variants: {
       shape: {
         /** A file: its picture or symbol above its name. */
-        tile: "p-1",
+        tile: fileTilePad,
         /**
          * A folder: one line in the files' columns (Justin, 2026-11-23, over a folder as large
          * as a file).
@@ -302,7 +310,7 @@ export function FileTile({
   const title = (
     <span
       data-slot="file-tile-name"
-      className="flex min-w-0 items-center gap-1.5 text-control font-medium text-fg"
+      className={cn("flex min-w-0 items-center gap-1.5 text-fg", fileTileName)}
     >
       {shape === "row" && <SymbolOrMark kind={kind} />}
       {spoken}
@@ -314,7 +322,7 @@ export function FileTile({
     <span
       data-slot="file-tile-meta"
       // A line is kept even without facts, so every tile in a row of the grid is as tall.
-      className="min-h-[1lh] truncate text-sm text-fg-muted tabular-nums"
+      className={cn("truncate text-fg-muted tabular-nums", fileTileMeta)}
     >
       {meta}
     </span>
@@ -340,7 +348,8 @@ export function FileTile({
         <div
           data-slot="file-tile-preview"
           className={cn(
-            "relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-well",
+            "relative flex items-center justify-center overflow-hidden bg-well",
+            fileTileWell,
             // Its edge: a hairline drawn inside it, over the picture.
             "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:inset-ring after:inset-ring-hairline",
           )}
@@ -410,7 +419,7 @@ export function FileTile({
             </div>
           )}
         </div>
-        <div className="flex min-w-0 flex-col px-1.5 pt-2 pb-1">
+        <div className={fileTileText}>
           {title}
           {metaLine}
         </div>

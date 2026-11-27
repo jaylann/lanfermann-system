@@ -1,6 +1,5 @@
 "use client";
 
-import { cva } from "class-variance-authority";
 import {
   Children,
   type ComponentProps,
@@ -28,6 +27,7 @@ import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 
 import { FileGridContext } from "./file-grid-context";
+import { fileGrid } from "./file-grid-variants";
 
 /** A grid scrolls nowhere, but it is a region of its own and needs a name. */
 type Named =
@@ -45,24 +45,6 @@ export function columnsOf(template: string): number {
     .filter((track) => track && track !== "none");
   return Math.max(1, tracks.length);
 }
-
-const fileGrid = cva(
-  [
-    "group/files relative grid gap-x-3 gap-y-6",
-    // As many columns as fit, each at least a tile wide, sharing what is left over.
-    "grid-cols-[repeat(auto-fill,minmax(min(var(--file-tile-min),100%),1fr))]",
-  ],
-  {
-    variants: {
-      size: {
-        /** Tiles at least 8rem wide: a narrow place, many small pictures. */
-        sm: "[--file-tile-min:8rem]",
-        /** Tiles at least 10rem wide: two on a phone, four or five beside an inspector. */
-        md: "[--file-tile-min:10rem]",
-      },
-    },
-  },
-);
 
 export type FileGridProps = Omit<ComponentProps<"div">, "aria-label" | "aria-labelledby"> &
   Named & {

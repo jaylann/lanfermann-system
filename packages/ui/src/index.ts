@@ -316,16 +316,28 @@ export {
   type FileGridSectionProps,
 } from "./components/file-grid/file-grid";
 export {
+  FileGridSkeleton,
+  type FileGridSkeletonProps,
+} from "./components/file-grid/file-grid-skeleton";
+export {
   FileKindSymbol,
   type FileKindSymbolProps,
   type FileSymbolKind,
 } from "./components/file-kind-symbol/file-kind-symbol";
-export { FileThumb, type FileThumbProps } from "./components/file-thumb/file-thumb";
+export {
+  FileThumb,
+  type FileThumbProps,
+  FileThumbSkeleton,
+} from "./components/file-thumb/file-thumb";
 export {
   FileTile,
   type FileTileProps,
   type FileTileStatus,
 } from "./components/file-tile/file-tile";
+export {
+  FileTileSkeleton,
+  type FileTileSkeletonProps,
+} from "./components/file-tile/file-tile-skeleton";
 export {
   FileUpload,
   FileUploadItem,
@@ -347,7 +359,14 @@ export {
 } from "./components/file-upload/files";
 export { Form, type FormProps } from "./components/form/form";
 export { Funnel, type FunnelProps, type FunnelStep } from "./components/funnel/funnel";
-export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
+export {
+  Ground,
+  type GroundMode,
+  type GroundName,
+  type GroundProps,
+  useGround,
+  useGroundMode,
+} from "./components/ground/ground";
 export { Grow, type GrowProps } from "./components/grow/grow";
 export { Heading, type HeadingProps } from "./components/heading/heading";
 export { Heatmap, type HeatmapDay, type HeatmapProps } from "./components/heatmap/heatmap";
@@ -669,6 +688,8 @@ export {
   type TableProps,
   TableRow,
   type TableRowProps,
+  TableSkeleton,
+  type TableSkeletonProps,
   TableSortButton,
   type TableSortButtonProps,
 } from "./components/table/table";
