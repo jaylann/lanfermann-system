@@ -18,6 +18,7 @@ import { inferInterval, pointLabel, type TimeValue, toTime } from "@/internal/ch
 import { statusIcons, statusIconTone } from "@/internal/status-icon";
 import { cn } from "@/lib/cn";
 import { dateFormatter } from "@/lib/format";
+import { useLocale } from "@/locale/locale";
 
 export type TrackerStatus = "success" | "warning" | "danger" | "none";
 
@@ -94,10 +95,11 @@ export function Tracker({
   label,
   statusLabels,
   drawIn = true,
-  locale = "de-DE",
+  locale,
   className,
   ...props
 }: TrackerProps) {
+  const { tag } = useLocale();
   const words = { ...defaultLabels, ...statusLabels };
   const [scrub, setScrub] = useState<Scrub | null>(null);
   const [said, setSaid] = useState("");
@@ -115,7 +117,7 @@ export function Tracker({
     const item = data[index]!;
     if (item.label) return item.label;
     return interval && Number.isFinite(times[index]!)
-      ? pointLabel(times[index]!, interval, { locale, withYear })
+      ? pointLabel(times[index]!, interval, { locale: locale ?? tag, withYear })
       : String(index + 1);
   };
   const sentence = (index: number) => {
@@ -193,8 +195,9 @@ export function Tracker({
   };
 
   const at = active ? (active.index + 0.5) / count : 0;
-  const first = dated.length > 0 && interval ? edgeLabel(dated[0]!, interval, locale) : null;
-  const last = dated.length > 0 && interval ? edgeLabel(dated.at(-1)!, interval, locale) : null;
+  const first = dated.length > 0 && interval ? edgeLabel(dated[0]!, interval, locale ?? tag) : null;
+  const last =
+    dated.length > 0 && interval ? edgeLabel(dated.at(-1)!, interval, locale ?? tag) : null;
 
   return (
     <figure

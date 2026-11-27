@@ -31,6 +31,7 @@ import { fieldShellGrowing, focusFieldControl } from "@/internal/field";
 import { StopGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { useLocale } from "@/locale/locale";
 
 import { promptKey, TOUCH_ONLY } from "./keys";
 
@@ -269,13 +270,14 @@ const textLook =
  * and fades at its top where more stands above.
  */
 export function PromptInputTextarea({
-  label = "Nachricht an die KI",
+  label,
   className,
   onKeyDown,
   onPaste,
   placeholder,
   ...props
 }: PromptInputTextareaProps) {
+  const { messages } = useLocale();
   const prompt = usePrompt("PromptInputTextarea");
   const area = useRef<HTMLTextAreaElement>(null);
   useScrollEdges(area, "y");
@@ -316,7 +318,7 @@ export function PromptInputTextarea({
         data-disabled={prompt.disabled ? "" : undefined}
         data-scroll-fade="y"
         data-fade-edges="start"
-        aria-label={label}
+        aria-label={label ?? messages.promptInput.label}
         rows={1}
         value={prompt.value}
         disabled={prompt.disabled}
@@ -422,13 +424,12 @@ export type PromptInputSubmitProps = {
  * up with the first word. While an answer is written it is the stop key, in the same place and
  * size: the arrow shrinks away and the square seats. Pressing it keeps the keyboard in the text.
  */
-export function PromptInputSubmit({
-  sendLabel = "Senden",
-  stopLabel = "Anhalten",
-  className,
-}: PromptInputSubmitProps) {
+export function PromptInputSubmit({ sendLabel, stopLabel, className }: PromptInputSubmitProps) {
+  const { messages } = useLocale();
   const prompt = usePrompt("PromptInputSubmit");
-  const label = prompt.running ? stopLabel : sendLabel;
+  const label = prompt.running
+    ? (stopLabel ?? messages.promptInput.stop)
+    : (sendLabel ?? messages.promptInput.send);
   return (
     <Tooltip>
       <TooltipTrigger
@@ -472,11 +473,12 @@ export type PromptInputAttachmentsProps = Omit<ComponentProps<"div">, "children"
  * last one away. Empty, the row takes no room.
  */
 export function PromptInputAttachments({
-  label = "Anhänge",
+  label,
   className,
   children,
   ...props
 }: PromptInputAttachmentsProps) {
+  const { messages } = useLocale();
   const prompt = usePrompt("PromptInputAttachments");
   const items = useMemo(
     () =>
@@ -493,7 +495,7 @@ export function PromptInputAttachments({
   return (
     <AttachmentVariantContext value="chip">
       <ChipGroup
-        aria-label={label}
+        aria-label={label ?? messages.promptInput.attachments}
         data-slot="prompt-input-attachments"
         className={cn("px-1 pt-1 pb-0.5 empty:hidden", className)}
         {...props}

@@ -24,6 +24,7 @@ import { PickerButton, pickerRow, PickerSheet, PickerTime } from "@/internal/pic
 import { useToday } from "@/internal/today";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { type DateRangePreset, presetOf } from "./presets";
 
@@ -107,10 +108,11 @@ export function DateRangeField({
   className,
   today,
   presets,
-  presetsLabel = "Schnellauswahl",
+  presetsLabel,
   disabled,
   ...props
 }: DateRangeFieldProps) {
+  const { messages } = useLocale();
   const todayIso = useToday(today);
   const now = parseIsoDate(todayIso);
   const example =
@@ -205,7 +207,7 @@ export function DateRangeField({
     <PresetList
       presets={presets}
       chosen={chosen}
-      label={presetsLabel}
+      label={presetsLabel ?? messages.dateRangeField.presets}
       unavailable={unavailable}
       onPick={pick}
     />

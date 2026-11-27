@@ -13,15 +13,9 @@ import {
 } from "@/internal/avatar-cut";
 import { PresenceDot } from "@/internal/presence-dot";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
-import {
-  type AvatarPerson,
-  defaultPresenceLabels,
-  initialsOf,
-  listOf,
-  personLabel,
-  type Presence,
-} from "./people";
+import { type AvatarPerson, initialsOf, listOf, personLabel, type Presence } from "./people";
 
 export type AvatarGroupProps = Omit<ComponentProps<"div">, "children"> & {
   /** Everyone, in the order of importance: the first stands in front. */
@@ -59,12 +53,13 @@ export function AvatarGroup({
   size = "md",
   label,
   presenceLabels,
-  locale = "de-DE",
+  locale,
   className,
   style,
   ...props
 }: AvatarGroupProps) {
-  const words = { ...defaultPresenceLabels, ...presenceLabels };
+  const { messages, tag } = useLocale();
+  const words = { ...messages.avatar.presence, ...presenceLabels };
   const room = Math.max(1, max);
   const front = people.length > room ? people.slice(0, room - 1) : people;
   const rest = people.slice(front.length);
@@ -99,7 +94,7 @@ export function AvatarGroup({
 
   const everyone = listOf(
     people.map((person) => personLabel(person, words)),
-    locale,
+    locale ?? tag,
   );
   // Initials and the number stand in the middle of what is seen of a tile, not of the tile:
   // the part under the one in front would otherwise hide their first letter.
@@ -132,7 +127,7 @@ export function AvatarGroup({
       key: "rest",
       tip: listOf(
         rest.map((person) => personLabel(person, words)),
-        locale,
+        locale ?? tag,
       ),
       content: (
         <span

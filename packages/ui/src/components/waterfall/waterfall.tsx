@@ -25,6 +25,7 @@ import {
 } from "@/internal/chart/steps";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type { WaterfallStep };
 
@@ -75,7 +76,7 @@ export function Waterfall({
   data,
   label,
   format,
-  locale = "de-DE",
+  locale,
   height = 240,
   colors = "status",
   tone = "neutral",
@@ -83,18 +84,19 @@ export function Waterfall({
   drawIn = true,
   words: wordsProp,
   pending = false,
-  empty = "Für diesen Zeitraum gibt es noch keine Werte.",
+  empty,
   className,
   style,
   ...props
 }: WaterfallProps) {
+  const { messages, tag } = useLocale();
   const live = useLive();
   const { grid: axisGridRef, sizer: axisSizerRef } = useAxisColumn<
     HTMLDivElement,
     HTMLDivElement
   >();
-  const numbers = chartFormat(locale, format);
-  const signed = signedFormat(locale, format);
+  const numbers = chartFormat(locale ?? tag, format);
+  const signed = signedFormat(locale ?? tag, format);
   const words = { ...defaultWords, ...wordsProp };
   const [active, setActive] = useState<{
     index: number;
@@ -260,7 +262,7 @@ export function Waterfall({
             </span>
           ))}
         </div>
-        {bars.length > 0 && <AxisLabels ticks={ticks} locale={locale} format={format} />}
+        {bars.length > 0 && <AxisLabels ticks={ticks} locale={locale ?? tag} format={format} />}
 
         <div
           data-slot="waterfall-plot"
@@ -290,7 +292,7 @@ export function Waterfall({
 
           {bars.length === 0 && (
             <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-fg-muted">
-              {empty}
+              {empty ?? messages.charts.empty}
             </p>
           )}
 
@@ -440,7 +442,7 @@ export function Waterfall({
               {/* A name too long for its band is hyphenated by the language's rules
                   („Fremd-leistung“), not broken at any letter. */}
               <span
-                lang={String(locale).split("-")[0]}
+                lang={String(locale ?? tag).split("-")[0]}
                 className="text-balance hyphens-auto text-fg-muted"
               >
                 {data[index]!.name}

@@ -20,6 +20,11 @@ const german = {
     bad: "Schlechte Antwort",
     stopped: "Die Antwort ist abgebrochen.",
     retry: "Noch einmal",
+    /** Who a message is from, for assistive tech. */
+    user: "Du",
+    assistant: "KI",
+    /** The name of the pair of rating keys. */
+    either: (good: string, bad: string) => `${good} oder ${bad}`,
   },
   promptInput: {
     label: "Nachricht an die KI",
@@ -39,14 +44,25 @@ const german = {
   },
   banner: {
     close: "Hinweis schließen",
+    tone: {
+      info: "Hinweis",
+      success: "Erledigt",
+      warning: "Warnung",
+      danger: "Fehler",
+    },
   },
   charts: {
     empty: "Für diesen Zeitraum gibt es noch keine Werte.",
     change: "Veränderung",
+    /** The two ends of a heatmap's scale. */
+    less: "Weniger",
+    more: "Mehr",
   },
   sources: {
     title: "Quellen",
     newTab: "öffnet in einem neuen Tab",
+    /** The name of a numbered reference in the text. */
+    label: (number: number, title: string) => `Quelle ${number}: ${title}`,
   },
   tableOfContents: {
     title: "Auf dieser Seite",
@@ -57,6 +73,11 @@ const german = {
   fileTile: {
     retry: "Noch einmal versuchen",
     folder: "Ordner",
+    status: {
+      uploading: "Wird hochgeladen",
+      done: "Hochgeladen",
+      error: "Fehlgeschlagen",
+    },
   },
   storedSecretField: {
     saved: "Gespeichert",
@@ -71,6 +92,14 @@ const german = {
     dropTitle: "Loslassen, um sie hinzuzufügen",
     button: "Dateien auswählen",
     retry: "Noch einmal versuchen",
+    /** The name of the key that removes a file. */
+    remove: (name: string) => `${name} entfernen`,
+    status: {
+      waiting: "Wartet",
+      uploading: "Wird hochgeladen",
+      done: "Hochgeladen",
+      error: "Fehlgeschlagen",
+    },
   },
   drawer: {
     close: "Schließen",
@@ -146,6 +175,8 @@ const german = {
   actionBar: {
     clear: "Auswahl aufheben",
     label: "Auswahl",
+    /** The word after the count. */
+    count: "ausgewählt",
   },
   command: {
     label: "Befehle",
@@ -166,6 +197,11 @@ const german = {
   },
   themeSwitch: {
     label: "Erscheinungsbild",
+    themes: {
+      system: "System",
+      light: "Hell",
+      dark: "Dunkel",
+    },
   },
   breadcrumbs: {
     more: "Weitere Orte",
@@ -173,6 +209,39 @@ const german = {
   conversation: {
     label: "Unterhaltung",
     latest: "Neueste",
+  },
+  attachment: {
+    /** One verb, said after the file's name. */
+    remove: "entfernen",
+    status: {
+      uploading: "Wird hochgeladen",
+      done: "Hochgeladen",
+      error: "Fehlgeschlagen",
+    },
+  },
+  trace: {
+    status: {
+      pending: "Steht aus",
+      running: "Läuft",
+      done: "Erledigt",
+      error: "Fehlgeschlagen",
+    },
+  },
+  otpField: {
+    /** The name of each box after the first. */
+    slot: (position: number, total: number) => `Ziffer ${position} von ${total}`,
+  },
+  numberField: {
+    decrement: "Verringern",
+    increment: "Erhöhen",
+  },
+  avatar: {
+    /** What a presence dot is called. */
+    presence: {
+      online: "Online",
+      away: "Abwesend",
+      offline: "Offline",
+    },
   },
 };
 
@@ -187,6 +256,9 @@ export const en: Messages = {
     bad: "Bad answer",
     stopped: "The answer was stopped.",
     retry: "Try again",
+    user: "You",
+    assistant: "AI",
+    either: (good, bad) => `${good} or ${bad}`,
   },
   promptInput: {
     label: "Message to the AI",
@@ -206,14 +278,23 @@ export const en: Messages = {
   },
   banner: {
     close: "Close notice",
+    tone: {
+      info: "Note",
+      success: "Done",
+      warning: "Warning",
+      danger: "Error",
+    },
   },
   charts: {
     empty: "There are no values for this period yet.",
     change: "Change",
+    less: "Less",
+    more: "More",
   },
   sources: {
     title: "Sources",
     newTab: "opens in a new tab",
+    label: (number, title) => `Source ${number}: ${title}`,
   },
   tableOfContents: {
     title: "On this page",
@@ -224,6 +305,11 @@ export const en: Messages = {
   fileTile: {
     retry: "Try again",
     folder: "Folder",
+    status: {
+      uploading: "Uploading",
+      done: "Uploaded",
+      error: "Failed",
+    },
   },
   storedSecretField: {
     saved: "Saved",
@@ -238,6 +324,13 @@ export const en: Messages = {
     dropTitle: "Drop to add them",
     button: "Choose files",
     retry: "Try again",
+    remove: (name) => `Remove ${name}`,
+    status: {
+      waiting: "Waiting",
+      uploading: "Uploading",
+      done: "Uploaded",
+      error: "Failed",
+    },
   },
   drawer: {
     close: "Close",
@@ -306,6 +399,7 @@ export const en: Messages = {
   actionBar: {
     clear: "Clear selection",
     label: "Selection",
+    count: "selected",
   },
   command: {
     label: "Commands",
@@ -326,6 +420,11 @@ export const en: Messages = {
   },
   themeSwitch: {
     label: "Appearance",
+    themes: {
+      system: "System",
+      light: "Light",
+      dark: "Dark",
+    },
   },
   breadcrumbs: {
     more: "More places",
@@ -333,6 +432,36 @@ export const en: Messages = {
   conversation: {
     label: "Conversation",
     latest: "Latest",
+  },
+  attachment: {
+    remove: "remove",
+    status: {
+      uploading: "Uploading",
+      done: "Uploaded",
+      error: "Failed",
+    },
+  },
+  trace: {
+    status: {
+      pending: "Pending",
+      running: "Running",
+      done: "Done",
+      error: "Failed",
+    },
+  },
+  otpField: {
+    slot: (position, total) => `Digit ${position} of ${total}`,
+  },
+  numberField: {
+    decrement: "Decrease",
+    increment: "Increase",
+  },
+  avatar: {
+    presence: {
+      online: "Online",
+      away: "Away",
+      offline: "Offline",
+    },
   },
 };
 

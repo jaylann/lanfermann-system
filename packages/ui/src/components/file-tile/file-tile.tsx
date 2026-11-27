@@ -22,6 +22,7 @@ import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 import { Progress, ProgressTrack } from "@/components/progress/progress";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import {
   fileTileMeta,
@@ -33,12 +34,6 @@ import {
 
 /** Where a file stands: on its way, arrived, or failed. */
 export type FileTileStatus = "uploading" | "done" | "error";
-
-const statusWords: Record<FileTileStatus, string> = {
-  uploading: "Wird hochgeladen",
-  done: "Hochgeladen",
-  error: "Fehlgeschlagen",
-};
 
 export type FileTileProps = Omit<ComponentProps<"div">, "children"> & {
   /** The file's or folder's name, as it is shown and read out: „Angebot_Kowalski_Herbst.pdf“. */
@@ -273,15 +268,16 @@ export function FileTile({
   progress,
   error,
   onRetry,
-  retryLabel = "Noch einmal versuchen",
+  retryLabel,
   statusLabels,
   variant = "file",
-  folderLabel = "Ordner",
+  folderLabel,
   dropOver = false,
   nameSlot,
   className,
   ...props
 }: FileTileProps) {
+  const { messages } = useLocale();
   const { inGrid } = useContext(FileGridContext);
   const kind = kindProp ?? (variant === "folder" ? "folder" : kindOf({ name, type }));
   const shape = variant === "folder" ? "row" : "tile";
@@ -298,12 +294,16 @@ export function FileTile({
   }
   const failed = status === "error";
   const fraction = Math.min(1, Math.max(0, progress ?? 0));
-  const words = { ...statusWords, ...statusLabels };
+  const words = { ...messages.fileTile.status, ...statusLabels };
 
   // Said before the name: a folder is named as one, a file that is not there yet by its state.
   const spoken = (
     <span className="sr-only">
-      {variant === "folder" ? `${folderLabel}: ` : status === "done" ? "" : `${words[status]}: `}
+      {variant === "folder"
+        ? `${folderLabel ?? messages.fileTile.folder}: `
+        : status === "done"
+          ? ""
+          : `${words[status]}: `}
     </span>
   );
 
@@ -413,7 +413,7 @@ export function FileTile({
                   onClick={onRetry}
                   className="touch-target relative rounded-xs text-sm font-medium text-fg underline decoration-1 underline-offset-[0.25em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
-                  {retryLabel}
+                  {retryLabel ?? messages.fileTile.retry}
                 </button>
               )}
             </div>

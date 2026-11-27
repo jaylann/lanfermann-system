@@ -11,6 +11,7 @@ import type { FieldSize } from "@/internal/field";
 import { RevealKey, secretSymbolSize, swapSettle, useSwap } from "@/internal/reveal-key";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 /** How many discs stand before the ending: the length is nobody's business. */
 const MASK_DISCS = 8;
@@ -107,14 +108,14 @@ export function StoredSecretField({
   saveLabel,
   saving = false,
   saved = false,
-  savedLabel = "Gespeichert",
+  savedLabel,
   savedHold = SAVED_SHOWN_MS,
-  storedLabel = "Gesetzt",
-  endingLabel = "endet auf",
-  replaceLabel = "Ersetzen",
+  storedLabel,
+  endingLabel,
+  replaceLabel,
   cancelLabel: _cancelLabel,
-  revealLabel = "Anzeigen",
-  hideLabel = "Verbergen",
+  revealLabel,
+  hideLabel,
   name,
   className,
   ref,
@@ -123,6 +124,7 @@ export function StoredSecretField({
   onBlur,
   ...props
 }: StoredSecretFieldProps) {
+  const { messages } = useLocale();
   const hasEnding = ending !== undefined && ending !== "";
   const stored = storedProp ?? hasEnding;
   const [own, setOwn] = useState(defaultReplacing);
@@ -189,7 +191,9 @@ export function StoredSecretField({
   }, [confirming, savedHold]);
 
   // What assistive tech reads in the field, whatever it looks like.
-  const said = hasEnding ? `${storedLabel}, ${endingLabel} ${ending}` : storedLabel;
+  const said = hasEnding
+    ? `${storedLabel ?? messages.storedSecretField.stored}, ${endingLabel ?? messages.storedSecretField.ending} ${ending}`
+    : (storedLabel ?? messages.storedSecretField.stored);
   const saveShown = typing && (filled || confirming);
 
   const field = (
@@ -251,8 +255,8 @@ export function StoredSecretField({
             revealed={revealed}
             onRevealedChange={(next) => reveal.swap(() => setRevealed(next))}
             size={size}
-            revealLabel={revealLabel}
-            hideLabel={hideLabel}
+            revealLabel={revealLabel ?? messages.storedSecretField.reveal}
+            hideLabel={hideLabel ?? messages.storedSecretField.hide}
             swapping={turn.swapping}
           />
         </>
@@ -327,7 +331,7 @@ export function StoredSecretField({
             "focus-visible:outline-offset-0",
           )}
         >
-          {replaceLabel}
+          {replaceLabel ?? messages.storedSecretField.replace}
         </Button>
       )}
     </InputGroup>
@@ -371,7 +375,7 @@ export function StoredSecretField({
         </div>
       </div>
       <span role="status" className="sr-only">
-        {confirming ? savedLabel : ""}
+        {confirming ? (savedLabel ?? messages.storedSecretField.saved) : ""}
       </span>
     </div>
   );

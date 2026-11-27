@@ -11,6 +11,7 @@ import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { kindOf, kindSymbols, kindSymbolsSmall, typeWord } from "./kinds";
 
@@ -22,12 +23,6 @@ export type AttachmentVariant = "chip" | "tile";
 
 /** Inside a prompt's row of attachments, they are chips unless they say otherwise. */
 export const AttachmentVariantContext = createContext<AttachmentVariant>("tile");
-
-const defaultStatusLabels: Record<AttachmentStatus, string> = {
-  uploading: "Wird hochgeladen",
-  done: "Hochgeladen",
-  error: "Fehlgeschlagen",
-};
 
 export type AttachmentProps = Omit<ComponentProps<"div">, "children"> & {
   /** The file's name, as it is shown and read out: „Angebot-Kornprobst.pdf“. */
@@ -87,21 +82,23 @@ export function Attachment({
   status = "done",
   error,
   onRemove,
-  removeLabel = "entfernen",
+  removeLabel: removeLabelProp,
   href,
   variant: variantProp,
   chipVariant = "plug",
   statusLabels,
-  locale = "de-DE",
+  locale,
   className,
   ...props
 }: AttachmentProps) {
+  const { messages, tag } = useLocale();
   const placed = useContext(AttachmentVariantContext);
   const variant = variantProp ?? placed;
-  const labels = { ...defaultStatusLabels, ...statusLabels };
+  const labels = { ...messages.attachment.status, ...statusLabels };
+  const removeLabel = removeLabelProp ?? messages.attachment.remove;
   const kind = kindOf({ name, type });
   const picture = kind === "image" && src !== undefined;
-  const sizeWord = size === undefined ? undefined : formatFileSize(size, locale);
+  const sizeWord = size === undefined ? undefined : formatFileSize(size, locale ?? tag);
 
   /** In front: the arc on the way, the danger symbol after a failure, else the kind. */
   const mark = (small: boolean) =>

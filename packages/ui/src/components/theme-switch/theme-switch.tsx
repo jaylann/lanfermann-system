@@ -14,6 +14,7 @@ import {
   type SelectTriggerProps,
 } from "@/components/select/select";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import type { Theme } from "./theme-mode";
 
@@ -24,12 +25,6 @@ const themes: readonly { value: Theme; icon: IconSvgElement }[] = [
   { value: "light", icon: Sun03Icon },
   { value: "dark", icon: Moon02Icon },
 ];
-
-const defaultLabels: Record<Theme, string> = {
-  system: "System",
-  light: "Hell",
-  dark: "Dunkel",
-};
 
 type Choice = {
   /** The chosen appearance (controlled). */
@@ -89,21 +84,23 @@ function ThemeSelect({
   value,
   defaultValue = "system",
   onValueChange,
-  "aria-label": label = "Erscheinungsbild",
+  "aria-label": label,
   labels,
   size,
   id,
   className,
   ...root
 }: AsSelect) {
+  const { messages } = useLocale();
+  const names = messages.themeSwitch.themes;
   const items = useMemo(
     () =>
       themes.map((theme) => ({
         value: theme.value,
-        label: labels?.[theme.value] ?? defaultLabels[theme.value],
+        label: labels?.[theme.value] ?? names[theme.value],
         icon: theme.icon,
       })),
-    [labels],
+    [labels, names],
   );
   return (
     <Select<Theme>
@@ -117,7 +114,12 @@ function ThemeSelect({
       {...root}
     >
       {/* As wide as its longest name needs, so the bar around it does not move with the choice. */}
-      <SelectTrigger id={id} aria-label={label} size={size} className={cn("min-w-32", className)} />
+      <SelectTrigger
+        id={id}
+        aria-label={label ?? messages.themeSwitch.label}
+        size={size}
+        className={cn("min-w-32", className)}
+      />
       <SelectContent>
         {items.map((item) => (
           <SelectItem key={item.value} value={item.value}>
@@ -134,13 +136,14 @@ function ThemeSegments({
   value,
   defaultValue = "system",
   onValueChange,
-  "aria-label": label = "Erscheinungsbild",
+  "aria-label": label,
   labels,
   withLabels = false,
   id,
   className,
 }: AsSegments) {
-  const names = { ...defaultLabels, ...labels };
+  const { messages } = useLocale();
+  const names = { ...messages.themeSwitch.themes, ...labels };
   return (
     // No marks: each symbol is its segment's mark. It keeps the segmented control's own slot,
     // by which the stylesheet finds the control.
@@ -148,7 +151,7 @@ function ThemeSegments({
       id={id}
       shape="round"
       marks={false}
-      aria-label={label}
+      aria-label={label ?? messages.themeSwitch.label}
       value={value}
       defaultValue={value === undefined ? defaultValue : undefined}
       onValueChange={(next) => onValueChange?.(next as Theme)}

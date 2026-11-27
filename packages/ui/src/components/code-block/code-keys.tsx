@@ -9,6 +9,7 @@ import { Toggle } from "@/components/toggle/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
 import { COPY_SHOWN_MS, CopyMarks } from "@/internal/copy";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { CodeCopy, type CodeCopyLabels } from "./code-copy";
 
@@ -61,12 +62,13 @@ export function CodeKeys({
   downloadedLabel,
   downloadedMessage,
   wrapToggle,
-  wrapLabel = "Zeilen umbrechen",
+  wrapLabel,
   wrapped,
   onWrappedChange,
   className,
   ...copyLabels
 }: CodeKeysProps) {
+  const { messages } = useLocale();
   return (
     <div data-slot="code-keys" className={cn("flex items-center gap-0.5", className)}>
       {wrapToggle && (
@@ -77,7 +79,7 @@ export function CodeKeys({
                 iconOnly
                 size="sm"
                 variant="quiet"
-                aria-label={wrapLabel}
+                aria-label={wrapLabel ?? messages.codeBlock.wrap}
                 data-slot="code-wrap"
                 pressed={wrapped}
                 onPressedChange={onWrappedChange}
@@ -86,7 +88,7 @@ export function CodeKeys({
               </Toggle>
             }
           />
-          <TooltipContent>{wrapLabel}</TooltipContent>
+          <TooltipContent>{wrapLabel ?? messages.codeBlock.wrap}</TooltipContent>
         </Tooltip>
       )}
       {download !== undefined && download !== false && (
@@ -118,10 +120,11 @@ type CodeDownloadProps = Pick<
 function CodeDownload({
   text,
   fileName,
-  downloadLabel = "Herunterladen",
-  downloadedLabel = "Heruntergeladen",
-  downloadedMessage = "Die Datei wurde heruntergeladen.",
+  downloadLabel,
+  downloadedLabel,
+  downloadedMessage,
 }: CodeDownloadProps) {
+  const { messages } = useLocale();
   const [done, setDone] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -152,7 +155,7 @@ function CodeDownload({
               iconOnly
               size="sm"
               variant="quiet"
-              aria-label={downloadLabel}
+              aria-label={downloadLabel ?? messages.codeBlock.download}
               onClick={save}
               className="text-fg-muted hover:text-fg"
             >
@@ -160,10 +163,14 @@ function CodeDownload({
             </Button>
           }
         />
-        <TooltipContent>{done ? downloadedLabel : downloadLabel}</TooltipContent>
+        <TooltipContent>
+          {done
+            ? (downloadedLabel ?? messages.codeBlock.downloaded)
+            : (downloadLabel ?? messages.codeBlock.download)}
+        </TooltipContent>
       </Tooltip>
       <span role="status" className="sr-only">
-        {done ? downloadedMessage : ""}
+        {done ? (downloadedMessage ?? messages.codeBlock.downloadedMessage) : ""}
       </span>
     </div>
   );

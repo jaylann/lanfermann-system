@@ -9,6 +9,7 @@ import { extent, share, valueAxis } from "@/internal/chart/scale";
 import { relativeChange, signedFormat } from "@/internal/chart/steps";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type DumbbellItem = {
   /** What the row is: a service, a project, a person. */
@@ -58,20 +59,21 @@ export function Dumbbell({
   labels,
   label,
   format,
-  locale = "de-DE",
+  locale,
   sort = false,
   tone = "neutral",
   zero = false,
   readout = true,
   drawIn = true,
-  changeLabel = "Veränderung",
+  changeLabel,
   className,
   ...props
 }: DumbbellProps) {
+  const { messages, tag } = useLocale();
   const live = useLive();
-  const numbers = chartFormat(locale, format);
-  const signedPercent = signedFormat(locale, { style: "percent", maximumFractionDigits: 0 });
-  const signed = signedFormat(locale, format);
+  const numbers = chartFormat(locale ?? tag, format);
+  const signedPercent = signedFormat(locale ?? tag, { style: "percent", maximumFractionDigits: 0 });
+  const signed = signedFormat(locale ?? tag, format);
   const [active, setActive] = useState<{ index: number; shown: boolean; entry: number } | null>(
     null,
   );
@@ -124,7 +126,7 @@ export function Dumbbell({
         color: "transparent",
         mark: "swatch",
         value: changeOf(index),
-        label: changeLabel,
+        label: changeLabel ?? messages.charts.change,
       },
     ];
   };
@@ -343,7 +345,7 @@ export function Dumbbell({
                 <th scope="col">Zeile</th>
                 <th scope="col">{labels[0]}</th>
                 <th scope="col">{labels[1]}</th>
-                <th scope="col">{changeLabel}</th>
+                <th scope="col">{changeLabel ?? messages.charts.change}</th>
               </tr>
             </thead>
             <tbody>

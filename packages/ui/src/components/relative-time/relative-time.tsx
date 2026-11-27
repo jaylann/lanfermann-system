@@ -4,6 +4,7 @@ import { type ComponentProps, useSyncExternalStore } from "react";
 
 import { readClock, subscribeClock } from "@/internal/clock";
 import { dateFormatter, formatRelativeTime, type TimeValue, toTime } from "@/lib/format";
+import { useLocale } from "@/locale/locale";
 
 /** The zone a page is written in on the server, where the reader's is not known yet. */
 const SERVER_ZONE = "Europe/Berlin";
@@ -54,7 +55,7 @@ const onServer = () => false;
 export function RelativeTime({
   value,
   now,
-  locale = "de-DE",
+  locale,
   short = false,
   timeZone,
   justNowLabel,
@@ -62,6 +63,7 @@ export function RelativeTime({
   className,
   ...props
 }: RelativeTimeProps) {
+  const { tag } = useLocale();
   const fixed = now === undefined ? undefined : toTime(now);
   const browser = useSyncExternalStore(still, inBrowser, onServer);
   const clock = useSyncExternalStore(
@@ -77,7 +79,7 @@ export function RelativeTime({
   const text =
     moment === null
       ? Number.isFinite(time)
-        ? dateFormatter(locale, {
+        ? dateFormatter(locale ?? tag, {
             day: "numeric",
             month: "short",
             year: "numeric",
@@ -88,7 +90,7 @@ export function RelativeTime({
         : ""
       : formatRelativeTime(time, {
           now: moment,
-          locale,
+          locale: locale ?? tag,
           style: short ? "short" : "long",
           timeZone: zone,
           justNow: justNowLabel,

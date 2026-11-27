@@ -27,6 +27,7 @@ import { useArrivingText } from "@/internal/arriving";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 /** Who wrote a message: the assistant, or the person using it. */
 export type MessageFrom = "assistant" | "user";
@@ -58,11 +59,12 @@ export type MessageProps = ComponentProps<"article"> & {
 export function Message({
   from,
   streaming = false,
-  label = from === "user" ? "Du" : "KI",
+  label,
   className,
   children,
   ...props
 }: MessageProps) {
+  const { messages } = useLocale();
   const conversation = useConversation();
   // Read once, when the message mounts: it joined a conversation that was already standing.
   const joined = useRef(conversation?.live ?? false);
@@ -77,7 +79,7 @@ export function Message({
         data-slot="message"
         data-from={from}
         data-streaming={streaming ? "" : undefined}
-        aria-label={label}
+        aria-label={label ?? (from === "user" ? messages.message.user : messages.message.assistant)}
         className={cn(
           "flex min-w-0 flex-col",
           from === "user"
@@ -266,11 +268,12 @@ export function MessageFeedback({
   value: valueProp,
   defaultValue = null,
   onValueChange,
-  goodLabel = "Gute Antwort",
-  badLabel = "Schlechte Antwort",
+  goodLabel,
+  badLabel,
   className,
   ...props
 }: MessageFeedbackProps) {
+  const { messages } = useLocale();
   const [own, setOwn] = useState<MessageVerdict>(defaultValue);
   const value = valueProp === undefined ? own : valueProp;
   const live = useLive();
@@ -323,14 +326,17 @@ export function MessageFeedback({
   return (
     <div
       role="group"
-      aria-label={`${goodLabel} oder ${badLabel}`}
+      aria-label={messages.message.either(
+        goodLabel ?? messages.message.good,
+        badLabel ?? messages.message.bad,
+      )}
       data-slot="message-feedback"
       data-live={live ? "" : undefined}
       className={cn("flex items-center gap-0.5", className)}
       {...props}
     >
-      {key("good", goodLabel, ThumbsUpIcon)}
-      {key("bad", badLabel, ThumbsDownIcon)}
+      {key("good", goodLabel ?? messages.message.good, ThumbsUpIcon)}
+      {key("bad", badLabel ?? messages.message.bad, ThumbsDownIcon)}
     </div>
   );
 }
@@ -348,12 +354,13 @@ export type MessageErrorProps = Omit<ComponentProps<"div">, "children"> & {
  * a key. Nothing shakes and no colour flashes; the words carry it.
  */
 export function MessageError({
-  children = "Die Antwort ist abgebrochen.",
+  children,
   onRetry,
-  retryLabel = "Noch einmal",
+  retryLabel,
   className,
   ...props
 }: MessageErrorProps) {
+  const { messages } = useLocale();
   return (
     <div
       role="alert"
@@ -363,11 +370,11 @@ export function MessageError({
     >
       <Icon icon={Alert02Icon} size={16} className="mt-[0.1875rem] shrink-0 text-danger" />
       <div className="flex min-w-0 flex-col items-start gap-2.5">
-        <p className="text-pretty">{children}</p>
+        <p className="text-pretty">{children ?? messages.message.stopped}</p>
         {onRetry && (
           <Button size="sm" variant="secondary" onClick={onRetry}>
             <Icon icon={RefreshIcon} size={14} />
-            {retryLabel}
+            {retryLabel ?? messages.message.retry}
           </Button>
         )}
       </div>
