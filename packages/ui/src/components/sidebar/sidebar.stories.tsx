@@ -560,11 +560,21 @@ export const BrandAndRailNames: Story = {
     await expect(canvas.queryAllByRole("img", { name: /Lanfermann/ })).toHaveLength(0);
     // Its name begins with the initials on the avatar.
     const person = canvas.getByRole("button", { name: /Maria Huber/ });
-    await userEvent.hover(person);
-    await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("Maria Huber"));
-    await userEvent.click(person);
+    const named = () => document.querySelector('[data-slot="tooltip-content"]');
+    await userEvent.tab();
+    await userEvent.tab();
+    person.focus();
+    await waitFor(() => expect(named()).toHaveTextContent("Maria Huber"));
+    await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(screen.getByRole("menu")).toBeVisible());
-    await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+    await waitFor(() => expect(named()).toBeNull());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    // Under the pointer as well, once the keyboard has left the row.
+    (document.activeElement as HTMLElement | null)?.blur();
+    await userEvent.hover(person);
+    await waitFor(() => expect(named()).toHaveTextContent("Maria Huber"), { timeout: 3000 });
+    await userEvent.unhover(person);
     await userEvent.keyboard("{Escape}");
   },
 };
