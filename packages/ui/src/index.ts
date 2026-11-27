@@ -542,6 +542,11 @@ export {
   type SelectTriggerProps,
 } from "./components/select/select";
 export {
+  SelectField,
+  type SelectFieldItems,
+  type SelectFieldProps,
+} from "./components/select-field/select-field";
+export {
   type Selection,
   type SelectionContainerProps,
   type SelectionItemProps,
