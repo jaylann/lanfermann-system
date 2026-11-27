@@ -119,6 +119,33 @@ export const NegativeValues: Story = {
   ),
 };
 
+const dollar = { style: "currency", currency: "USD" } as const;
+const smallCosts = [
+  { dienst: "Speicher", kosten: 0.83 },
+  { dienst: "Bilder", kosten: 0.41 },
+  { dienst: "E-Mail", kosten: 0.27 },
+  { dienst: "Domains", kosten: 0.12 },
+  { dienst: "Protokolle", kosten: 0.04 },
+];
+
+/**
+ * Amounts under one dollar: the axis counts in quarters, and each line says its own value
+ * („0,25 $“, „0,75 $“) with as many decimals as the quarter needs.
+ */
+export const SmallAmounts: Story = {
+  name: "Small amounts",
+  render: () => (
+    <BarChart
+      className="w-[42rem] max-w-full"
+      label="Kosten pro Dienst im November"
+      data={smallCosts}
+      x="dienst"
+      series={[{ key: "kosten", label: "Kosten" }]}
+      format={dollar}
+    />
+  ),
+};
+
 const years = {
   "2026": months,
   "2025": months.map((row) => ({ ...row, umsatz: row.vorjahr })),

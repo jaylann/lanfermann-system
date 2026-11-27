@@ -117,6 +117,7 @@ export function Waterfall({
   );
   const up = (number: number) => share(number, axis.domain);
   const ticks = useAxisTicks(axis.ticks, axis.domain);
+  const axisLabel = numbers.axisFor(axis.ticks);
   const slots = bands(bars.length, bars.length > 12 ? 0.25 : 0.35);
   const centre = (index: number) => (index + 0.5) / bars.length;
   // A column's side, from its centre: half the column, as wide as its band and at most 1.5rem.
@@ -256,7 +257,7 @@ export function Waterfall({
         >
           {axis.ticks.map((tick) => (
             <span key={tick} className="col-start-1 row-start-1">
-              {numbers.axis(tick)}
+              {axisLabel(tick)}
             </span>
           ))}
         </div>

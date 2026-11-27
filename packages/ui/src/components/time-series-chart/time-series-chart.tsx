@@ -207,6 +207,7 @@ export function TimeSeriesChart<Row>({
   }, [rows, series, hidden, target, zero, area, height]);
   const up = (number: number) => share(number, axis.domain);
   const valueTicks = useAxisTicks(axis.ticks, axis.domain);
+  const axisLabel = numbers.axisFor(axis.ticks);
   const base = 1 - Math.min(1, Math.max(0, up(0)));
 
   const shapes = useMemo<Shape[]>(
@@ -371,7 +372,7 @@ export function TimeSeriesChart<Row>({
         >
           {axis.ticks.map((tick) => (
             <span key={tick} className="col-start-1 row-start-1">
-              {numbers.axis(tick)}
+              {axisLabel(tick)}
             </span>
           ))}
         </div>

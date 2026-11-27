@@ -65,6 +65,27 @@ export function visitDays(count = 30, last = new Date(2026, 10, 20), seed = 11):
   });
 }
 
+export type CostDay = { tag: string; kosten: number };
+
+/**
+ * What a hosted service costs per day, in dollars. `most` is about the dearest day: under a
+ * dollar for a month in which almost nothing ran, so the axis has to count in cents.
+ */
+export function costDays(
+  most = 0.95,
+  count = 30,
+  last = new Date(2026, 10, 30),
+  seed = 13,
+): CostDay[] {
+  const random = seeded(seed);
+  return daysUntil(last, count).map((date, index) => {
+    const weekend = date.getDay() === 0 || date.getDay() === 6;
+    const wave = 0.55 + 0.3 * Math.sin(index / 4);
+    const share = (weekend ? 0.25 : 1) * (wave + random() * 0.25);
+    return { tag: iso(date), kosten: Math.round(Math.min(1, share) * most * 100) / 100 };
+  });
+}
+
 export type RevenueMonth = { monat: string; umsatz: number; vorjahr: number };
 
 /** Revenue per month over a year. */

@@ -87,6 +87,7 @@ export function Dumbbell({
     [data, zero],
   );
   const at = (value: number) => share(value, axis.domain);
+  const axisLabel = numbers.axisFor(axis.ticks);
   const toColor = tone === "accent" ? "var(--lf-series-1)" : "var(--lf-text)";
   const fromColor = "var(--lf-series-muted)";
 
@@ -232,7 +233,7 @@ export function Dumbbell({
                 className="absolute top-0 right-0 whitespace-nowrap tabular-nums"
                 style={labelAlong(at(tick))}
               >
-                {numbers.axis(tick)}
+                {axisLabel(tick)}
               </span>
             </div>
           ))}

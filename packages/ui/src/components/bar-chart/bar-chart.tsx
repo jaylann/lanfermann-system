@@ -137,6 +137,7 @@ export function BarChart<Row>({
   }, [data, series, hidden, stacked, height]);
   const up = (number: number) => share(number, axis.domain);
   const ticks = useAxisTicks(axis.ticks, axis.domain);
+  const axisLabel = numbers.axisFor(axis.ticks);
   const zero = up(0);
   const slots = bands(data.length, data.length > 16 ? 0.25 : 0.35);
 
@@ -315,7 +316,7 @@ export function BarChart<Row>({
         >
           {axis.ticks.map((tick) => (
             <span key={tick} className="col-start-1 row-start-1">
-              {numbers.axis(tick)}
+              {axisLabel(tick)}
             </span>
           ))}
         </div>
