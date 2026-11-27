@@ -45,6 +45,8 @@ type DropContextValue = {
   /** Counts the drags that ended, so a target forgets its own count of enters and leaves. */
   ended: number;
   disabled: boolean;
+  /** Whether the area takes files at all, or only items dragged inside it. */
+  files: boolean;
   enter: (target: Target) => void;
   leave: (id: string) => void;
   /** Where a drag of items begins: what it carries, and the picture under the pointer. */
@@ -70,19 +72,37 @@ const plate = [
   "transition-opacity spring-leave data-shown:opacity-100 data-shown:spring-settle",
 ].join(" ");
 
-export type FileDropAreaProps = Omit<ComponentProps<"div">, "onDrop"> & {
-  /**
-   * Called with the files that were dropped or pasted, and the target they were dropped on: the
-   * id of a `useDropTarget` (a folder), or `null` for the area itself.
-   */
-  onFiles: (files: File[], target: string | null) => void;
+type FileDropAreaOwnProps = Omit<ComponentProps<"div">, "onDrop"> & {
   /** Called with the ids of items dragged inside the area and dropped on a target. */
   onItems?: (ids: string[], target: string) => void;
-  /** What the plate says while files hang over the area itself: „In building-gbar ablegen“. */
-  label: ReactNode;
   /** Nothing can be dropped right now. */
   disabled?: boolean;
 };
+
+export type FileDropAreaProps = FileDropAreaOwnProps &
+  (
+    | {
+        /** `all` (the default): files from the system and items dragged inside the area. */
+        accept?: "all";
+        /**
+         * Called with the files that were dropped or pasted, and the target they were dropped
+         * on: the id of a `useDropTarget` (a folder), or `null` for the area itself.
+         */
+        onFiles: (files: File[], target: string | null) => void;
+        /** What the plate says while files hang over the area itself: „In building-gbar ablegen“. */
+        label: ReactNode;
+      }
+    | {
+        /**
+         * `items`: only items dragged inside the area, onto its targets. Files dragged in from
+         * the system are none of its business: no halo, no plate, no paste, and the drop is
+         * left to the browser as anywhere else on the page.
+         */
+        accept: "items";
+        onFiles?: undefined;
+        label?: undefined;
+      }
+  );
 
 /**
  * A region that takes files: dropped from the system, pasted while the focus is inside it, or
@@ -97,11 +117,17 @@ export type FileDropAreaProps = Omit<ComponentProps<"div">, "onDrop"> & {
  * does not take a drag of itself, and the area itself takes no items: they would stay where
  * they are.
  *
+ * With `accept="items"` it takes no files at all, only what is dragged inside it: the rail of a
+ * page whose rows can be sorted into folders but that has nothing to upload. It then needs
+ * neither `onFiles` nor a `label`. Give `useItemDrag` a `label` there, since what is dragged is
+ * no file („3 Links“).
+ *
  * Dragging has no keyboard path: offer the same through keys on the page (an upload button, a
  * „Verschieben nach…“ entry in an item's menu). Word the label as where the files go: „In
  * building-gbar ablegen“, a target's as „In badges ablegen“ and „Nach badges verschieben“.
  */
 export function FileDropArea({
+  accept = "all",
   onFiles,
   onItems,
   label,
@@ -116,8 +142,9 @@ export function FileDropArea({
   const [kind, setKind] = useState<"files" | "items" | null>(null);
   const [ended, setEnded] = useState(0);
   const ghost = useRef<HTMLDivElement>(null);
+  const takesFiles = accept === "all";
   const { over, reset, handlers } = useDragDepth(
-    (event) => carriesFiles(event) || carriesItems(event),
+    (event) => (takesFiles && carriesFiles(event)) || carriesItems(event),
     disabled,
   );
 
@@ -152,6 +179,7 @@ export function FileDropArea({
     dragged,
     ended,
     disabled,
+    files: takesFiles,
     enter: (next) => pointAt(next),
     leave: (id) => {
       if (targetNow.current?.id === id) pointAt(null);
@@ -191,7 +219,7 @@ export function FileDropArea({
         onDragEnter={(event) => {
           handlers.onDragEnter(event);
           if (disabled || kind !== null) return;
-          if (carriesFiles(event)) setKind("files");
+          if (takesFiles && carriesFiles(event)) setKind("files");
           else if (carriesItems(event)) setKind("items");
         }}
         onDragOver={(event) => {
@@ -207,8 +235,10 @@ export function FileDropArea({
           if (disabled) return;
           const where = targetNow.current?.id ?? null;
           if (carriesFiles(event)) {
+            // An area for items only leaves a drop of files to the browser.
+            if (!takesFiles) return;
             event.preventDefault();
-            onFiles([...event.dataTransfer.files], where);
+            onFiles?.([...event.dataTransfer.files], where);
           } else if (carriesItems(event)) {
             event.preventDefault();
             const ids = readItems(event.dataTransfer.getData(ITEMS_TYPE));
@@ -217,13 +247,13 @@ export function FileDropArea({
           finish();
         }}
         onPaste={(event) => {
-          if (disabled) return;
+          if (disabled || !takesFiles) return;
           // What is pasted into a field (a name being changed) is the field's.
           if (event.target instanceof Element && event.target.closest("input, textarea")) return;
           const pasted = [...event.clipboardData.files];
           if (pasted.length === 0) return;
           event.preventDefault();
-          onFiles(pasted, null);
+          onFiles?.(pasted, null);
         }}
       >
         {children}
@@ -291,7 +321,8 @@ export function useDropTarget({ id, label, moveLabel, disabled = false }: UseDro
     depth.current = 0;
   }, [ended]);
   const refuses = !area || disabled || area.disabled || (area.dragged?.includes(id) ?? false);
-  const accepts = (event: DragEvent) => !refuses && (carriesFiles(event) || carriesItems(event));
+  const accepts = (event: DragEvent) =>
+    !refuses && ((area?.files && carriesFiles(event)) || carriesItems(event));
   const over = area?.target === id;
   const dropProps: DropTargetProps = {
     "data-drop-target": id,
