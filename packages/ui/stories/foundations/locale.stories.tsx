@@ -168,7 +168,8 @@ export const EnglishNames: Story = {
   play: async ({ canvas, userEvent, step }) => {
     await step("the dialog's way out is called Close", async () => {
       const dialog = await screen.findByRole("dialog", { name: "Send quote." });
-      await expect(dialog.querySelector('[aria-label="Close"]')).toBeVisible();
+      // The sheet fades in: its key is there at once, and seen a moment later.
+      await waitFor(() => expect(dialog.querySelector('[aria-label="Close"]')).toBeVisible());
       await expect(dialog.querySelector('[aria-label="Schließen"]')).toBeNull();
     });
 
@@ -186,6 +187,8 @@ export const EnglishNames: Story = {
 
     await step("the strip of days writes its dates the American way", async () => {
       const strip = canvas.getByRole("group", { name: /Availability of the quote service/ });
+      await expect(strip).toHaveAttribute("aria-roledescription", "History");
+      await expect(strip).toHaveAccessibleName(/Use the arrow keys to move through the entries\.$/);
       strip.focus();
       await userEvent.keyboard("{ArrowLeft}");
       await waitFor(() =>
@@ -198,7 +201,10 @@ export const EnglishNames: Story = {
 
     await step("once something is typed, the cross is called Clear search", async () => {
       await userEvent.type(canvas.getByRole("searchbox", { name: "Search quotes" }), "hu");
-      await expect(canvas.getByRole("button", { name: "Clear search" })).toBeVisible();
+      // The cross eases in once there is text to clear.
+      await waitFor(() =>
+        expect(canvas.getByRole("button", { name: "Clear search" })).toBeVisible(),
+      );
     });
   },
 };
@@ -212,7 +218,7 @@ export const GermanWithoutProvider: Story = {
   play: async ({ canvas, userEvent, step }) => {
     await step("the dialog's way out is called Schließen", async () => {
       const dialog = await screen.findByRole("dialog", { name: "Angebot senden." });
-      await expect(dialog.querySelector('[aria-label="Schließen"]')).toBeVisible();
+      await waitFor(() => expect(dialog.querySelector('[aria-label="Schließen"]')).toBeVisible());
       await expect(dialog.querySelector('[aria-label="Close"]')).toBeNull();
     });
 
@@ -230,6 +236,8 @@ export const GermanWithoutProvider: Story = {
 
     await step("the strip of days writes its dates the German way", async () => {
       const strip = canvas.getByRole("group", { name: /Verfügbarkeit des Angebotsdienstes/ });
+      await expect(strip).toHaveAttribute("aria-roledescription", "Verlauf");
+      await expect(strip).toHaveAccessibleName(/Mit den Pfeiltasten durch die Einträge gehen\.$/);
       strip.focus();
       await userEvent.keyboard("{ArrowLeft}");
       await waitFor(() =>
@@ -242,7 +250,10 @@ export const GermanWithoutProvider: Story = {
 
     await step("once something is typed, the cross is called Suche leeren", async () => {
       await userEvent.type(canvas.getByRole("searchbox", { name: "Angebote suchen" }), "hu");
-      await expect(canvas.getByRole("button", { name: "Suche leeren" })).toBeVisible();
+      // The cross eases in once there is text to clear.
+      await waitFor(() =>
+        expect(canvas.getByRole("button", { name: "Suche leeren" })).toBeVisible(),
+      );
     });
   },
 };
