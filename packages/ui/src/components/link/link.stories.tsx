@@ -104,7 +104,7 @@ export const ExternalSemantics: Story = {
     </div>
   ),
   play: async ({ canvas }) => {
-    const link = canvas.getByRole("link", { name: "Statusseite, öffnet in einem neuen Tab" });
+    const link = canvas.getByRole("link", { name: /^Statusseite\s*, öffnet in einem neuen Tab$/ });
     await expect(link).toHaveAttribute("target", "_blank");
     await expect(link).toHaveAttribute("rel", "noreferrer");
     await expect(link.querySelector('[data-slot="link-external-arrow"]')).not.toBeNull();

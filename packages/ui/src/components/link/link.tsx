@@ -46,7 +46,7 @@ export function Link({
         // A word joiner holds the arrow to the last word, so it never starts a line alone; the
         // box is its own, so the underline ends with the words.
         <span data-slot="link-external" className="inline-block whitespace-nowrap no-underline">
-          &#8288;
+          <span aria-hidden>&#8288;</span>
           <ExternalArrow />
           <span className="sr-only">, {externalLabel}</span>
         </span>

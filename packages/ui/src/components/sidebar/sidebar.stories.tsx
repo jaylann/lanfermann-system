@@ -54,6 +54,7 @@ import { ShortcutProvider } from "@/components/shortcut/shortcut";
 
 import {
   Sidebar,
+  SidebarBrand,
   SidebarButton,
   SidebarContent,
   SidebarFooter,
@@ -131,6 +132,8 @@ type EntriesProps = Partial<SidebarProps> & {
   folds?: boolean;
   /** Whether the menu beside the sidebar is open at first, so it shows in a still picture. */
   moreOpen?: boolean;
+  /** The product's mark in the header, in place of the workspace's menu. */
+  brand?: boolean;
 };
 
 /**
@@ -142,6 +145,7 @@ function Entries({
   subpage,
   folds = false,
   moreOpen = false,
+  brand = false,
   ...props
 }: EntriesProps) {
   const [at, setAt] = useState<{ page: Page | "mehr"; sub?: string }>({
@@ -183,43 +187,49 @@ function Entries({
   return (
     <Sidebar aria-label="Hauptnavigation" {...props}>
       <SidebarHeader>
-        <Menu>
-          <MenuTrigger
-            render={
-              <SidebarButton
-                menu
-                media={
-                  <Avatar size="sm">
-                    <AvatarFallback>{active?.initials}</AvatarFallback>
-                  </Avatar>
+        {brand ? (
+          <SidebarBrand href="#uebersicht" />
+        ) : (
+          <>
+            <Menu>
+              <MenuTrigger
+                render={
+                  <SidebarButton
+                    menu
+                    media={
+                      <Avatar size="sm">
+                        <AvatarFallback>{active?.initials}</AvatarFallback>
+                      </Avatar>
+                    }
+                    className="font-medium text-fg"
+                  />
                 }
-                className="font-medium text-fg"
-              />
-            }
-          >
-            {active?.name}
-          </MenuTrigger>
-          <MenuContent className="min-w-56">
-            <MenuGroup>
-              <MenuGroupLabel>Betriebe</MenuGroupLabel>
-              <MenuRadioGroup
-                value={business}
-                onValueChange={(value: string) => setBusiness(value)}
               >
-                {businesses.map((entry) => (
-                  <MenuRadioItem key={entry.value} value={entry.value}>
-                    {entry.name}
-                  </MenuRadioItem>
-                ))}
-              </MenuRadioGroup>
-            </MenuGroup>
-            <MenuSeparator />
-            <MenuItem>
-              <Icon icon={Add01Icon} size={16} className="text-fg-muted" />
-              Betrieb hinzufügen
-            </MenuItem>
-          </MenuContent>
-        </Menu>
+                {active?.name}
+              </MenuTrigger>
+              <MenuContent className="min-w-56">
+                <MenuGroup>
+                  <MenuGroupLabel>Betriebe</MenuGroupLabel>
+                  <MenuRadioGroup
+                    value={business}
+                    onValueChange={(value: string) => setBusiness(value)}
+                  >
+                    {businesses.map((entry) => (
+                      <MenuRadioItem key={entry.value} value={entry.value}>
+                        {entry.name}
+                      </MenuRadioItem>
+                    ))}
+                  </MenuRadioGroup>
+                </MenuGroup>
+                <MenuSeparator />
+                <MenuItem>
+                  <Icon icon={Add01Icon} size={16} className="text-fg-muted" />
+                  Betrieb hinzufügen
+                </MenuItem>
+              </MenuContent>
+            </Menu>
+          </>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -492,6 +502,71 @@ export const PhoneOpen: Story = {
       </AppShell>
     </Opened>
   ),
+};
+
+/**
+ * The product's mark in the header. It starts where the entries' symbols start; collapse the
+ * sidebar and the word gives its place to the symbol, which stands in the symbols' column.
+ */
+export const Brand: Story = {
+  parameters: {
+    visual: {
+      ...shell,
+      target: '[data-slot="sidebar-brand"]',
+      motion: [{ name: "collapse", click: '[data-slot="sidebar-trigger"]', frames: 10 }],
+    },
+  },
+  render: (args) => (
+    <AppShell>
+      <Entries {...args} brand />
+      <Page />
+    </AppShell>
+  ),
+};
+
+/** On the rail: the symbol over the symbols, and the person below named beside the avatar. */
+export const BrandRail: Story = {
+  parameters: {
+    visual: {
+      ...shell,
+      motion: [
+        { name: "expand", click: '[data-slot="sidebar-trigger"]', frames: 10 },
+        { name: "name", hover: '[data-slot="sidebar-button"]', frames: 6 },
+      ],
+    },
+  },
+  render: (args) => (
+    <AppShell defaultSidebarOpen={false}>
+      <Entries {...args} brand />
+      <Page />
+    </AppShell>
+  ),
+};
+
+/**
+ * As a test: the brand is one link with one name whatever the sidebar shows, and on the rail the
+ * person's row names itself in a tooltip, which gives way once its menu is open.
+ */
+export const BrandAndRailNames: Story = {
+  parameters: { visual: shell },
+  render: (args) => (
+    <AppShell defaultSidebarOpen={false}>
+      <Entries {...args} brand />
+      <Page />
+    </AppShell>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getAllByRole("link", { name: "Lanfermann" })).toHaveLength(1);
+    await expect(canvas.queryAllByRole("img", { name: /Lanfermann/ })).toHaveLength(0);
+    // Its name begins with the initials on the avatar.
+    const person = canvas.getByRole("button", { name: /Maria Huber/ });
+    await userEvent.hover(person);
+    await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("Maria Huber"));
+    await userEvent.click(person);
+    await waitFor(() => expect(screen.getByRole("menu")).toBeVisible());
+    await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+    await userEvent.keyboard("{Escape}");
+  },
 };
 
 /**
