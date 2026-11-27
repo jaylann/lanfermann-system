@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { type CodeKeyOptions, CodeKeys } from "./code-keys";
 import { CodeScroll } from "./code-scroll";
@@ -24,7 +25,7 @@ type CodeTabsFrameProps = Omit<CodeKeyOptions, "download"> & {
   tabs: { label: string; copyText: string; fileName: string }[];
   group?: string;
   defaultValue?: string;
-  label: string;
+  label?: string;
   /** A key that saves the version that is shown. */
   download?: boolean;
   /** Long lines break when the block first shows. With `wrapToggle` the reader can change it. */
@@ -42,13 +43,15 @@ export function CodeTabsFrame({
   tabs,
   group,
   defaultValue,
-  label,
+  label: labelProp,
   download,
   wrap = false,
   wrapToggle = false,
   className,
   ...keyOptions
 }: CodeTabsFrameProps) {
+  const { messages } = useLocale();
+  const label = labelProp ?? messages.codeBlock.label;
   const [wrapped, setWrapped] = useState(wrap);
   const names = tabs.map((tab) => tab.label);
   const [own, setOwn] = useState(defaultValue ?? names[0]);

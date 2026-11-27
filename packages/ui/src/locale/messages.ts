@@ -57,6 +57,9 @@ const german = {
     /** The two ends of a heatmap's scale. */
     less: "Weniger",
     more: "Mehr",
+    /** Between a value and its goal: „12 von 20“, „60 % vom Ziel“. */
+    of: "von",
+    ofTarget: "vom Ziel",
   },
   sources: {
     title: "Quellen",
@@ -160,6 +163,13 @@ const german = {
     copiedMessage: "Der Code wurde kopiert.",
     failedMessage: (keys: string) =>
       `Der Code wurde nicht kopiert. Er ist markiert und kann mit ${keys} kopiert werden.`,
+    /** The name of the region when the block has no title. */
+    label: "Code",
+    /** The key that unfolds a long block. */
+    fold: (hidden: number) => `${hidden} weitere Zeilen`,
+    /** What a changed line is marked with (`CodeLines`, an attribute). */
+    added: "hinzugefügt",
+    removed: "entfernt",
   },
   editableName: {
     label: "Name",
@@ -205,6 +215,8 @@ const german = {
   },
   breadcrumbs: {
     more: "Weitere Orte",
+    /** The navigation's name (an attribute: a Server Component passes it). */
+    label: "Pfad",
   },
   conversation: {
     label: "Unterhaltung",
@@ -242,6 +254,53 @@ const german = {
       away: "Abwesend",
       offline: "Offline",
     },
+  },
+  callout: {
+    /** The title of each tone when the caller gives none. */
+    note: "Hinweis",
+    tip: "Tipp",
+    important: "Wichtig",
+    warning: "Warnung",
+    caution: "Vorsicht",
+  },
+  link: {
+    /** Said after a link that leaves the site. */
+    external: "öffnet in einem neuen Tab",
+  },
+  pager: {
+    /** The navigation's name (an attribute: a Server Component passes it). */
+    label: "Weitere Seiten",
+    next: "Nächste Seite",
+    previous: "Vorherige Seite",
+  },
+  parameterList: {
+    required: "erforderlich",
+    optional: "optional",
+    default: "Standard:",
+  },
+  stat: {
+    /** Which way a change went, for assistive tech. */
+    up: "Gestiegen",
+    down: "Gesunken",
+    flat: "Unverändert",
+  },
+  steps: {
+    /** Where a step stands, for assistive tech. */
+    done: "Erledigt",
+    current: "Aktueller Schritt",
+    upcoming: "Steht aus",
+  },
+  anchorHeading: {
+    /** The link beside a heading (an attribute: a Server Component passes it). */
+    label: "Link zu diesem Abschnitt",
+  },
+  chip: {
+    /** The key that removes a chip (an attribute: a Server Component passes it). */
+    remove: "Entfernen",
+  },
+  fileThumbStack: {
+    /** The name of a stack of files (an attribute: a Server Component passes it). */
+    count: (count: number) => (count === 1 ? "1 Datei" : `${count} Dateien`),
   },
 };
 
@@ -290,6 +349,8 @@ export const en: Messages = {
     change: "Change",
     less: "Less",
     more: "More",
+    of: "of",
+    ofTarget: "of target",
   },
   sources: {
     title: "Sources",
@@ -384,6 +445,10 @@ export const en: Messages = {
     copiedMessage: "The code was copied.",
     failedMessage: (keys) =>
       `The code was not copied. It is selected and can be copied with ${keys}.`,
+    label: "Code",
+    fold: (hidden) => (hidden === 1 ? "1 more line" : `${hidden} more lines`),
+    added: "added",
+    removed: "removed",
   },
   editableName: {
     label: "Name",
@@ -428,6 +493,7 @@ export const en: Messages = {
   },
   breadcrumbs: {
     more: "More places",
+    label: "Breadcrumb",
   },
   conversation: {
     label: "Conversation",
@@ -462,6 +528,45 @@ export const en: Messages = {
       away: "Away",
       offline: "Offline",
     },
+  },
+  callout: {
+    note: "Note",
+    tip: "Tip",
+    important: "Important",
+    warning: "Warning",
+    caution: "Caution",
+  },
+  link: {
+    external: "opens in a new tab",
+  },
+  pager: {
+    label: "More pages",
+    next: "Next page",
+    previous: "Previous page",
+  },
+  parameterList: {
+    required: "required",
+    optional: "optional",
+    default: "Default:",
+  },
+  stat: {
+    up: "Up",
+    down: "Down",
+    flat: "Unchanged",
+  },
+  steps: {
+    done: "Done",
+    current: "Current step",
+    upcoming: "Upcoming",
+  },
+  anchorHeading: {
+    label: "Link to this section",
+  },
+  chip: {
+    remove: "Remove",
+  },
+  fileThumbStack: {
+    count: (count) => (count === 1 ? "1 file" : `${count} files`),
   },
 };
 

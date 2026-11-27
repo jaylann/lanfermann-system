@@ -4,6 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { ActionArrow } from "@/internal/arrow";
 import { renderAs } from "@/internal/render-as";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 export type PagerProps = ComponentProps<"nav"> & {
   /** The name of the navigation for assistive tech. */
@@ -43,7 +44,7 @@ export type PagerLinkProps = Omit<useRender.ComponentProps<"a">, "title"> & {
 export function PagerLink({
   direction,
   title,
-  label = direction === "next" ? "Nächste Seite" : "Vorherige Seite",
+  label,
   render,
   className,
   ...props
@@ -73,7 +74,7 @@ export function PagerLink({
           )}
         >
           <ActionArrow direction={next ? "right" : "left"} size={14} />
-          {label}
+          {label ?? <Localized ns="pager" name={direction} />}
         </span>
         <span
           data-slot="pager-title"

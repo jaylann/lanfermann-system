@@ -4,6 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Icon } from "@/components/icon/icon";
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 export type StatGroupProps = ComponentProps<"div"> & {
   /**
@@ -106,12 +107,6 @@ const toneClass = {
   neutral: "text-fg-muted",
 } as const;
 
-const defaultTrendLabels: Record<StatTrend, string> = {
-  up: "Gestiegen",
-  down: "Gesunken",
-  flat: "Unverändert",
-};
-
 export type StatChangeProps = ComponentProps<"p"> & {
   trend: StatTrend;
   /**
@@ -143,7 +138,6 @@ export function StatChange({
   children,
   ...props
 }: StatChangeProps) {
-  const labels = { ...defaultTrendLabels, ...trendLabels };
   return (
     <p
       data-slot="stat-change"
@@ -170,7 +164,9 @@ export function StatChange({
           toneClass[tone],
         )}
       >
-        <span className="sr-only">{labels[trend]}: </span>
+        <span className="sr-only">
+          {trendLabels?.[trend] ?? <Localized ns="stat" name={trend} />}:{" "}
+        </span>
         {children}
       </span>
       {context !== undefined && <span className="text-fg-muted">{context}</span>}
