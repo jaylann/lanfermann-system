@@ -7,6 +7,7 @@ import { Input, type InputProps } from "@/components/input/input";
 import { InputGroup, InputGroupButton } from "@/components/input-group/input-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
 import { CopyMarks, useCopy } from "@/internal/copy";
+import { useCopyKeys } from "@/internal/copy-keys";
 import type { FieldSize } from "@/internal/field";
 import { RevealKey, secretSymbolSize, swapSettle, useSwap } from "@/internal/reveal-key";
 import { cn } from "@/lib/cn";
@@ -84,11 +85,15 @@ export function SecretField({
   copiedLabel = "Kopiert",
   copiedMessage = "In die Zwischenablage kopiert.",
   failedLabel = "Markiert",
-  failedMessage = "Nicht kopiert. Der Wert ist markiert und kann mit ⌘C kopiert werden.",
+  failedMessage: failedMessageProp,
   className,
   ref,
   ...props
 }: SecretFieldProps) {
+  const copyKeys = useCopyKeys();
+  const failedMessage =
+    failedMessageProp ??
+    `Nicht kopiert. Der Wert ist markiert und kann mit ${copyKeys} kopiert werden.`;
   const [own, setOwn] = useState(defaultRevealed);
   const revealed = !hideable || (revealedProp ?? own);
   const field = useRef<HTMLInputElement>(null);

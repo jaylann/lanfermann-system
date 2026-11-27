@@ -5,6 +5,7 @@ import type { ComponentProps, ReactNode, RefObject } from "react";
 import { Button, type ButtonProps } from "@/components/button/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
 import { CopyMarks, useCopy } from "@/internal/copy";
+import { useCopyKeys } from "@/internal/copy-keys";
 import { cn } from "@/lib/cn";
 
 /** The words of a key that copies. */
@@ -70,13 +71,17 @@ export function CopyButton({
   copiedLabel = "Kopiert",
   copiedMessage = "In die Zwischenablage kopiert.",
   failedLabel = selectTarget ? "Markiert" : "Nicht kopiert",
-  failedMessage = selectTarget
-    ? "Nicht kopiert. Der Text ist markiert und kann mit ⌘C kopiert werden."
-    : "Nicht kopiert. Der Browser hat den Zugriff auf die Zwischenablage abgelehnt.",
+  failedMessage: failedMessageProp,
   className,
   children,
   ...props
 }: CopyButtonProps) {
+  const copyKeys = useCopyKeys();
+  const failedMessage =
+    failedMessageProp ??
+    (selectTarget
+      ? `Nicht kopiert. Der Text ist markiert und kann mit ${copyKeys} kopiert werden.`
+      : "Nicht kopiert. Der Browser hat den Zugriff auf die Zwischenablage abgelehnt.");
   const { state, copy } = useCopy({ text, selectTarget, onCopied });
   const marks = <CopyMarks copied={state === "copied"} size={symbolSize[size]} />;
   const word = state === "failed" ? failedLabel : copiedLabel;

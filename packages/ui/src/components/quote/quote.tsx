@@ -3,6 +3,7 @@
 import { type ComponentProps, type ReactNode, useRef } from "react";
 
 import { CodeCopy, type CodeCopyLabels } from "@/components/code-block/code-copy";
+import { useCopyKeys } from "@/internal/copy-keys";
 import { cn } from "@/lib/cn";
 
 export type QuoteProps = Omit<ComponentProps<"figure">, "children"> &
@@ -32,11 +33,15 @@ export function Quote({
   copiedLabel,
   copiedMessage = "Der Text wurde kopiert.",
   failedLabel,
-  failedMessage = "Der Text wurde nicht kopiert. Er ist markiert und kann mit ⌘C kopiert werden.",
+  failedMessage: failedMessageProp,
   className,
   children,
   ...props
 }: QuoteProps) {
+  const copyKeys = useCopyKeys();
+  const failedMessage =
+    failedMessageProp ??
+    `Der Text wurde nicht kopiert. Er ist markiert und kann mit ${copyKeys} kopiert werden.`;
   const words = useRef<HTMLQuoteElement>(null);
   return (
     <figure

@@ -101,7 +101,11 @@ function TableBox({
         // stays inside the card's edge.
         "in-data-[slot=card]:border-t-0 in-data-[slot=card]:before:hidden",
         "in-data-[slot=card]:overflow-clip in-data-[slot=card]:rounded-none",
-        "in-data-[slot=card]:first:rounded-t-xl in-data-[slot=card]:last:rounded-b-xl",
+        // Only where the table really is the card's first or last part: as the card's own child,
+        // or the only thing in a wrapper (a `Loaded`) that is. Under a `CardBar` its band of
+        // column names keeps square corners, wrapper or not.
+        "[[data-slot=card]>&:first-child]:rounded-t-xl [[data-slot=card]>:first-child>&:first-child]:rounded-t-xl",
+        "[[data-slot=card]>&:last-child]:rounded-b-xl [[data-slot=card]>:last-child>&:last-child]:rounded-b-xl",
         "in-data-[slot=card]:has-[[data-slot=table-scroll]:focus-visible]:-outline-offset-2",
         containerClassName,
       )}

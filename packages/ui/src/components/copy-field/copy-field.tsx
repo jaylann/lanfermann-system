@@ -4,6 +4,7 @@ import { type ComponentProps, useRef } from "react";
 
 import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 import { CopyMarks, useCopy } from "@/internal/copy";
+import { useCopyKeys } from "@/internal/copy-keys";
 import { fieldFace } from "@/internal/field";
 import { cn } from "@/lib/cn";
 
@@ -47,13 +48,17 @@ export function CopyField({
   text = value,
   label,
   copiedMessage = "In die Zwischenablage kopiert.",
-  failedMessage = "Nicht kopiert. Der Text ist markiert und kann mit ⌘C kopiert werden.",
+  failedMessage: failedMessageProp,
   keep = 16,
   size = "md",
   onCopied,
   className,
   ...props
 }: CopyFieldProps) {
+  const copyKeys = useCopyKeys();
+  const failedMessage =
+    failedMessageProp ??
+    `Nicht kopiert. Der Text ist markiert und kann mit ${copyKeys} kopiert werden.`;
   const shown = useRef<HTMLSpanElement>(null);
   const { state, copy } = useCopy({ text, selectTarget: shown, onCopied });
   return (

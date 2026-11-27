@@ -38,6 +38,10 @@ function onVisibility() {
 }
 
 export function subscribeClock(listener: () => void): () => void {
+  // A clock nobody listened to stands still, at 0 on a page that was rendered on the server.
+  // The first listener sets it, so what React reads right after subscribing is the present and
+  // not a moment that turns every "vor 3 Std." into a date until the first tick.
+  if (listeners.size === 0 && Date.now() - now >= TICK) now = Date.now();
   listeners.add(listener);
   if (listeners.size === 1) {
     document.addEventListener("visibilitychange", onVisibility);

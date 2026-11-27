@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 
 import { CopyButton, type CopyButtonLabels } from "@/components/copy-button/copy-button";
+import { useCopyKeys } from "@/internal/copy-keys";
 import { cn } from "@/lib/cn";
 
 /** The words of the copy key of a code block. */
@@ -27,9 +28,13 @@ export function CodeCopy({
   copiedLabel,
   copiedMessage = "Der Code wurde kopiert.",
   failedLabel,
-  failedMessage = "Der Code wurde nicht kopiert. Er ist markiert und kann mit ⌘C kopiert werden.",
+  failedMessage: failedMessageProp,
   className,
 }: CodeCopyProps) {
+  const copyKeys = useCopyKeys();
+  const failedMessage =
+    failedMessageProp ??
+    `Der Code wurde nicht kopiert. Er ist markiert und kann mit ${copyKeys} kopiert werden.`;
   return (
     <CopyButton
       data-slot="code-copy"
