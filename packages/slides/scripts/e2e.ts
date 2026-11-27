@@ -600,11 +600,15 @@ if (existsSync(motionFile)) {
     return false;
   };
   // The block a `Step` wraps carries the step; the part inside it knows nothing of it.
-  const takeaway = '[data-slot="stage"] [data-step="2"]';
+  const takeaway = '[data-slot="stage"] [data-slides-at="2"]';
   check(
     "motion: what comes at a later step is not shown yet, and keeps its place",
     (await opacityOf(takeaway)) === "0" &&
       ((await page.locator(takeaway).boundingBox())?.height ?? 0) > 0,
+  );
+  check(
+    "motion: a data-step of the deck's own markup is no step: it is shown from the start",
+    (await opacityOf('[data-slot="stage"] [data-step="3"]')) === "1",
   );
   await page.keyboard.press("ArrowRight");
   check("motion: ArrowRight takes a step first", await hashIs(page, "#/rueckruf.1"), page.url());
@@ -615,6 +619,7 @@ if (existsSync(motionFile)) {
     await settled(() => opacityOf(takeaway), "1"),
   );
   await page.keyboard.press("ArrowRight");
+  // Two steps, not three: the deck's own `data-step={3}` on this slide is not counted.
   check("motion: after the last step comes the next slide", await shows(page, "leistungen"));
   await page.keyboard.press("ArrowLeft");
   check(
