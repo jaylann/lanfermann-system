@@ -196,8 +196,8 @@ export function Dumbbell({
         data-slot="dumbbell-plot"
         data-live={live || undefined}
         role="group"
-        aria-roledescription="Diagramm"
-        aria-label={`${label}. Mit den Pfeiltasten durch die Zeilen gehen.`}
+        aria-roledescription={messages.charts.chart}
+        aria-label={`${label}. ${messages.charts.hintRows}`}
         tabIndex={rows.length > 0 ? 0 : undefined}
         onKeyDown={onKeyDown}
         onBlur={hide}
@@ -342,7 +342,7 @@ export function Dumbbell({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Zeile</th>
+                <th scope="col">{messages.charts.row}</th>
                 <th scope="col">{labels[0]}</th>
                 <th scope="col">{labels[1]}</th>
                 <th scope="col">{changeLabel ?? messages.charts.change}</th>

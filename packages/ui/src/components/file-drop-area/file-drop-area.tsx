@@ -15,6 +15,7 @@ import {
 import { Icon } from "@/components/icon/icon";
 import { carriesFiles, useDragDepth } from "@/internal/drag-depth";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** The type under which items dragged inside an area carry their ids: a JSON list of strings. */
 export const ITEMS_TYPE = "application/x-lanfermann-items";
@@ -334,7 +335,9 @@ export type ItemDragProps = {
  * many under the pointer („3 Dateien“). Spread `itemProps(id)` on each item; it needs the area
  * around it.
  */
-export function useItemDrag({ itemsFor, label = itemsWord }: UseItemDragOptions) {
+export function useItemDrag({ itemsFor, label: labelProp }: UseItemDragOptions) {
+  const { messages } = useLocale();
+  const label = labelProp ?? messages.fileDropArea.items;
   const area = useContext(DropContext);
   const itemProps = (id: string): ItemDragProps => ({
     draggable: true,

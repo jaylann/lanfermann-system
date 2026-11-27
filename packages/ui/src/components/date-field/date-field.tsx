@@ -17,6 +17,7 @@ import {
 } from "@/internal/iso-date";
 import { PickerButton, pickerRow, PickerSheet, PickerTime } from "@/internal/picker-sheet";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
+import { useLocale } from "@/locale/locale";
 
 export type DateFieldProps = Omit<
   TypedInputProps,
@@ -72,6 +73,7 @@ export function DateField({
   disabled,
   ...props
 }: DateFieldProps) {
+  const { messages } = useLocale();
   const now = parseIsoDate(today);
   const typed = useTypedValue({
     value,
@@ -82,12 +84,10 @@ export function DateField({
       const read = parseGermanMoment(text, now);
       if (!read) {
         return {
-          problem: time
-            ? "Bitte geben Sie Datum und Uhrzeit ein, zum Beispiel 30.11.2026, 09:30."
-            : "Bitte geben Sie ein Datum ein, zum Beispiel 30.11.2026.",
+          problem: time ? messages.dateField.invalidWithTime : messages.dateField.invalid,
         };
       }
-      const outside = outsideLimits(read.date, min, max);
+      const outside = outsideLimits(read.date, min, max, messages.dateField.limits);
       if (outside) return { problem: outside };
       return time ? `${read.date}T${read.time || DEFAULT_TIME}` : read.date;
     },
@@ -105,9 +105,9 @@ export function DateField({
         <TypedInput
           // Digits alone are enough for a date ("301126"); a time needs a space or a colon.
           inputMode={time ? undefined : "numeric"}
-          placeholder={
-            time ? `z. B. ${formatGermanMoment("2026-11-30T09:30", hourCycle)}` : "z. B. 30.11.2026"
-          }
+          placeholder={messages.dateField.example(
+            time ? formatGermanMoment("2026-11-30T09:30", hourCycle) : "30.11.2026",
+          )}
           text={typed.text}
           onTextChange={typed.setText}
           onCommit={typed.commit}
@@ -122,7 +122,7 @@ export function DateField({
       </InputGroup>
       <PickerSheet
         anchor={field}
-        label={time ? "Datum und Uhrzeit wählen" : "Datum wählen"}
+        label={time ? messages.dateField.sheetWithTime : messages.dateField.sheet}
         done={time}
       >
         <Calendar
@@ -139,7 +139,7 @@ export function DateField({
         {time && (
           <div className={pickerRow}>
             <PickerTime
-              label="Uhrzeit"
+              label={messages.dateField.time}
               hourCycle={hourCycle}
               value={clock}
               onValueChange={(next) => {

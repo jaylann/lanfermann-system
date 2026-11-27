@@ -60,8 +60,6 @@ export type WaterfallProps = Omit<ComponentProps<"figure">, "children"> & {
   empty?: ReactNode;
 };
 
-const defaultWords = { change: "Veränderung", running: "Stand", total: "Summe" };
-
 /**
  * How a result is built from gains and losses: revenue, less material, less outside work,
  * equals the result. Each step floats from the sum before it to the sum after it, a hairline
@@ -97,7 +95,12 @@ export function Waterfall({
   >();
   const numbers = chartFormat(locale ?? tag, format);
   const signed = signedFormat(locale ?? tag, format);
-  const words = { ...defaultWords, ...wordsProp };
+  const words = {
+    change: messages.charts.change,
+    running: messages.charts.running,
+    total: messages.charts.total,
+    ...wordsProp,
+  };
   const [active, setActive] = useState<{
     index: number;
     shown: boolean;
@@ -268,8 +271,8 @@ export function Waterfall({
           data-slot="waterfall-plot"
           data-live={live || undefined}
           role="group"
-          aria-roledescription="Diagramm"
-          aria-label={`${label}. Mit den Pfeiltasten durch die Schritte gehen.`}
+          aria-roledescription={messages.charts.chart}
+          aria-label={`${label}. ${messages.charts.hintSteps}`}
           tabIndex={bars.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -467,7 +470,7 @@ export function Waterfall({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Schritt</th>
+                <th scope="col">{messages.charts.step}</th>
                 <th scope="col">{words.change}</th>
                 <th scope="col">{words.running}</th>
               </tr>

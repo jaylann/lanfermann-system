@@ -60,6 +60,23 @@ const german = {
     /** Between a value and its goal: „12 von 20“, „60 % vom Ziel“. */
     of: "von",
     ofTarget: "vom Ziel",
+    /** What assistive tech calls the plot, and how its keyboard is explained after the name. */
+    chart: "Diagramm",
+    calendar: "Kalender",
+    hintValues: "Mit den Pfeiltasten durch die Werte gehen.",
+    hintSteps: "Mit den Pfeiltasten durch die Schritte gehen.",
+    hintRows: "Mit den Pfeiltasten durch die Zeilen gehen.",
+    hintDays: "Mit den Pfeiltasten durch die Tage gehen.",
+    /** The column heads of the tables behind the charts, and the rows of their readouts. */
+    total: "Summe",
+    running: "Stand",
+    time: "Zeitpunkt",
+    category: "Kategorie",
+    step: "Schritt",
+    row: "Zeile",
+    /** What a funnel's rate is measured against, said after it. */
+    ratePrevious: "vom Schritt davor",
+    rateFirst: "vom ersten Schritt",
   },
   sources: {
     title: "Quellen",
@@ -72,6 +89,13 @@ const german = {
   },
   dateRangeField: {
     presets: "Schnellauswahl",
+    invalid: "Bitte geben Sie einen Zeitraum ein, zum Beispiel 14.11. – 30.11.2026.",
+    invalidWithTime: (example: string) =>
+      `Bitte geben Sie Beginn und Ende ein, zum Beispiel ${example}.`,
+    sheet: "Zeitraum wählen",
+    /** The names of the two times under the calendar. */
+    from: "Von",
+    to: "bis",
   },
   fileTile: {
     retry: "Noch einmal versuchen",
@@ -302,6 +326,54 @@ const german = {
     /** The name of a stack of files (an attribute: a Server Component passes it). */
     count: (count: number) => (count === 1 ? "1 Datei" : `${count} Dateien`),
   },
+  picker: {
+    /** The key at the end of a date field, and the key that closes its sheet. */
+    open: "Kalender öffnen",
+    done: "Fertig",
+  },
+  dateField: {
+    /** The field reads the German formats in every language, so the examples stay German dates. */
+    invalid: "Bitte geben Sie ein Datum ein, zum Beispiel 30.11.2026.",
+    invalidWithTime: "Bitte geben Sie Datum und Uhrzeit ein, zum Beispiel 30.11.2026, 09:30.",
+    limits: {
+      between: (min: string, max: string) =>
+        `Bitte wählen Sie ein Datum zwischen dem ${min} und dem ${max}.`,
+      from: (min: string) => `Bitte wählen Sie ein Datum ab dem ${min}.`,
+      until: (max: string) => `Bitte wählen Sie ein Datum bis zum ${max}.`,
+    },
+    /** The placeholder, around an example the field would read. */
+    example: (example: string) => `z. B. ${example}`,
+    /** The name of the sheet with the calendar. */
+    sheet: "Datum wählen",
+    sheetWithTime: "Datum und Uhrzeit wählen",
+    time: "Uhrzeit",
+  },
+  timeField: {
+    invalid: (example: string) => `Bitte geben Sie eine Uhrzeit ein, zum Beispiel ${example}.`,
+    between: (min: string, max: string) =>
+      `Bitte wählen Sie eine Uhrzeit zwischen ${min} und ${max}.`,
+    from: (min: string) => `Bitte wählen Sie eine Uhrzeit ab ${min}.`,
+    until: (max: string) => `Bitte wählen Sie eine Uhrzeit bis ${max}.`,
+    example: (example: string) => `z. B. ${example}`,
+    /** The name of the list of times. */
+    list: "Uhrzeiten",
+  },
+  fileDropArea: {
+    /** What the picture under the pointer says for this many dragged items. */
+    items: (count: number) => (count === 1 ? "1 Datei" : `${count} Dateien`),
+  },
+  tracker: {
+    /** What assistive tech calls the strip. */
+    role: "Verlauf",
+    /** Said after the strip's name: how the keyboard moves through it. */
+    hint: "Mit den Pfeiltasten durch die Einträge gehen.",
+    status: {
+      success: "In Ordnung",
+      warning: "Gestört",
+      danger: "Ausgefallen",
+      none: "Keine Daten",
+    },
+  },
 };
 
 /** The shape of a table: what every language has to say. */
@@ -351,6 +423,20 @@ export const en: Messages = {
     more: "More",
     of: "of",
     ofTarget: "of target",
+    chart: "Chart",
+    calendar: "Calendar",
+    hintValues: "Use the arrow keys to move through the values.",
+    hintSteps: "Use the arrow keys to move through the steps.",
+    hintRows: "Use the arrow keys to move through the rows.",
+    hintDays: "Use the arrow keys to move through the days.",
+    total: "Total",
+    running: "Running total",
+    time: "Time",
+    category: "Category",
+    step: "Step",
+    row: "Row",
+    ratePrevious: "of the previous step",
+    rateFirst: "of the first step",
   },
   sources: {
     title: "Sources",
@@ -362,6 +448,11 @@ export const en: Messages = {
   },
   dateRangeField: {
     presets: "Presets",
+    invalid: "Enter a date range, for example 14.11. – 30.11.2026.",
+    invalidWithTime: (example) => `Enter a start and an end, for example ${example}.`,
+    sheet: "Choose a date range",
+    from: "From",
+    to: "to",
   },
   fileTile: {
     retry: "Try again",
@@ -567,6 +658,44 @@ export const en: Messages = {
   },
   fileThumbStack: {
     count: (count) => (count === 1 ? "1 file" : `${count} files`),
+  },
+  picker: {
+    open: "Open calendar",
+    done: "Done",
+  },
+  dateField: {
+    invalid: "Enter a date, for example 30.11.2026.",
+    invalidWithTime: "Enter a date and a time, for example 30.11.2026, 09:30.",
+    limits: {
+      between: (min, max) => `Choose a date between ${min} and ${max}.`,
+      from: (min) => `Choose a date from ${min} on.`,
+      until: (max) => `Choose a date up to ${max}.`,
+    },
+    example: (example) => `e.g. ${example}`,
+    sheet: "Choose a date",
+    sheetWithTime: "Choose a date and a time",
+    time: "Time",
+  },
+  timeField: {
+    invalid: (example) => `Enter a time, for example ${example}.`,
+    between: (min, max) => `Choose a time between ${min} and ${max}.`,
+    from: (min) => `Choose a time from ${min} on.`,
+    until: (max) => `Choose a time up to ${max}.`,
+    example: (example) => `e.g. ${example}`,
+    list: "Times",
+  },
+  fileDropArea: {
+    items: (count) => (count === 1 ? "1 file" : `${count} files`),
+  },
+  tracker: {
+    role: "History",
+    hint: "Use the arrow keys to move through the entries.",
+    status: {
+      success: "Operational",
+      warning: "Degraded",
+      danger: "Down",
+      none: "No data",
+    },
   },
 };
 

@@ -388,8 +388,8 @@ export function TimeSeriesChart<Row>({
           data-live={live || undefined}
           data-scrubbing={active?.shown && active.touch ? "touch" : undefined}
           role="group"
-          aria-roledescription="Diagramm"
-          aria-label={`${label}. Mit den Pfeiltasten durch die Werte gehen.`}
+          aria-roledescription={messages.charts.chart}
+          aria-label={`${label}. ${messages.charts.hintValues}`}
           tabIndex={rows.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -610,7 +610,7 @@ export function TimeSeriesChart<Row>({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Zeitpunkt</th>
+                <th scope="col">{messages.charts.time}</th>
                 {series.map((entry) => (
                   <th key={entry.key} scope="col">
                     {entry.label}

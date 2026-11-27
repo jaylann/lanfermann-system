@@ -162,7 +162,7 @@ export function BarChart<Row>({
         color: "transparent",
         mark: "swatch",
         value: numbers.value(shown.reduce((sum, entry) => sum + value(row, entry.key), 0)),
-        label: "Summe",
+        label: messages.charts.total,
       });
     }
     return rows;
@@ -327,8 +327,8 @@ export function BarChart<Row>({
           data-slot="bar-chart-plot"
           data-live={live || undefined}
           role="group"
-          aria-roledescription="Diagramm"
-          aria-label={`${label}. Mit den Pfeiltasten durch die Werte gehen.`}
+          aria-roledescription={messages.charts.chart}
+          aria-label={`${label}. ${messages.charts.hintValues}`}
           tabIndex={data.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -508,7 +508,7 @@ export function BarChart<Row>({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Kategorie</th>
+                <th scope="col">{messages.charts.category}</th>
                 {series.map((entry) => (
                   <th key={entry.key} scope="col">
                     {entry.label}

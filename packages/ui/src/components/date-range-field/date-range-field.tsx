@@ -113,6 +113,7 @@ export function DateRangeField({
   ...props
 }: DateRangeFieldProps) {
   const { messages } = useLocale();
+  const limits = messages.dateField.limits;
   const todayIso = useToday(today);
   const now = parseIsoDate(todayIso);
   const example =
@@ -139,7 +140,8 @@ export function DateRangeField({
           : undefined;
       if (preset) {
         const range = preset.range(todayIso);
-        const outside = outsideLimits(range.from, min, max) ?? outsideLimits(range.to, min, max);
+        const outside =
+          outsideLimits(range.from, min, max, limits) ?? outsideLimits(range.to, min, max, limits);
         if (outside) return { problem: outside };
         return toIsoInterval(range);
       }
@@ -148,12 +150,13 @@ export function DateRangeField({
       if (!read) {
         return {
           problem: time
-            ? `Bitte geben Sie Beginn und Ende ein, zum Beispiel ${example}.`
-            : "Bitte geben Sie einen Zeitraum ein, zum Beispiel 14.11. – 30.11.2026.",
+            ? messages.dateRangeField.invalidWithTime(example)
+            : messages.dateRangeField.invalid,
         };
       }
       const outside =
-        outsideLimits(read.from.date, min, max) ?? outsideLimits(read.to.date, min, max);
+        outsideLimits(read.from.date, min, max, limits) ??
+        outsideLimits(read.to.date, min, max, limits);
       if (outside) return { problem: outside };
       return toIsoInterval(settle(read.from, read.to, time));
     },
@@ -217,7 +220,7 @@ export function DateRangeField({
     <Popover open={open} onOpenChange={setOpen}>
       <InputGroup ref={field} data-slot="date-range-field" size={size} className={className}>
         <TypedInput
-          placeholder={time ? `z. B. ${example}` : "z. B. 14.11. – 30.11.2026"}
+          placeholder={messages.dateField.example(time ? example : "14.11. – 30.11.2026")}
           text={typed.text}
           onTextChange={typed.setText}
           onCommit={typed.commit}
@@ -230,7 +233,7 @@ export function DateRangeField({
         />
         <PickerButton size={size} disabled={disabled || props.readOnly} />
       </InputGroup>
-      <PickerSheet anchor={field} label="Zeitraum wählen" done={time}>
+      <PickerSheet anchor={field} label={messages.dateRangeField.sheet} done={time}>
         <div className="flex flex-col gap-3 sm:flex-row">
           {presetList}
           <Calendar
@@ -257,14 +260,14 @@ export function DateRangeField({
         {time && (
           <div className={pickerRow}>
             <PickerTime
-              label="Von"
+              label={messages.dateRangeField.from}
               hourCycle={hourCycle}
               value={clock.from}
               // Text that is no time is not taken: the field goes back to the time it had.
               onValueChange={(next) => next !== "" && setClock("from", next)}
             />
             <PickerTime
-              label="bis"
+              label={messages.dateRangeField.to}
               hourCycle={hourCycle}
               value={clock.to}
               onValueChange={(next) => next !== "" && setClock("to", next)}

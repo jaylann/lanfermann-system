@@ -310,8 +310,8 @@ export function Heatmap({
             <div
               data-slot="heatmap-grid"
               role="group"
-              aria-roledescription="Kalender"
-              aria-label={`${label}. Mit den Pfeiltasten durch die Tage gehen.`}
+              aria-roledescription={messages.charts.calendar}
+              aria-label={`${label}. ${messages.charts.hintDays}`}
               tabIndex={days.length > 0 ? 0 : undefined}
               onPointerMove={onPointerMove}
               onPointerDown={onPointerDown}

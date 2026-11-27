@@ -41,19 +41,16 @@ export type TrackerProps = Omit<ComponentProps<"figure">, "children"> & {
   label: string;
   /** The words for each status. A status is always said, never told by colour alone. */
   statusLabels?: Partial<Record<TrackerStatus, string>>;
+  /** What assistive tech calls the strip in place of „Gruppe“: „Verlauf“, "History". */
+  roleLabel?: string;
+  /** The sentence after the strip's name that says how the keyboard moves through it. */
+  keyboardHint?: string;
   /**
    * Whether the cells come in one after another, left to right, where the strip first shows
    * (the default, as every chart draws itself in). Off under reduced motion.
    */
   drawIn?: boolean;
   locale?: string;
-};
-
-const defaultLabels: Record<TrackerStatus, string> = {
-  success: "In Ordnung",
-  warning: "Gestört",
-  danger: "Ausgefallen",
-  none: "Keine Daten",
 };
 
 /*
@@ -94,13 +91,15 @@ export function Tracker({
   data,
   label,
   statusLabels,
+  roleLabel,
+  keyboardHint,
   drawIn = true,
   locale,
   className,
   ...props
 }: TrackerProps) {
-  const { tag } = useLocale();
-  const words = { ...defaultLabels, ...statusLabels };
+  const { messages, tag } = useLocale();
+  const words = { ...messages.tracker.status, ...statusLabels };
   const [scrub, setScrub] = useState<Scrub | null>(null);
   const [said, setSaid] = useState("");
   const finger = useRef<number | null>(null);
@@ -211,8 +210,8 @@ export function Tracker({
         data-active={active?.shown || undefined}
         data-scrubbing={active?.shown && active.touch ? "touch" : undefined}
         role="group"
-        aria-roledescription="Verlauf"
-        aria-label={`${label}. Mit den Pfeiltasten durch die Einträge gehen.`}
+        aria-roledescription={roleLabel ?? messages.tracker.role}
+        aria-label={`${label}. ${keyboardHint ?? messages.tracker.hint}`}
         tabIndex={count > 0 ? 0 : undefined}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

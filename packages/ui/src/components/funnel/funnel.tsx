@@ -3,6 +3,7 @@ import type { ComponentProps, CSSProperties } from "react";
 import { chartFormat } from "@/internal/chart/format";
 import { fillStyle, troughFill } from "@/internal/trough";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 export type FunnelStep = {
   /** What happens at the step: „Angebot gesendet“. */
@@ -46,7 +47,7 @@ export function Funnel({
   format,
   locale = "de-DE",
   rate = "previous",
-  rateLabels = { previous: "vom Schritt davor", first: "vom ersten Schritt" },
+  rateLabels,
   tone = "neutral",
   drawIn = true,
   className,
@@ -92,7 +93,15 @@ export function Funnel({
               {kept !== null && index > 0 ? (
                 <>
                   {numbers.share(kept)}
-                  <span className="sr-only"> {rateLabels[rate]}</span>
+                  <span className="sr-only">
+                    {" "}
+                    {rateLabels?.[rate] ?? (
+                      <Localized
+                        ns="charts"
+                        name={rate === "first" ? "rateFirst" : "ratePrevious"}
+                      />
+                    )}
+                  </span>
                 </>
               ) : null}
             </span>
