@@ -85,13 +85,31 @@ export function StatLabel({ className, ...props }: ComponentProps<"p">) {
  * The figure, large and in tabular digits. Plain text, or a `RollingNumber`. It never breaks: a
  * figure split over two lines reads as two.
  */
-export function StatValue({ className, ...props }: ComponentProps<"p">) {
+export function StatValue({
+  total,
+  className,
+  children,
+  ...props
+}: ComponentProps<"p"> & {
+  /**
+   * What the figure is a part of, with its word: „von 7“. It stands after the figure, smaller
+   * and muted, so „2 von 7“ reads as one fact with the 2 as what counts.
+   */
+  total?: ReactNode;
+}) {
   return (
     <p
       data-slot="stat-value"
       className={cn("text-xl font-medium whitespace-nowrap text-fg tabular-nums", className)}
       {...props}
-    />
+    >
+      {children}
+      {total !== undefined && (
+        <span data-slot="stat-value-total" className="ms-1.5 text-base font-normal text-fg-muted">
+          {total}
+        </span>
+      )}
+    </p>
   );
 }
 

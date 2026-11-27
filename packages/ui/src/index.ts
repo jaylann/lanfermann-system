@@ -383,6 +383,7 @@ export {
   type HoverCardTriggerProps,
 } from "./components/hover-card/hover-card";
 export { Icon, type IconProps, type IconSvgElement } from "./components/icon/icon";
+export { IconTile, type IconTileProps } from "./components/icon-tile/icon-tile";
 export { Input, type InputProps } from "./components/input/input";
 export {
   InputGroup,
@@ -792,7 +793,7 @@ export {
   type WaterfallProps,
   type WaterfallStep,
 } from "./components/waterfall/waterfall";
-export { writeClipboard } from "./internal/clipboard";
+export { readClipboard, writeClipboard } from "./internal/clipboard";
 export { cn, mergeClassName } from "./lib/cn";
 export {
   type DateOptions,

@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 
+import { iconTile } from "@/components/icon-tile/icon-tile";
 import { cn } from "@/lib/cn";
 
 export type EmptyProps = ComponentProps<"div"> & {
@@ -52,8 +53,12 @@ export function EmptyMedia({ variant = "tile", className, ...props }: EmptyMedia
       aria-hidden
       className={cn(
         "mb-2 flex shrink-0 items-center justify-center text-fg-muted",
-        variant === "tile" &&
-          "size-10 rounded-lg bg-surface inset-ring inset-ring-hairline group-data-[size=inline]/empty:size-9 group-data-[size=inline]/empty:rounded-md forced-colors:inset-ring-[CanvasText]",
+        // The plate is the `IconTile`'s, a size smaller in an inline empty state.
+        variant === "tile" && [
+          iconTile.face,
+          iconTile.md,
+          "group-data-[size=inline]/empty:size-9 group-data-[size=inline]/empty:rounded-md",
+        ],
         className,
       )}
       {...props}
