@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect } from "storybook/test";
+import { expect, screen, waitFor } from "storybook/test";
 
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
 import { Ground } from "@/components/ground/ground";
 import { Input } from "@/components/input/input";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu/menu";
 import { Switch } from "@/components/switch/switch";
 
 const meta = {
@@ -124,5 +125,36 @@ export const KeepsItsMode: Story = {
     await expect(lightness(canvas.getByTestId("light"))).toBeGreaterThan(200);
     await expect(lightness(canvas.getByTestId("dark"))).toBeLessThan(80);
     await expect(getComputedStyle(canvas.getByTestId("light")).colorScheme).toBe("light");
+  },
+};
+
+/**
+ * As a test: a menu opened inside a light scope is portalled to the page and still comes out
+ * light, because the sheet carries the scope's mode beside its ground.
+ */
+export const PopupKeepsTheMode: Story = {
+  render: () => (
+    <Ground ground="paper" mode="light" className="rounded-xl bg-ground p-6">
+      <Menu>
+        <MenuTrigger render={<Button>Angebot</Button>} />
+        <MenuContent>
+          <MenuItem>Bearbeiten</MenuItem>
+          <MenuItem>Duplizieren</MenuItem>
+        </MenuContent>
+      </Menu>
+    </Ground>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Angebot" }));
+    const sheet = await screen.findByRole("menu");
+    await expect(sheet).toHaveAttribute("data-mode", "light");
+    await expect(sheet).toHaveAttribute("data-theme", "paper");
+    await waitFor(async () => {
+      const [r = 0, g = 0, b = 0] = (
+        getComputedStyle(sheet).backgroundColor.match(/[\d.]+/g) ?? []
+      ).map(Number);
+      await expect((r + g + b) / 3).toBeGreaterThan(200);
+    });
+    await userEvent.keyboard("{Escape}");
   },
 };
