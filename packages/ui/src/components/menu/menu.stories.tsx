@@ -12,6 +12,7 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useEffect } from "react";
 import { expect, screen, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
@@ -245,6 +246,48 @@ export const Destructive: Story = {
       </MenuContent>
     </Menu>
   ),
+};
+
+/** Points at the destructive row once the menu stands, so a still picture shows its highlight. */
+function PointedAt() {
+  useEffect(() => {
+    let frame = requestAnimationFrame(function point() {
+      const row = document.querySelector('[data-slot="menu-item"][data-tone="danger"]');
+      if (!row) {
+        frame = requestAnimationFrame(point);
+        return;
+      }
+      for (const type of ["pointermove", "mousemove"])
+        row.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX: 1, clientY: 1 }));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return (
+    <Menu defaultOpen modal={false}>
+      <MenuTrigger
+        render={
+          <Button>
+            Datei
+            <ChevronDownGlyph className="text-fg-muted" />
+          </Button>
+        }
+      />
+      <MenuContent>
+        <MenuItem icon={PencilEdit02Icon}>Umbenennen</MenuItem>
+        <MenuItem icon={Download01Icon}>Herunterladen</MenuItem>
+        <MenuSeparator />
+        <MenuItem tone="danger" icon={Delete02Icon}>
+          In den Papierkorb
+        </MenuItem>
+      </MenuContent>
+    </Menu>
+  );
+}
+
+/** The destructive row under the pointer: the danger wash in place of the grey highlight. */
+export const DestructiveHighlighted: Story = {
+  parameters: { visual: { viewport: { width: 380, height: 250 }, clip: "viewport" } },
+  render: () => <PointedAt />,
 };
 
 /**

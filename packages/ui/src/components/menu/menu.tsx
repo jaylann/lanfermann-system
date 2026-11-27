@@ -73,8 +73,13 @@ type WithTone = {
 
 // The danger row on top of `listItem`: the colour in every state but disabled, and the wash in
 // place of the grey highlight (forced colours keep the system's highlight from `listItem`).
-const dangerRow =
-  "data-[tone=danger]:not-data-disabled:text-danger data-[tone=danger]:data-highlighted:bg-danger-soft";
+// The usual highlight lies over the wash as a flat layer: on Indigo, where danger is white and
+// its wash is close to the sheet, the row is then marked at least as clearly as any other.
+const dangerRow = [
+  "data-[tone=danger]:not-data-disabled:text-danger data-[tone=danger]:data-highlighted:bg-danger-soft",
+  "data-[tone=danger]:data-highlighted:bg-linear-to-b data-[tone=danger]:data-highlighted:from-hover data-[tone=danger]:data-highlighted:to-hover",
+  "forced-colors:data-[tone=danger]:data-highlighted:bg-none",
+].join(" ");
 
 function RowIcon({ icon }: WithIcon) {
   return icon ? (
