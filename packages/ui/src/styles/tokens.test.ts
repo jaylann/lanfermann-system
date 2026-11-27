@@ -143,6 +143,9 @@ const pairs: [string, string, number][] = [
     [status, `${status}-soft`, TEXT],
     [`on-${status}`, `${status}-solid`, TEXT],
   ]),
+  // A destructive row of a menu: the danger text on the sheet it lies on. Highlighted, it stands
+  // on its wash, which the loop above already holds.
+  ["danger", "sheet", TEXT],
   // Code: each syntax colour on each face of a block and on each line wash. Line numbers are
   // the muted text on the block's face; the signs of a diff are the status text on its wash.
   ...codeRoles.flatMap((role) =>

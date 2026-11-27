@@ -283,7 +283,7 @@ function FileMenuEntries() {
       <MenuItem icon={PencilEdit02Icon}>Umbenennen</MenuItem>
       <MenuItem icon={FolderTransferIcon}>Verschieben nach…</MenuItem>
       <MenuSeparator />
-      <MenuItem icon={Delete02Icon} className="text-danger">
+      <MenuItem tone="danger" icon={Delete02Icon}>
         In den Papierkorb
       </MenuItem>
     </>

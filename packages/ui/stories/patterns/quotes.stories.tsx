@@ -202,7 +202,7 @@ export const Quotes: Story = {
                             Duplizieren
                           </MenuItem>
                           <MenuSeparator />
-                          <MenuItem className="text-danger">
+                          <MenuItem tone="danger">
                             <Icon icon={Delete02Icon} />
                             Löschen
                           </MenuItem>

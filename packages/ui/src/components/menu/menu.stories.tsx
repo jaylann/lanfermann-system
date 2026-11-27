@@ -6,6 +6,7 @@ import {
   Delete02Icon,
   Download01Icon,
   EuroIcon,
+  PaintBoardIcon,
   Pdf01Icon,
   PencilEdit02Icon,
   UserIcon,
@@ -14,7 +15,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
-import { Icon } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
 
 import {
@@ -70,9 +70,8 @@ export const Default: Story = {
           <MenuItem icon={Download01Icon}>Als PDF herunterladen</MenuItem>
         </MenuGroup>
         <MenuSeparator />
-        {/* In the danger colour, its symbol too: given as a child, it takes the row's colour. */}
-        <MenuItem className="text-danger">
-          <Icon icon={Delete02Icon} />
+        {/* What destroys stands last, under a line, in the danger tone. */}
+        <MenuItem tone="danger" icon={Delete02Icon}>
           Löschen
         </MenuItem>
       </MenuContent>
@@ -104,8 +103,7 @@ export const Open: Story = {
           </MenuItem>
         </MenuGroup>
         <MenuSeparator />
-        <MenuItem className="text-danger">
-          <Icon icon={Delete02Icon} />
+        <MenuItem tone="danger" icon={Delete02Icon}>
           Löschen
         </MenuItem>
       </MenuContent>
@@ -211,6 +209,110 @@ export const OptionsWithIcons: Story = {
  * ArrowRight and ArrowLeft enter and leave the submenu, and Escape closes the menu and hands the
  * focus back to the trigger.
  */
+/**
+ * A row that destroys: last, under a line, in the danger tone. Its highlight is the danger wash,
+ * under the pointer and from the keyboard alike, so the row warns before it is pressed.
+ */
+export const Destructive: Story = {
+  parameters: {
+    visual: {
+      viewport: { width: 380, height: 300 },
+      clip: "viewport",
+      target: '[data-tone="danger"]',
+    },
+  },
+  render: () => (
+    <Menu defaultOpen modal={false}>
+      <MenuTrigger
+        render={
+          <Button>
+            Datei
+            <ChevronDownGlyph className="text-fg-muted" />
+          </Button>
+        }
+      />
+      <MenuContent>
+        <MenuItem icon={PencilEdit02Icon}>Umbenennen</MenuItem>
+        <MenuItem icon={Copy01Icon}>Adresse kopieren</MenuItem>
+        <MenuItem icon={Download01Icon}>Herunterladen</MenuItem>
+        <MenuSeparator />
+        <MenuItem tone="danger" icon={Delete02Icon}>
+          In den Papierkorb
+        </MenuItem>
+        <MenuItem tone="danger" icon={Delete02Icon} disabled>
+          Endgültig löschen
+        </MenuItem>
+      </MenuContent>
+    </Menu>
+  ),
+};
+
+/**
+ * A submenu that holds a choice names what is chosen: the `detail` stands muted before the
+ * chevron, so the answer is read without opening the submenu.
+ */
+export const SubmenuDetail: Story = {
+  parameters: { visual: { viewport: { width: 380, height: 250 }, clip: "viewport" } },
+  render: () => (
+    <Menu defaultOpen modal={false}>
+      <MenuTrigger
+        render={
+          <Button>
+            Konto
+            <ChevronDownGlyph className="text-fg-muted" />
+          </Button>
+        }
+      />
+      <MenuContent className="min-w-60">
+        <MenuItem icon={UserIcon}>Profil</MenuItem>
+        <MenuSub>
+          <MenuSubTrigger icon={PaintBoardIcon} detail="Hell">
+            Erscheinungsbild
+          </MenuSubTrigger>
+          <MenuSubContent>
+            <MenuRadioGroup defaultValue="hell">
+              <MenuRadioItem value="system">System</MenuRadioItem>
+              <MenuRadioItem value="hell">Hell</MenuRadioItem>
+              <MenuRadioItem value="dunkel">Dunkel</MenuRadioItem>
+            </MenuRadioGroup>
+          </MenuSubContent>
+        </MenuSub>
+      </MenuContent>
+    </Menu>
+  ),
+};
+
+/**
+ * As a test: the arrow keys reach the destructive row, which carries the tone and the highlight
+ * together, and a disabled one is passed over in the danger colour's place.
+ */
+export const DestructiveKeyboard: Story = {
+  render: () => (
+    <Menu>
+      <MenuTrigger render={<Button>Datei</Button>} />
+      <MenuContent>
+        <MenuItem>Umbenennen</MenuItem>
+        <MenuSeparator />
+        <MenuItem tone="danger" icon={Delete02Icon}>
+          In den Papierkorb
+        </MenuItem>
+      </MenuContent>
+    </Menu>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Datei" }));
+    const row = await screen.findByRole("menuitem", { name: "In den Papierkorb" });
+    await expect(row).toHaveAttribute("data-tone", "danger");
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+    await waitFor(() => expect(row).toHaveAttribute("data-highlighted"));
+    const rest = getComputedStyle(screen.getByRole("menuitem", { name: "Umbenennen" }));
+    const danger = getComputedStyle(row);
+    await expect(danger.color).not.toBe(rest.color);
+    await expect(danger.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    await userEvent.keyboard("{Escape}");
+  },
+};
+
 export const Keyboard: Story = {
   render: () => (
     <Menu>

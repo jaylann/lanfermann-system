@@ -1,6 +1,6 @@
 import { Copy01Icon, Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { expect } from "storybook/test";
 
 import { kindOf } from "@/components/attachment/kinds";
@@ -89,7 +89,7 @@ function RowActions({ id }: { id: string }) {
           Duplizieren
         </MenuItem>
         <MenuSeparator />
-        <MenuItem className="text-danger">
+        <MenuItem tone="danger">
           <Icon icon={Delete02Icon} />
           Löschen
         </MenuItem>
@@ -225,7 +225,7 @@ export const Rows: Story = {
 
 type SortKey = "customer" | "amount";
 
-function SortableQuotes() {
+function SortableQuotes({ links = false }: { links?: boolean }) {
   const [sort, setSort] = useState<{ key: SortKey; direction: "ascending" | "descending" }>({
     key: "amount",
     direction: "descending",
@@ -242,17 +242,29 @@ function SortableQuotes() {
         current.key === key && current.direction === "ascending" ? "descending" : "ascending",
     }));
   const directionOf = (key: SortKey) => (sort.key === key ? sort.direction : undefined);
+  // As links, each heading leads to the order it would set; the story's router is this state.
+  const sortProps = (key: SortKey) =>
+    links
+      ? {
+          href: `?sort=${key}&dir=${directionOf(key) === "ascending" ? "desc" : "asc"}`,
+          onClick: (event: MouseEvent) => {
+            if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+            event.preventDefault();
+            toggle(key);
+          },
+        }
+      : { onClick: () => toggle(key) };
   return (
     <Table aria-label="Angebote">
       <TableHeader>
         <TableRow>
           <TableHead sort={directionOf("customer") ?? "none"}>
-            <TableSortButton direction={directionOf("customer")} onClick={() => toggle("customer")}>
+            <TableSortButton direction={directionOf("customer")} {...sortProps("customer")}>
               Kunde
             </TableSortButton>
           </TableHead>
           <TableHead numeric sort={directionOf("amount") ?? "none"}>
-            <TableSortButton direction={directionOf("amount")} onClick={() => toggle("amount")}>
+            <TableSortButton direction={directionOf("amount")} {...sortProps("amount")}>
               Betrag
             </TableSortButton>
           </TableHead>
@@ -285,6 +297,36 @@ export const Sortable: Story = {
     },
   },
   render: () => <SortableQuotes />,
+};
+
+/**
+ * Where the order is part of the address, the headings are links of the same look: a new tab
+ * opens the list in that order, and the Back button undoes a sort.
+ */
+export const SortLinks: Story = {
+  parameters: {
+    visual: { viewport: { width: 520, height: 330 }, target: '[data-slot="table-sort-button"]' },
+  },
+  render: () => <SortableQuotes links />,
+};
+
+/** As a test: the headings are links that name where they lead, and a click still sorts. */
+export const SortLinksKeyboard: Story = {
+  render: () => <SortableQuotes links />,
+  play: async ({ canvas, userEvent }) => {
+    const customer = canvas.getByRole("link", { name: "Kunde" });
+    await expect(customer).toHaveAttribute("href", "?sort=customer&dir=asc");
+    await expect(canvas.getByRole("link", { name: "Betrag" })).toHaveAttribute(
+      "href",
+      "?sort=amount&dir=asc",
+    );
+    await userEvent.click(customer);
+    await expect(canvas.getByRole("columnheader", { name: "Kunde" })).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+    await expect(customer).toHaveAttribute("href", "?sort=customer&dir=desc");
+  },
 };
 
 const LINES = [
