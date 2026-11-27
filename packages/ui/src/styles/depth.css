@@ -15,7 +15,8 @@
  *                                                what is handled (-chosen: one of several, taken;
  *                                                shadow-bevel-pressed under a press)
  *   Sheet    what floats temporarily             depth-floating, depth-overlay; depth-dock, a
- *                                                fitting that floats (the action bar)
+ *                                                fitting that floats (the action bar; -focus and
+ *                                                -invalid: a docked field that is typed into)
  *   Bar      the site's bar over the page        depth-bar
  *   Seam     where two sections of a site meet   depth-seam (components/seam)
  *
@@ -524,8 +525,21 @@
      `ActionBar`). The edge, light and lip of a key, and a long, wide float under it (Justin,
      2026-11-20, chosen over a shorter and a wider one). */
   --shadow-dock:
-    0 0 0 1px var(--depth-surface-edge), 0 1px 2px 0 var(--depth-surface-contact),
+    0 0 0 1px var(--depth-surface-edge), 0 0 0 0 transparent,
+    0 1px 2px 0 var(--depth-surface-contact), 0 12px 28px -10px var(--depth-sheet-mid),
+    0 28px 60px -20px var(--depth-sheet-far);
+  /* A dock that is typed into (a `PromptInput` with `surface="dock"`): with the caret in it, its
+     edge is the accent's and a field's halo stands around it, over the same float. The second
+     layer is the halo's place, empty at rest, so the two ease into each other.
+     `--d-dock-edge` and `--d-dock-halo` let a board show the other ways it could look. */
+  --shadow-dock-focus:
+    0 0 0 1px var(--d-dock-edge, var(--lf-accent)),
+    0 0 0 4px var(--d-dock-halo, var(--depth-field-halo)), 0 1px 2px 0 var(--depth-surface-contact),
     0 12px 28px -10px var(--depth-sheet-mid), 0 28px 60px -20px var(--depth-sheet-far);
+  --shadow-dock-invalid:
+    0 0 0 1px var(--lf-danger), 0 0 0 4px var(--depth-field-halo-danger),
+    0 1px 2px 0 var(--depth-surface-contact), 0 12px 28px -10px var(--depth-sheet-mid),
+    0 28px 60px -20px var(--depth-sheet-far);
 
   /* Sheets. */
   --shadow-floating:
@@ -670,6 +684,22 @@
 /* A fitting that floats: the `ActionBar`. Its face, light and lip are a key's. */
 @utility depth-dock {
   @apply shadow-dock inset-shadow-raised;
+  background-image: var(--d-face, var(--depth-surface-face));
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-dock-focus {
+  @apply shadow-dock-focus inset-shadow-raised;
+  background-image: var(--d-face, var(--depth-surface-face));
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+@utility depth-dock-invalid {
+  @apply shadow-dock-invalid inset-shadow-raised;
   background-image: var(--d-face, var(--depth-surface-face));
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
