@@ -81,7 +81,7 @@ describe("Diagram by step", () => {
         bands={[{ col: 5, row: 1, span: 3 }]}
       />,
     );
-    expect(html).not.toContain("data-step");
+    expect(html).not.toContain("data-slides-at");
     expect(html).not.toContain("data-draw");
     expect(html).not.toContain("pathLength");
     expect(html).not.toContain("--step-at");
@@ -103,21 +103,21 @@ describe("Diagram by step", () => {
         bands={[{ col: 5, row: 1, span: 3, step: 1 }]}
       />,
     );
-    expect(html).toContain('data-slot="slide-diagram-node" data-step="1"');
-    expect(html).toContain('data-slot="slide-diagram-node" data-step="2"');
-    expect(html).toContain('data-slot="slide-diagram-band" data-step="1"');
-    expect(html).toContain('data-slot="slide-diagram-marker" data-step="1"');
+    expect(html).toContain('data-slot="slide-diagram-node" data-slides-at="1"');
+    expect(html).toContain('data-slot="slide-diagram-node" data-slides-at="2"');
+    expect(html).toContain('data-slot="slide-diagram-band" data-slides-at="1"');
+    expect(html).toContain('data-slot="slide-diagram-marker" data-slides-at="1"');
     // The first connector draws at step 1; both others come at step 2, the second of them
     // dashed: it fades instead, and starts one place later.
-    expect(html).toContain('data-slot="slide-diagram-edge" data-draw="" data-step="1"');
+    expect(html).toContain('data-slot="slide-diagram-edge" data-draw="" data-slides-at="1"');
     expect(html).toContain(
-      'data-slot="slide-diagram-edge" data-draw="" data-step="2" style="--step-at:2"',
+      'data-slot="slide-diagram-edge" data-draw="" data-slides-at="2" style="--step-at:2"',
     );
     expect(html).toContain(
-      'data-slot="slide-diagram-edge" data-step="2" style="--step-at:2;--draw-order:1"',
+      'data-slot="slide-diagram-edge" data-slides-at="2" style="--step-at:2;--draw-order:1"',
     );
     expect(html.match(/pathLength="1"/g)).toHaveLength(2);
-    expect(html).toContain('data-slot="slide-diagram-label" data-step="1"');
+    expect(html).toContain('data-slot="slide-diagram-label" data-slides-at="1"');
   });
 
   it("counts its steps without being drawn", () => {

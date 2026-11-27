@@ -18,9 +18,9 @@ describe("figures, bars and an example by step", () => {
       />,
     );
     expect(html).toContain(
-      '<div class="flex flex-col gap-4 border-t-2 border-rule pt-6" data-step="2" style="--step-at:2">',
+      '<div class="flex flex-col gap-4 border-t-2 border-rule pt-6" data-slides-at="2" style="--step-at:2">',
     );
-    expect(html.match(/data-step=/g)).toHaveLength(1);
+    expect(html.match(/data-slides-at=/g)).toHaveLength(1);
     expect(countSteps(<FigureRow items={[{ value: "1", label: "a", step: 3 }]} />)).toBe(3);
   });
 
@@ -35,7 +35,7 @@ describe("figures, bars and an example by step", () => {
       />,
     );
     expect(html).toMatch(
-      /<li class="[^"]*" data-step="1" style="--step-at:1;grid-template-columns:/,
+      /<li class="[^"]*" data-slides-at="1" style="--step-at:1;grid-template-columns:/,
     );
     // The unshown row still sets the full width: the other bar is half of its 264px track
     // (1000px less the 512px of labels, the 160px of values and the two 32px gaps).
@@ -48,8 +48,8 @@ describe("figures, bars and an example by step", () => {
       <Example input="„Frage“" output="suchen()" caption="Modell" outputStep={1} />,
     );
     expect(html).toContain('<p data-lines="1" class="text-slide-lead text-fg">„Frage“</p>');
-    expect(html).toContain('<div class="flex" data-step="1" style="--step-at:1">');
-    expect(html).toContain('class="text-slide-meta text-fg-muted" data-step="1"');
+    expect(html).toContain('<div class="flex" data-slides-at="1" style="--step-at:1">');
+    expect(html).toContain('class="text-slide-meta text-fg-muted" data-slides-at="1"');
     expect(Example.slideSteps({ input: "a", output: "b" })).toBe(0);
     expect(countSteps(<Example input="a" output="b" outputStep={2} />)).toBe(2);
   });

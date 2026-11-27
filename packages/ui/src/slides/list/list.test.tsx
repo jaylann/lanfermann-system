@@ -20,10 +20,10 @@ describe("List by step", () => {
     );
     expect(html).toContain(">Sie sagt sofort, was Sie tun.</li>");
     expect(html).toContain("<b>Sie macht den Anruf leicht.</b></li>");
-    expect(html).toContain('data-step="1" style="--step-at:1">Sie zeigt Ihre Arbeit.</li>');
-    expect(html).toContain('data-step="2" style="--step-at:2"><b>Sie lädt schnell.</b></li>');
+    expect(html).toContain('data-slides-at="1" style="--step-at:1">Sie zeigt Ihre Arbeit.</li>');
+    expect(html).toContain('data-slides-at="2" style="--step-at:2"><b>Sie lädt schnell.</b></li>');
     expect(html).toContain(">Sie nennt Ihre Zeiten.</li>");
-    expect(html.match(/data-step=/g)).toHaveLength(2);
+    expect(html.match(/data-slides-at=/g)).toHaveLength(2);
   });
 
   it("counts the highest step among the rows", () => {

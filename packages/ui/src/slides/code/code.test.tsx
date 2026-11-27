@@ -7,18 +7,18 @@ import { Code } from "./code";
 
 const LISTING = ["[", "  eins,", "  zwei,", "  drei", "]"].join("\n");
 
-/** The `data-step` of every line, in order; `null` for a line there from the start. */
+/** The `data-slides-at` of every line, in order; `null` for a line there from the start. */
 function lineSteps(html: string): (string | null)[] {
   const block = /<div class="flex flex-col rounded[^"]*">(.*?)<\/div>/.exec(html)?.[1] ?? "";
   return [...block.matchAll(/<p([^>]*)>/g)].map(
-    ([, attributes = ""]) => /data-step="(\d+)"/.exec(attributes)?.[1] ?? null,
+    ([, attributes = ""]) => /data-slides-at="(\d+)"/.exec(attributes)?.[1] ?? null,
   );
 }
 
 describe("Code by step", () => {
   it("marks no line without reveal", () => {
     const html = renderToStaticMarkup(<Code code={LISTING} />);
-    expect(html).not.toContain("data-step");
+    expect(html).not.toContain("data-slides-at");
     expect(Code.slideSteps({ code: LISTING })).toBe(0);
   });
 
@@ -53,7 +53,7 @@ describe("Code by step", () => {
     const html = renderToStaticMarkup(
       <Code code={LISTING} highlight={1} reveal={[{ from: 2, step: 1 }]} />,
     );
-    expect(html).toMatch(/<p class="[^"]*text-accent" data-step="1"/);
+    expect(html).toMatch(/<p class="[^"]*text-accent" data-slides-at="1"/);
   });
 
   it("counts the highest step in reveal", () => {

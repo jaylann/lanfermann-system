@@ -15,7 +15,7 @@ describe("ColumnChart by step", () => {
         ]}
       />,
     );
-    expect(html).not.toContain("data-step");
+    expect(html).not.toContain("data-slides-at");
   });
 
   it("marks a column's item, which holds its value and label, and not the list's baseline", () => {
@@ -28,8 +28,8 @@ describe("ColumnChart by step", () => {
       />,
     );
     expect(html).toMatch(/<ol data-slot="slide-column-chart" class="[^"]*before:bg-rule"/);
-    expect(html).toContain('<li class="row-[1/4] grid grid-rows-subgrid" data-step="2"');
-    expect(html.match(/data-step=/g)).toHaveLength(1);
+    expect(html).toContain('<li class="row-[1/4] grid grid-rows-subgrid" data-slides-at="2"');
+    expect(html.match(/data-slides-at=/g)).toHaveLength(1);
   });
 
   it("brings a group's name and columns at its step, a column never before its group", () => {
@@ -48,11 +48,11 @@ describe("ColumnChart by step", () => {
         ]}
       />,
     );
-    expect(html).toMatch(/<p class="pt-4[^"]*" data-step="2"[^>]*>Desktop<\/p>/);
-    expect(html.match(/<li class="row-\[1\/4\][^"]*" data-step="(\d)"/g)).toEqual([
-      '<li class="row-[1/4] grid grid-rows-subgrid" data-step="2"',
-      '<li class="row-[1/4] grid grid-rows-subgrid" data-step="3"',
-      '<li class="row-[1/4] grid grid-rows-subgrid" data-step="2"',
+    expect(html).toMatch(/<p class="pt-4[^"]*" data-slides-at="2"[^>]*>Desktop<\/p>/);
+    expect(html.match(/<li class="row-\[1\/4\][^"]*" data-slides-at="(\d)"/g)).toEqual([
+      '<li class="row-[1/4] grid grid-rows-subgrid" data-slides-at="2"',
+      '<li class="row-[1/4] grid grid-rows-subgrid" data-slides-at="3"',
+      '<li class="row-[1/4] grid grid-rows-subgrid" data-slides-at="2"',
     ]);
     // The group's own item and its run keep the baseline in view.
     expect(html).toContain('<li class="flex flex-col-reverse justify-end">');

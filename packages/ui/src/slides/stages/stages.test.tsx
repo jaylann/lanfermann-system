@@ -22,9 +22,9 @@ describe("Stages by step", () => {
 
   it("brings the connector into a stage, and its checkpoint, with that stage", () => {
     const html = renderToStaticMarkup(<Stages items={items} gates={["G1", true]} />);
-    expect(html).toContain('data-slot="slide-diagram-edge" data-draw="" data-step="1"');
-    expect(html).toContain('data-slot="slide-diagram-edge" data-draw="" data-step="2"');
-    expect(html).toContain('data-slot="slide-diagram-gate-label" data-step="1"');
+    expect(html).toContain('data-slot="slide-diagram-edge" data-draw="" data-slides-at="1"');
+    expect(html).toContain('data-slot="slide-diagram-edge" data-draw="" data-slides-at="2"');
+    expect(html).toContain('data-slot="slide-diagram-gate-label" data-slides-at="1"');
     expect(html.match(/data-slot="slide-diagram-gate"/g)).toHaveLength(2);
   });
 
@@ -34,7 +34,7 @@ describe("Stages by step", () => {
     );
     // It comes with the later of its stages, the third, and starts after the connector into it.
     expect(html).toContain(
-      'data-slot="slide-diagram-edge" data-step="2" style="--step-at:2;--draw-order:1"',
+      'data-slot="slide-diagram-edge" data-slides-at="2" style="--step-at:2;--draw-order:1"',
     );
   });
 

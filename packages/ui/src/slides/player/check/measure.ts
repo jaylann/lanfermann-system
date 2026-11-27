@@ -238,10 +238,22 @@ export function measureSlide(slide: Element): SlideIssue[] {
 }
 
 /**
+ * The steps the parts inside a box are marked with, as the page holds them: the kit's own
+ * `data-slides-at` and nothing else. A `data-step` in a deck's markup is the deck's.
+ */
+export function markedSteps(box: {
+  querySelectorAll(selector: string): Iterable<Pick<Element, "getAttribute">>;
+}): number[] {
+  return Array.from(box.querySelectorAll("[data-slides-at]"), (element) =>
+    Number(element.getAttribute("data-slides-at")),
+  );
+}
+
+/**
  * A part that asks for a step the slide does not have, given the steps its parts are marked
- * with (`data-step`, read from the page) and the steps the player counted for the slide. Such a
- * part would never be shown: the player stops at the slide's last step. It happens where a deck's
- * own component draws a stepped part inside and the slide does not name `steps`.
+ * with (`markedSteps`) and the steps the player counted for the slide. Such a part would never
+ * be shown: the player stops at the slide's last step. It happens where a deck's own component
+ * draws a stepped part inside and the slide does not name `steps`.
  */
 export function stepIssue(
   marked: readonly number[],
@@ -272,10 +284,7 @@ export function measureEntry(entry: Element, steps: number): SlideIssue[] {
     return [{ kind: "structure", message: 'The child renders no element with data-slot="slide".' }];
   }
   const issues = measureSlide(slide);
-  const marked = Array.from(entry.querySelectorAll("[data-step]"), (element) =>
-    Number(element.getAttribute("data-step")),
-  );
-  const unreachable = stepIssue(marked, steps);
+  const unreachable = stepIssue(markedSteps(entry), steps);
   if (unreachable) issues.unshift(unreachable);
   if (slides.length > 1) {
     issues.unshift({
