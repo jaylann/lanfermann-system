@@ -40,6 +40,12 @@ export function Charts({ ground }: { ground: string }) {
         height={160}
       />
       <Sparkline data={days.map((day) => day.umsatz)} label="Umsatz der letzten 30 Tage" />
+      {/* A series may name its colour; it crosses the line as plain data. */}
+      <Sparkline
+        data={days.map((day) => day.umsatz)}
+        color={3}
+        label="Umsatz der letzten 30 Tage, in der Farbe seiner Reihe"
+      />
       <BarList
         aria-label={`Umsatz nach Kunde (${ground})`}
         data={[
@@ -59,14 +65,14 @@ export function Charts({ ground }: { ground: string }) {
           { quartal: "Q4", angebote: 70 },
         ]}
         x="quartal"
-        series={[{ key: "angebote", label: "Angebote" }]}
+        series={[{ key: "angebote", label: "Angebote", color: 3 }]}
       />
       <SegmentedBar
         label={`Rechnungen nach Stand (${ground})`}
         data={[
-          { name: "Bezahlt", value: 41_280 },
-          { name: "Offen", value: 12_940 },
-          { name: "Überfällig", value: 3_120 },
+          { name: "Bezahlt", value: 41_280, color: 5 },
+          { name: "Offen", value: 12_940, color: 3 },
+          { name: "Überfällig", value: 3_120, color: "muted" },
         ]}
       />
       <Tracker

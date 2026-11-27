@@ -162,6 +162,8 @@ const pairs: [string, string, number][] = [
     [`series-${series}`, "surface", MARK],
     [`on-series-${series}`, `series-${series}`, TEXT],
   ]),
+  // A part that names `muted` (a remainder) prints its share on the de-emphasis grey.
+  ["on-series-muted", "series-muted", TEXT],
 ];
 
 describe("ground tokens", () => {

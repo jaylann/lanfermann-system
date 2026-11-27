@@ -3,6 +3,8 @@
  * Made from a seeded generator, so every capture draws the same lines.
  */
 
+import type { SeriesColor } from "@/internal/chart/series-color";
+
 function seeded(seed: number) {
   let state = seed;
   return () => {
@@ -83,6 +85,46 @@ export function costDays(
     const wave = 0.55 + 0.3 * Math.sin(index / 4);
     const share = (weekend ? 0.25 : 1) * (wave + random() * 0.25);
     return { tag: iso(date), kosten: Math.round(Math.min(1, share) * most * 100) / 100 };
+  });
+}
+
+export type ServiceCostDay = {
+  tag: string;
+  claude: number;
+  supabase: number;
+  cloudfront: number;
+  sonstige: number;
+};
+
+/**
+ * The paid services of the cost stories, dearest first, each with the series colour nearest
+ * its own (Claude's clay is the amber, Supabase's green the green, CloudFront's purple the
+ * indigo), and the remainder in the grey. The colour is the service's, not its place's.
+ */
+export const costServices = [
+  { key: "claude", label: "Claude", color: 3 },
+  { key: "supabase", label: "Supabase", color: 5 },
+  { key: "cloudfront", label: "CloudFront", color: 1 },
+  { key: "sonstige", label: "Sonstige", color: "muted" },
+] as const satisfies readonly { key: keyof ServiceCostDay; label: string; color: SeriesColor }[];
+
+/** What each service cost per day, in dollars: Claude on working days, the rest evenly. */
+export function serviceCostDays(
+  count = 14,
+  last = new Date(2026, 10, 30),
+  seed = 23,
+): ServiceCostDay[] {
+  const random = seeded(seed);
+  const cents = (amount: number) => Math.round(amount * 100) / 100;
+  return daysUntil(last, count).map((date, index) => {
+    const weekend = date.getDay() === 0 || date.getDay() === 6;
+    return {
+      tag: iso(date),
+      claude: cents((weekend ? 1.5 : 7) + random() * (weekend ? 2 : 6) + index * 0.2),
+      supabase: cents(1.8 + random() * 0.5),
+      cloudfront: cents(1.1 + random() * 2.2 + (index === 9 ? 3.5 : 0)),
+      sonstige: cents(0.5 + random() * 0.9),
+    };
   });
 }
 

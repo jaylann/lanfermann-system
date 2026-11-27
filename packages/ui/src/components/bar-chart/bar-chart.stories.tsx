@@ -5,7 +5,14 @@ import { expect, waitFor } from "storybook/test";
 import { Button } from "@/components/button/button";
 import { Card, CardBar } from "@/components/card/card";
 import { Heading } from "@/components/heading/heading";
-import { revenueMonths } from "@/components/time-series-chart/story-data";
+import { SegmentedBar } from "@/components/segmented-bar/segmented-bar";
+import { Sparkline } from "@/components/sparkline/sparkline";
+import {
+  costServices,
+  revenueMonths,
+  serviceCostDays,
+} from "@/components/time-series-chart/story-data";
+import { seriesPaint } from "@/internal/chart/series-color";
 import { toTime } from "@/internal/chart/time";
 
 import { BarChart } from "./bar-chart";
@@ -143,6 +150,110 @@ export const SmallAmounts: Story = {
       series={[{ key: "kosten", label: "Kosten" }]}
       format={dollar}
     />
+  ),
+};
+
+const serviceDays = serviceCostDays();
+const dayOfMonth = (row: { tag: string }) => `${Number(row.tag.slice(8))}.`;
+
+/**
+ * Series with an identity of their own name their colour: each service wears the series colour
+ * nearest its brand whatever its place in the stack, and the remainder is the grey, last.
+ */
+export const NamedColours: Story = {
+  name: "Named colours",
+  render: () => (
+    <BarChart
+      className="w-[42rem] max-w-full"
+      label="Kosten pro Tag nach Dienst"
+      layout="stacked"
+      data={serviceDays}
+      x="tag"
+      categoryLabel={dayOfMonth}
+      series={costServices}
+      format={dollar}
+    />
+  ),
+};
+
+const usd = new Intl.NumberFormat("de-DE", { style: "currency", currency: "USD" });
+const serviceTotals = costServices.map((service) => ({
+  ...service,
+  trend: serviceDays.map((day) => day[service.key]),
+  total: serviceDays.reduce((sum, day) => sum + day[service.key], 0),
+}));
+
+/**
+ * One colour per service on a whole page: its part of each day's column, its part of the
+ * month and its trend wear the same colour, so the swatch beside its name is the only legend
+ * the page needs.
+ */
+export const OneColourPerService: Story = {
+  name: "One colour per service",
+  parameters: { visual: { viewport: { width: 1080, height: 440 } } },
+  render: () => (
+    <div className="grid w-[62rem] max-w-full grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <Card>
+        <CardBar>
+          <Heading level={2} size="label">
+            Kosten pro Tag
+          </Heading>
+        </CardBar>
+        <div className="px-5 pt-4 pb-5">
+          <BarChart
+            label="Kosten pro Tag nach Dienst"
+            layout="stacked"
+            data={serviceDays}
+            x="tag"
+            categoryLabel={dayOfMonth}
+            series={costServices}
+            format={dollar}
+          />
+        </div>
+      </Card>
+      <Card>
+        <CardBar>
+          <Heading level={2} size="label">
+            Die letzten 14 Tage nach Dienst
+          </Heading>
+        </CardBar>
+        <div className="flex flex-col gap-4 px-5 pt-4 pb-3">
+          <SegmentedBar
+            label="Kosten nach Dienst"
+            size="tall"
+            legend={false}
+            data={serviceTotals.map((service) => ({
+              name: service.label,
+              value: service.total,
+              color: service.color,
+            }))}
+            format={dollar}
+          />
+          <ul className="flex flex-col divide-y divide-hairline text-control">
+            {serviceTotals.map((service) => (
+              <li key={service.key} className="flex items-center gap-2 py-2">
+                <span
+                  aria-hidden
+                  className="size-2.5 shrink-0 rounded-[3px]"
+                  style={{ backgroundColor: seriesPaint(service.color).fill }}
+                />
+                <span className="min-w-0 flex-1 truncate text-fg-body">{service.label}</span>
+                <Sparkline
+                  className="w-24 shrink-0"
+                  data={service.trend}
+                  color={service.color}
+                  height={20}
+                  drawIn={false}
+                />
+                <span className="w-20 shrink-0 text-right text-fg tabular-nums">
+                  {usd.format(service.total)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Card>
+    </div>
   ),
 };
 

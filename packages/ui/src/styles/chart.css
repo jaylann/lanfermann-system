@@ -6,6 +6,8 @@
  * their hue (teal, amber, blue, green, magenta), stepped a little lighter so a 2px line reads as
  * a colour and not as text. The order is fixed: a chart takes series 1, 2, 3 … in turn and never
  * cycles; a series keeps its colour when another is hidden. More than six series is a table.
+ * A series with an identity of its own (a service, a state) names its colour instead and wears
+ * it in every chart, whatever its place (`SeriesColor`, `src/internal/chart/series-color.ts`).
  *
  * The order was chosen by search over every order of six of the hues, checked with the dataviz
  * validator (OKLab ΔE ×100 between neighbours, under deuteranopia and protanopia simulated with
@@ -42,6 +44,8 @@
   --lf-on-series-4: #13121c;
   --lf-on-series-5: #13121c;
   --lf-on-series-6: #000000;
+  /* On the de-emphasis grey: a remainder that names `muted` in a tall `SegmentedBar`. */
+  --lf-on-series-muted: #13121c;
 }
 
 /* Ink's, and in dark mode every ground's but Indigo's. */
@@ -68,6 +72,7 @@
   --lf-on-series-4: #13121c;
   --lf-on-series-5: #13121c;
   --lf-on-series-6: #13121c;
+  --lf-on-series-muted: #fbfbfd;
 }
 
 [data-theme="indigo"],
@@ -87,6 +92,7 @@
   --lf-on-series-4: #13121c;
   --lf-on-series-5: #13121c;
   --lf-on-series-6: #13121c;
+  --lf-on-series-muted: #13121c;
 }
 
 /* The deeper Indigo of dark mode: the de-emphasis grey steps down with it. */

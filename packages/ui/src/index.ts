@@ -785,6 +785,7 @@ export {
   type WaterfallProps,
   type WaterfallStep,
 } from "./components/waterfall/waterfall";
+export { type SeriesColor } from "./internal/chart/series-color";
 export { cn, mergeClassName } from "./lib/cn";
 export {
   type DateOptions,
