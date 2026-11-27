@@ -718,6 +718,11 @@ export {
 export { Text, type TextProps } from "./components/text/text";
 export { Textarea, type TextareaProps } from "./components/textarea/textarea";
 export {
+  ThemeMenuItems,
+  type ThemeMenuItemsProps,
+  useThemeNames,
+} from "./components/theme-switch/theme-menu";
+export {
   type ColorMode,
   type Theme,
   THEME_STORAGE_KEY,

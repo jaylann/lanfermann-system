@@ -20,7 +20,8 @@ import type { Theme } from "./theme-mode";
 
 export type { Theme };
 
-const themes: readonly { value: Theme; icon: IconSvgElement }[] = [
+/** The three choices and their symbols, shared with the menu form (`ThemeMenuItems`). */
+export const themes: readonly { value: Theme; icon: IconSvgElement }[] = [
   { value: "system", icon: ComputerIcon },
   { value: "light", icon: Sun03Icon },
   { value: "dark", icon: Moon02Icon },
