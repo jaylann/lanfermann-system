@@ -8,7 +8,6 @@ import { useGround } from "@/components/ground/ground";
 import { CloseGlyph } from "@/internal/glyphs";
 import {
   overlayBackdrop,
-  overlayBody,
   overlayDescription,
   overlayFooter,
   overlayHeader,
@@ -16,6 +15,7 @@ import {
   overlayTitle,
   overlayViewport,
 } from "@/internal/overlay";
+import { OverlayBody, type OverlayBodyProps } from "@/internal/overlay-body";
 import { cn, mergeClassName } from "@/lib/cn";
 
 /**
@@ -112,8 +112,8 @@ export function DialogDescription({ className, ...props }: DialogPrimitive.Descr
 }
 
 /** The content. It scrolls when it is taller than the window allows. */
-export function DialogBody({ className, ...props }: ComponentProps<"div">) {
-  return <div data-slot="dialog-body" className={cn(overlayBody, className)} {...props} />;
+export function DialogBody(props: OverlayBodyProps) {
+  return <OverlayBody data-slot="dialog-body" {...props} />;
 }
 
 export function DialogFooter({ className, ...props }: ComponentProps<"div">) {
