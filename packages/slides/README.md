@@ -110,7 +110,11 @@ if (bundle.js !== undefined && errors.length === 0) {
   `syntax`, notes that cannot be left out one of kind `notes`. `kitVersion` is the version of
   `@lanfermann/ui` whose player the script needs.
 - **`typecheckDeck({ files, entry })`** checks the types against the kit's declarations and
-  returns errors of kind `type`. It is separate, so that `bundleDeck` stays fast.
+  returns errors of kind `type`. It is separate, so that `bundleDeck` stays fast. The compiler
+  reads the deck from memory and, of the machine, only its own library files, React's types
+  and the kit's declarations. A `/// <reference … />` in a deck is not followed: both functions
+  refuse it with an error of kind `import` (`reference-not-allowed`). No message names a path
+  of the machine.
 - **`deckHtml(js, { mode, title, lang, pdfUrl?, csp?, assets? })`** makes the one file, with the
   player's script, styles and fonts inline. `mode` is `audience`, `presenter`, `print` or
   `check`. `csp` is written as a `<meta>` when given. `assets` maps the name a picture has in

@@ -116,7 +116,9 @@ the build for an audience fails and names the notes. Reword one of the two.
   `../bilder/werkstatt.jpg`
 
 Nothing else: no other package, no `node:` module, no address, no `require`, no `import()`.
-This holds for an import nothing uses and for one only a type uses as well.
+This holds for an import nothing uses and for one only a type uses as well. A triple-slash
+directive (`/// <reference path="…" />`, `types`, `lib`, `no-default-lib`) is refused too: it
+takes a file in without an import.
 
 A deck also does not use `fetch`, `XMLHttpRequest`, `WebSocket`, `eval` or `new Function`. The
 built file would not let them work anyway: its policy allows no connection and no text run as
@@ -177,6 +179,7 @@ exits 1 when one of them is an error.
 | `import-not-found`                                                   | A relative import that names no file of the deck                     |
 | `unsupported-file`                                                   | A file, or an import of one, that is neither code nor a picture      |
 | `dynamic-import`, `require`                                          | `import()` or `require`                                              |
+| `reference-not-allowed`                                              | A `/// <reference … />` directive at the head of a file              |
 | `forbidden-global`                                                   | `fetch`, `XMLHttpRequest`, `WebSocket`, `eval`, `new Function`       |
 | `no-default-deck`                                                    | No `deck.tsx`, or its default export is not a `<Deck>` element       |
 | `deck-prop-not-literal`                                              | A title or a language that is not written out, or a spread on `Deck` |

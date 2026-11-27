@@ -23,6 +23,70 @@ export const REQUIRE = {
   message: "require is not allowed in a deck: use import",
 };
 
+/** One `/// <reference … />` at the head of a file: where its comment stands, and what it names. */
+export type ReferenceDirective = {
+  /** The comment's first character in the file's text, and the one after its last. */
+  start: number;
+  end: number;
+  /** `path`, `types`, `lib` or `no-default-lib`, when the directive names one of them. */
+  attribute?: string;
+};
+
+const REFERENCE_ATTRIBUTES: readonly string[] = ["path", "types", "lib", "no-default-lib"];
+
+/**
+ * The triple-slash reference directives of a file: every `///` comment before its first line of
+ * code that opens a `<reference`, which is where the compiler reads them and nowhere else. Read
+ * a little wider than the compiler does (it also wants the closing `/>`), so that nothing it
+ * takes for a directive is missed here.
+ */
+export function referenceDirectives(text: string): ReferenceDirective[] {
+  const found: ReferenceDirective[] = [];
+  for (const range of ts.getLeadingCommentRanges(text, 0) ?? []) {
+    if (range.kind !== ts.SyntaxKind.SingleLineCommentTrivia) continue;
+    const comment = text.slice(range.pos, range.end);
+    if (!/^\/\/\/\s*<reference/i.test(comment)) continue;
+    const named = /\s([a-z-]+)\s*=/i.exec(comment)?.[1]?.toLowerCase();
+    found.push({
+      start: range.pos,
+      end: range.end,
+      ...(named !== undefined && REFERENCE_ATTRIBUTES.includes(named) ? { attribute: named } : {}),
+    });
+  }
+  return found;
+}
+
+/**
+ * Why a reference directive is refused. It would make the compiler read a file, a package's
+ * types or a library by a name the deck picks, past everything that checks an import. The
+ * message names the kind of directive and not what it points at.
+ */
+function referenceRefusal(directive: ReferenceDirective): { code: string; message: string } {
+  const written =
+    directive.attribute === undefined ? "<reference>" : `<reference ${directive.attribute}>`;
+  return {
+    code: "reference-not-allowed",
+    message:
+      `/// ${written} is not allowed in a deck: a deck takes in its own files, React and ` +
+      "the kit by import, and nothing else",
+  };
+}
+
+/** The refusals for a file's reference directives, each at the comment that writes one. */
+export function scanReferences(path: string, text: string): DeckError[] {
+  return referenceDirectives(text).map((directive) => {
+    // Counted as the compiler counts lines, without parsing the file for it.
+    const before = text.slice(0, directive.start).split(/\r\n|[\n\r\u2028\u2029]/);
+    return {
+      kind: "import",
+      file: path,
+      line: before.length,
+      column: (before.at(-1)?.length ?? 0) + 1,
+      ...referenceRefusal(directive),
+    };
+  });
+}
+
 /** Why an import by name is refused, or `undefined` for one a deck may write. */
 export function refusalOf(
   name: string,
@@ -60,6 +124,9 @@ export function refusalOf(
  *
  * With `images` (the command line has them), an import of a picture that is not there is
  * reported as well.
+ *
+ * A `/// <reference … />` is refused here too: it takes a file in as an import does, by a name
+ * of the deck's choosing. `typecheckDeck` says the same about it, in the same words.
  */
 export function scanImports(
   parsed: ReadonlyMap<string, ts.SourceFile>,
@@ -68,6 +135,7 @@ export function scanImports(
 ): DeckError[] {
   const errors: DeckError[] = [];
   for (const [path, file] of parsed) {
+    errors.push(...scanReferences(path, file.text));
     const refuse = (node: ts.Node, { code, message }: { code: string; message: string }) => {
       errors.push({
         kind: "import",
