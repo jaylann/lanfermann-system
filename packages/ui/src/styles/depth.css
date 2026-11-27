@@ -74,7 +74,11 @@
 
 :root,
 [data-theme="paper"],
-[data-theme="tint"] {
+[data-mode="dark"] [data-mode="light"][data-theme="paper"],
+[data-mode="dark"] [data-mode="light"] [data-theme="paper"],
+[data-theme="tint"],
+[data-mode="dark"] [data-mode="light"][data-theme="tint"],
+[data-mode="dark"] [data-mode="light"] [data-theme="tint"] {
   /* neutral fitting: a white face that shades toward the bottom */
   --depth-surface-face: linear-gradient(rgb(42 37 82 / 0) 40%, rgb(42 37 82 / 0.085));
   --depth-surface-edge: rgb(19 18 28 / 0.12);
@@ -195,6 +199,8 @@
    near-black edges and shadows, the key inverted. */
 .dark,
 [data-theme="ink"],
+[data-mode="dark"] [data-mode="light"][data-theme="ink"],
+[data-mode="dark"] [data-mode="light"] [data-theme="ink"],
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
 [data-mode="dark"] [data-theme="paper"],
@@ -338,6 +344,8 @@
 }
 
 [data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"][data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"] [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
 [data-mode="dark"] [data-theme="indigo"] {
   --depth-surface-face: linear-gradient(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0));

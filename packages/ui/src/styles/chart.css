@@ -25,7 +25,11 @@
 
 :root,
 [data-theme="paper"],
-[data-theme="tint"] {
+[data-mode="dark"] [data-mode="light"][data-theme="paper"],
+[data-mode="dark"] [data-mode="light"] [data-theme="paper"],
+[data-theme="tint"],
+[data-mode="dark"] [data-mode="light"][data-theme="tint"],
+[data-mode="dark"] [data-mode="light"] [data-theme="tint"] {
   --lf-series-1: #5f50d0;
   --lf-series-2: #079390;
   --lf-series-3: #b36e00;
@@ -47,6 +51,8 @@
 /* Ink's, and in dark mode every ground's but Indigo's. */
 .dark,
 [data-theme="ink"],
+[data-mode="dark"] [data-mode="light"][data-theme="ink"],
+[data-mode="dark"] [data-mode="light"] [data-theme="ink"],
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
 [data-mode="dark"] [data-theme="paper"],
@@ -71,6 +77,8 @@
 }
 
 [data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"][data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"] [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
 [data-mode="dark"] [data-theme="indigo"] {
   --lf-series-1: #ffffff;

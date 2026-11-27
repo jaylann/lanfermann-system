@@ -3,7 +3,7 @@
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
 import type { ComponentProps } from "react";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import type { IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
 import { Tile } from "@/internal/tile";
@@ -31,6 +31,7 @@ export function NavigationMenu({
   ...props
 }: NavigationMenuProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <NavigationMenuPrimitive.Root
       data-slot="navigation-menu"
@@ -58,6 +59,7 @@ export function NavigationMenu({
           <NavigationMenuPrimitive.Popup
             data-slot="navigation-menu-popup"
             data-theme={ground}
+            data-mode={groundMode}
             className={cn(
               "relative h-(--popup-height) w-(--popup-width) origin-(--transform-origin) rounded-xl bg-sheet text-fg-body depth-floating outline-hidden",
               // Size is the one thing that has to be laid out here: the sheet takes the measure

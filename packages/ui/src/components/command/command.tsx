@@ -14,7 +14,7 @@ import {
 } from "react";
 
 import { Chip } from "@/components/chip/chip";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Grow } from "@/components/grow/grow";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
@@ -230,6 +230,7 @@ export type CommandContentProps = DialogPrimitive.Popup.Props;
  */
 export function CommandContent({ className, children, ...props }: CommandContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   const { label, locale, items, query, setQuery, close } = useCommand("CommandContent");
   // Base UI's own matcher, set to compare letters by their base: "gart" finds "Gärtnerei". Its
   // default is the locale's search collation, and the German one keeps "ä" apart from "a".
@@ -254,6 +255,7 @@ export function CommandContent({ className, children, ...props }: CommandContent
         <DialogPrimitive.Popup
           data-slot="command-content"
           data-theme={ground}
+          data-mode={groundMode}
           aria-label={label}
           className={mergeClassName(
             [

@@ -4,7 +4,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/button/button";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { CloseGlyph } from "@/internal/glyphs";
 import {
   overlayBackdrop,
@@ -53,6 +53,7 @@ export function DialogContent({
   ...props
 }: DialogContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop data-slot="dialog-backdrop" className={overlayBackdrop} />
@@ -60,6 +61,7 @@ export function DialogContent({
         <DialogPrimitive.Popup
           data-slot="dialog-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(overlayPopup, className)}
           {...props}
         >

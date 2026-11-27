@@ -15,7 +15,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/button/button";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Icon } from "@/components/icon/icon";
 import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { cn } from "@/lib/cn";
@@ -152,6 +152,7 @@ export function SiteHeaderMenu({
   ...dialog
 }: SiteHeaderMenuProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   const menu = useRef<DialogPrimitive.Root.Actions>(null);
   const sheet = useRef<HTMLDivElement>(null);
   // The open menu, once it is there: whether more places wait below (`data-overflow`).
@@ -185,6 +186,7 @@ export function SiteHeaderMenu({
           initialFocus={sheet}
           data-slot="site-header-menu-sheet"
           data-theme={ground}
+          data-mode={groundMode}
           // Following any link in the menu closes it: a place, the way home, the next step. A
           // link on the same page (an anchor) or a router's link would otherwise leave it open.
           onClick={(event) => {

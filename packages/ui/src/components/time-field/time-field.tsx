@@ -4,7 +4,7 @@ import { Autocomplete } from "@base-ui/react/autocomplete";
 import { Clock01Icon } from "@hugeicons/core-free-icons";
 import { useRef } from "react";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Icon } from "@/components/icon/icon";
 import { InputGroupAddon } from "@/components/input-group/input-group";
 import { fieldShell, fieldShellSize, type FieldSize, focusFieldControl } from "@/internal/field";
@@ -78,6 +78,7 @@ export function TimeField({
   ...props
 }: TimeFieldProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   const list = useRef<HTMLDivElement>(null);
   const written = (time: string) => formatTime(time, hourCycle);
   const typed = useTypedValue({
@@ -184,6 +185,7 @@ export function TimeField({
           <Autocomplete.Popup
             data-slot="time-field-list"
             data-theme={ground}
+            data-mode={groundMode}
             className={cn(listSheet, popupMotion, "min-w-(--anchor-width)")}
           >
             <Autocomplete.List

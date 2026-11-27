@@ -3,7 +3,7 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import type { ReactNode } from "react";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronRightGlyph } from "@/internal/glyphs";
 import { ListMark } from "@/internal/list-mark";
@@ -33,6 +33,7 @@ export function MenuContent({
   ...props
 }: MenuContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -46,6 +47,7 @@ export function MenuContent({
         <MenuPrimitive.Popup
           data-slot="menu-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName([listSheet, popupMotion, "min-w-48"], className)}
           {...props}
         />
@@ -237,6 +239,7 @@ export function MenuSubContent({
   ...props
 }: MenuContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -248,6 +251,7 @@ export function MenuSubContent({
         <MenuPrimitive.Popup
           data-slot="menu-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName([listSheet, popupMotion, "min-w-40"], className)}
           {...props}
         />

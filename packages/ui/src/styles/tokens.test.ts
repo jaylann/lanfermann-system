@@ -17,6 +17,8 @@ const label = ({ ground, mode }: { ground: Ground; mode: Mode }) =>
   mode === "light" ? ground : `${ground} (dark)`;
 
 const DARK = '[data-mode="dark"]';
+/** A region of a dark page that stays light: these parts repeat a light block inside it. */
+const LIGHT_SCOPE = `${DARK} [data-mode="light"]`;
 /** Dark Paper on a root that names no ground. */
 const DARK_ROOT = `:root${DARK}:not([data-theme])`;
 
@@ -33,6 +35,8 @@ function read(file: string) {
  */
 function setsScope(selector: string, ground: Ground, mode: Mode) {
   const part = selector.trim();
+  // A light scope repeats a light block that is read already, and is no dark block.
+  if (part.startsWith(LIGHT_SCOPE)) return false;
   if (part.includes(DARK) !== (mode === "dark")) return false;
   if (part.includes(`[data-theme="${ground}"]`)) return true;
   if (ground === "paper") return part === (mode === "dark" ? DARK_ROOT : ":root");
@@ -185,8 +189,12 @@ describe("ground tokens", () => {
   it("a dark block reaches its ground on <html> and nested in the page", () => {
     // Each ground on <html> itself and on a nested element; Paper also on a bare root.
     for (const [, selector] of (css + depthCss).matchAll(/([^{}]+)\{[^{}]*\}/g)) {
-      if (!selector?.includes(DARK) || selector.includes("@")) continue;
-      const parts = selector.split(",").map((part) => part.trim());
+      if (!selector || selector.includes("@")) continue;
+      const parts = selector
+        .split(",")
+        .map((part) => part.trim())
+        .filter((part) => !part.startsWith(LIGHT_SCOPE));
+      if (!parts.some((part) => part.includes(DARK))) continue;
       for (const ground of GROUNDS) {
         if (!parts.some((part) => part.includes(`[data-theme="${ground}"]`))) continue;
         expect(parts, selector).toContain(`${DARK}[data-theme="${ground}"]`);
@@ -194,6 +202,23 @@ describe("ground tokens", () => {
         if (ground === "paper") expect(parts, selector).toContain(DARK_ROOT);
       }
     }
+  });
+
+  it("a light block also reaches a light scope inside a dark page", () => {
+    // Every block that sets a ground in light mode: on the scope itself and nested inside it.
+    let blocks = 0;
+    for (const [, selector] of (css + depthCss).matchAll(/([^{}]+)\{[^{}]*\}/g)) {
+      if (!selector || selector.includes("@")) continue;
+      const parts = selector.split(",").map((part) => part.trim());
+      for (const ground of GROUNDS) {
+        const plain = `[data-theme="${ground}"]`;
+        if (!parts.includes(plain)) continue;
+        blocks += 1;
+        expect(parts, selector).toContain(`${LIGHT_SCOPE}${plain}`);
+        expect(parts, selector).toContain(`${LIGHT_SCOPE} ${plain}`);
+      }
+    }
+    expect(blocks).toBeGreaterThan(12);
   });
 
   describe.each([...byScope.keys()])("contrast on %s", (scope) => {

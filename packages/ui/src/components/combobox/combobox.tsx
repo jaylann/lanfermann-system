@@ -11,7 +11,7 @@ import {
   chipShape,
   type ChipVariant,
 } from "@/components/chip/chip-variants";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Grow } from "@/components/grow/grow";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import {
@@ -500,6 +500,7 @@ export function ComboboxContent({
   ...props
 }: ComboboxContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Positioner
@@ -513,6 +514,7 @@ export function ComboboxContent({
         <ComboboxPrimitive.Popup
           data-slot="combobox-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(
             [listSheet, popupMotion, "max-w-(--available-width) min-w-(--anchor-width)"],
             className,

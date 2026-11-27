@@ -4,7 +4,7 @@ import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { type ComponentProps, createContext, useContext } from "react";
 
 import { Button } from "@/components/button/button";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { CloseGlyph } from "@/internal/glyphs";
 import { overlayDescription, overlayFooter, overlayHeader, overlayTitle } from "@/internal/overlay";
 import { OverlayBody, type OverlayBodyProps } from "@/internal/overlay-body";
@@ -115,6 +115,7 @@ export function DrawerContent({
   ...props
 }: DrawerContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   const side = useContext(DrawerSideContext);
   return (
     <DrawerPrimitive.Portal>
@@ -131,6 +132,7 @@ export function DrawerContent({
         <DrawerPrimitive.Popup
           data-slot="drawer-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(
             [
               "relative flex flex-col bg-sheet text-base text-fg-body depth-overlay outline-hidden [--bleed:3rem]",
