@@ -315,15 +315,37 @@ export function TableCell({
   );
 }
 
-export type TableSortButtonProps = ComponentProps<"button"> & {
+type TableSortShared = {
   /** The current direction, if the table is sorted by this column. */
   direction?: "ascending" | "descending";
 };
+
+export type TableSortButtonProps = TableSortShared &
+  (
+    | (ComponentProps<"button"> & { href?: undefined })
+    | (ComponentProps<"a"> & {
+        /**
+         * Where sorting by this column leads, when the order is kept in the address: the heading
+         * is then a real link, which a new tab and the Back button understand. `onClick` is still
+         * called; call `event.preventDefault()` there if a router takes over.
+         */
+        href: string;
+      })
+  );
+
+const sortButton = [
+  "group/sort touch-target relative -mx-1.5 inline-flex h-(--control-sm) items-center gap-1 rounded-sm px-1.5 text-sm text-fg-muted select-none",
+  "hover:bg-hover hover:text-fg data-direction:text-fg",
+  "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent",
+];
 
 /**
  * The heading of a sortable column, as a button. An arrow shows the direction and turns over
  * (`seat`) when it changes; an unsorted column shows it faintly under the pointer. Keep the state
  * yourself, and put the same direction on the `TableHead` as `sort`.
+ *
+ * With `href` it is a link of the same look, for a table whose order is part of the address, as
+ * `Pagination` does for its pages.
  */
 export function TableSortButton({
   className,
@@ -331,27 +353,38 @@ export function TableSortButton({
   children,
   ...props
 }: TableSortButtonProps) {
+  const arrow = (
+    <ArrowUpGlyph
+      className={cn(
+        "transition-[rotate,opacity] spring-seat",
+        direction ? "opacity-100" : "opacity-0 group-hover/sort:opacity-50",
+        direction === "descending" && "rotate-180",
+      )}
+    />
+  );
+  if (props.href !== undefined) {
+    return (
+      <a
+        data-slot="table-sort-button"
+        data-direction={direction}
+        className={cn(sortButton, className)}
+        {...props}
+      >
+        {children}
+        {arrow}
+      </a>
+    );
+  }
   return (
     <button
       type="button"
       data-slot="table-sort-button"
       data-direction={direction}
-      className={cn(
-        "group/sort touch-target relative -mx-1.5 inline-flex h-(--control-sm) items-center gap-1 rounded-sm px-1.5 text-sm text-fg-muted select-none",
-        "hover:bg-hover hover:text-fg data-direction:text-fg",
-        "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent",
-        className,
-      )}
+      className={cn(sortButton, className)}
       {...props}
     >
       {children}
-      <ArrowUpGlyph
-        className={cn(
-          "transition-[rotate,opacity] spring-seat",
-          direction ? "opacity-100" : "opacity-0 group-hover/sort:opacity-50",
-          direction === "descending" && "rotate-180",
-        )}
-      />
+      {arrow}
     </button>
   );
 }
