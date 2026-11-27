@@ -45,7 +45,7 @@ export {
 export { type FileKind, kindOf } from "./components/attachment/kinds";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
 export { AvatarGroup, type AvatarGroupProps } from "./components/avatar-group/avatar-group";
-export { type AvatarPerson, type Presence } from "./components/avatar-group/people";
+export { type AvatarPerson, initialsOf, type Presence } from "./components/avatar-group/people";
 export { Badge, type BadgeProps } from "./components/badge/badge";
 export { Banner, type BannerProps, type BannerTone } from "./components/banner/banner";
 export {
@@ -330,6 +330,11 @@ export {
   FileThumbSkeleton,
 } from "./components/file-thumb/file-thumb";
 export {
+  FileThumbStack,
+  type FileThumbStackFile,
+  type FileThumbStackProps,
+} from "./components/file-thumb/file-thumb-stack";
+export {
   FileTile,
   type FileTileProps,
   type FileTileStatus,
@@ -583,6 +588,8 @@ export {
 } from "./components/side-nav/side-nav";
 export {
   Sidebar,
+  SidebarBrand,
+  type SidebarBrandProps,
   SidebarButton,
   type SidebarButtonProps,
   SidebarContent,
@@ -785,6 +792,7 @@ export {
   type WaterfallProps,
   type WaterfallStep,
 } from "./components/waterfall/waterfall";
+export { writeClipboard } from "./internal/clipboard";
 export { cn, mergeClassName } from "./lib/cn";
 export {
   type DateOptions,

@@ -17,13 +17,17 @@ export function FileThumbPicture({
   src,
   kind,
   seeThrough,
+  symbolSize = 16,
 }: {
   src: string;
   kind: FileSymbolKind;
   seeThrough: boolean;
+  /** The size of the symbol that stands in for a picture that did not load. */
+  symbolSize?: number;
 }) {
   const [failed, setFailed] = useState<string | null>(null);
-  if (failed === src) return <FileKindSymbol kind={kind} size={16} className="text-fg-muted" />;
+  if (failed === src)
+    return <FileKindSymbol kind={kind} size={symbolSize} className="text-fg-muted" />;
   return (
     <img
       src={src}
