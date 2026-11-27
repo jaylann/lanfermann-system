@@ -499,6 +499,12 @@ export {
   ReferenceEntryName,
   ReferenceEntryTitle,
 } from "./components/reference-entry/reference-entry";
+export {
+  ReflowGrid,
+  type ReflowGridProps,
+  ReflowTile,
+  type ReflowTileProps,
+} from "./components/reflow-grid/reflow-grid";
 export { RelativeTime, type RelativeTimeProps } from "./components/relative-time/relative-time";
 export { RollingNumber, type RollingNumberProps } from "./components/rolling-number/rolling-number";
 export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
