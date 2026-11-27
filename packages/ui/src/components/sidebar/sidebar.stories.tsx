@@ -495,6 +495,68 @@ export const PhoneOpen: Story = {
 };
 
 /**
+ * A sidebar that is shown rather than used: on a design page, beside the app's own. `inline`
+ * leaves the shell around it alone, so collapsing the real sidebar does not collapse the
+ * specimen, and it is as tall as its place. `collapsed` shows the rail of the same specimen.
+ */
+export const Inline: Story = {
+  parameters: { visual: { viewport: { width: 1100, height: 640 }, clip: "viewport" } },
+  render: (args) => (
+    <AppShell>
+      <Entries {...args} />
+      <Page>
+        <div className="mt-4 flex items-stretch gap-4">
+          <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+            <Entries
+              {...args}
+              inline
+              aria-label="Beispiel, ausgeklappt"
+              start="rechnungen"
+              className="border-r-0"
+            />
+          </div>
+          <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+            <Entries
+              {...args}
+              inline
+              collapsed
+              aria-label="Beispiel, eingeklappt"
+              className="border-r-0"
+            />
+          </div>
+        </div>
+      </Page>
+    </AppShell>
+  ),
+};
+
+/** As a test: the shell's trigger collapses the app's sidebar and leaves the specimen as it is. */
+export const InlineKeepsItsState: Story = {
+  parameters: { visual: { viewport: { width: 1100, height: 640 } } },
+  render: (args) => (
+    <AppShell>
+      <Entries {...args} />
+      <Page>
+        <div className="mt-4 flex h-[26rem]">
+          <Entries {...args} inline aria-label="Beispiel" />
+        </div>
+      </Page>
+    </AppShell>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const [own, specimen] = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-slot="sidebar"]:not([data-drawer])'),
+    );
+    await expect(specimen).toHaveAttribute("data-inline");
+    await expect(getComputedStyle(specimen!).position).toBe("relative");
+    await userEvent.click(canvas.getByRole("button", { name: "Seitenleiste" }));
+    await waitFor(() => expect(own).toHaveAttribute("data-state", "collapsed"));
+    await expect(specimen).toHaveAttribute("data-state", "expanded");
+    await expect(specimen).not.toHaveAttribute("id");
+  },
+};
+
+/**
  * The keyboard path, as a test: Tab goes from entry to entry, the current page says so, Strg B
  * collapses the sidebar and an entry of the rail names itself when it takes the focus.
  */

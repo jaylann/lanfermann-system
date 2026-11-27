@@ -78,6 +78,17 @@ export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
    * by a tooltip. `hidden`: nothing, and the page has the whole window.
    */
   collapse?: "rail" | "hidden";
+  /**
+   * A sidebar that is shown, not used as the app's own: a specimen on a design page, a preview
+   * in the settings, a figure in the docs. It ignores the `AppShell` around it (it neither
+   * collapses with the real sidebar nor waits in a drawer on a phone), does not stick to the
+   * window and is as tall as its content, or as its place makes it. `collapsed` shows its rail.
+   */
+  inline?: boolean;
+  /** With `inline`: show it collapsed, as `collapse` says. An inline sidebar holds no state. */
+  collapsed?: boolean;
+  /** The way out of the phone's drawer, as assistive tech hears it. */
+  closeLabel?: string;
 };
 
 /**
@@ -99,13 +110,18 @@ export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
 export function Sidebar({
   "aria-label": label,
   collapse = "rail",
+  inline = false,
+  collapsed = false,
+  closeLabel = "Schließen",
   className,
   children,
   ...props
 }: SidebarProps) {
-  const state = useContext(SidebarStateContext);
+  const shell = useContext(SidebarStateContext);
+  // Inline, the shell around it is not its own: it stands as a sidebar without one does.
+  const state = inline ? null : shell;
   const box = useRef<HTMLDivElement>(null);
-  const open = state?.open ?? true;
+  const open = inline ? !collapsed : (state?.open ?? true);
   const rail = !open && collapse === "rail";
   const gone = !open && collapse === "hidden";
 
@@ -126,7 +142,7 @@ export function Sidebar({
     [label, closeDrawer],
   );
 
-  return (
+  const standing = (
     // Once one entry of the rail has named itself, its neighbours do so without the wait.
     <TooltipProvider>
       <SidebarLayoutContext value={layout}>
@@ -137,10 +153,14 @@ export function Sidebar({
           data-state={open ? "expanded" : "collapsed"}
           data-collapse={collapse}
           data-rail={rail ? "" : undefined}
+          data-inline={inline ? "" : undefined}
           inert={gone}
           className={cn(
             lengths,
-            "sticky top-0 z-10 h-dvh shrink-0 justify-end self-start overflow-hidden border-r border-hairline bg-ground text-control",
+            "shrink-0 justify-end overflow-hidden border-r border-hairline bg-ground text-control",
+            // The app's own sidebar stays in the window while the page scrolls; a specimen is
+            // part of the page and scrolls with it.
+            inline ? "relative" : "sticky top-0 z-10 h-dvh self-start",
             // Width is laid out on every frame, which the rule against it is about. Here the
             // page beside it has to be pushed, and it never happens on a phone.
             "w-(--sidebar-width) transition-[width,border-color] spring-settle",
@@ -184,12 +204,14 @@ export function Sidebar({
               </div>
             </SidebarLayoutContext>
             {/* The scrim and a swipe close it too; this is the way out for assistive tech. */}
-            <DrawerClose className="sr-only">Schließen</DrawerClose>
+            <DrawerClose className="sr-only">{closeLabel}</DrawerClose>
           </DrawerContent>
         </Drawer>
       ) : null}
     </TooltipProvider>
   );
+  // A trigger or entry inside a specimen must not reach the real shell either.
+  return inline ? <SidebarStateContext value={null}>{standing}</SidebarStateContext> : standing;
 }
 
 /** What stands above the entries and stays there: the workspace, the product's mark. */
