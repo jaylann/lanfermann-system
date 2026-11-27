@@ -18,6 +18,7 @@ import { Icon } from "@/components/icon/icon";
 import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 import { atRest, type Moving, springForce, stepSpring } from "@/motion/spring-step";
 import { springs } from "@/motion/springs";
 
@@ -115,11 +116,12 @@ export type ConversationContentProps = ComponentProps<"div"> & {
  * its padding, the room between messages); the box itself fills the conversation.
  */
 export function ConversationContent({
-  label = "Unterhaltung",
+  label,
   className,
   children,
   ...props
 }: ConversationContentProps) {
+  const { messages } = useLocale();
   const shared = useContext(SharedContext);
   const scroller = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -324,7 +326,7 @@ export function ConversationContent({
       // with every piece of an answer.
       data-fade-edges={shared?.away ? undefined : "start"}
       role="region"
-      aria-label={label}
+      aria-label={label ?? messages.conversation.label}
       // A region that scrolls must be reachable from the keyboard.
       tabIndex={0}
       className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-hidden"
@@ -353,11 +355,8 @@ export type ConversationLatestProps = Omit<ComponentProps<"span">, "children"> &
  * Pressed, the view glides back down (from far up it jumps closer first), keeps to the foot
  * again, and the keyboard focus goes to the conversation.
  */
-export function ConversationLatest({
-  label = "Neueste",
-  className,
-  ...props
-}: ConversationLatestProps) {
+export function ConversationLatest({ label, className, ...props }: ConversationLatestProps) {
+  const { messages } = useLocale();
   const shared = useContext(SharedContext);
   const shown = shared?.away ?? false;
   return (
@@ -378,7 +377,7 @@ export function ConversationLatest({
           onClick={() => shared?.engine.current?.toLatest(true)}
         >
           <Icon icon={ArrowDown01Icon} size={14} />
-          {label}
+          {label ?? messages.conversation.latest}
         </Button>
       </span>
     </div>

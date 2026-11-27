@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 import { type LinkVariants, linkVariants } from "./link-variants";
 
@@ -28,7 +29,7 @@ export function Link({
   className,
   variant,
   external = false,
-  externalLabel = "öffnet in einem neuen Tab",
+  externalLabel,
   children,
   ...props
 }: LinkProps) {
@@ -48,7 +49,9 @@ export function Link({
         <span data-slot="link-external" className="inline-block whitespace-nowrap no-underline">
           <span aria-hidden>&#8288;</span>
           <ExternalArrow />
-          <span className="sr-only">, {externalLabel}</span>
+          <span className="sr-only">
+            , {externalLabel ?? <Localized ns="link" name="external" />}
+          </span>
         </span>
       )}
     </a>

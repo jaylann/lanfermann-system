@@ -20,6 +20,7 @@ import { Readout, type ReadoutRow } from "@/internal/chart/readout";
 import { bands, extent, share, valueAxis } from "@/internal/chart/scale";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type BarChartSeries<Row> = {
   /** The field of a row that holds this series' value. */
@@ -83,23 +84,24 @@ export function BarChart<Row>({
   layout = "grouped",
   tone = "neutral",
   format,
-  locale = "de-DE",
+  locale,
   height = 240,
   readout = true,
   onActiveChange,
   drawIn = true,
   pending = false,
-  empty = "Für diesen Zeitraum gibt es noch keine Werte.",
+  empty,
   className,
   style,
   ...props
 }: BarChartProps<Row>) {
+  const { messages, tag } = useLocale();
   const live = useLive();
   const { grid: axisGridRef, sizer: axisSizerRef } = useAxisColumn<
     HTMLDivElement,
     HTMLDivElement
   >();
-  const numbers = chartFormat(locale, format);
+  const numbers = chartFormat(locale ?? tag, format);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
   const [active, setActive] = useState<{
     index: number;
@@ -160,7 +162,7 @@ export function BarChart<Row>({
         color: "transparent",
         mark: "swatch",
         value: numbers.value(shown.reduce((sum, entry) => sum + value(row, entry.key), 0)),
-        label: "Summe",
+        label: messages.charts.total,
       });
     }
     return rows;
@@ -319,14 +321,14 @@ export function BarChart<Row>({
             </span>
           ))}
         </div>
-        {data.length > 0 && <AxisLabels ticks={ticks} locale={locale} format={format} />}
+        {data.length > 0 && <AxisLabels ticks={ticks} locale={locale ?? tag} format={format} />}
 
         <div
           data-slot="bar-chart-plot"
           data-live={live || undefined}
           role="group"
-          aria-roledescription="Diagramm"
-          aria-label={`${label}. Mit den Pfeiltasten durch die Werte gehen.`}
+          aria-roledescription={messages.charts.chart}
+          aria-label={`${label}. ${messages.charts.hintValues}`}
           tabIndex={data.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -349,7 +351,7 @@ export function BarChart<Row>({
 
           {data.length === 0 && (
             <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-fg-muted">
-              {empty}
+              {empty === undefined ? messages.charts.empty : empty}
             </p>
           )}
 
@@ -506,7 +508,7 @@ export function BarChart<Row>({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Kategorie</th>
+                <th scope="col">{messages.charts.category}</th>
                 {series.map((entry) => (
                   <th key={entry.key} scope="col">
                     {entry.label}

@@ -5,6 +5,7 @@ import { lane, laneAt } from "@/internal/chart/lane";
 import { share, valueAxis } from "@/internal/chart/scale";
 import { fillStyle, troughFill } from "@/internal/trough";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 export type BulletItem = {
   /** What is measured against its goal: „Umsatz im November“. */
@@ -54,8 +55,8 @@ export function Bullet({
   data,
   format,
   locale = "de-DE",
-  of = "von",
-  ofTarget = "vom Ziel",
+  of,
+  ofTarget,
   tone = "neutral",
   drawIn = true,
   className,
@@ -91,11 +92,12 @@ export function Bullet({
               {item.target !== undefined && (
                 <span className="text-fg-muted">
                   {" "}
-                  {of} {numbers.value(item.target)}
+                  {of ?? <Localized ns="charts" name="of" />} {numbers.value(item.target)}
                   {reached !== null && (
                     <>
                       {" · "}
-                      {numbers.share(reached)} {ofTarget}
+                      {numbers.share(reached)}{" "}
+                      {ofTarget ?? <Localized ns="charts" name="ofTarget" />}
                     </>
                   )}
                 </span>

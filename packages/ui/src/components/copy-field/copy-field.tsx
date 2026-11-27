@@ -7,6 +7,7 @@ import { CopyMarks, useCopy } from "@/internal/copy";
 import { useCopyKeys } from "@/internal/copy-keys";
 import { fieldFace } from "@/internal/field";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 const sizes = {
   sm: { box: "h-(--control-sm) rounded-sm pr-2 pl-(--field-pad-sm)", symbol: 14 },
@@ -47,7 +48,7 @@ export function CopyField({
   value,
   text = value,
   label,
-  copiedMessage = "In die Zwischenablage kopiert.",
+  copiedMessage,
   failedMessage: failedMessageProp,
   keep = 16,
   size = "md",
@@ -55,10 +56,9 @@ export function CopyField({
   className,
   ...props
 }: CopyFieldProps) {
+  const { messages } = useLocale();
   const copyKeys = useCopyKeys();
-  const failedMessage =
-    failedMessageProp ??
-    `Nicht kopiert. Der Text ist markiert und kann mit ${copyKeys} kopiert werden.`;
+  const failedMessage = failedMessageProp ?? messages.copy.selectedMessage(copyKeys);
   const shown = useRef<HTMLSpanElement>(null);
   const { state, copy } = useCopy({ text, selectTarget: shown, onCopied });
   return (
@@ -93,7 +93,11 @@ export function CopyField({
         </span>
       </button>
       <span role="status" className="sr-only">
-        {state === "copied" ? copiedMessage : state === "failed" ? failedMessage : ""}
+        {state === "copied"
+          ? (copiedMessage ?? messages.copy.copiedMessage)
+          : state === "failed"
+            ? failedMessage
+            : ""}
       </span>
     </span>
   );

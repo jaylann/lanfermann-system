@@ -41,7 +41,7 @@ export function CodeTabs({
   items,
   group,
   defaultValue,
-  label = "Code",
+  label,
   className,
   ...keyOptions
 }: CodeTabsProps) {

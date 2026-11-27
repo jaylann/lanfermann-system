@@ -10,6 +10,7 @@ import {
 import { Link } from "@/components/link/link";
 import { cn } from "@/lib/cn";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { useLocale } from "@/locale/locale";
 
 /** A picture's or a video's own size in pixels. */
 export type NaturalSize = { width: number; height: number };
@@ -112,10 +113,11 @@ export function MediaPreview({
   kind: kindProp,
   onNaturalSize,
   pdf = "auto",
-  openLabel = "PDF öffnen",
+  openLabel,
   className,
   ...props
 }: MediaPreviewProps) {
+  const { messages } = useLocale();
   const kind = kindProp ?? kindOf({ name, type });
   // A phone or tablet draws no PDF inside a page: there the frame would stay an empty box.
   const touch = useMediaQuery("(hover: none) and (pointer: coarse)");
@@ -184,10 +186,12 @@ export function MediaPreview({
             )}
           >
             <FileKindSymbol kind="pdf" size={48} className="text-fg-muted" />
-            <span className="text-sm text-fg-muted">{typeWord({ name, type })}</span>
+            <span className="text-sm text-fg-muted">
+              {typeWord({ name, type }, messages.attachment.kinds)}
+            </span>
             {!framed && (
               <Link external href={src} className="mt-1 text-control">
-                {openLabel}
+                {openLabel ?? messages.mediaPreview.open}
               </Link>
             )}
           </div>
@@ -205,7 +209,9 @@ export function MediaPreview({
         <div data-slot="media-preview-symbol" className="flex flex-col items-center gap-2 p-6">
           <FileKindSymbol kind={kind} size={48} className="text-fg-muted" />
           {kind !== "folder" && (
-            <span className="text-sm text-fg-muted">{typeWord({ name, type })}</span>
+            <span className="text-sm text-fg-muted">
+              {typeWord({ name, type }, messages.attachment.kinds)}
+            </span>
           )}
         </div>
       )}

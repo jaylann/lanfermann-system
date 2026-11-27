@@ -35,6 +35,7 @@ import { ChevronRightGlyph } from "@/internal/glyphs";
 import { renderAs } from "@/internal/render-as";
 import { useTravellingMark } from "@/internal/travelling-mark";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { SidebarStateContext, useWideWindow } from "./sidebar-context";
 
@@ -114,11 +115,12 @@ export function Sidebar({
   collapse = "rail",
   inline = false,
   collapsed = false,
-  closeLabel = "Schließen",
+  closeLabel,
   className,
   children,
   ...props
 }: SidebarProps) {
+  const { messages } = useLocale();
   const shell = useContext(SidebarStateContext);
   // Inline, the shell around it is not its own: it stands as a sidebar without one does.
   const state = inline ? null : shell;
@@ -206,7 +208,7 @@ export function Sidebar({
               </div>
             </SidebarLayoutContext>
             {/* The scrim and a swipe close it too; this is the way out for assistive tech. */}
-            <DrawerClose className="sr-only">{closeLabel}</DrawerClose>
+            <DrawerClose className="sr-only">{closeLabel ?? messages.sidebar.close}</DrawerClose>
           </DrawerContent>
         </Drawer>
       ) : null}
@@ -974,11 +976,12 @@ export type SidebarTriggerProps = Omit<ButtonProps, "iconOnly" | "aria-label" | 
  * On a narrow window it opens the sidebar as a drawer. Its tooltip names the shortcut.
  */
 export function SidebarTrigger({
-  "aria-label": label = "Seitenleiste",
+  "aria-label": label,
   className,
   onClick,
   ...props
 }: SidebarTriggerProps) {
+  const { messages } = useLocale();
   const state = useContext(SidebarStateContext);
   const wide = useWideWindow();
   const expanded = state ? (wide ? state.open : state.drawerOpen) : true;
@@ -990,7 +993,7 @@ export function SidebarTrigger({
             variant="quiet"
             {...props}
             iconOnly
-            aria-label={label}
+            aria-label={label ?? messages.sidebar.trigger}
             aria-expanded={expanded}
             aria-controls={wide ? state?.id : undefined}
             data-slot="sidebar-trigger"
@@ -1005,7 +1008,7 @@ export function SidebarTrigger({
         <SidebarGlyph />
       </TooltipTrigger>
       <TooltipContent side="bottom" className="flex items-center gap-2">
-        {label}
+        {label ?? messages.sidebar.trigger}
         {state?.shortcut ? <Shortcut keys={state.shortcut} /> : null}
       </TooltipContent>
     </Tooltip>

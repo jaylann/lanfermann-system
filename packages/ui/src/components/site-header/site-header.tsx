@@ -19,6 +19,7 @@ import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Icon } from "@/components/icon/icon";
 import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /**
  * Where the bar stands and how wide it is, shared by the bar and the top row of the open menu so
@@ -144,13 +145,14 @@ export type SiteHeaderMenuProps = Pick<
 export function SiteHeaderMenu({
   label,
   title,
-  closeLabel = "Menü schließen",
+  closeLabel,
   brand,
   actions,
   className,
   children,
   ...dialog
 }: SiteHeaderMenuProps) {
+  const { messages } = useLocale();
   const ground = useGround();
   const groundMode = useGroundMode();
   const menu = useRef<DialogPrimitive.Root.Actions>(null);
@@ -211,7 +213,7 @@ export function SiteHeaderMenu({
                     <Button
                       iconOnly
                       variant="quiet"
-                      aria-label={closeLabel}
+                      aria-label={closeLabel ?? messages.siteHeader.close}
                       data-slot="site-header-menu-close"
                       className="ml-auto"
                     />

@@ -16,6 +16,7 @@ import { HoverCard, HoverCardContent } from "@/components/hover-card/hover-card"
 import { Icon } from "@/components/icon/icon";
 import { linkVariants } from "@/components/link/link-variants";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { entryId, siteOf, type Source, sourceAt } from "./source-list";
 
@@ -114,12 +115,8 @@ export type SourceReferenceProps = Omit<ComponentProps<"a">, "href" | "children"
  *
  * A number that has no source is an error, said in the console: the number then stands bare.
  */
-export function SourceReference({
-  n,
-  label = (number, title) => `Quelle ${number}: ${title}`,
-  className,
-  ...props
-}: SourceReferenceProps) {
+export function SourceReference({ n, label, className, ...props }: SourceReferenceProps) {
+  const { messages } = useLocale();
   const { items, base, card } = useSources("SourceReference");
   const id = useId();
   const source = items[n - 1];
@@ -144,7 +141,7 @@ export function SourceReference({
       data-sources={base}
       data-n={n}
       href={`#${entryId(base, n)}`}
-      aria-label={label(n, source.title)}
+      aria-label={(label ?? messages.sources.label)(n, source.title)}
       className={cn(
         // Smaller than a finger: an invisible target of 44px around it (touch.css).
         "touch-target tabular-nums no-underline select-none",
@@ -171,12 +168,8 @@ export type SourceListProps = Omit<ComponentProps<"div">, "children"> & {
  * entry a reference led to stands on the tint. The links open in a new tab, so the conversation
  * stays where it is.
  */
-export function SourceList({
-  title = "Quellen",
-  newTabLabel = "öffnet in einem neuen Tab",
-  className,
-  ...props
-}: SourceListProps) {
+export function SourceList({ title, newTabLabel, className, ...props }: SourceListProps) {
+  const { messages } = useLocale();
   const { items, base } = useSources("SourceList");
   const titleId = `${base}-quellen`;
   return (
@@ -186,7 +179,7 @@ export function SourceList({
       {...props}
     >
       <p id={titleId} className="text-sm font-medium text-fg-muted">
-        {title}
+        {title ?? messages.sources.title}
       </p>
       <ol aria-labelledby={titleId} className="flex flex-col">
         {items.map((source, index) => (
@@ -207,7 +200,7 @@ export function SourceList({
                 className={cn(linkVariants({ variant: "quiet" }), "min-w-0 text-fg")}
               >
                 {source.title}
-                <span className="sr-only">, {newTabLabel}</span>
+                <span className="sr-only">, {newTabLabel ?? messages.sources.newTab}</span>
               </a>
               <span className="text-sm text-fg-muted">{siteOf(source)}</span>
             </span>

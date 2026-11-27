@@ -4,10 +4,11 @@ import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { CSSProperties } from "react";
 
-import { defaultPresenceLabels, type Presence } from "@/components/avatar-group/people";
+import { type Presence } from "@/components/avatar-group/people";
 import { AVATAR_GAP, avatarGeometry, cutMask } from "@/internal/avatar-cut";
 import { PresenceDot } from "@/internal/presence-dot";
 import { mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 const avatarVariants = cva(
   // Round: a person is not a part of the machine (Justin, 2026-11-19; before, a rounded square).
@@ -44,6 +45,7 @@ export type AvatarProps = AvatarPrimitive.Root.Props &
  * Several people at once are an `AvatarGroup`.
  */
 export function Avatar({ className, size, presence, presenceLabel, style, ...props }: AvatarProps) {
+  const { messages } = useLocale();
   const root = (cut?: string, cutRtl?: string) => {
     const vars = { "--avatar-cut": cut, "--avatar-cut-rtl": cutRtl } as CSSProperties;
     return (
@@ -70,7 +72,7 @@ export function Avatar({ className, size, presence, presenceLabel, style, ...pro
     <span data-slot="avatar-place" className="relative inline-flex shrink-0">
       {root(cutMask(cut), cutMask({ ...cut, rtl: true }))}
       <PresenceDot slot="avatar-presence" presence={presence} diameter={geometry.dot} />
-      <span className="sr-only">{presenceLabel ?? defaultPresenceLabels[presence]}</span>
+      <span className="sr-only">{presenceLabel ?? messages.avatar.presence[presence]}</span>
     </span>
   );
 }

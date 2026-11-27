@@ -21,6 +21,7 @@ import { ListMark } from "@/internal/list-mark";
 import { listItem, listSheet, popupMotion } from "@/internal/popup";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type TimeFieldProps = Omit<
   TypedInputProps,
@@ -77,6 +78,7 @@ export function TimeField({
   readOnly,
   ...props
 }: TimeFieldProps) {
+  const { messages } = useLocale();
   const ground = useGround();
   const groundMode = useGroundMode();
   const list = useRef<HTMLDivElement>(null);
@@ -89,18 +91,18 @@ export function TimeField({
     read: (text) => {
       const time = parseGermanTime(text);
       if (!time) {
-        return { problem: `Bitte geben Sie eine Uhrzeit ein, zum Beispiel ${written("09:30")}.` };
+        return { problem: messages.timeField.invalid(written("09:30")) };
       }
       if ((!min || time >= min) && (!max || time <= max)) return time;
       if (min && max) {
         return {
-          problem: `Bitte wählen Sie eine Uhrzeit zwischen ${written(min)} und ${written(max)}.`,
+          problem: messages.timeField.between(written(min), written(max)),
         };
       }
       return {
         problem: min
-          ? `Bitte wählen Sie eine Uhrzeit ab ${written(min)}.`
-          : `Bitte wählen Sie eine Uhrzeit bis ${written(max!)}.`,
+          ? messages.timeField.from(written(min))
+          : messages.timeField.until(written(max!)),
       };
     },
   });
@@ -154,7 +156,7 @@ export function TimeField({
             render={
               <TypedInput
                 inputMode="numeric"
-                placeholder={`z. B. ${written("09:30")}`}
+                placeholder={messages.timeField.example(written("09:30"))}
                 text={typed.text}
                 onTextChange={typed.setText}
                 onCommit={typed.commit}
@@ -190,7 +192,7 @@ export function TimeField({
           >
             <Autocomplete.List
               ref={list}
-              aria-label="Uhrzeiten"
+              aria-label={messages.timeField.list}
               className="max-h-[min(15rem,calc(var(--available-height)-0.5rem))] scroll-py-1 overflow-y-auto overscroll-contain outline-none"
             >
               {(time: string) => (

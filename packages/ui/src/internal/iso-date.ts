@@ -279,14 +279,33 @@ export function parseIsoInterval(interval: string | null | undefined): IsoRange 
   return splitIsoMoment(from) && splitIsoMoment(to) ? { from, to } : { from: "", to: "" };
 }
 
-/** Why a day cannot be chosen, as a sentence; nothing if it lies within the limits. */
-export function outsideLimits(date: string, min?: string, max?: string): string | undefined {
+/** The sentences that say why a day cannot be chosen, each with its days already written. */
+export type LimitWords = {
+  between: (min: string, max: string) => string;
+  from: (min: string) => string;
+  until: (max: string) => string;
+};
+
+const germanLimitWords: LimitWords = {
+  between: (min, max) => `Bitte wählen Sie ein Datum zwischen dem ${min} und dem ${max}.`,
+  from: (min) => `Bitte wählen Sie ein Datum ab dem ${min}.`,
+  until: (max) => `Bitte wählen Sie ein Datum bis zum ${max}.`,
+};
+
+/**
+ * Why a day cannot be chosen, as a sentence; nothing if it lies within the limits. The days are
+ * written the German way in every language, because that is the format the fields read.
+ */
+export function outsideLimits(
+  date: string,
+  min?: string,
+  max?: string,
+  words: LimitWords = germanLimitWords,
+): string | undefined {
   if ((!min || date >= min) && (!max || date <= max)) return undefined;
   const day = (iso: string) => formatGermanDate(parseIsoDate(iso)!);
-  if (min && max) return `Bitte wählen Sie ein Datum zwischen dem ${day(min)} und dem ${day(max)}.`;
-  return min
-    ? `Bitte wählen Sie ein Datum ab dem ${day(min)}.`
-    : `Bitte wählen Sie ein Datum bis zum ${day(max!)}.`;
+  if (min && max) return words.between(day(min), day(max));
+  return min ? words.from(day(min)) : words.until(day(max!));
 }
 
 // --- a range in a calendar ------------------------------------------------------------------------

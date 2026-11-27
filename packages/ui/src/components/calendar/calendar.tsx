@@ -9,13 +9,14 @@ import {
   type MonthGridProps,
   type MonthProps,
 } from "react-day-picker";
-import { de } from "react-day-picker/locale";
+import { de, enUS } from "react-day-picker/locale";
 
 import { buttonVariants } from "@/components/button/button-variants";
 import { ChevronLeftGlyph, ChevronRightGlyph } from "@/internal/glyphs";
 import { parseIsoDate, toIsoDate } from "@/internal/iso-date";
 import { useToday } from "@/internal/today";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { CalendarSelection } from "./calendar-selection";
 
@@ -134,11 +135,15 @@ const navButton = cn(
  */
 const NO_DAY = new Date(1900, 0, 1);
 
+/** The day a week starts on, as react-day-picker counts them. */
+const MONDAY = 1 as const;
+
 /**
  * What both kinds of calendar share: the limits, the look, German weekdays from Monday, and the
  * month to open on: the one of what is chosen, else today's.
  */
 function useCalendarProps({ min, max, className }: CalendarCommon, chosen?: Date) {
+  const { locale } = useLocale();
   const first = parseIsoDate(min);
   const last = parseIsoDate(max);
   const disabled: Matcher[] = [
@@ -153,9 +158,10 @@ function useCalendarProps({ min, max, className }: CalendarCommon, chosen?: Date
   return {
     start: blank ? "blank" : "month",
     props: {
-      locale: de,
-      // German weekdays run from Monday on the left, whatever the page around it does; the
-      // selection is drawn for that.
+      locale: locale === "en" ? enUS : de,
+      // The week runs from Monday on the left in both languages, whatever the page around it
+      // does; the selection is drawn for that.
+      weekStartsOn: MONDAY,
       dir: "ltr",
       showOutsideDays: true,
       fixedWeeks: true,

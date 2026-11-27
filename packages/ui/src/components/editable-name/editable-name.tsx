@@ -12,6 +12,7 @@ import {
 import { splitName } from "@/components/attachment/kinds";
 import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /**
  * Where the base name of a file name ends: before its extension, which a rename keeps unless it
@@ -57,10 +58,11 @@ export function EditableName({
   editing,
   onEditingChange,
   onRename,
-  label = "Name",
+  label,
   className,
   ...props
 }: EditableNameProps) {
+  const { messages } = useLocale();
   const field = useRef<HTMLInputElement>(null);
   const reasonId = useId();
   const [draft, setDraft] = useState(value);
@@ -121,7 +123,7 @@ export function EditableName({
       <input
         ref={field}
         value={draft}
-        aria-label={label}
+        aria-label={label ?? messages.editableName.label}
         aria-invalid={reason !== null ? true : undefined}
         aria-describedby={reason !== null ? reasonId : undefined}
         aria-busy={busy ? true : undefined}

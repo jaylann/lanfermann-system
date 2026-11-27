@@ -21,6 +21,7 @@ import { Text } from "@/components/text/text";
 import { ActionArrow } from "@/internal/arrow";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /*
  * The closing ask of a page, in the two forms Justin kept (Lab/Cta, 2026-11-15):
@@ -426,16 +427,17 @@ export function CtaMessage({
   action,
   recipient,
   initials,
-  sendLabel = "Nachricht senden",
+  sendLabel,
   secondAction,
-  sentTitle = "Die Nachricht wurde gesendet.",
+  sentTitle,
   sentText,
-  failedText = "Die Nachricht wurde nicht gesendet. Bitte versuche es noch einmal.",
+  failedText,
   sent: sentProp = false,
   className,
   children,
   ...props
 }: CtaMessageProps) {
+  const { messages } = useLocale();
   const [state, setState] = useState<"draft" | "sent" | "failed">(sentProp ? "sent" : "draft");
   const [pending, startTransition] = useTransition();
   const sent = state === "sent";
@@ -501,7 +503,9 @@ export function CtaMessage({
               </span>
               {sent && (
                 <>
-                  <p className="text-lg font-semibold text-fg">{sentTitle}</p>
+                  <p className="text-lg font-semibold text-fg">
+                    {sentTitle ?? messages.cta.sentTitle}
+                  </p>
                   {sentText && <p className="text-fg-muted">{sentText}</p>}
                 </>
               )}
@@ -522,14 +526,14 @@ export function CtaMessage({
             <span className="ml-auto flex flex-wrap items-center justify-end gap-2">
               {state === "failed" && (
                 <span role="alert" className="basis-full text-right text-danger">
-                  {failedText}
+                  {failedText ?? messages.cta.failedText}
                 </span>
               )}
               {/* Once sent there is nothing left to do here: the actions go. */}
               {!sent && secondAction}
               {!sent && (
                 <Button type="submit" variant="primary" loading={pending}>
-                  {sendLabel}
+                  {sendLabel ?? messages.cta.send}
                   <ActionArrow size={16} />
                 </Button>
               )}

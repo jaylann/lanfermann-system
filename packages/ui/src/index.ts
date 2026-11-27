@@ -810,4 +810,11 @@ export {
 } from "./lib/format";
 export { type Platform } from "./lib/shortcut";
 export { useMediaQuery } from "./lib/use-media-query";
+export {
+  LocaleProvider,
+  type LocaleProviderProps,
+  type LocaleValue,
+  useLocale,
+} from "./locale/locale";
+export { getMessages, type Locale, type Messages } from "./locale/messages";
 export { type SpringName, springs, transitions } from "./motion/springs";

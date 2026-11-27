@@ -16,6 +16,7 @@ import { useReducedMotion } from "@/internal/reduced-motion";
 import { renderAs } from "@/internal/render-as";
 import { fillStyle, troughFill, troughTrack } from "@/internal/trough";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type BarListItem = {
   /** What the row is: a customer, a page, a source. */
@@ -78,7 +79,7 @@ export type BarListProps = Omit<ComponentProps<"ul">, "children"> & {
 export function BarList({
   data,
   format,
-  locale = "de-DE",
+  locale,
   sort = true,
   limit,
   share = false,
@@ -88,10 +89,11 @@ export function BarList({
   className,
   ...props
 }: BarListProps) {
+  const { tag } = useLocale();
   const live = useLive();
   const still = useReducedMotion();
   const list = useRef<HTMLUListElement>(null);
-  const numbers = chartFormat(locale, format);
+  const numbers = chartFormat(locale ?? tag, format);
 
   const total = data.reduce((sum, item) => sum + Math.max(0, item.value), 0);
   const ranked = sort ? [...data].sort((a, b) => b.value - a.value) : [...data];

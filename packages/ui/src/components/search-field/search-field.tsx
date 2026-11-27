@@ -14,6 +14,7 @@ import { Shortcut, useShortcut } from "@/components/shortcut/shortcut";
 import type { FieldSize } from "@/internal/field";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 const symbolSize = { sm: 14, md: 16, lg: 18 } as const;
 
@@ -58,7 +59,7 @@ export function SearchField({
   size = "md",
   shortcut,
   count,
-  clearLabel = "Suche leeren",
+  clearLabel,
   disabled = false,
   className,
   ref,
@@ -67,6 +68,7 @@ export function SearchField({
   onBlur,
   ...props
 }: SearchFieldProps) {
+  const { messages } = useLocale();
   const field = useRef<HTMLInputElement | null>(null);
   const [focused, setFocused] = useState(false);
   const typed = value !== "";
@@ -142,7 +144,7 @@ export function SearchField({
           </span>
         )}
         <InputGroupButton
-          aria-label={clearLabel}
+          aria-label={clearLabel ?? messages.searchField.clear}
           inert={!typed}
           onClick={() => {
             onValueChange("");

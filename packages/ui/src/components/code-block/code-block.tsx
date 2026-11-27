@@ -63,9 +63,9 @@ export function CodeBlock({
   title,
   icon,
   mark,
-  label = "Code",
+  label,
   fold,
-  foldLabel = (hidden) => `${hidden} weitere Zeilen`,
+  foldLabel,
   className,
   lineNumbers,
   marked,
@@ -88,7 +88,7 @@ export function CodeBlock({
       prompt={prompt}
       label={label}
       fold={fold}
-      foldLabel={fold === undefined ? undefined : foldLabel(lineCount - fold)}
+      foldLabel={fold === undefined ? undefined : foldLabel?.(lineCount - fold)}
       className={className}
       fileName={codeFileName(title, language)}
       wrap={wrap}

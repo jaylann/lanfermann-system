@@ -32,6 +32,7 @@ import {
 } from "@/internal/chart/time";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type TimeSeriesChartSeries<Row> = {
   /** The field of a row that holds this series' value. A missing value is a gap. */
@@ -139,7 +140,7 @@ export function TimeSeriesChart<Row>({
   curve = "smooth",
   tone = "neutral",
   format,
-  locale = "de-DE",
+  locale,
   interval: intervalProp,
   height = 240,
   zero = true,
@@ -148,11 +149,12 @@ export function TimeSeriesChart<Row>({
   readout = true,
   onActiveChange,
   pending = false,
-  empty = "Für diesen Zeitraum gibt es noch keine Werte.",
+  empty,
   className,
   style,
   ...props
 }: TimeSeriesChartProps<Row>) {
+  const { messages, tag } = useLocale();
   // An id that may stand in `url(#…)`.
   const id = `chart${useId().replace(/[^\w-]/g, "")}`;
   const live = useLive();
@@ -164,7 +166,7 @@ export function TimeSeriesChart<Row>({
   const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
   const [scrub, setScrub] = useState<Scrub | null>(null);
   const [said, setSaid] = useState("");
-  const numbers = chartFormat(locale, format);
+  const numbers = chartFormat(locale ?? tag, format);
 
   const rows = useMemo(
     () =>
@@ -244,7 +246,9 @@ export function TimeSeriesChart<Row>({
         label: entry.label,
       }));
   const sentence = (index: number) =>
-    `${pointLabel(times[index]!, interval, { locale, withYear })}: ${readoutRows(index)
+    `${pointLabel(times[index]!, interval, { locale: locale ?? tag, withYear })}: ${readoutRows(
+      index,
+    )
       .map((row) => `${row.label} ${row.value}`)
       .join(", ")}`;
 
@@ -375,15 +379,17 @@ export function TimeSeriesChart<Row>({
             </span>
           ))}
         </div>
-        {rows.length > 0 && <AxisLabels ticks={valueTicks} locale={locale} format={format} />}
+        {rows.length > 0 && (
+          <AxisLabels ticks={valueTicks} locale={locale ?? tag} format={format} />
+        )}
 
         <div
           data-slot="time-series-chart-plot"
           data-live={live || undefined}
           data-scrubbing={active?.shown && active.touch ? "touch" : undefined}
           role="group"
-          aria-roledescription="Diagramm"
-          aria-label={`${label}. Mit den Pfeiltasten durch die Werte gehen.`}
+          aria-roledescription={messages.charts.chart}
+          aria-label={`${label}. ${messages.charts.hintValues}`}
           tabIndex={rows.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -407,7 +413,7 @@ export function TimeSeriesChart<Row>({
 
           {rows.length === 0 ? (
             <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-fg-muted">
-              {empty}
+              {empty === undefined ? messages.charts.empty : empty}
             </p>
           ) : (
             <svg
@@ -559,7 +565,10 @@ export function TimeSeriesChart<Row>({
               {readout && (
                 <div className={cn(lane, "chart-follow")} style={laneAt(activeX)}>
                   <Readout
-                    title={pointLabel(times[active.index]!, interval, { locale, withYear })}
+                    title={pointLabel(times[active.index]!, interval, {
+                      locale: locale ?? tag,
+                      withYear,
+                    })}
                     rows={readoutRows(active.index)}
                     className={cn(
                       "absolute top-0 right-0 transition-[translate] spring-settle",
@@ -585,7 +594,7 @@ export function TimeSeriesChart<Row>({
                   className="absolute top-0 right-0 whitespace-nowrap tabular-nums"
                   style={labelAlong(at)}
                 >
-                  {tickLabel(tick, locale)}
+                  {tickLabel(tick, locale ?? tag)}
                 </span>
               </div>
             );
@@ -601,7 +610,7 @@ export function TimeSeriesChart<Row>({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Zeitpunkt</th>
+                <th scope="col">{messages.charts.time}</th>
                 {series.map((entry) => (
                   <th key={entry.key} scope="col">
                     {entry.label}
@@ -612,7 +621,9 @@ export function TimeSeriesChart<Row>({
             <tbody>
               {rows.map(({ row, time }) => (
                 <tr key={time}>
-                  <th scope="row">{pointLabel(time, interval, { locale, withYear: true })}</th>
+                  <th scope="row">
+                    {pointLabel(time, interval, { locale: locale ?? tag, withYear: true })}
+                  </th>
                   {series.map((entry) => {
                     const number = value(row, entry.key);
                     return <td key={entry.key}>{number === null ? "–" : numbers.value(number)}</td>;
