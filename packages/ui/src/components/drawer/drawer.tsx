@@ -9,6 +9,7 @@ import { CloseGlyph } from "@/internal/glyphs";
 import { overlayDescription, overlayFooter, overlayHeader, overlayTitle } from "@/internal/overlay";
 import { OverlayBody, type OverlayBodyProps } from "@/internal/overlay-body";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** The edge a drawer comes from. It is swiped back towards that edge to close it. */
 export type DrawerSide = "bottom" | "right" | "left";
@@ -111,9 +112,10 @@ export function DrawerContent({
   className,
   children,
   hideClose = false,
-  closeLabel = "Schließen",
+  closeLabel,
   ...props
 }: DrawerContentProps) {
+  const { messages } = useLocale();
   const ground = useGround();
   const groundMode = useGroundMode();
   const side = useContext(DrawerSideContext);
@@ -169,7 +171,7 @@ export function DrawerContent({
                   iconOnly
                   size="sm"
                   variant="quiet"
-                  aria-label={closeLabel}
+                  aria-label={closeLabel ?? messages.drawer.close}
                   className={cn("absolute text-fg-muted", sides[side].close)}
                 />
               }

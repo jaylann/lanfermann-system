@@ -36,6 +36,7 @@ import {
 } from "@/internal/popup";
 import { placeInRow, placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** One entry of a combobox's `items`. The whole object is the value that gets chosen. */
 export type ComboboxOption<Value = string> = {
@@ -109,7 +110,7 @@ export function Combobox<Value, Multiple extends boolean | undefined = false, It
   items,
   multiple,
   onCreate,
-  createLabel = (label) => `„${label}“ anlegen`,
+  createLabel,
   inputValue,
   defaultInputValue,
   onInputValueChange,
@@ -117,6 +118,7 @@ export function Combobox<Value, Multiple extends boolean | undefined = false, It
   onOpenChange,
   ...props
 }: ComboboxProps<Value, Multiple, Item>) {
+  const { messages } = useLocale();
   // Base UI's own matcher, set to compare letters by their base. Its default is the locale's
   // search collation, and the German one keeps "ä" apart from "a": whoever types a name without
   // its umlaut would find nothing.
@@ -135,7 +137,11 @@ export function Combobox<Value, Multiple extends boolean | undefined = false, It
     const sameName = new Intl.Collator(locale, { sensitivity: "base" });
     const exists = items.some((option) => sameName.compare(option.label, wanted) === 0);
     if (!exists) {
-      const create: CreateOption = { value: wanted, label: wanted, create: createLabel(wanted) };
+      const create: CreateOption = {
+        value: wanted,
+        label: wanted,
+        create: (createLabel ?? messages.combobox.create)(wanted),
+      };
       offered = [...items, create] as typeof items;
     }
   }
@@ -213,10 +219,11 @@ export type ComboboxInputProps = Omit<ComboboxPrimitive.Input.Props, "className"
 export function ComboboxInput({
   className,
   size = "md",
-  clearLabel = "Auswahl löschen",
-  openLabel = "Liste öffnen",
+  clearLabel,
+  openLabel,
   ...props
 }: ComboboxInputProps) {
+  const { messages } = useLocale();
   return (
     <ComboboxPrimitive.InputGroup
       data-slot="combobox-input-group"
@@ -232,7 +239,7 @@ export function ComboboxInput({
       />
       <ComboboxPrimitive.Clear
         data-slot="combobox-clear"
-        aria-label={clearLabel}
+        aria-label={clearLabel ?? messages.combobox.clear}
         className={cn(
           innerButton,
           // It arrives with the first choice and leaves by fading, like every exit. A disabled
@@ -245,7 +252,7 @@ export function ComboboxInput({
       </ComboboxPrimitive.Clear>
       <ComboboxPrimitive.Trigger
         data-slot="combobox-trigger"
-        aria-label={openLabel}
+        aria-label={openLabel ?? messages.combobox.open}
         className={innerButton}
       >
         <ChevronDownGlyph />
@@ -261,7 +268,7 @@ type ChipsRowProps = Omit<ComboboxPrimitive.Input.Props, "className" | "size"> &
   chosen: readonly unknown[];
   chipVariant: ChipVariant;
   chipsLabel: string;
-  removeLabel: string;
+  removeLabel: string | undefined;
   chipsHint: (count: number) => string;
 };
 
@@ -279,6 +286,7 @@ function ChipsRow({
   placeholder,
   ...props
 }: ChipsRowProps) {
+  const { messages } = useLocale();
   // Page load does not animate: only a chip that joins after the field stands seats in.
   const live = useLive();
   const row = useRef<HTMLDivElement>(null);
@@ -338,7 +346,11 @@ function ChipsRow({
                   </span>
                   <ComboboxPrimitive.ChipRemove
                     data-slot="chip-remove"
-                    aria-label={`${text} ${removeLabel}`}
+                    aria-label={
+                      removeLabel === undefined
+                        ? messages.combobox.remove(text)
+                        : `${text} ${removeLabel}`
+                    }
                     className={cn(chipRemoveKey, "data-disabled:hidden")}
                   >
                     <CloseGlyph width={8} height={8} />
@@ -409,14 +421,14 @@ export function ComboboxChips({
   className,
   size = "md",
   chipVariant = "flat",
-  chipsLabel = "Ausgewählt",
-  removeLabel = "entfernen",
-  chipsHint = (count) =>
-    `${count} ausgewählt. Am Anfang des Felds führt die Pfeiltaste nach links zu den gewählten Einträgen.`,
-  clearLabel = "Auswahl löschen",
-  openLabel = "Liste öffnen",
+  chipsLabel,
+  removeLabel,
+  chipsHint,
+  clearLabel,
+  openLabel,
   ...props
 }: ComboboxChipsProps) {
+  const { messages } = useLocale();
   return (
     <ComboboxPrimitive.InputGroup
       data-slot="combobox-input-group"
@@ -442,16 +454,16 @@ export function ComboboxChips({
           <ChipsRow
             chosen={chosen ?? []}
             chipVariant={chipVariant}
-            chipsLabel={chipsLabel}
+            chipsLabel={chipsLabel ?? messages.combobox.chips}
             removeLabel={removeLabel}
-            chipsHint={chipsHint}
+            chipsHint={chipsHint ?? messages.combobox.chipsHint}
             {...props}
           />
         )}
       </ComboboxPrimitive.Value>
       <ComboboxPrimitive.Clear
         data-slot="combobox-clear"
-        aria-label={clearLabel}
+        aria-label={clearLabel ?? messages.combobox.clear}
         className={cn(
           innerButton,
           "mt-1 transition-[opacity,scale] spring-snap data-disabled:hidden data-starting-style:scale-75 data-starting-style:opacity-0",
@@ -462,7 +474,7 @@ export function ComboboxChips({
       </ComboboxPrimitive.Clear>
       <ComboboxPrimitive.Trigger
         data-slot="combobox-trigger"
-        aria-label={openLabel}
+        aria-label={openLabel ?? messages.combobox.open}
         className={cn(innerButton, "mt-1")}
       >
         <ChevronDownGlyph />
@@ -494,11 +506,12 @@ export function ComboboxContent({
   align = "start",
   sideOffset = 6,
   alignOffset,
-  empty = "Nichts gefunden.",
-  listLabel = "Vorschläge",
+  empty,
+  listLabel,
   children,
   ...props
 }: ComboboxContentProps) {
+  const { messages } = useLocale();
   const ground = useGround();
   const groundMode = useGroundMode();
   return (
@@ -526,11 +539,11 @@ export function ComboboxContent({
             data-slot="combobox-empty"
             className="text-control text-fg-muted not-empty:px-2.5 not-empty:py-1.5"
           >
-            {empty}
+            {empty ?? messages.combobox.empty}
           </ComboboxPrimitive.Empty>
           <ComboboxPrimitive.List
             data-slot="combobox-list"
-            aria-label={listLabel}
+            aria-label={listLabel ?? messages.combobox.list}
             className="max-h-[min(20rem,calc(var(--available-height)-0.5rem))] scroll-py-1 overflow-y-auto overscroll-contain outline-none"
           >
             {children}

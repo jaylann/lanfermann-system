@@ -23,6 +23,7 @@ import { ChevronRightGlyph } from "@/internal/glyphs";
 import { overlayBackdrop } from "@/internal/overlay";
 import { listGroupLabel, listItem, listItemDetail } from "@/internal/popup";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** One thing the palette offers: a page to go to, or something to do. */
 export type CommandEntry = {
@@ -129,11 +130,12 @@ export function Command({
   shortcut = "mod+k",
   defaultQuery = "",
   onQueryChange,
-  label = "Befehle",
+  label,
   locale,
   modal = true,
   children,
 }: CommandProps) {
+  const { messages } = useLocale();
   const [kept, setKept] = useState(defaultOpen);
   const open = controlled ?? kept;
   const [trail, setTrail] = useState<readonly CommandEntry[]>([]);
@@ -158,9 +160,10 @@ export function Command({
 
   useShortcut(shortcut || "mod+k", () => setOpen(!open), { enabled: shortcut !== false });
 
+  const name = label ?? messages.command.label;
   const state = useMemo<CommandState>(
     () => ({
-      label,
+      label: name,
       locale,
       items: trail[trail.length - 1]?.page ?? items,
       trail,
@@ -189,7 +192,7 @@ export function Command({
         setQuery("");
       },
     }),
-    [label, locale, items, trail, direction, query, setQuery, setOpen],
+    [name, locale, items, trail, direction, query, setQuery, setOpen],
   );
 
   return (
@@ -480,14 +483,15 @@ export type CommandFooterProps = ComponentProps<"div"> & {
  * not there on a touch screen, which has no keys. Pass children to put something else there.
  */
 export function CommandFooter({
-  chooseLabel = "Auswählen",
-  moveLabel = "Bewegen",
-  backLabel = "Zurück",
-  closeLabel = "Schließen",
+  chooseLabel,
+  moveLabel,
+  backLabel,
+  closeLabel,
   className,
   children,
   ...props
 }: CommandFooterProps) {
+  const { messages } = useLocale();
   const { trail } = useCommand("CommandFooter");
   return (
     <div
@@ -501,17 +505,17 @@ export function CommandFooter({
     >
       {children ?? (
         <>
-          <Hint keys="enter">{chooseLabel}</Hint>
+          <Hint keys="enter">{chooseLabel ?? messages.command.choose}</Hint>
           <span className="flex items-center gap-1.5">
             <span className="flex gap-1">
               <Shortcut keys="up" />
               <Shortcut keys="down" />
             </span>
-            {moveLabel}
+            {moveLabel ?? messages.command.move}
           </span>
-          {trail.length > 0 && <Hint keys="backspace">{backLabel}</Hint>}
+          {trail.length > 0 && <Hint keys="backspace">{backLabel ?? messages.command.back}</Hint>}
           <span className="ml-auto">
-            <Hint keys="esc">{closeLabel}</Hint>
+            <Hint keys="esc">{closeLabel ?? messages.command.close}</Hint>
           </span>
         </>
       )}

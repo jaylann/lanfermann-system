@@ -9,6 +9,7 @@ import { Spinner } from "@/components/spinner/spinner";
 import { CloseGlyph } from "@/internal/glyphs";
 import { statusIcons, statusIconTone, type StatusTone } from "@/internal/status-icon";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** The one stack of the app. `toast()` adds to it from anywhere, also from outside React. */
 export const toastManager = ToastPrimitive.createToastManager();
@@ -145,22 +146,18 @@ export type ToasterProps = {
  * or focusing the stack (F6 jumps to it) spreads it into a list and holds the timers. A toast can
  * be swiped away to the right or downwards.
  */
-export function Toaster({
-  limit = 3,
-  timeout = 5000,
-  closeLabel = "Schließen",
-  label = "Benachrichtigungen",
-}: ToasterProps) {
+export function Toaster({ limit = 3, timeout = 5000, closeLabel, label }: ToasterProps) {
+  const { messages } = useLocale();
   return (
     <ToastPrimitive.Provider toastManager={toastManager} limit={limit} timeout={timeout}>
       <ToastPrimitive.Portal>
         <ToastPrimitive.Viewport
           data-slot="toast-viewport"
-          aria-label={label}
+          aria-label={label ?? messages.toast.label}
           // On a phone the stack keeps clear of the home indicator and the rounded corners.
           className="fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 w-[calc(100vw-2rem)] sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:w-90"
         >
-          <ToastList closeLabel={closeLabel} />
+          <ToastList closeLabel={closeLabel ?? messages.toast.close} />
         </ToastPrimitive.Viewport>
       </ToastPrimitive.Portal>
     </ToastPrimitive.Provider>

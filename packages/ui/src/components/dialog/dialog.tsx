@@ -17,6 +17,7 @@ import {
 } from "@/internal/overlay";
 import { OverlayBody, type OverlayBodyProps } from "@/internal/overlay-body";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /**
  * A task that needs the whole attention for a moment: a short form, a detail, a choice. The page
@@ -49,9 +50,10 @@ export function DialogContent({
   className,
   children,
   hideClose = false,
-  closeLabel = "Schließen",
+  closeLabel,
   ...props
 }: DialogContentProps) {
+  const { messages } = useLocale();
   const ground = useGround();
   const groundMode = useGroundMode();
   return (
@@ -74,7 +76,7 @@ export function DialogContent({
                   iconOnly
                   size="sm"
                   variant="quiet"
-                  aria-label={closeLabel}
+                  aria-label={closeLabel ?? messages.dialog.close}
                   className="absolute top-3 right-3 text-fg-muted"
                 />
               }
