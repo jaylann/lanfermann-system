@@ -88,12 +88,20 @@ export function AppShell({
   );
 }
 
-/** Everything beside the sidebar: the page's bar and its content, one under the other. */
+/**
+ * Everything beside the sidebar: the page's bar and its content, one under the other. It says
+ * how much of the window's top the bar takes, as `--app-shell-top` (nothing without a bar), so
+ * that what sticks in the page (a `StickyDetailPane`, a table's head) can stand clear of it.
+ */
 export function AppShellPage({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="app-shell-page"
-      className={cn("flex min-w-0 flex-1 flex-col", className)}
+      className={cn(
+        "flex min-w-0 flex-1 flex-col",
+        '[--app-shell-top:0px] has-[>[data-slot="app-shell-bar"]]:[--app-shell-top:var(--app-shell-bar,3rem)]',
+        className,
+      )}
       {...props}
     />
   );
@@ -103,13 +111,16 @@ export function AppShellPage({ className, ...props }: ComponentProps<"div">) {
  * The bar across the top of the page: the `SidebarTrigger`, where one is (`Breadcrumbs`), and
  * what can be done from everywhere (the search). It stays in view while the page scrolls. What
  * belongs to one page only (its title, its actions) stands in the page's `PageHeader`, not here.
+ *
+ * It is 3rem high. For another height set `--app-shell-bar` on the `AppShell` rather than a
+ * height on the bar: what sticks under the bar reads the same value.
  */
 export function AppShellBar({ className, ...props }: ComponentProps<"header">) {
   return (
     <header
       data-slot="app-shell-bar"
       className={cn(
-        "sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-hairline bg-ground px-3",
+        "sticky top-0 z-10 flex h-[var(--app-shell-bar,3rem)] shrink-0 items-center gap-2 border-b border-hairline bg-ground px-3",
         className,
       )}
       {...props}

@@ -239,6 +239,8 @@ export {
   DetailPaneLayout,
   type DetailPaneLayoutProps,
   type DetailPaneProps,
+  StickyDetailPane,
+  type StickyDetailPaneProps,
 } from "./components/detail-pane/detail-pane";
 export {
   Dialog,

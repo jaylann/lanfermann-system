@@ -1,7 +1,17 @@
 "use client";
 
-import { type ComponentProps, createContext, type ReactNode, use, useState } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  use,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
+import { Card } from "@/components/card/card";
+import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { cn } from "@/lib/cn";
 
 /** Whether the pane is open, and whether its column has come to rest. */
@@ -94,5 +104,74 @@ export function DetailPane({ className, children, ...props }: DetailPaneProps) {
         {open ? children : kept}
       </div>
     </aside>
+  );
+}
+
+export type StickyDetailPaneProps = Omit<DetailPaneProps, "aria-label"> & {
+  /** The pane's name as a landmark: "Details", or what it is about ("Rechnung RE-2026-118"). */
+  label: string;
+  /**
+   * What the pane is about, where its content can be longer than the window: when it changes,
+   * the pane starts at its top again instead of where the last one was left.
+   */
+  scrollKey?: string | number;
+};
+
+/**
+ * The pane of a `DetailPaneLayout` beside a list that is longer than the window: its content
+ * stands on one `Card`, which stays in view under the app's bar while the page scrolls. It is
+ * never taller than the window; content that is scrolls inside the card and fades at the edge
+ * where more waits, and its scrolling does not carry on into the page.
+ *
+ * Under an `AppShellBar` it finds the bar's height by itself (`--app-shell-top`). The room
+ * between the bar and the card is `--detail-pane-top` (1.5rem, the page's own gutter, so a pane
+ * that starts at the top of the page does not move before it sticks). A pane that always shows
+ * something keeps its layout `open` and swaps its content instead of closing.
+ */
+export function StickyDetailPane({
+  label,
+  scrollKey,
+  className,
+  children,
+  ...props
+}: StickyDetailPaneProps) {
+  const scroller = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    scroller.current?.scrollTo({ top: 0 });
+  }, [scrollKey]);
+  return (
+    <DetailPane
+      aria-label={label}
+      data-sticky=""
+      className={cn(
+        "[--detail-pane-stuck:calc(var(--app-shell-top,0px)+var(--detail-pane-top,1.5rem))]",
+        "sticky top-(--detail-pane-stuck) flex max-h-[calc(100svh-var(--detail-pane-stuck)-1.5rem)] flex-col",
+        className,
+      )}
+      {...props}
+    >
+      <Card
+        // The scrolling box's focus ring stands on the card: the box's own would fade with it.
+        className={cn(
+          "min-h-0",
+          "has-[>[data-slot=detail-pane-scroll]:focus-visible]:outline-2",
+          "has-[>[data-slot=detail-pane-scroll]:focus-visible]:outline-offset-2",
+          "has-[>[data-slot=detail-pane-scroll]:focus-visible]:outline-accent",
+        )}
+      >
+        {/* Reachable by the keyboard, as every box that scrolls: what it holds may have nothing
+            that takes the focus, and the arrow keys have to scroll it all the same. */}
+        <ScrollFade
+          ref={scroller}
+          data-slot="detail-pane-scroll"
+          role="group"
+          aria-label={label}
+          tabIndex={0}
+          className="min-h-0 scroll-py-10 [scrollbar-width:thin] overscroll-contain rounded-[inherit] focus-visible:outline-hidden"
+        >
+          {children}
+        </ScrollFade>
+      </Card>
+    </DetailPane>
   );
 }
