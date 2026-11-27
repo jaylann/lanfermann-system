@@ -36,7 +36,7 @@ with the rules for notes and pictures and every code the check prints, is in
 
 ```
 slides init <dir> [--template blank] [--title <text>] [--lang <tag>] [--force]
-slides check <dir> [--no-browser] [--json]
+slides check <dir> [--browser | --no-browser] [--json]
 slides dev <dir> [--port 4173] [--audience]
 slides build <dir> (--audience | --presenter) [--pdf] [--out <dir>]
 slides pack <dir> [--out <file>] [--json]
@@ -52,13 +52,18 @@ slides unpack <file> <dir> [--force]
   against the kit's, compiles the deck, and draws it in a headless Chrome to measure every
   slide: a part beyond the content box, a box that cuts off its text, a title on too many lines,
   a slide that throws. It prints one line per finding, with its file, line and column, and
-  exits 1 on any error. `--json` prints an object with `ok`, `diagnostics` and `report` and
-  nothing else. Without a browser the layout is left unchecked, with one warning.
+  exits 1 on any error.
 
   ```
   deck.tsx:2:20 error import "lodash" is not allowed (import-not-allowed)
-  check failed: 1 slide, 1 error, 0 warnings
+  check failed: 1 slide, 1 error, 0 warnings, layout not checked
   ```
+
+  Without a browser the layout is left unchecked: one warning, and the last line ends with
+  `layout not checked` and what is missing, so that a pass does not read like a whole one.
+  `--browser` makes a missing browser an error (exit 1); `--no-browser` leaves the layout out
+  on purpose. `--json` prints an object with `ok`, `diagnostics`, `report` and `layout`
+  (`"checked"`, `"skipped"` or `"unavailable"`) and nothing else.
 
 - **`dev`** serves the presenter's view on `127.0.0.1` and builds again when a file changes.
   `--audience` serves what an audience gets.

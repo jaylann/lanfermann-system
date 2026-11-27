@@ -116,10 +116,12 @@ describeWithKit("checkDeck, without a browser", () => {
     expect(await checkDeck(await fixture("sample"), { browser: false })).toEqual({
       ok: true,
       diagnostics: [],
+      layout: "skipped",
     });
     expect(await checkDeck(await fixture("pictures"), { browser: false })).toEqual({
       ok: true,
       diagnostics: [],
+      layout: "skipped",
     });
   });
 
@@ -188,11 +190,16 @@ describeWithKit("checkDeck, without a browser", () => {
     const auto = await checkDeck(source, { launch });
     expect(auto.ok).toBe(true);
     expect(auto.report).toBeUndefined();
+    expect(auto.layout).toBe("unavailable");
+    expect(auto.layoutHint).toBe(
+      "no browser started (install Chrome, or name a browser with SLIDES_BROWSER)",
+    );
     expect(auto.diagnostics).toMatchObject([
       { code: "browser-not-found", severity: "warning", file: "deck.tsx", line: 1 },
     ]);
     const asked = await checkDeck(source, { browser: true, launch });
     expect(asked.ok).toBe(false);
     expect(asked.diagnostics).toMatchObject([{ code: "browser-not-found", severity: "error" }]);
+    expect(asked.layout).toBe("unavailable");
   });
 });

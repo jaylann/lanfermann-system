@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 import { analyzeDeck } from "./analyze";
-import { BrowserUnavailableError, DeckNotReadyError, renderPdf } from "./browser";
+import { browserFromEnv, BrowserUnavailableError, DeckNotReadyError, renderPdf } from "./browser";
 import { buildDeck } from "./build";
 import { checkDeck } from "./check";
 import { startDevServer } from "./dev";
@@ -26,6 +26,8 @@ export type RunIo = {
   out: (line: string) => void;
   err: (line: string) => void;
   cwd: string;
+  /** The environment a command reads `SLIDES_BROWSER` from. The process's own by default. */
+  env?: NodeJS.ProcessEnv;
 };
 
 export const HELP = `slides: start, check, preview, build and pack a slide deck
@@ -35,7 +37,7 @@ from @lanfermann/ui/slides. The format: docs/deck-format.md of this package.
 
 Usage
   slides init <dir> [--template blank] [--title <text>] [--lang <tag>] [--force]
-  slides check <dir> [--no-browser] [--json]
+  slides check <dir> [--browser | --no-browser] [--json]
   slides dev <dir> [--port 4173] [--audience]
   slides build <dir> (--audience | --presenter) [--pdf] [--out <dir>]
   slides pack <dir> [--out <file>] [--json]
@@ -49,8 +51,13 @@ Commands
           ("Untitled deck" by default), --lang its language ("en").
   check   Imports, names, notes, classes, types, and (with a browser) the
           layout of every slide. Prints file:line:column lines and exits 1
-          on any error. --json prints { ok, diagnostics, report } only.
-          --no-browser leaves the layout unchecked.
+          on any error. Without a browser the layout is left unchecked:
+          one warning, and the last line ends with "layout not checked"
+          and what is missing. --browser makes that an error (exit 1), for
+          a run that must have measured. --no-browser leaves the layout
+          unchecked on purpose. --json prints { ok, diagnostics, report,
+          layout } only; layout is "checked", "skipped" (not asked for, or
+          the deck has errors) or "unavailable" (no browser).
   dev     Serves the presenter's view on 127.0.0.1 and builds again when a
           file changes. --audience serves what an audience gets.
   build   Writes one HTML file that runs from a disk without a network:
@@ -111,17 +118,27 @@ async function write(file: string, data: string | Uint8Array, io: RunIo): Promis
   io.out(`wrote ${shown(file, io)} (${kilobytes(bytes)})`);
 }
 
-async function check(dir: string, flags: { json: boolean; browser: boolean }, io: RunIo) {
+async function check(dir: string, flags: { json: boolean; browser: boolean | "auto" }, io: RunIo) {
   const source = await readDeckDir(resolve(io.cwd, dir));
-  const result = await checkDeck(source, { browser: flags.browser ? "auto" : false });
+  const result = await checkDeck(source, {
+    browser: flags.browser,
+    launch: browserFromEnv(io.env),
+  });
   if (flags.json) {
-    const { ok, diagnostics, report = null } = result;
-    io.out(JSON.stringify({ ok, diagnostics, report }, null, 2));
+    const { ok, diagnostics, report = null, layout } = result;
+    io.out(JSON.stringify({ ok, diagnostics, report, layout }, null, 2));
     return result.ok ? 0 : 1;
   }
   for (const diagnostic of result.diagnostics) io.out(formatDiagnostic(diagnostic));
   const slides = plural(analyzeDeck(source).slides.length, "slide");
-  const layout = result.report === undefined ? ", layout not checked" : "";
+  // A pass without a measured layout must not read like a whole one: the line says so, and
+  // where no browser could be driven, also what is missing.
+  const layout =
+    result.layout === "checked"
+      ? ""
+      : result.layoutHint === undefined
+        ? ", layout not checked"
+        : `, layout not checked: ${result.layoutHint}`;
   io.out(
     `check ${result.ok ? "passed" : "failed"}: ${slides}, ${counts(result.diagnostics)}${layout}`,
   );
@@ -157,7 +174,10 @@ async function build(
     if (audience.html === undefined) return fail(audience.errors);
     if (flags.audience) made.push([join(folder, `${slug}.html`), audience.html]);
     // Printed from the audience's file: a PDF's source holds no notes either.
-    if (pdfName !== undefined) made.push([join(folder, pdfName), await renderPdf(audience.html)]);
+    if (pdfName !== undefined) {
+      const pdf = await renderPdf(audience.html, { browser: browserFromEnv(io.env) });
+      made.push([join(folder, pdfName), pdf]);
+    }
   }
   if (flags.presenter) {
     const presenter = await buildDeck(source, {
@@ -258,6 +278,7 @@ export async function run(argv: readonly string[], io: RunIo): Promise<number> {
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
         json: { type: "boolean" },
+        browser: { type: "boolean" },
         "no-browser": { type: "boolean" },
         audience: { type: "boolean" },
         presenter: { type: "boolean" },
@@ -291,12 +312,14 @@ export async function run(argv: readonly string[], io: RunIo): Promise<number> {
       throw new UsageError(`${command} takes one folder: slides ${command} <dir>`);
     }
     switch (command) {
-      case "check":
-        return await check(
-          dir,
-          { json: values.json === true, browser: values["no-browser"] !== true },
-          io,
-        );
+      case "check": {
+        if (values.browser === true && values["no-browser"] === true) {
+          throw new UsageError("check takes --browser or --no-browser, not both.");
+        }
+        const browser =
+          values.browser === true ? true : values["no-browser"] === true ? false : "auto";
+        return await check(dir, { json: values.json === true, browser }, io);
+      }
       case "build":
         return await build(
           dir,

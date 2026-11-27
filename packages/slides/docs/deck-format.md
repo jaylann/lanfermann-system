@@ -74,7 +74,7 @@ nothing moves when it comes. A print, the PDF and the check show every step.
   (`<Aufgabe steps={2}>`, passed on to its `<Slide steps={…}>`): the player counts a slide's
   steps before it draws it, and the check reports a step the slide does not have.
 - Motion belongs to the slide being presented, on a screen. `data-motion="none"` on a slide
-  keeps it still.
+  stops its blocks from rising in when it comes on (see "What the kit reserves").
 
 ## Notes
 
@@ -130,6 +130,52 @@ A `className` in a deck takes the class names the kit's stylesheet defines, whic
 `@lanfermann/ui/slides/player/classes.json`. Any other class has no style in the built file,
 so the check reports it. A `className` that is computed cannot be checked and gets a warning.
 
+## What the kit reserves
+
+A part of the deck's own is plain markup, and the kit reads and styles markup by a few names.
+What it reserves in a slide:
+
+| Name                                    | Where, and what it means                                                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data-slides-at`                        | On an element that appears at a step (`<Step at>`, `stepAttributes`), with `--step-at` in its style                                                    |
+| `data-slides-step`                      | On the box the player puts around a slide: the step the slide stands at, with `--slide-step` in its style                                              |
+| `data-slides-live`                      | On that box while the slide is presented: nothing moves outside one                                                                                    |
+| `data-slides-entry`                     | On the box around each child of `<Deck>` in the player, with its index: the check finds a slide by it                                                  |
+| `data-slides-ready`                     | On `<html>` once the page is done, as `window.__slidesReady` says                                                                                      |
+| `data-slides-document`                  | On `<html>` of a page that is nothing but a deck (the print, the PDF's source)                                                                         |
+| `data-slide-ground`                     | On a slide and on a frame that is always light: the ground its colours are from                                                                        |
+| `data-slide-index`, `data-slide-id`     | Written onto each slide by the player: its place in the deck and its `id`                                                                              |
+| `data-slot`                             | The kit's values are `slide`, `slide-…`, `deck`, `stage`, `stage-canvas` and `player-…`                                                                |
+| `data-motion`                           | `none` on a `Slide`, see below                                                                                                                         |
+| `data-lines`, `data-bleed`, `data-crop` | Read by the layout check anywhere in a slide: the lines a text may take, a part that may leave the canvas, a box that shows a part of something larger |
+| `data-draw`                             | On the kit's connectors: one that draws itself                                                                                                         |
+
+Every other name is the deck's. That holds for `data-step` too: the kit's mark for a step is
+`data-slides-at`, so a `data-step` of the deck's own is neither counted as a step nor shown and
+hidden by the kit.
+
+**Faces.** The player loads two faces, and the built file holds no other: `"Sofia Sans
+Variable"` for text and `"JetBrains Mono Variable"` for code. The classes `font-sans` and
+`font-mono` name them; a part that sets a `fontFamily` itself uses these two family names.
+
+**Motion.** Presented live, a slide's blocks rise in when the slide comes on, and the circles
+of its `forms` grow. `data-motion="none"` on the `Slide` turns off exactly that: the rise-in of
+the slide's direct children and the growth of its forms (under reduced motion, their fade-in).
+It does not stop a step from fading in, a connector from drawing itself or a scene's camera
+from travelling. A part with motion of its own stands on such a slide, so the two do not add up.
+
+Whether anything may move at all is `useSlideStep().live`: true only for the slide being
+presented. A preview in the presenter's console, a tile of the grid, the print and the check
+are not live, and a part that moves there would be measured or printed halfway.
+
+```tsx
+function Zeiger({ an, children }: { an: boolean; children: ReactNode }) {
+  const { live } = useSlideStep();
+  const style = { opacity: an ? 1 : 0.3, transition: live ? "opacity 400ms ease" : "none" };
+  return <div style={style}>{children}</div>;
+}
+```
+
 ## Pictures
 
 ```tsx
@@ -169,34 +215,56 @@ same.
 
 ## What the check says
 
-`slides check` prints one line per finding, `file:line:column severity message (code)`, and
-exits 1 when one of them is an error.
+`slides check` prints one line per finding, `file:line:column severity message (code)`, then
+one line that sums up, and exits 1 when a finding is an error.
 
-| Code                                                                 | Meaning                                                              |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `import-not-allowed`                                                 | An import of anything but React, the kit and the deck's files        |
-| `import-outside-deck`                                                | A relative import that leaves the folder                             |
-| `import-not-found`                                                   | A relative import that names no file of the deck                     |
-| `unsupported-file`                                                   | A file, or an import of one, that is neither code nor a picture      |
-| `dynamic-import`, `require`                                          | `import()` or `require`                                              |
-| `reference-not-allowed`                                              | A `/// <reference … />` directive at the head of a file              |
-| `forbidden-global`                                                   | `fetch`, `XMLHttpRequest`, `WebSocket`, `eval`, `new Function`       |
-| `no-default-deck`                                                    | No `deck.tsx`, or its default export is not a `<Deck>` element       |
-| `deck-prop-not-literal`                                              | A title or a language that is not written out, or a spread on `Deck` |
-| `slides-not-static`                                                  | A child of `<Deck>` that is computed                                 |
-| `notes-not-literal`, `spread-on-slide`, `notes-property`             | Notes that could not be left out for certain (rules 2 to 4)          |
-| `notes-in-audience-build`                                            | Words of a slide's notes that also stand elsewhere in the deck       |
-| `notes-ignored` (warning)                                            | Notes on an element that is no child of `<Deck>`: never shown        |
-| `unknown-class`                                                      | A class the kit does not have                                        |
-| `class-not-checked` (warning)                                        | A `className` that is computed                                       |
-| `asset-too-large`                                                    | A picture over 2 MB, or pictures over 12 MB together                 |
-| `ts1005`, `ts2322`, …                                                | What the TypeScript compiler says, `strict`, against the kit's types |
-| `bundle`                                                             | What the bundler says about code it cannot compile                   |
-| `layout-overflow`                                                    | A part that reaches beyond the content box or the canvas             |
-| `layout-clipped`                                                     | A box that cuts off its own text                                     |
-| `layout-wrap`                                                        | A text on more lines than it may take                                |
-| `render-error`, `structure`, `font-missing`                          | A slide that threw, a child that is not one slide, a face not loaded |
-| `browser-not-found` (warning; an error when a browser was asked for) | The layout was not checked: no Chrome, or no `playwright-core`       |
+```
+check passed: 10 slides, 0 errors, 0 warnings
+```
+
+That line stands alone only when the layout was measured. Otherwise it ends with
+`, layout not checked`: after `--no-browser`, for a deck with an error (it cannot be drawn),
+and where no browser could be driven. In the last case the deck may pass all the same, with a
+warning, so the line also names what is missing:
+
+```
+deck.tsx:1:1 warning the layout was not checked: playwright-core is not installed (…) (browser-not-found)
+check passed: 10 slides, 0 errors, 1 warning, layout not checked: playwright-core is not installed (bun add -d playwright-core, or npm i -D playwright-core)
+```
+
+`--browser` asks for the layout: without a browser the warning is then an error and the exit
+code 1. Use it wherever a pass has to mean that every slide was measured.
+
+`--json` prints `{ ok, diagnostics, report, layout }` and nothing else. `layout` is `"checked"`
+(and `report` is the player's report), `"skipped"` (`--no-browser`, or the deck has an error
+that comes first) or `"unavailable"` (no browser; `report` is `null`). A tool that reads `ok`
+reads `layout` with it.
+
+| Code                                                     | Meaning                                                              |
+| -------------------------------------------------------- | -------------------------------------------------------------------- |
+| `import-not-allowed`                                     | An import of anything but React, the kit and the deck's files        |
+| `import-outside-deck`                                    | A relative import that leaves the folder                             |
+| `import-not-found`                                       | A relative import that names no file of the deck                     |
+| `unsupported-file`                                       | A file, or an import of one, that is neither code nor a picture      |
+| `dynamic-import`, `require`                              | `import()` or `require`                                              |
+| `reference-not-allowed`                                  | A `/// <reference … />` directive at the head of a file              |
+| `forbidden-global`                                       | `fetch`, `XMLHttpRequest`, `WebSocket`, `eval`, `new Function`       |
+| `no-default-deck`                                        | No `deck.tsx`, or its default export is not a `<Deck>` element       |
+| `deck-prop-not-literal`                                  | A title or a language that is not written out, or a spread on `Deck` |
+| `slides-not-static`                                      | A child of `<Deck>` that is computed                                 |
+| `notes-not-literal`, `spread-on-slide`, `notes-property` | Notes that could not be left out for certain (rules 2 to 4)          |
+| `notes-in-audience-build`                                | Words of a slide's notes that also stand elsewhere in the deck       |
+| `notes-ignored` (warning)                                | Notes on an element that is no child of `<Deck>`: never shown        |
+| `unknown-class`                                          | A class the kit does not have                                        |
+| `class-not-checked` (warning)                            | A `className` that is computed                                       |
+| `asset-too-large`                                        | A picture over 2 MB, or pictures over 12 MB together                 |
+| `ts1005`, `ts2322`, …                                    | What the TypeScript compiler says, `strict`, against the kit's types |
+| `bundle`                                                 | What the bundler says about code it cannot compile                   |
+| `layout-overflow`                                        | A part that reaches beyond the content box or the canvas             |
+| `layout-clipped`                                         | A box that cuts off its own text                                     |
+| `layout-wrap`                                            | A text on more lines than it may take                                |
+| `render-error`, `structure`, `font-missing`              | A slide that threw, a child that is not one slide, a face not loaded |
+| `browser-not-found` (warning; an error with `--browser`) | The layout was not checked: no Chrome, or no `playwright-core`       |
 
 The layout is measured by the player's check mode in a headless Chrome, from a file opened
 without a network. It needs `playwright-core` and a Chrome on the machine; nothing is

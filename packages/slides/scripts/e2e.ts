@@ -54,7 +54,15 @@ const recordsOf = (value: unknown) => listOf(value).filter(isRecord);
 
 /** Runs the built command line in the folder the files are written to. */
 function slides(...args: string[]) {
-  const run = spawnSync(process.execPath, [cli, ...args], { cwd: out, encoding: "utf8" });
+  return slidesWith({}, ...args);
+}
+/** The same, with variables of the environment set for this one process. */
+function slidesWith(env: NodeJS.ProcessEnv, ...args: string[]) {
+  const run = spawnSync(process.execPath, [cli, ...args], {
+    cwd: out,
+    encoding: "utf8",
+    env: { ...process.env, ...env },
+  });
   return { code: run.status, stdout: run.stdout, stderr: run.stderr };
 }
 const readJson = (text: string): unknown => {
@@ -132,8 +140,40 @@ function groundWidths(pdf: Buffer): number[] {
   const report = isRecord(json) ? json.report : undefined;
   const reported = isRecord(report) ? recordsOf(report.slides) : [];
   check(
-    "check --json: prints { ok, diagnostics, report } and nothing else",
-    isRecord(json) && json.ok === true && listOf(json.diagnostics).length === 0 && isRecord(report),
+    "check --json: prints { ok, diagnostics, report, layout } and nothing else",
+    isRecord(json) &&
+      json.ok === true &&
+      listOf(json.diagnostics).length === 0 &&
+      isRecord(report) &&
+      Object.keys(json).sort().join() === "diagnostics,layout,ok,report",
+  );
+  check(
+    "check --json: says the layout was measured",
+    isRecord(json) && json.layout === "checked",
+    isRecord(json) ? String(json.layout) : "",
+  );
+  const asked = slides("check", fixture("sample"), "--browser");
+  check(
+    "check --browser: passes where a browser is there, with the same line",
+    asked.code === 0 && asked.stdout.trim() === "check passed: 10 slides, 0 errors, 0 warnings",
+    `exit ${asked.code} ${asked.stdout.trim()}`,
+  );
+  // A browser that is not there, for these two runs: a pass says what it did not look at.
+  const nowhere = { SLIDES_BROWSER: join(out, "no-browser-here") };
+  const blind = slidesWith(nowhere, "check", fixture("sample"));
+  check(
+    "check without a browser: passes with a warning and says the layout was not checked",
+    blind.code === 0 &&
+      (blind.stdout.trim().split("\n").at(-1) ?? "").startsWith(
+        "check passed: 10 slides, 0 errors, 1 warning, layout not checked: no browser started",
+      ),
+    `exit ${blind.code} ${blind.stdout.trim()}`,
+  );
+  const blindAsked = slidesWith(nowhere, "check", fixture("sample"), "--browser");
+  check(
+    "check --browser without a browser: exits 1",
+    blindAsked.code === 1 && blindAsked.stdout.includes("check failed: 10 slides, 1 error"),
+    `exit ${blindAsked.code} ${blindAsked.stdout.trim()}`,
   );
   check(
     "check --json: the report is ok and has ten slides",
