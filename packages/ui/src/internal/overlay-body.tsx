@@ -21,6 +21,9 @@ export type OverlayBodyProps = ComponentProps<"div"> & {
  * beyond them, so a line never stands cut in half under the title or above the keys; at rest,
  * and at either end, nothing is masked. `scroll-padding` (scroll-fade.css) keeps a field or key
  * that takes the focus clear of the fade.
+ *
+ * The fade is 1.5rem here, shorter than the library's 2.5rem (Justin, 2026-11-28, picked from
+ * 40, 32 and 24px side by side). A caller's `--scroll-fade-size` wins.
  */
 export function OverlayBody({ className, fade = true, ref, ...props }: OverlayBodyProps) {
   const box = useRef<HTMLDivElement>(null);
@@ -29,7 +32,7 @@ export function OverlayBody({ className, fade = true, ref, ...props }: OverlayBo
     <div
       ref={mergeRefs(box, ref)}
       data-scroll-fade={fade ? "y" : undefined}
-      className={cn(overlayBody, className)}
+      className={cn(overlayBody, "[--scroll-fade-size:1.5rem]", className)}
       {...props}
     />
   );
