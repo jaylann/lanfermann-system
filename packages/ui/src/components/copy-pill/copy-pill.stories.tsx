@@ -5,6 +5,7 @@ import {
   SourceCodeIcon,
 } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { createRef } from "react";
 import { expect, fn, waitFor } from "storybook/test";
 
 import { Icon } from "@/components/icon/icon";
@@ -123,5 +124,33 @@ export const Keyboard: Story = {
       await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2));
       await expect(pill).toHaveFocus();
     });
+  },
+};
+
+const focused = fn();
+const blurred = fn();
+const pillRef = createRef<HTMLButtonElement>();
+
+/**
+ * A caller's own `ref`, `onFocus` and `onBlur`, as a test: they are served beside the pill's, so
+ * the pill still opens under the keyboard and still measures its words.
+ */
+export const CallerHandlers: Story = {
+  render: (args) => <CopyPill {...args} ref={pillRef} onFocus={focused} onBlur={blurred} />,
+  play: async ({ canvas, userEvent }) => {
+    focused.mockClear();
+    blurred.mockClear();
+    const pill = canvas.getByRole("button", { name: "Prompt kopieren" });
+    await expect(pillRef.current).toBe(pill);
+    await expect(pill.style.getPropertyValue("--words")).toMatch(/px$/);
+
+    await userEvent.tab();
+    await expect(pill).toHaveFocus();
+    await expect(focused).toHaveBeenCalledOnce();
+    await waitFor(() => expect(pill).toHaveAttribute("data-open"));
+
+    await userEvent.tab();
+    await expect(blurred).toHaveBeenCalledOnce();
+    await waitFor(() => expect(pill).not.toHaveAttribute("data-open"));
   },
 };

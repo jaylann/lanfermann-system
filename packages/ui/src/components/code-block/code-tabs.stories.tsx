@@ -82,3 +82,17 @@ export const Keyboard: Story = {
     }
   },
 };
+
+/**
+ * A `defaultValue` that no tab has, as a test: the block shows its first tab, not none, so the
+ * code on screen is the code the copy takes.
+ */
+export const UnknownDefault: Story = {
+  args: { defaultValue: "yarn" },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("tab", { name: "bun" })).toHaveAttribute("aria-selected", "true");
+    await expect(canvas.getByRole("group", { name: "Code: bun" })).toHaveTextContent(
+      "bun add @lanfermann/ui",
+    );
+  },
+};

@@ -78,6 +78,12 @@ export function CopyField({
         <span
           ref={shown}
           data-slot="copy-field-value"
+          // Selected after a refusal, ⌘C must take the text itself: the selection also holds
+          // the cut the field shows and the copies `MiddleTruncate` keeps out of sight.
+          onCopy={(event) => {
+            event.clipboardData.setData("text/plain", text);
+            event.preventDefault();
+          }}
           className="min-w-0 flex-1 font-mono text-sm text-fg-body"
         >
           <MiddleTruncate text={value} keep={keep} />

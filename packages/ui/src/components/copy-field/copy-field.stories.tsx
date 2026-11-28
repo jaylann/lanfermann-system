@@ -70,3 +70,38 @@ export const Keyboard: Story = {
     }
   },
 };
+
+/**
+ * A refused clipboard, as a test: the value is selected instead, and ⌘C then takes the whole
+ * text, not the cut the field shows.
+ */
+export const Refused: Story = {
+  tags: ["visual-skip"],
+  render: () => (
+    <div className="w-80">
+      <CopyField value={ADDRESS} label="Adresse kopieren" />
+    </div>
+  ),
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const write = spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("denied"));
+    try {
+      await userEvent.click(canvas.getByRole("button", { name: /^Adresse kopieren/ }));
+      await waitFor(() => expect(canvas.getByRole("status")).toHaveTextContent("Nicht kopiert."));
+      const value = canvasElement.querySelector<HTMLElement>('[data-slot="copy-field-value"]')!;
+      const selection = window.getSelection();
+      await expect(value.contains(selection?.anchorNode ?? null)).toBe(true);
+      // What ⌘C does next: a copy event where the selection starts.
+      const copy = new ClipboardEvent("copy", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+      value.firstElementChild?.dispatchEvent(copy);
+      await expect(copy.clipboardData?.getData("text/plain")).toBe(ADDRESS);
+      await expect(copy.defaultPrevented).toBe(true);
+    } finally {
+      write.mockRestore();
+      window.getSelection()?.removeAllRanges();
+    }
+  },
+};

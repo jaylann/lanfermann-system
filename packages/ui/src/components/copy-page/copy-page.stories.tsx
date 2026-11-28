@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen, waitFor } from "storybook/test";
+import { useState } from "react";
+import { expect, screen, spyOn, waitFor } from "storybook/test";
 
 import { BreadcrumbItem, BreadcrumbLink, Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
+import { Button } from "@/components/button/button";
 import { Heading } from "@/components/heading/heading";
 
 import { CopyPage } from "./copy-page";
@@ -93,5 +95,93 @@ export const Keyboard: Story = {
       await userEvent.keyboard("{Escape}");
       await waitFor(() => expect(more).toHaveFocus());
     });
+  },
+};
+
+/**
+ * A clipboard that writes nowhere and says what it was given, by whichever of its two ways the
+ * browser takes, and a server that answers `pages` under `/doku/`.
+ */
+function watchCopy(pages: (address: string) => Promise<Response>) {
+  const written: string[] = [];
+  const writeText = spyOn(navigator.clipboard, "writeText").mockImplementation((text) => {
+    written.push(text);
+    return Promise.resolve();
+  });
+  const write =
+    typeof navigator.clipboard.write === "function"
+      ? spyOn(navigator.clipboard, "write").mockImplementation(async (items) => {
+          const blob = await items[0]!.getType("text/plain");
+          written.push(await blob.text());
+        })
+      : undefined;
+  const real = window.fetch.bind(window);
+  const fetched = spyOn(window, "fetch").mockImplementation((input, init) =>
+    typeof input === "string" && input.startsWith("/doku/") ? pages(input) : real(input, init),
+  );
+  return {
+    written,
+    fetched,
+    restore: () => {
+      writeText.mockRestore();
+      write?.mockRestore();
+      fetched.mockRestore();
+    },
+  };
+}
+
+/**
+ * A layout that stays while the page under it changes, as a test: the copy takes the page that
+ * is shown now, not the one the pointer first reached the fitting on.
+ */
+export const PageChange: Story = {
+  render: function Render(args) {
+    const [page, setPage] = useState("schnellstart");
+    return (
+      <div className="flex items-center gap-3">
+        <Button onClick={() => setPage("einrichten")}>Nächste Seite</Button>
+        <CopyPage {...args} href={`/doku/${page}.md`} />
+      </div>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    const watch = watchCopy((address) => Promise.resolve(new Response(`# ${address}`)));
+    try {
+      const copy = canvas.getByRole("button", { name: texts.label });
+      await userEvent.hover(copy);
+      await waitFor(() => expect(watch.fetched).toHaveBeenCalledWith("/doku/schnellstart.md"));
+      await userEvent.click(canvas.getByRole("button", { name: "Nächste Seite" }));
+      await userEvent.click(copy);
+      await waitFor(() => expect(canvas.getByRole("status")).toHaveTextContent(texts.copied));
+      await expect(watch.written).toEqual(["# /doku/einrichten.md"]);
+    } finally {
+      watch.restore();
+    }
+  },
+};
+
+/**
+ * The fetch ahead of the press fails, as a test: it is forgotten, so the press that follows
+ * fetches the page again and copies it.
+ */
+export const FetchAgain: Story = {
+  args: { href: "/doku/schnellstart.md" },
+  play: async ({ canvas, userEvent }) => {
+    let calls = 0;
+    const watch = watchCopy(() =>
+      calls++ === 0
+        ? Promise.reject(new TypeError("offline"))
+        : Promise.resolve(new Response("# Schnellstart")),
+    );
+    try {
+      const copy = canvas.getByRole("button", { name: texts.label });
+      await userEvent.hover(copy);
+      await waitFor(() => expect(watch.fetched).toHaveBeenCalledOnce());
+      await userEvent.click(copy);
+      await waitFor(() => expect(canvas.getByRole("status")).toHaveTextContent(texts.copied));
+      await expect(watch.written).toEqual(["# Schnellstart"]);
+    } finally {
+      watch.restore();
+    }
   },
 };

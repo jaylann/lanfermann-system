@@ -104,7 +104,7 @@ export function CodeBlockLive({
     })),
   );
   // What goes on the clipboard: the code as it stands, without the lines a change removed.
-  const dropped = parseLines(removed);
+  const dropped = parseLines(removed, lines.length);
   const text = lines
     .filter((_, index) => !dropped.has(index + 1))
     .map((line) => line.map((piece) => piece.text).join(""))

@@ -4,12 +4,16 @@
  */
 export type LineSpec = number | string | ReadonlyArray<number | readonly [number, number]>;
 
-/** The lines a spec names. Numbers that are not lines are ignored, not an error. */
-export function parseLines(spec: LineSpec | undefined): Set<number> {
+/**
+ * The lines a spec names. Numbers that are not lines are ignored, not an error. `last` is the
+ * last line the code has: a range stops there, so it may be open (`[5, Infinity]`).
+ */
+export function parseLines(spec: LineSpec | undefined, last = Infinity): Set<number> {
   const lines = new Set<number>();
   if (spec === undefined) return lines;
   const add = (from: number, to: number) => {
-    for (let line = Math.min(from, to); line <= Math.max(from, to); line++) {
+    const end = Math.min(Math.max(from, to), last);
+    for (let line = Math.max(Math.min(from, to), 1); line <= end; line++) {
       if (Number.isInteger(line) && line > 0) lines.add(line);
     }
   };
@@ -38,8 +42,8 @@ export function trimCode(code: string) {
  * removed lines of a diff are left out. The signs and line numbers are never part of the text.
  */
 export function copyText(code: string, removed?: LineSpec) {
-  const drop = parseLines(removed);
   const lines = trimCode(code).split("\n");
+  const drop = parseLines(removed, lines.length);
   return drop.size === 0 ? lines.join("\n") : lines.filter((_, i) => !drop.has(i + 1)).join("\n");
 }
 
@@ -50,7 +54,11 @@ export function lineKinds(
   count: number,
   { marked, added, removed }: { marked?: LineSpec; added?: LineSpec; removed?: LineSpec },
 ): LineKind[] {
-  const [m, a, r] = [parseLines(marked), parseLines(added), parseLines(removed)];
+  const [m, a, r] = [
+    parseLines(marked, count),
+    parseLines(added, count),
+    parseLines(removed, count),
+  ];
   return Array.from({ length: count }, (_, i) =>
     r.has(i + 1) ? "removed" : a.has(i + 1) ? "added" : m.has(i + 1) ? "marked" : undefined,
   );
