@@ -23,7 +23,7 @@ import { ChevronRightGlyph } from "@/internal/glyphs";
 import { overlayBackdrop } from "@/internal/overlay";
 import { listGroupLabel, listItem, listItemDetail } from "@/internal/popup";
 import { cn, mergeClassName } from "@/lib/cn";
-import { useLocale } from "@/locale/locale";
+import { useLocale, useProvidedTag } from "@/locale/locale";
 
 /** One thing the palette offers: a page to go to, or something to do. */
 export type CommandEntry = {
@@ -99,7 +99,10 @@ export type CommandProps = {
   onQueryChange?: (query: string) => void;
   /** The name of the palette and of its field for assistive tech. */
   label?: string;
-  /** The language entries are compared in while typing (`"de-DE"`). The machine's unless set. */
+  /**
+   * The language entries are compared in while typing (`"de-DE"`). Left out, it is the one of
+   * the nearest `LocaleProvider`, and the machine's without one.
+   */
   locale?: Intl.LocalesArgument;
   /**
    * Whether the page behind is inert. Leave it on: the palette is a dialog. `false` is for a
@@ -131,11 +134,13 @@ export function Command({
   defaultQuery = "",
   onQueryChange,
   label,
-  locale,
+  locale: localeProp,
   modal = true,
   children,
 }: CommandProps) {
   const { messages } = useLocale();
+  const providedTag = useProvidedTag();
+  const locale = localeProp ?? providedTag;
   const [kept, setKept] = useState(defaultOpen);
   const open = controlled ?? kept;
   const [trail, setTrail] = useState<readonly CommandEntry[]>([]);

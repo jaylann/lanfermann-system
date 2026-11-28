@@ -36,7 +36,7 @@ import {
 } from "@/internal/popup";
 import { placeInRow, placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn, mergeClassName } from "@/lib/cn";
-import { useLocale } from "@/locale/locale";
+import { useLocale, useProvidedTag } from "@/locale/locale";
 
 /** One entry of a combobox's `items`. The whole object is the value that gets chosen. */
 export type ComboboxOption<Value = string> = {
@@ -100,13 +100,13 @@ const MultipleContext = createContext(false);
  * taken in a row, and each is submitted under the field's name.
  *
  * Typing ignores case and accents: "gart" finds "Gärtnerei" and "cafe" finds "Café". Pass
- * `locale` (`"de-DE"`) so that does not depend on the machine. The first match is highlighted
- * while typing, so Enter takes it.
+ * `locale` (`"de-DE"`), or put a `LocaleProvider` around the app, so that does not depend on
+ * the machine. The first match is highlighted while typing, so Enter takes it.
  */
 export function Combobox<Value, Multiple extends boolean | undefined = false, Item = Value>({
   autoHighlight = true,
   filter,
-  locale,
+  locale: localeProp,
   items,
   multiple,
   onCreate,
@@ -119,6 +119,9 @@ export function Combobox<Value, Multiple extends boolean | undefined = false, It
   ...props
 }: ComboboxProps<Value, Multiple, Item>) {
   const { messages } = useLocale();
+  // The caller's, else the provider's; without either it stays the machine's, as it was.
+  const providedTag = useProvidedTag();
+  const locale = localeProp ?? providedTag;
   // Base UI's own matcher, set to compare letters by their base. Its default is the locale's
   // search collation, and the German one keeps "ä" apart from "a": whoever types a name without
   // its umlaut would find nothing.
