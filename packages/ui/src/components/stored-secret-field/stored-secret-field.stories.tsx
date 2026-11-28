@@ -6,7 +6,11 @@ import { Button } from "@/components/button/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
 import { Form } from "@/components/form/form";
 
-import { StoredSecretField, type StoredSecretFieldProps } from "./stored-secret-field";
+import {
+  StoredSecretField,
+  StoredSecretFieldKey,
+  type StoredSecretFieldProps,
+} from "./stored-secret-field";
 
 const meta = {
   title: "Components/StoredSecretField",
@@ -69,6 +73,48 @@ export const NotSet: Story = {
   render: () => (
     <Stored ending={undefined} description="Steht im Dashboard des Dienstes unter „Webhooks“." />
   ),
+};
+
+/**
+ * A key inside the field (`trailing` with a `StoredSecretFieldKey`): it comes once something is
+ * typed, and the eye glides aside for it. For a form that wants its key inside the field; to
+ * save the field by itself, `saveLabel` puts the key beside it.
+ */
+export const TrailingKey: Story = {
+  parameters: {
+    visual: {
+      motion: [{ name: "type", click: "input", type: "lf_sig_8Hd2", frames: 8 }],
+    },
+  },
+  render: () => (
+    <Field className="w-96 max-w-full">
+      <FieldLabel>Signatur-Secret</FieldLabel>
+      <StoredSecretField
+        ending={undefined}
+        placeholder="Nicht gesetzt"
+        trailing={<StoredSecretFieldKey variant="primary">Prüfen</StoredSecretFieldKey>}
+      />
+      <FieldDescription>Steht im Dashboard des Dienstes unter „Webhooks“.</FieldDescription>
+    </Field>
+  ),
+};
+
+/** As a test: the key in the field is out of reach while the field is empty, and there once typed. */
+export const TrailingKeyAppears: Story = {
+  render: () => (
+    <StoredSecretField
+      ending={undefined}
+      aria-label="Secret"
+      trailing={<StoredSecretFieldKey>Prüfen</StoredSecretFieldKey>}
+    />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.queryByRole("button", { name: "Prüfen" })).toBeNull();
+    await userEvent.type(canvas.getByLabelText("Secret"), "lf_sig_8Hd2");
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Prüfen" })).toBeVisible());
+    await userEvent.clear(canvas.getByLabelText("Secret"));
+    await waitFor(() => expect(canvas.queryByRole("button", { name: "Prüfen" })).toBeNull());
+  },
 };
 
 /**
