@@ -58,7 +58,17 @@ export type BarChartProps<Row> = Omit<ComponentProps<"figure">, "children"> & {
   pending?: boolean;
   /** What stands in the plot without any data. */
   empty?: ReactNode;
+  /**
+   * The chart's own words, for one chart worded without a `LocaleProvider`: what assistive
+   * tech calls the plot (`chart`), how its keyboard is explained after the name (`hint`), the
+   * sum of a stack in the readout (`total`) and the head of the table's first column
+   * (`category`). Each one left out is the provider's.
+   */
+  words?: Partial<BarChartWords>;
 };
+
+/** The words a `BarChart` says on its own (`words`). */
+export type BarChartWords = { chart: string; hint: string; total: string; category: string };
 
 const value = (row: unknown, key: string): number => {
   const raw = (row as Record<string, unknown>)[key];
@@ -91,11 +101,19 @@ export function BarChart<Row>({
   drawIn = true,
   pending = false,
   empty,
+  words: wordsProp,
   className,
   style,
   ...props
 }: BarChartProps<Row>) {
   const { messages, tag } = useLocale();
+  const words: BarChartWords = {
+    chart: messages.charts.chart,
+    hint: messages.charts.hintValues,
+    total: messages.charts.total,
+    category: messages.charts.category,
+    ...wordsProp,
+  };
   const live = useLive();
   const { grid: axisGridRef, sizer: axisSizerRef } = useAxisColumn<
     HTMLDivElement,
@@ -162,7 +180,7 @@ export function BarChart<Row>({
         color: "transparent",
         mark: "swatch",
         value: numbers.value(shown.reduce((sum, entry) => sum + value(row, entry.key), 0)),
-        label: messages.charts.total,
+        label: words.total,
       });
     }
     return rows;
@@ -327,8 +345,8 @@ export function BarChart<Row>({
           data-slot="bar-chart-plot"
           data-live={live || undefined}
           role="group"
-          aria-roledescription={messages.charts.chart}
-          aria-label={`${label}. ${messages.charts.hintValues}`}
+          aria-roledescription={words.chart}
+          aria-label={`${label}. ${words.hint}`}
           tabIndex={data.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -508,7 +526,7 @@ export function BarChart<Row>({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">{messages.charts.category}</th>
+                <th scope="col">{words.category}</th>
                 {series.map((entry) => (
                   <th key={entry.key} scope="col">
                     {entry.label}

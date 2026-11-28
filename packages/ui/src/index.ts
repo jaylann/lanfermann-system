@@ -53,6 +53,7 @@ export {
   type BarChartActive,
   type BarChartProps,
   type BarChartSeries,
+  type BarChartWords,
 } from "./components/bar-chart/bar-chart";
 export { BarList, type BarListItem, type BarListProps } from "./components/bar-list/bar-list";
 export {
@@ -283,7 +284,12 @@ export {
   DrawerTitle,
   DrawerTrigger,
 } from "./components/drawer/drawer";
-export { Dumbbell, type DumbbellItem, type DumbbellProps } from "./components/dumbbell/dumbbell";
+export {
+  Dumbbell,
+  type DumbbellItem,
+  type DumbbellProps,
+  type DumbbellWords,
+} from "./components/dumbbell/dumbbell";
 export { EditableName, type EditableNameProps } from "./components/editable-name/editable-name";
 export {
   Empty,
@@ -374,7 +380,12 @@ export {
 } from "./components/ground/ground";
 export { Grow, type GrowProps } from "./components/grow/grow";
 export { Heading, type HeadingProps } from "./components/heading/heading";
-export { Heatmap, type HeatmapDay, type HeatmapProps } from "./components/heatmap/heatmap";
+export {
+  Heatmap,
+  type HeatmapDay,
+  type HeatmapProps,
+  type HeatmapWords,
+} from "./components/heatmap/heatmap";
 export {
   HoverCard,
   HoverCardContent,
@@ -741,6 +752,7 @@ export {
   type TimeSeriesChartActive,
   type TimeSeriesChartProps,
   type TimeSeriesChartSeries,
+  type TimeSeriesChartWords,
 } from "./components/time-series-chart/time-series-chart";
 export {
   Timeline,
@@ -797,6 +809,7 @@ export {
   Waterfall,
   type WaterfallProps,
   type WaterfallStep,
+  type WaterfallWords,
 } from "./components/waterfall/waterfall";
 export { readClipboard, writeClipboard } from "./internal/clipboard";
 export { cn, mergeClassName } from "./lib/cn";

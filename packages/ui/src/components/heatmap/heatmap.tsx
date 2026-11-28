@@ -53,7 +53,16 @@ export type HeatmapProps = Omit<ComponentProps<"figure">, "children"> & {
    * default, as every chart draws itself in). Off under reduced motion.
    */
   drawIn?: boolean;
+  /**
+   * The grid's own words, for one grid worded without a `LocaleProvider`: what assistive tech
+   * calls it (`chart`, „Kalender“) and how its keyboard is explained after the name (`hint`).
+   * Each one left out is the provider's. (The ends of the scale are `scaleLabels`.)
+   */
+  words?: Partial<HeatmapWords>;
 };
+
+/** The words a `Heatmap` says on its own (`words`). */
+export type HeatmapWords = { chart: string; hint: string };
 
 /**
  * How much of the hue each step mixes into the placeholder, in OKLab, so the steps rise evenly.
@@ -91,11 +100,17 @@ export function Heatmap({
   tone = "accent",
   scaleLabels,
   drawIn = true,
+  words: wordsProp,
   className,
   style,
   ...props
 }: HeatmapProps) {
   const { messages, tag } = useLocale();
+  const words: HeatmapWords = {
+    chart: messages.charts.calendar,
+    hint: messages.charts.hintDays,
+    ...wordsProp,
+  };
   const numbers = chartFormat(locale ?? tag, format);
   const pluralTag = locale ?? tag;
   const plural = useMemo(() => new Intl.PluralRules(pluralTag), [pluralTag]);
@@ -310,8 +325,8 @@ export function Heatmap({
             <div
               data-slot="heatmap-grid"
               role="group"
-              aria-roledescription={messages.charts.calendar}
-              aria-label={`${label}. ${messages.charts.hintDays}`}
+              aria-roledescription={words.chart}
+              aria-label={`${label}. ${words.hint}`}
               tabIndex={days.length > 0 ? 0 : undefined}
               onPointerMove={onPointerMove}
               onPointerDown={onPointerDown}
