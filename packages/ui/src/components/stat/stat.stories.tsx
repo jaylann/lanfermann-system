@@ -71,6 +71,17 @@ function Figures({ variant }: { variant?: "ruled" | "cards" }) {
   );
 }
 
+/** A figure that is part of a whole: the total stands after it, smaller and muted. */
+export const WithTotal: Story = {
+  parameters: { visual: { viewport: { width: 420, height: 160 } } },
+  render: () => (
+    <Stat className="w-64">
+      <StatLabel>Zugangsdaten gesetzt</StatLabel>
+      <StatValue total="von 7">2</StatValue>
+    </Stat>
+  ),
+};
+
 /**
  * On an app's page: the row in one `Card`, hairlines between the figures. One shows usage against
  * the plan; one a change that is bad news.

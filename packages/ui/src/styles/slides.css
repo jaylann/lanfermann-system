@@ -241,16 +241,17 @@
    * a print, the check and a capture have no such box, so they stand still and show the end state.
    * What moves is `translate`, `scale` and `opacity`, never a size or an inset.
    *
-   * A step: an element marked with `data-step` and `--step-at` (`stepAttributes`) is seen once
-   * `--slide-step` reaches it. Without `--slide-step` (a plain `Deck`, a print, the check) the
+   * A step: an element marked with `data-slides-at` and `--step-at` (`stepAttributes`) is seen
+   * once `--slide-step` reaches it. Without `--slide-step` (a plain `Deck`, a print, the check) the
    * fallback shows everything. A step that is not reached keeps its place: nothing reflows.
    * Never `display: none`. A marked element is a stacking context and the frame of its absolutely
    * placed children, shown or not (its `translate` is never `none`).
    *
-   * Every rule here names a slide or one of its parts: `data-step` is a plain name, and a page
-   * that uses it for something of its own must not be touched (a test checks it).
+   * The attribute carries the kit's prefix, and every rule here names a slide or one of its
+   * parts: a `data-step` in a deck's own markup, or anywhere on a page this stylesheet is loaded
+   * beside, is not the kit's and is not touched (a test checks both).
    */
-  [data-slot="slide"] [data-step] {
+  [data-slot="slide"] [data-slides-at] {
     --step-on: clamp(0, calc(var(--slide-step, 9999) - var(--step-at, 0) + 1), 1); /* 0 or 1 */
     opacity: var(--step-on);
     translate: 0 calc((1 - var(--step-on)) * 16px);
@@ -264,7 +265,7 @@
    * `data-motion="none"` comes on standing still.
    */
   @media screen and (prefers-reduced-motion: no-preference) {
-    [data-slides-live] [data-slot="slide"] [data-step] {
+    [data-slides-live] [data-slot="slide"] [data-slides-at] {
       transition:
         opacity var(--slide-step-duration) ease,
         translate var(--slide-step-duration) var(--slide-ease);
@@ -275,7 +276,7 @@
       > :not(
         [data-slot="slide-footer"],
         [data-slot="slide-forms"],
-        [data-step],
+        [data-slides-at],
         [data-slot="slide-scene"]
       ) {
       /*
@@ -341,7 +342,7 @@
    * slide's blocks and forms fade in together, without a stagger.
    */
   @media screen and (prefers-reduced-motion: reduce) {
-    [data-slides-live] [data-slot="slide"] [data-step] {
+    [data-slides-live] [data-slot="slide"] [data-slides-at] {
       translate: none;
       transition: opacity var(--slide-step-duration) ease;
     }
@@ -351,7 +352,7 @@
       > :not(
         [data-slot="slide-footer"],
         [data-slot="slide-forms"],
-        [data-step],
+        [data-slides-at],
         [data-slot="slide-scene"]
       ),
     [data-slides-live] [data-slot="slide"]:not([data-motion="none"]) [data-slot="slide-forms"] {
@@ -369,7 +370,7 @@
     [data-slot="slide-flow-arrow"],
     [data-slot="slide-diagram-label"],
     [data-slot="slide-diagram-gate-label"]
-  )[data-step] {
+  )[data-slides-at] {
     translate: 0 0;
   }
 
@@ -380,7 +381,7 @@
      * by `--step-on`, so a step taken back goes at once.
      */
     [data-slides-live]
-      :is([data-slot="slide-diagram-edge"], [data-slot="slide-flow-arrow"])[data-step] {
+      :is([data-slot="slide-diagram-edge"], [data-slot="slide-flow-arrow"])[data-slides-at] {
       --draw-delay: calc(var(--step-on) * var(--draw-order, 0) * var(--slide-draw-stagger));
     }
 
@@ -418,14 +419,17 @@
     }
 
     /* A dashed connector cannot be drawn (its dashes are the dash array): it fades in. */
-    [data-slides-live] [data-slot="slide-diagram-edge"][data-step]:not([data-draw]) {
+    [data-slides-live] [data-slot="slide-diagram-edge"][data-slides-at]:not([data-draw]) {
       transition: opacity var(--slide-step-duration) ease
         calc(var(--step-on) * var(--slide-draw-lead) + var(--draw-delay));
     }
 
     /* A connector's label and a checkpoint's name fade in as the line arrives. */
     [data-slides-live]
-      :is([data-slot="slide-diagram-label"], [data-slot="slide-diagram-gate-label"])[data-step] {
+      :is(
+        [data-slot="slide-diagram-label"],
+        [data-slot="slide-diagram-gate-label"]
+      )[data-slides-at] {
       transition: opacity var(--slide-step-duration) ease
         calc(var(--step-on) * var(--slide-draw-gate));
     }
@@ -495,7 +499,7 @@
    * Every step shown, whatever step the page stood at. Nothing moves in print: the motion above
    * is for screens only.
    */
-  [data-slot="slide"] [data-step] {
+  [data-slot="slide"] [data-slides-at] {
     --step-on: 1;
   }
 }

@@ -19,6 +19,7 @@ import {
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 export type RollingNumberProps = Omit<ComponentProps<"span">, "children"> & {
   value: number;
@@ -70,15 +71,16 @@ type Model = {
  */
 export function RollingNumber({
   value,
-  locale = "de-DE",
+  locale,
   format,
   className,
   style,
   ref,
   ...props
 }: RollingNumberProps) {
+  const { tag } = useLocale();
   // Cached by what it is (`lib/format.ts`), so a `format` written inline costs nothing.
-  const formatter = numberFormat(locale, format);
+  const formatter = numberFormat(locale ?? tag, format);
   const parts = toPlaces(formatter, value);
 
   // The places follow the value, worked out while rendering (state that follows a prop).

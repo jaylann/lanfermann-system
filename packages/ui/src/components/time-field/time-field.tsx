@@ -4,7 +4,7 @@ import { Autocomplete } from "@base-ui/react/autocomplete";
 import { Clock01Icon } from "@hugeicons/core-free-icons";
 import { useRef } from "react";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Icon } from "@/components/icon/icon";
 import { InputGroupAddon } from "@/components/input-group/input-group";
 import { fieldShell, fieldShellSize, type FieldSize, focusFieldControl } from "@/internal/field";
@@ -20,7 +20,25 @@ import {
 import { ListMark } from "@/internal/list-mark";
 import { listItem, listSheet, popupMotion } from "@/internal/popup";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
+import { worded, type Wording } from "@/internal/wording";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
+
+/**
+ * The messages a `TimeField` says on its own. Each is the language's (`LocaleProvider`) unless
+ * given: a finished sentence, or a function that is handed what the default names, written on
+ * the field's clock.
+ */
+export type TimeFieldLabels = {
+  /** The text is not a time. Handed an example the field would read: "09:30". */
+  invalid: Wording<[example: string]>;
+  /** The time lies outside `min` and `max`. */
+  between: Wording<[min: string, max: string]>;
+  /** The time lies before `min`, and there is no `max`. */
+  from: Wording<[min: string]>;
+  /** The time lies after `max`, and there is no `min`. */
+  until: Wording<[max: string]>;
+};
 
 export type TimeFieldProps = Omit<
   TypedInputProps,
@@ -48,6 +66,8 @@ export type TimeFieldProps = Omit<
   defaultOpen?: boolean;
   /** The size of the field, from the density. */
   size?: FieldSize;
+  /** Any of the field's own messages, in place of the language's (`TimeFieldLabels`). */
+  labels?: Partial<TimeFieldLabels>;
 };
 
 /**
@@ -60,7 +80,8 @@ export type TimeFieldProps = Omit<
  * `930`, `9:30`, `9.30`, `9 Uhr`, `9 pm` all become a time. On a phone it brings up the digits.
  *
  * `hourCycle={12}` writes and offers the times with AM and PM. The value is `"09:30"` either
- * way: 24 hours, no zone. Inside a `Form`, `name` submits exactly that.
+ * way: 24 hours, no zone. Inside a `Form`, `name` submits exactly that. The clock is this prop's
+ * in every language: a `LocaleProvider` changes the field's words, not how a time is written.
  */
 export function TimeField({
   value,
@@ -73,11 +94,14 @@ export function TimeField({
   defaultOpen,
   size = "md",
   className,
+  labels,
   disabled,
   readOnly,
   ...props
 }: TimeFieldProps) {
+  const { messages } = useLocale();
   const ground = useGround();
+  const groundMode = useGroundMode();
   const list = useRef<HTMLDivElement>(null);
   const written = (time: string) => formatTime(time, hourCycle);
   const typed = useTypedValue({
@@ -88,18 +112,24 @@ export function TimeField({
     read: (text) => {
       const time = parseGermanTime(text);
       if (!time) {
-        return { problem: `Bitte geben Sie eine Uhrzeit ein, zum Beispiel ${written("09:30")}.` };
+        return {
+          problem: worded(labels?.invalid ?? messages.timeField.invalid, written("09:30")),
+        };
       }
       if ((!min || time >= min) && (!max || time <= max)) return time;
       if (min && max) {
         return {
-          problem: `Bitte wählen Sie eine Uhrzeit zwischen ${written(min)} und ${written(max)}.`,
+          problem: worded(
+            labels?.between ?? messages.timeField.between,
+            written(min),
+            written(max),
+          ),
         };
       }
       return {
         problem: min
-          ? `Bitte wählen Sie eine Uhrzeit ab ${written(min)}.`
-          : `Bitte wählen Sie eine Uhrzeit bis ${written(max!)}.`,
+          ? worded(labels?.from ?? messages.timeField.from, written(min))
+          : worded(labels?.until ?? messages.timeField.until, written(max!)),
       };
     },
   });
@@ -153,7 +183,7 @@ export function TimeField({
             render={
               <TypedInput
                 inputMode="numeric"
-                placeholder={`z. B. ${written("09:30")}`}
+                placeholder={messages.timeField.example(written("09:30"))}
                 text={typed.text}
                 onTextChange={typed.setText}
                 onCommit={typed.commit}
@@ -184,11 +214,12 @@ export function TimeField({
           <Autocomplete.Popup
             data-slot="time-field-list"
             data-theme={ground}
+            data-mode={groundMode}
             className={cn(listSheet, popupMotion, "min-w-(--anchor-width)")}
           >
             <Autocomplete.List
               ref={list}
-              aria-label="Uhrzeiten"
+              aria-label={messages.timeField.list}
               className="max-h-[min(15rem,calc(var(--available-height)-0.5rem))] scroll-py-1 overflow-y-auto overscroll-contain outline-none"
             >
               {(time: string) => (

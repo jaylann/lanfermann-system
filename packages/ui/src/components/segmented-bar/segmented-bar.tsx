@@ -4,6 +4,7 @@ import { type ComponentProps, useLayoutEffect, useRef, useState } from "react";
 
 import { chartFormat } from "@/internal/chart/format";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type SegmentedBarItem = {
   name: string;
@@ -46,14 +47,15 @@ export function SegmentedBar({
   label,
   size = "thin",
   format,
-  locale = "de-DE",
+  locale,
   legend = true,
   drawIn = true,
   className,
   onPointerLeave,
   ...props
 }: SegmentedBarProps) {
-  const numbers = chartFormat(locale, format);
+  const { tag } = useLocale();
+  const numbers = chartFormat(locale ?? tag, format);
   const [active, setActive] = useState<string | null>(null);
   const bar = useRef<HTMLDivElement>(null);
 

@@ -44,6 +44,30 @@ describe("what a deck may import", () => {
     );
   });
 
+  it("refuses a reference directive, at its comment and without what it names", () => {
+    const source = deckOf(
+      `/// <reference path="/etc/hosts" />\n/// <reference types="node" />\n${HEAD}` +
+        'export default (<Deck title="Probe"><Slide /></Deck>);\n',
+      { "parts/teil.ts": '// Teil\n  /// <reference lib="es2015" />\nexport const teil = 1;\n' },
+    );
+    const refused = (attribute: string) =>
+      `error /// <reference ${attribute}> is not allowed in a deck: a deck takes in its own ` +
+      "files, React and the kit by import, and nothing else (reference-not-allowed)";
+    expect(lines(source)).toEqual([
+      `deck.tsx:1:1 ${refused("path")}`,
+      `deck.tsx:2:1 ${refused("types")}`,
+      `parts/teil.ts:2:3 ${refused("lib")}`,
+    ]);
+  });
+
+  it("takes a triple-slash comment that is no directive: after code, or about something else", () => {
+    const source = deckOf(
+      `/// Ein Deck zur Probe.\n${HEAD}/// <reference path="/etc/hosts" />\n` +
+        'export default (<Deck title="Probe"><Slide /></Deck>);\n',
+    );
+    expect(lines(source)).toEqual([]);
+  });
+
   it("refuses a relative path that leaves the folder", () => {
     const source = deckWith(SLIDE, 'import { x } from "../geheim";');
     expect(lines(source)).toEqual([

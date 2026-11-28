@@ -2,7 +2,7 @@
 
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { listSheet } from "@/internal/popup";
 import { mergeClassName } from "@/lib/cn";
 
@@ -34,6 +34,7 @@ export type ContextMenuContentProps = ContextMenuPrimitive.Popup.Props;
  */
 export function ContextMenuContent({ className, ...props }: ContextMenuContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <ContextMenuPrimitive.Portal>
       {/* No side and no offsets: they would move the sheet away from the pointer. */}
@@ -44,6 +45,7 @@ export function ContextMenuContent({ className, ...props }: ContextMenuContentPr
         <ContextMenuPrimitive.Popup
           data-slot="context-menu-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(
             [
               listSheet,

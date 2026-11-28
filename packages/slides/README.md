@@ -36,7 +36,7 @@ with the rules for notes and pictures and every code the check prints, is in
 
 ```
 slides init <dir> [--template blank] [--title <text>] [--lang <tag>] [--force]
-slides check <dir> [--no-browser] [--json]
+slides check <dir> [--browser | --no-browser] [--json]
 slides dev <dir> [--port 4173] [--audience]
 slides build <dir> (--audience | --presenter) [--pdf] [--out <dir>]
 slides pack <dir> [--out <file>] [--json]
@@ -52,13 +52,18 @@ slides unpack <file> <dir> [--force]
   against the kit's, compiles the deck, and draws it in a headless Chrome to measure every
   slide: a part beyond the content box, a box that cuts off its text, a title on too many lines,
   a slide that throws. It prints one line per finding, with its file, line and column, and
-  exits 1 on any error. `--json` prints an object with `ok`, `diagnostics` and `report` and
-  nothing else. Without a browser the layout is left unchecked, with one warning.
+  exits 1 on any error.
 
   ```
   deck.tsx:2:20 error import "lodash" is not allowed (import-not-allowed)
-  check failed: 1 slide, 1 error, 0 warnings
+  check failed: 1 slide, 1 error, 0 warnings, layout not checked
   ```
+
+  Without a browser the layout is left unchecked: one warning, and the last line ends with
+  `layout not checked` and what is missing, so that a pass does not read like a whole one.
+  `--browser` makes a missing browser an error (exit 1); `--no-browser` leaves the layout out
+  on purpose. `--json` prints an object with `ok`, `diagnostics`, `report` and `layout`
+  (`"checked"`, `"skipped"` or `"unavailable"`) and nothing else.
 
 - **`dev`** serves the presenter's view on `127.0.0.1` and builds again when a file changes.
   `--audience` serves what an audience gets.
@@ -110,13 +115,23 @@ if (bundle.js !== undefined && errors.length === 0) {
   `syntax`, notes that cannot be left out one of kind `notes`. `kitVersion` is the version of
   `@lanfermann/ui` whose player the script needs.
 - **`typecheckDeck({ files, entry })`** checks the types against the kit's declarations and
-  returns errors of kind `type`. It is separate, so that `bundleDeck` stays fast.
+  returns errors of kind `type`. It is separate, so that `bundleDeck` stays fast. The compiler
+  reads the deck from memory and, of the machine, only its own library files, React's types
+  and the kit's declarations. A `/// <reference … />` in a deck is not followed: both functions
+  refuse it with an error of kind `import` (`reference-not-allowed`). No message names a path
+  of the machine.
 - **`deckHtml(js, { mode, title, lang, pdfUrl?, csp?, assets? })`** makes the one file, with the
   player's script, styles and fonts inline. `mode` is `audience`, `presenter`, `print` or
   `check`. `csp` is written as a `<meta>` when given. `assets` maps the name a picture has in
-  the script (an address, or `./bilder/werkstatt.jpg` for a file of the deck) to its data URL.
+  the script (an address, or `./bilder/werkstatt.jpg` for a file of the deck) to where the page
+  finds it: a data URL, an absolute `https:` address, or a path on the page's own origin (`/…`,
+  `./…`, `../…`). Any other value is a `TypeError`. The command line passes data URLs, so its
+  files load nothing; a file with addresses or paths is for a server that publishes the
+  pictures beside the page. The layout check and the PDF open a file without a network: hand
+  them data URLs.
 - **`deckCsp(js, options)`** is the strict policy for exactly the file `deckHtml` makes from the
-  same input.
+  same input. Pictures are allowed as data, from `'self'` when an asset is a path, and from the
+  origin of each `https:` asset, and from nowhere else.
 
 - **`deckTemplate("blank", { title, lang? })`** is the deck `slides init` writes, as files in
   memory (`{ entry, files, images }`), so a server seeds a new deck from the same template.

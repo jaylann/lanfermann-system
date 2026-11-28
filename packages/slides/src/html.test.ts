@@ -136,10 +136,74 @@ describeWithKit("deckHtml", () => {
     );
   });
 
-  it("refuses an asset that is no data URL", async () => {
-    await expect(
-      deckHtml(JS, { ...BASE, assets: { "./a.png": "https://example.com/a.png" } }),
-    ).rejects.toThrow('The asset "./a.png" is not a data URL.');
+  it.each([
+    ["an https address", "https://cdn.example.com/decks/handschlag/a1b2.png?v=2"],
+    ["a path from the origin's root", "/decks/handschlag/assets/a1b2.png"],
+    ["a path beside the page", "./assets/a1b2.png"],
+    ["a path one folder up", "../assets/a1b2.png"],
+  ])(
+    "puts %s in place of a picture's name, in every way the name may be quoted",
+    async (_, url) => {
+      const js = "var a=\"./bilder/a.png\",b='./bilder/a.png',c=`./bilder/a.png`;";
+      const html = await deckHtml(js, { ...BASE, assets: { "./bilder/a.png": url } });
+      const value = JSON.stringify(url);
+      expect(scriptsOf(html)[1]).toBe(`var a=${value},b=${value},c=${value};`);
+    },
+  );
+
+  it("replaces every name in one pass: a value that reads like another name stays", async () => {
+    const js = 'var a="./a.png",b="./b.png",c="data:image/svg+xml,<svg x=\'./a.png\'/>";';
+    const html = await deckHtml(js, {
+      ...BASE,
+      assets: {
+        "./a.png": "./b.png",
+        "./b.png": "data:image/png;base64,BBBB",
+        "data:image/svg+xml,<svg x='./a.png'/>": "/c.svg",
+      },
+    });
+    expect(scriptsOf(html)[1]).toBe('var a="./b.png",b="data:image/png;base64,BBBB",c="/c.svg";');
+  });
+
+  it("keeps an address from ending the script it stands in", async () => {
+    const html = await deckHtml('var a="./a.png";', {
+      ...BASE,
+      assets: { "./a.png": 'https://example.com/</script><script>alert("x")</script>' },
+    });
+    expect(scriptsOf(html)).toHaveLength(3);
+    const page: Record<string, unknown> = {};
+    runInNewContext(scriptsOf(html)[1] ?? "", page);
+    expect(page.a).toBe('https://example.com/</script><script>alert("x")</script>');
+  });
+
+  it.each([
+    ["http:", "http://example.com/a.png"],
+    ["javascript:", "javascript:alert(1)"],
+    ["another scheme", "ftp://example.com/a.png"],
+    ["a file of the machine", "file:///etc/hosts"],
+    ["an address without a scheme", "//example.com/a.png"],
+    ["a bare word", "a.png"],
+    ["nothing", ""],
+    ["https without a host", "https://"],
+    ["https without its slashes", "https:example.com/a.png"],
+    ["a user name in the address", "https://nutzer:geheim@example.com/a.png"],
+    ["a host no policy can name", "https://*.example.com/a.png"],
+    ["a host that would end the directive", "https://a;script-src/a.png"],
+    ["an IPv6 host", "https://[::1]/a.png"],
+    ["a backslash that a browser reads as a slash", "/\\example.com/a.png"],
+    ["a tab that a browser drops", "/\t/example.com/a.png"],
+    ["a blank in front", " https://example.com/a.png"],
+    ["a line break", "./a\n.png"],
+  ])("refuses an asset that is %s, and names only the asset", async (_, url) => {
+    const refusal =
+      'The asset "./a.png" is neither a data URL, an https address nor a path on the page\'s ' +
+      "own origin (/…, ./… or ../…).";
+    const assets = { "./a.png": url };
+    const failure: unknown = await deckHtml(JS, { ...BASE, assets }).catch(
+      (error: unknown) => error,
+    );
+    expect(failure).toBeInstanceOf(TypeError);
+    expect(failure).toHaveProperty("message", refusal);
+    expect(() => deckCsp(JS, { mode: "audience", assets })).toThrow(new TypeError(refusal));
   });
 
   it("makes the same file from the same input", async () => {
@@ -183,10 +247,89 @@ describeWithKit("deckCsp", () => {
   });
 
   it("allows no connection, no eval and no inline script without a hash", () => {
-    const csp = deckCsp(JS, { mode: "audience" });
-    expect(csp).not.toContain("unsafe");
-    expect(csp).not.toContain("connect-src");
-    expect(csp).not.toMatch(/https?:|\*/);
+    for (const csp of [
+      deckCsp(JS, { mode: "audience" }),
+      deckCsp(JS, { mode: "audience", assets: {} }),
+      deckCsp(JS, { mode: "audience", assets: { "./a.png": "data:image/png;base64,AAAA" } }),
+    ]) {
+      expect(csp).not.toContain("unsafe");
+      expect(csp).not.toContain("connect-src");
+      expect(csp).not.toContain("'self'");
+      expect(csp).not.toMatch(/https?:|\*/);
+      expect(csp).toContain("; img-src data:; ");
+    }
+  });
+
+  const imgSrc = (assets: Record<string, string>) =>
+    deckCsp(JS, { mode: "audience", assets })
+      .split("; ")
+      .find((directive) => directive.startsWith("img-src "));
+
+  it("lets pictures come from exactly the origins of the assets, each once and in order", () => {
+    expect(
+      imgSrc({
+        "./a.png": "https://cdn.example.com/decks/a.png",
+        "./b.png": "https://bilder.example.org:8443/b.png?v=2#x",
+        "./c.png": "https://cdn.example.com/other/c.png",
+        "./d.png": "data:image/png;base64,AAAA",
+        "./e.png": "HTTPS://CDN.Example.com:443/e.png",
+      }),
+    ).toBe("img-src data: https://bilder.example.org:8443 https://cdn.example.com");
+    // The same policy whichever asset is named first.
+    expect(imgSrc({ a: "https://b.example/1", b: "https://a.example/2" })).toBe(
+      imgSrc({ b: "https://a.example/2", a: "https://b.example/1" }),
+    );
+  });
+
+  it.each(["/decks/handschlag/a.png", "./assets/a.png", "../assets/a.png"])(
+    "lets pictures come from the page's own origin for the path %s, and from nowhere else",
+    (path) => {
+      expect(imgSrc({ "./a.png": path })).toBe("img-src data: 'self'");
+      expect(imgSrc({ "./a.png": path, "./b.png": "https://cdn.example.com/b.png" })).toBe(
+        "img-src data: 'self' https://cdn.example.com",
+      );
+    },
+  );
+
+  it("names 'self' only for a path: an https address alone does not open the own origin", () => {
+    expect(imgSrc({ "./a.png": "https://cdn.example.com/a.png" })).toBe(
+      "img-src data: https://cdn.example.com",
+    );
+  });
+
+  it("widens nothing but img-src, and stays the policy of the file with those assets", async () => {
+    const js = 'var __LF_DECK__={default:"./a.png"};';
+    const options = {
+      ...BASE,
+      assets: { "./a.png": "https://cdn.example.com/a.png", "./b.png": "/b.png" },
+    };
+    const csp = deckCsp(js, options);
+    const html = await deckHtml(js, { ...options, csp });
+    const [style] = stylesOf(html);
+    expect(scriptsOf(html)[1]).toBe('var __LF_DECK__={default:"https://cdn.example.com/a.png"};');
+    expect(csp).toBe(
+      [
+        "default-src 'none'",
+        `style-src ${hash(style ?? "")}`,
+        `script-src ${scriptsOf(html).map(hash).join(" ")}`,
+        "img-src data: 'self' https://cdn.example.com",
+        "font-src data:",
+        "base-uri 'none'",
+        "form-action 'none'",
+      ].join("; "),
+    );
+  });
+
+  it("changes the script's hash with the value of an asset", () => {
+    const js = 'var __LF_DECK__={default:"./a.png"};';
+    const policy = (url: string) => deckCsp(js, { mode: "audience", assets: { "./a.png": url } });
+    const scriptSrc = (csp: string) =>
+      csp.split("; ").find((part) => part.startsWith("script-src"));
+    const first = policy("https://cdn.example.com/a1.png");
+    // The same origin, so the same img-src: only the hash tells the two files apart.
+    expect(scriptSrc(policy("https://cdn.example.com/a2.png"))).not.toBe(scriptSrc(first));
+    expect(scriptSrc(policy("data:image/png;base64,AAAA"))).not.toBe(scriptSrc(first));
+    expect(scriptSrc(policy("https://cdn.example.com/a1.png"))).toBe(scriptSrc(first));
   });
 
   it("takes a preview server's reload line into the policy", () => {

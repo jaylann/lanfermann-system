@@ -4,16 +4,12 @@ import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { type ComponentProps, createContext, useContext } from "react";
 
 import { Button } from "@/components/button/button";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { CloseGlyph } from "@/internal/glyphs";
-import {
-  overlayBody,
-  overlayDescription,
-  overlayFooter,
-  overlayHeader,
-  overlayTitle,
-} from "@/internal/overlay";
+import { overlayDescription, overlayFooter, overlayHeader, overlayTitle } from "@/internal/overlay";
+import { OverlayBody, type OverlayBodyProps } from "@/internal/overlay-body";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** The edge a drawer comes from. It is swiped back towards that edge to close it. */
 export type DrawerSide = "bottom" | "right" | "left";
@@ -116,10 +112,12 @@ export function DrawerContent({
   className,
   children,
   hideClose = false,
-  closeLabel = "Schließen",
+  closeLabel,
   ...props
 }: DrawerContentProps) {
+  const { messages } = useLocale();
   const ground = useGround();
+  const groundMode = useGroundMode();
   const side = useContext(DrawerSideContext);
   return (
     <DrawerPrimitive.Portal>
@@ -136,6 +134,7 @@ export function DrawerContent({
         <DrawerPrimitive.Popup
           data-slot="drawer-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(
             [
               "relative flex flex-col bg-sheet text-base text-fg-body depth-overlay outline-hidden [--bleed:3rem]",
@@ -172,7 +171,7 @@ export function DrawerContent({
                   iconOnly
                   size="sm"
                   variant="quiet"
-                  aria-label={closeLabel}
+                  aria-label={closeLabel ?? messages.drawer.close}
                   className={cn("absolute text-fg-muted", sides[side].close)}
                 />
               }
@@ -212,8 +211,8 @@ export function DrawerDescription({ className, ...props }: DrawerPrimitive.Descr
 }
 
 /** The content. It scrolls when it is taller than the sheet allows. */
-export function DrawerBody({ className, ...props }: ComponentProps<"div">) {
-  return <div data-slot="drawer-body" className={cn(overlayBody, className)} {...props} />;
+export function DrawerBody(props: OverlayBodyProps) {
+  return <OverlayBody data-slot="drawer-body" {...props} />;
 }
 
 export function DrawerFooter({ className, ...props }: ComponentProps<"div">) {

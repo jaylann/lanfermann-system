@@ -19,13 +19,24 @@
  * Every file with per-ground tokens (depth, status, code, chart) carries the same selectors;
  * `tokens.test.ts` checks that every ground in both modes has the full set.
  *
+ * A light scope: a region of a dark page that stays light (the light thumbnail of an appearance
+ * setting, a preview of both modes side by side). It is `data-mode="light"` together with a
+ * `data-theme`, which `<Ground ground="paper" mode="light">` sets. Every light block therefore
+ * also lists `[data-mode="dark"] [data-mode="light"][data-theme="<ground>"]` and, for a ground
+ * nested inside such a scope, `[data-mode="dark"] [data-mode="light"] [data-theme="<ground>"]`.
+ * With three attributes they outrank every dark selector, whatever the order. One level only:
+ * a dark scope inside a light scope inside a dark page stays light. A dark scope on a light
+ * page needs none of this (`data-mode="dark"` with a `data-theme` on the region).
+ *
  * Scope rule: a custom property that references a ground token resolves where it is DECLARED. Put
  * derived values in every ground block or in `@theme inline`, never on `:root` alone, or a nested
  * ground silently keeps its parent's colours.
  */
 
 :root,
-[data-theme="paper"] {
+[data-theme="paper"],
+[data-mode="dark"] [data-mode="light"][data-theme="paper"],
+[data-mode="dark"] [data-mode="light"] [data-theme="paper"] {
   color-scheme: light;
 
   --lf-ground: #fbfbfd;
@@ -72,7 +83,9 @@
   --lf-selection: #5f50d0; /* what is chosen in a calendar: one shape, its days on-accent */
 }
 
-[data-theme="tint"] {
+[data-theme="tint"],
+[data-mode="dark"] [data-mode="light"][data-theme="tint"],
+[data-mode="dark"] [data-mode="light"] [data-theme="tint"] {
   color-scheme: light;
 
   --lf-ground: #edeafc;
@@ -119,7 +132,9 @@
 }
 
 .dark,
-[data-theme="ink"] {
+[data-theme="ink"],
+[data-mode="dark"] [data-mode="light"][data-theme="ink"],
+[data-mode="dark"] [data-mode="light"] [data-theme="ink"] {
   color-scheme: dark;
 
   --lf-ground: #13121c;
@@ -167,6 +182,8 @@
 }
 
 [data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"][data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"] [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
 [data-mode="dark"] [data-theme="indigo"] {
   color-scheme: dark;

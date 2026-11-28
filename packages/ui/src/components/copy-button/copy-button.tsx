@@ -5,7 +5,9 @@ import type { ComponentProps, ReactNode, RefObject } from "react";
 import { Button, type ButtonProps } from "@/components/button/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
 import { CopyMarks, useCopy } from "@/internal/copy";
+import { useCopyKeys } from "@/internal/copy-keys";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** The words of a key that copies. */
 export type CopyButtonLabels = {
@@ -66,20 +68,26 @@ export function CopyButton({
   size = "md",
   variant = "quiet",
   disabled,
-  copyLabel = "Kopieren",
-  copiedLabel = "Kopiert",
-  copiedMessage = "In die Zwischenablage kopiert.",
-  failedLabel = selectTarget ? "Markiert" : "Nicht kopiert",
-  failedMessage = selectTarget
-    ? "Nicht kopiert. Der Text ist markiert und kann mit ⌘C kopiert werden."
-    : "Nicht kopiert. Der Browser hat den Zugriff auf die Zwischenablage abgelehnt.",
+  copyLabel,
+  copiedLabel,
+  copiedMessage,
+  failedLabel,
+  failedMessage: failedMessageProp,
   className,
   children,
   ...props
 }: CopyButtonProps) {
+  const { messages } = useLocale();
+  const copyKeys = useCopyKeys();
+  const failedMessage =
+    failedMessageProp ??
+    (selectTarget ? messages.copy.selectedMessage(copyKeys) : messages.copy.failedMessage);
   const { state, copy } = useCopy({ text, selectTarget, onCopied });
   const marks = <CopyMarks copied={state === "copied"} size={symbolSize[size]} />;
-  const word = state === "failed" ? failedLabel : copiedLabel;
+  const word =
+    state === "failed"
+      ? (failedLabel ?? (selectTarget ? messages.copy.selected : messages.copy.failed))
+      : (copiedLabel ?? messages.copy.copied);
 
   return (
     <span
@@ -98,7 +106,7 @@ export function CopyButton({
                 size={size}
                 variant={variant}
                 disabled={disabled}
-                aria-label={copyLabel}
+                aria-label={copyLabel ?? messages.copy.copy}
                 onClick={() => void copy()}
                 // A symbol only darkens under the pointer.
                 className={variant === "quiet" ? "text-fg-muted hover:text-fg" : undefined}
@@ -107,7 +115,9 @@ export function CopyButton({
               </Button>
             }
           />
-          <TooltipContent>{state === "idle" ? copyLabel : word}</TooltipContent>
+          <TooltipContent>
+            {state === "idle" ? (copyLabel ?? messages.copy.copy) : word}
+          </TooltipContent>
         </Tooltip>
       ) : (
         <Button size={size} variant={variant} disabled={disabled} onClick={() => void copy()}>
@@ -116,7 +126,11 @@ export function CopyButton({
         </Button>
       )}
       <span role="status" className="sr-only">
-        {state === "copied" ? copiedMessage : state === "failed" ? failedMessage : ""}
+        {state === "copied"
+          ? (copiedMessage ?? messages.copy.copiedMessage)
+          : state === "failed"
+            ? failedMessage
+            : ""}
       </span>
     </span>
   );

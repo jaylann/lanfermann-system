@@ -1,8 +1,9 @@
 "use client";
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import type { ReactNode } from "react";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronRightGlyph } from "@/internal/glyphs";
 import { ListMark } from "@/internal/list-mark";
@@ -32,6 +33,7 @@ export function MenuContent({
   ...props
 }: MenuContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -45,6 +47,7 @@ export function MenuContent({
         <MenuPrimitive.Popup
           data-slot="menu-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName([listSheet, popupMotion, "min-w-48"], className)}
           {...props}
         />
@@ -59,12 +62,31 @@ export function MenuContent({
  */
 type WithIcon = { icon?: IconSvgElement };
 
+type WithTone = {
+  /**
+   * `danger` for a row that destroys something ("Löschen", "In den Papierkorb"): its words and
+   * symbol take the danger colour and its highlight the danger wash. Put it last, under a
+   * `MenuSeparator`, and name what it does; the colour alone says nothing.
+   */
+  tone?: "neutral" | "danger";
+};
+
+// The danger row on top of `listItem`: the colour in every state but disabled, and the wash in
+// place of the grey highlight (forced colours keep the system's highlight from `listItem`).
+// The usual highlight lies over the wash as a flat layer: on Indigo, where danger is white and
+// its wash is close to the sheet, the row is then marked at least as clearly as any other.
+const dangerRow = [
+  "data-[tone=danger]:not-data-disabled:text-danger data-[tone=danger]:data-highlighted:bg-danger-soft",
+  "data-[tone=danger]:data-highlighted:bg-linear-to-b data-[tone=danger]:data-highlighted:from-hover data-[tone=danger]:data-highlighted:to-hover",
+  "forced-colors:data-[tone=danger]:data-highlighted:bg-none",
+].join(" ");
+
 function RowIcon({ icon }: WithIcon) {
   return icon ? (
     <Icon
       icon={icon}
       size={16}
-      className="text-fg-muted group-data-disabled:text-on-disabled group-data-highlighted:text-fg"
+      className="text-fg-muted group-data-disabled:text-on-disabled group-data-highlighted:text-fg group-data-[tone=danger]:not-group-data-disabled:text-danger"
     />
   ) : null;
 }
@@ -72,13 +94,15 @@ function RowIcon({ icon }: WithIcon) {
 export function MenuItem({
   className,
   icon,
+  tone,
   children,
   ...props
-}: MenuPrimitive.Item.Props & WithIcon) {
+}: MenuPrimitive.Item.Props & WithIcon & WithTone) {
   return (
     <MenuPrimitive.Item
       data-slot="menu-item"
-      className={mergeClassName(["group", listItem], className)}
+      data-tone={tone === "danger" ? "danger" : undefined}
+      className={mergeClassName(["group", listItem, dangerRow], className)}
       {...props}
     >
       <RowIcon icon={icon} />
@@ -91,13 +115,15 @@ export function MenuItem({
 export function MenuLinkItem({
   className,
   icon,
+  tone,
   children,
   ...props
-}: MenuPrimitive.LinkItem.Props & WithIcon) {
+}: MenuPrimitive.LinkItem.Props & WithIcon & WithTone) {
   return (
     <MenuPrimitive.LinkItem
       data-slot="menu-item"
-      className={mergeClassName(["group", listItem], className)}
+      data-tone={tone === "danger" ? "danger" : undefined}
+      className={mergeClassName(["group", listItem, dangerRow], className)}
       {...props}
     >
       <RowIcon icon={icon} />
@@ -179,9 +205,14 @@ export const MenuSub = MenuPrimitive.SubmenuRoot;
 export function MenuSubTrigger({
   className,
   icon,
+  detail,
   children,
   ...props
-}: MenuPrimitive.SubmenuTrigger.Props & WithIcon) {
+}: MenuPrimitive.SubmenuTrigger.Props &
+  WithIcon & {
+    /** What the submenu is set to now ("Hell" beside "Erscheinungsbild"): muted, at the right. */
+    detail?: ReactNode;
+  }) {
   return (
     <MenuPrimitive.SubmenuTrigger
       data-slot="menu-sub-trigger"
@@ -190,7 +221,17 @@ export function MenuSubTrigger({
     >
       <RowIcon icon={icon} />
       {children}
-      <ChevronRightGlyph className="ml-auto text-fg-muted" />
+      {detail !== undefined && (
+        <span
+          data-slot="menu-sub-trigger-detail"
+          className="ml-auto min-w-0 truncate ps-4 text-fg-muted group-data-disabled:text-on-disabled"
+        >
+          {detail}
+        </span>
+      )}
+      <ChevronRightGlyph
+        className={detail === undefined ? "ml-auto text-fg-muted" : "-ml-1 text-fg-muted"}
+      />
     </MenuPrimitive.SubmenuTrigger>
   );
 }
@@ -205,6 +246,7 @@ export function MenuSubContent({
   ...props
 }: MenuContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -219,6 +261,7 @@ export function MenuSubContent({
         <MenuPrimitive.Popup
           data-slot="menu-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName([listSheet, popupMotion, "min-w-40"], className)}
           {...props}
         />

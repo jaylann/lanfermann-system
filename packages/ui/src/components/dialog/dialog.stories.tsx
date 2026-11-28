@@ -73,6 +73,46 @@ export const Default: Story = {
 
 export const Open: Story = { render: () => <SendDialog defaultOpen /> };
 
+/** A form taller than the window: the fields scroll between the title and the keys. */
+function TermsDialog() {
+  return (
+    <div className="flex min-h-[420px] items-center justify-center">
+      <Dialog defaultOpen modal={false}>
+        <DialogTrigger render={<Button />}>Kunde anlegen</DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kunde anlegen.</DialogTitle>
+            <DialogDescription>Steht danach in jedem Angebot zur Auswahl.</DialogDescription>
+          </DialogHeader>
+          <DialogBody className="flex flex-col gap-4">
+            {["Betrieb", "Ansprechperson", "E-Mail-Adresse", "Telefon", "Straße", "Ort"].map(
+              (label) => (
+                <Field key={label}>
+                  <FieldLabel>{label}</FieldLabel>
+                  <Input />
+                </Field>
+              ),
+            )}
+          </DialogBody>
+          <DialogFooter>
+            <DialogClose render={<Button variant="quiet" />}>Abbrechen</DialogClose>
+            <DialogClose render={<Button variant="primary" />}>Anlegen</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/**
+ * In a low window the body scrolls and fades at the edge where more fields wait, instead of
+ * cutting one in half above the keys.
+ */
+export const Scrolling: Story = {
+  parameters: { visual: { viewport: { width: 720, height: 420 }, clip: "viewport" } },
+  render: () => <TermsDialog />,
+};
+
 /**
  * The keyboard path, as a test: opening moves the focus to the first field, Tab stays inside the
  * dialog in both directions, and Escape closes it and returns the focus to the trigger.

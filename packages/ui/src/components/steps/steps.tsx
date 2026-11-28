@@ -5,15 +5,10 @@ import { linkVariants } from "@/components/link/link-variants";
 import { TickGlyph } from "@/internal/glyphs";
 import { renderAs } from "@/internal/render-as";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 /** Where a step stands: behind one, the one being worked on, or still ahead. */
 export type StepStatus = "done" | "current" | "upcoming";
-
-const statusWords: Record<StepStatus, string> = {
-  done: "Erledigt",
-  current: "Aktueller Schritt",
-  upcoming: "Steht aus",
-};
 
 export type StepsProps = ComponentProps<"ol"> & {
   /**
@@ -154,7 +149,7 @@ export function Step({
   description,
   href,
   render,
-  statusLabel = statusWords[status],
+  statusLabel,
   className,
   ...props
 }: StepProps) {
@@ -162,7 +157,9 @@ export function Step({
   const name = (
     <>
       {/* The current step is announced by `aria-current`; the other two by a word. */}
-      {status !== "current" && <span className="sr-only">{statusLabel}: </span>}
+      {status !== "current" && (
+        <span className="sr-only">{statusLabel ?? <Localized ns="steps" name={status} />}: </span>
+      )}
       {title}
     </>
   );

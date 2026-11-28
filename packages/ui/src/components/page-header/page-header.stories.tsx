@@ -46,6 +46,26 @@ export const Default: Story = {
   ),
 };
 
+/**
+ * The line under the title while its numbers load (`loading`, with the sentence that is read
+ * out): it stays a paragraph and holds its shape, which waits its fifth of a second like any
+ * other skeleton.
+ */
+export const DescriptionLoading: Story = {
+  render: () => (
+    <PageHeader>
+      <PageHeaderTitle>Angebote.</PageHeaderTitle>
+      <PageHeaderDescription loading="Die Zahl der Angebote wird geladen." />
+      <PageHeaderActions>
+        <Button variant="primary">
+          <Icon icon={Add01Icon} />
+          Angebot schreiben
+        </Button>
+      </PageHeaderActions>
+    </PageHeader>
+  ),
+};
+
 /** A record's page: its state after the title, a quieter action beside the committed one. */
 export const WithBadge: Story = {
   render: () => (

@@ -16,16 +16,11 @@ import { disclosureChevron, disclosurePanel } from "@/internal/disclosure";
 import { ChevronRightGlyph } from "@/internal/glyphs";
 import { RailMark, type RailStatus } from "@/internal/rail-mark";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
+import { de } from "@/locale/messages";
 
 /** Where a step stands: not begun, being worked on, finished, or failed. */
 export type TraceStatus = RailStatus;
-
-const defaultStatusLabels: Record<TraceStatus, string> = {
-  pending: "Steht aus",
-  running: "Läuft",
-  done: "Erledigt",
-  error: "Fehlgeschlagen",
-};
 
 /** What stands in front of a finished step: the system's disc, or the step's own symbol. */
 export type TraceMarks = "dots" | "symbols";
@@ -33,7 +28,7 @@ export type TraceMarks = "dots" | "symbols";
 type TraceContextValue = { labels: Record<TraceStatus, string>; marks: TraceMarks };
 
 const TraceContext = createContext<TraceContextValue>({
-  labels: defaultStatusLabels,
+  labels: de.trace.status,
   marks: "dots",
 });
 
@@ -66,9 +61,10 @@ export function Trace({ marks = "dots", statusLabels, className, ...props }: Tra
     const frame = requestAnimationFrame(() => setLive(true));
     return () => cancelAnimationFrame(frame);
   }, []);
+  const words = useLocale().messages.trace.status;
   const context = useMemo(
-    () => ({ labels: { ...defaultStatusLabels, ...statusLabels }, marks }),
-    [statusLabels, marks],
+    () => ({ labels: { ...words, ...statusLabels }, marks }),
+    [words, statusLabels, marks],
   );
   return (
     <TraceContext value={context}>

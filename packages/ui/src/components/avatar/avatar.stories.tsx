@@ -45,3 +45,17 @@ export const Sizes: Story = {
     </div>
   ),
 };
+
+/**
+ * With a `name` and nothing inside, the avatar shows the name's initials by the one rule
+ * (`initialsOf`): first and last word, one letter each.
+ */
+export const FromName: Story = {
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Avatar name="Maria Huber" />
+      <Avatar name="Cher" />
+      <Avatar name="Anna-Lena von der Heide" />
+    </div>
+  ),
+};

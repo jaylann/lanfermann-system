@@ -16,6 +16,7 @@ import { FieldDisabledContext } from "@/internal/field-context";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 const symbolSize = { sm: 14, md: 16, lg: 18 } as const;
 
@@ -60,7 +61,8 @@ export function SearchField({
   size = "md",
   shortcut,
   count,
-  clearLabel = "Suche leeren",
+  clearLabel,
+  disabled = false,
   className,
   ref,
   onKeyDown,
@@ -68,18 +70,20 @@ export function SearchField({
   onBlur,
   ...props
 }: SearchFieldProps) {
+  const { messages } = useLocale();
   const field = useRef<HTMLInputElement | null>(null);
   const [focused, setFocused] = useState(false);
   const typed = value !== "";
   // A field that cannot be used is not cleared by its cross either, and its keys stay the
   // page's (a swallowed ⌘F would open nothing at all).
-  const off = useContext(FieldDisabledContext) || props.disabled === true;
+  const off = useContext(FieldDisabledContext) || disabled;
   useShortcut(
     shortcut ?? "",
     () => {
       field.current?.focus();
       field.current?.select();
     },
+    // A disabled field cannot take the focus: its keys stay the browser's (⌘F finds on the page).
     { enabled: shortcut !== undefined && !focused && !off },
   );
   return (
@@ -116,6 +120,7 @@ export function SearchField({
         // The browser's own clearing cross and decorations: the field brings its own.
         className="[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
         {...props}
+        disabled={disabled}
       />
       {count !== undefined ? (
         // Typing does not wait: the count is there in the first frame and changes in place. It
@@ -138,6 +143,8 @@ export function SearchField({
             aria-hidden={typed ? true : undefined}
             className={cn(
               "col-start-1 row-start-1 flex pr-(--field-pad) transition-[opacity,scale] motion-reduce:scale-100",
+              // The keys stay as a hint of what will reach the field, set back with the rest.
+              off && "[&_kbd]:bg-transparent [&_kbd]:depth-flat [&_kbd]:text-on-disabled",
               typed ? "scale-92 opacity-0 spring-snap" : "scale-100 opacity-100 spring-seat",
             )}
           >
@@ -145,7 +152,7 @@ export function SearchField({
           </span>
         )}
         <InputGroupButton
-          aria-label={clearLabel}
+          aria-label={clearLabel ?? messages.searchField.clear}
           inert={!typed}
           disabled={off}
           onClick={() => {

@@ -21,9 +21,11 @@ describe("PriceTable by step", () => {
         ]}
       />,
     );
-    expect(html).toContain('<tr data-step="1" style="--step-at:1">');
-    expect(html).toMatch(/<div class="[^"]*border-t-2[^"]*" data-step="2" style="--step-at:2">/);
-    expect(html.match(/data-step=/g)).toHaveLength(2);
+    expect(html).toContain('<tr data-slides-at="1" style="--step-at:1">');
+    expect(html).toMatch(
+      /<div class="[^"]*border-t-2[^"]*" data-slides-at="2" style="--step-at:2">/,
+    );
+    expect(html.match(/data-slides-at=/g)).toHaveLength(2);
   });
 
   it("counts the highest step among positions and totals", () => {

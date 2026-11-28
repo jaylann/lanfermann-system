@@ -11,6 +11,7 @@ import {
 } from "@/internal/field";
 import { MinusGlyph, PlusGlyph } from "@/internal/glyphs";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type NumberFieldProps = NumberFieldPrimitive.Root.Props & {
   /** The size of the field, from the density. */
@@ -55,12 +56,14 @@ export function NumberField({ className, size = "md", children, ...props }: Numb
  * two steppers it is centred instead.
  */
 export function NumberFieldInput({ className, ...props }: NumberFieldPrimitive.Input.Props) {
+  const { messages } = useLocale();
   return (
     <NumberFieldPrimitive.Input
       data-slot="number-field-input"
       data-field-control=""
-      // What a screen reader says the field is. Base UI's own word is English ("Number field").
-      aria-roledescription="Zahlenfeld"
+      // What a screen reader says the field is, in the provider's language: Base UI's own word
+      // is always English ("Number field").
+      aria-roledescription={messages.numberField.role}
       className={mergeClassName(
         [
           bareControl,
@@ -95,10 +98,11 @@ export function NumberFieldDecrement({
   children,
   ...props
 }: NumberFieldPrimitive.Decrement.Props) {
+  const { messages } = useLocale();
   return (
     <NumberFieldPrimitive.Decrement
       data-slot="number-field-decrement"
-      aria-label="Verringern"
+      aria-label={messages.numberField.decrement}
       className={mergeClassName(stepper, className)}
       {...props}
     >
@@ -113,10 +117,11 @@ export function NumberFieldIncrement({
   children,
   ...props
 }: NumberFieldPrimitive.Increment.Props) {
+  const { messages } = useLocale();
   return (
     <NumberFieldPrimitive.Increment
       data-slot="number-field-increment"
-      aria-label="Erhöhen"
+      aria-label={messages.numberField.increment}
       className={mergeClassName(stepper, className)}
       {...props}
     >

@@ -43,11 +43,20 @@ export function useScrollEdges(
     // The box, and what it holds: the overflow changes when either changes its size.
     const observer = new ResizeObserver(schedule);
     observer.observe(scroller);
-    for (const child of scroller.children) observer.observe(child);
+    // Also what joins later (rows that load, a form that opens): observing a child twice does
+    // nothing, so every change of the list watches them all again.
+    const watch = () => {
+      for (const child of scroller.children) observer.observe(child);
+      schedule();
+    };
+    watch();
+    const joined = new MutationObserver(watch);
+    joined.observe(scroller, { childList: true });
     return () => {
       cancelAnimationFrame(frame);
       scroller.removeEventListener("scroll", schedule);
       observer.disconnect();
+      joined.disconnect();
     };
   }, [ref, axis, mounted]);
 }

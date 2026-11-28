@@ -36,3 +36,21 @@ export function selectContents(element: HTMLElement | null | undefined) {
   }
   window.getSelection()?.selectAllChildren(element);
 }
+
+/**
+ * Reads the text on the clipboard without making the browser ask: only where it already
+ * remembers that the page may (`clipboard-read` granted). Everywhere else, and where the browser
+ * cannot say, it resolves to `null`, so a page can offer "paste what was copied" as a
+ * convenience and never as a prompt.
+ */
+export async function readClipboard(): Promise<string | null> {
+  try {
+    const status = await navigator.permissions.query({
+      name: "clipboard-read" as PermissionName,
+    });
+    if (status.state !== "granted") return null;
+    return await navigator.clipboard.readText();
+  } catch {
+    return null;
+  }
+}

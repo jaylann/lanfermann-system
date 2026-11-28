@@ -9,6 +9,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 /** The five kinds of a GitHub alert (`> [!NOTE]` …), which is where most callouts come from. */
 export type CalloutTone = "note" | "tip" | "important" | "warning" | "caution";
@@ -16,7 +17,6 @@ export type CalloutTone = "note" | "tip" | "important" | "warning" | "caution";
 type ToneSpec = {
   icon: IconSvgElement;
   /** The word that opens it when no title is given. */
-  word: string;
   edge: string;
   title: string;
   iconColor: string;
@@ -26,35 +26,30 @@ type ToneSpec = {
 const tones: Record<CalloutTone, ToneSpec> = {
   note: {
     icon: InformationCircleIcon,
-    word: "Hinweis",
     edge: "border-line",
     title: "text-fg",
     iconColor: "text-fg-muted",
   },
   tip: {
     icon: Idea01Icon,
-    word: "Tipp",
     edge: "border-success",
     title: "text-success",
     iconColor: "text-success",
   },
   important: {
     icon: AlertDiamondIcon,
-    word: "Wichtig",
     edge: "border-accent",
     title: "text-fg",
     iconColor: "text-fg",
   },
   warning: {
     icon: Alert02Icon,
-    word: "Warnung",
     edge: "border-warning",
     title: "text-warning",
     iconColor: "text-warning",
   },
   caution: {
     icon: AlertCircleIcon,
-    word: "Vorsicht",
     edge: "border-danger",
     title: "text-danger",
     iconColor: "text-danger",
@@ -106,8 +101,12 @@ export function Callout({
         <Icon icon={icon ?? spec.icon} size={18} className={cn("shrink-0", spec.iconColor)} />
         {/* With a title of its own, the kind is left to the icon and the colour: said in words
             for assistive tech, as a `Banner` does. */}
-        {title !== undefined && <span className="sr-only">{spec.word}: </span>}
-        {title ?? spec.word}
+        {title !== undefined && (
+          <span className="sr-only">
+            <Localized ns="callout" name={tone} />:{" "}
+          </span>
+        )}
+        {title ?? <Localized ns="callout" name={tone} />}
       </p>
       <div data-slot="callout-body" className="flex flex-col gap-2 text-pretty">
         {children}

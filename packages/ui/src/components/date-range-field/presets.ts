@@ -10,15 +10,23 @@ export type DateRangePreset = {
   label: string;
   /** The range on a given day (an ISO date), both ends as ISO dates. */
   range: (today: string) => DateRange;
+  /**
+   * Set by `lastDays` when it was given no name of its own: how many days it looks back. The
+   * field then names the preset in its language („Letzte 28 Tage“, "Last 28 days") in place of
+   * `label`, which a helper without hooks can only say in German.
+   */
+  days?: number;
 };
 
 /**
  * The last `count` days, today included: `lastDays(7)` on 21 November is 15 to 21 November. The
- * range a dashboard looks back over, „Letzte 7 Tage“, 28 or 90.
+ * range a dashboard looks back over, „Letzte 7 Tage“, 28 or 90. Without a `label` the field
+ * names it in the language of its `LocaleProvider`; a `label` is said as it is.
  */
-export function lastDays(count: number, label = `Letzte ${count} Tage`): DateRangePreset {
+export function lastDays(count: number, label?: string): DateRangePreset {
   return {
-    label,
+    label: label ?? `Letzte ${count} Tage`,
+    ...(label === undefined ? { days: count } : null),
     range: (today) => {
       const end = parseIsoDate(today);
       if (!end) return { from: "", to: "" };

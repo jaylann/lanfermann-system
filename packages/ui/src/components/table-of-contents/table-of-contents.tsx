@@ -18,6 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/collapsible/collapsible";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type TocItem = {
   /** The id of the heading the entry leads to. */
@@ -171,12 +172,13 @@ const indent: Record<NonNullable<TocItem["depth"]>, string> = {
  */
 export function TableOfContents({
   items,
-  title = "Auf dieser Seite",
+  title,
   collapsible = false,
   current: controlled,
   className,
   ...props
 }: TableOfContentsProps) {
+  const { messages } = useLocale();
   const titleId = useId();
   const ids = useStableIds(items);
   // The window is read only when nobody else says where the reader is.
@@ -250,9 +252,15 @@ export function TableOfContents({
 
   if (collapsible) {
     return (
-      <nav data-slot="toc" data-collapsible="" aria-label={title} className={className} {...props}>
+      <nav
+        data-slot="toc"
+        data-collapsible=""
+        aria-label={title ?? messages.tableOfContents.title}
+        className={className}
+        {...props}
+      >
         <Collapsible>
-          <CollapsibleTrigger>{title}</CollapsibleTrigger>
+          <CollapsibleTrigger>{title ?? messages.tableOfContents.title}</CollapsibleTrigger>
           <CollapsiblePanel>
             <div className="pt-1 pb-2 pl-5">{entries}</div>
           </CollapsiblePanel>
@@ -264,7 +272,7 @@ export function TableOfContents({
   return (
     <nav data-slot="toc" aria-labelledby={titleId} className={className} {...props}>
       <p id={titleId} className="pb-3 text-sm font-semibold text-fg">
-        {title}
+        {title ?? messages.tableOfContents.title}
       </p>
       {entries}
     </nav>

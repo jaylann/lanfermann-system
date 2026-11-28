@@ -6,6 +6,7 @@ import { type CSSProperties, Fragment, useEffect, useRef, useState } from "react
 import { fieldFace } from "@/internal/field";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /**
  * In separate slots, how long a slot's own halo takes to open (`snap`), after which it hops
@@ -85,13 +86,14 @@ export function OtpField({
   variant = "joined",
   fill = false,
   mask = false,
-  slotLabel = (position, total) => `Ziffer ${position} von ${total}`,
+  slotLabel,
   className,
   onValueChange,
   onFocus,
   onBlur,
   ...props
 }: OtpFieldProps) {
+  const { messages } = useLocale();
   // Page load does not animate: a code that is there when the field first shows stands still.
   const live = useLive();
 
@@ -228,7 +230,9 @@ export function OtpField({
               <OTPFieldPrimitive.Input
                 key={index}
                 // The first slot takes the field's label; the others say where they stand.
-                aria-label={index === 0 ? undefined : slotLabel(index + 1, length)}
+                aria-label={
+                  index === 0 ? undefined : (slotLabel ?? messages.otpField.slot)(index + 1, length)
+                }
                 render={(inputProps, state) => (
                   <span
                     data-slot="otp-field-slot"

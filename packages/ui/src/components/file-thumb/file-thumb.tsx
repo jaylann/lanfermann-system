@@ -1,11 +1,15 @@
 import type { ComponentProps } from "react";
 
+import { mayBeTransparent } from "@/components/attachment/kinds";
 import {
   FileKindSymbol,
   type FileSymbolKind,
 } from "@/components/file-kind-symbol/file-kind-symbol";
+import { Skeleton } from "@/components/skeleton/skeleton";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+
+import { FileThumbPicture } from "./file-thumb-picture";
 
 /**
  * When the mark takes the picture's place: under the pointer, with the keyboard on the row, while
@@ -22,6 +26,19 @@ export type FileThumbProps = Omit<ComponentProps<"span">, "children"> & {
   kind: FileSymbolKind;
   /** The picture, small: an image's own address. Without it the kind's symbol stands. */
   src?: string;
+  /**
+   * The file's name and MIME type. With either, a picture in a format that may be see-through
+   * (PNG, WebP, SVG, GIF, AVIF) lies on the quiet checker, so a dark mark does not vanish on a
+   * dark well; a JPEG gets none.
+   */
+  name?: string;
+  type?: string;
+  /**
+   * `contain` (the default): the whole picture inside the square, so a logo or a mark keeps its
+   * edges; a see-through one lies on the checker across the whole square. `cover`: the picture
+   * fills the square, cropped where it must be, for a list of photos.
+   */
+  fit?: "cover" | "contain";
 };
 
 /**
@@ -33,9 +50,20 @@ export type FileThumbProps = Omit<ComponentProps<"span">, "children"> & {
  * the accent plug and its drawn tick when the row is chosen; it fades in on `snap` and seats on
  * `seat`.
  *
- * Server-safe.
+ * A picture that does not load gives way to the kind's symbol. Server-safe (the picture is a
+ * small client part of its own).
  */
-export function FileThumb({ kind, src, className, ...props }: FileThumbProps) {
+export function FileThumb({
+  kind,
+  src,
+  name,
+  type,
+  fit = "contain",
+  className,
+  ...props
+}: FileThumbProps) {
+  const seeThrough =
+    (name !== undefined || type !== undefined) && mayBeTransparent({ name: name ?? "", type });
   return (
     <span
       data-slot="file-thumb"
@@ -53,13 +81,7 @@ export function FileThumb({ kind, src, className, ...props }: FileThumbProps) {
         )}
       >
         {src ? (
-          <img
-            src={src}
-            alt=""
-            loading="lazy"
-            draggable={false}
-            className="size-full object-cover"
-          />
+          <FileThumbPicture src={src} kind={kind} seeThrough={seeThrough} fit={fit} />
         ) : (
           <FileKindSymbol kind={kind} size={16} className="text-fg-muted" />
         )}
@@ -81,5 +103,20 @@ export function FileThumb({ kind, src, className, ...props }: FileThumbProps) {
         <TickGlyph className="opacity-0 transition-[stroke-dashoffset,opacity] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] in-data-selected:opacity-100 in-data-selected:[stroke-dashoffset:0]" />
       </span>
     </span>
+  );
+}
+
+/**
+ * The shape of a `FileThumb` in a row that is still loading: the same square with the same
+ * corners. Put a `Skeleton` line for the name beside it, inside a `SkeletonGroup`.
+ */
+export function FileThumbSkeleton({ className, ...props }: ComponentProps<"span">) {
+  return (
+    <Skeleton
+      shape="block"
+      data-slot="file-thumb-skeleton"
+      className={cn("size-8 shrink-0 rounded-sm", className)}
+      {...props}
+    />
   );
 }

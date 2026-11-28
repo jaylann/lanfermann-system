@@ -1,18 +1,28 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  exampleDate,
+  exampleMoment,
+  exampleRange,
+  exampleTimedRange,
+  formatDate,
   formatGermanDate,
   formatGermanMoment,
   formatGermanRange,
+  formatMoment,
+  formatRange,
   formatTime,
   isIsoTime,
   outsideLimits,
+  parseDate,
   parseGermanDate,
   parseGermanMoment,
   parseGermanRange,
   parseGermanTime,
   parseIsoDate,
   parseIsoInterval,
+  parseMoment,
+  parseRange,
   shiftIsoTime,
   splitIsoMoment,
   timeMatches,
@@ -353,5 +363,274 @@ describe("times with AM and PM", () => {
     const oneDay = parseGermanRange("14.11. 9 am – 5 pm", TODAY)!;
     expect(oneDay.from).toEqual({ date: "2026-11-14", time: "09:00" });
     expect(oneDay.to).toEqual({ date: "2026-11-14", time: "17:00" });
+  });
+});
+
+// --- English --------------------------------------------------------------------------------------
+
+const NOW = new Date(2026, 10, 14);
+
+const american = (text: string, today = NOW) => {
+  const date = parseDate(text, "en", today);
+  return date ? toIsoDate(date) : undefined;
+};
+
+describe("typed American dates", () => {
+  it.each([
+    ["11/30/2026", "2026-11-30"],
+    ["11/30/26", "2026-11-30"],
+    ["2/1/2026", "2026-02-01"],
+    ["02/01/2026", "2026-02-01"],
+    ["1/2/26", "2026-01-02"],
+    ["11/30", "2026-11-30"],
+    ["2/1", "2026-02-01"],
+    ["11-30-2026", "2026-11-30"],
+    ["11-30-26", "2026-11-30"],
+    ["2-1-2026", "2026-02-01"],
+    ["11302026", "2026-11-30"],
+    ["113026", "2026-11-30"],
+    ["2026-11-30", "2026-11-30"],
+    ["  11/30/2026  ", "2026-11-30"],
+  ])("reads %s", (text, expected) => {
+    expect(american(text)).toBe(expected);
+  });
+
+  it("takes this year for a date without one", () => {
+    expect(american("3/5", new Date(2031, 0, 1))).toBe("2031-03-05");
+  });
+
+  it("reads the month first, also where a day would fit", () => {
+    expect(american("5/6/2026")).toBe("2026-05-06");
+    expect(american("05062026")).toBe("2026-05-06");
+  });
+
+  it.each([
+    // The German way, in any of its forms: never turned round, never guessed.
+    "30.11.2026",
+    "30.11.",
+    "05.06.2026",
+    "11.30.2026",
+    // A day first has no thirtieth month.
+    "30/11/2026",
+    "30-11-2026",
+    "30112026",
+    // Days that do not exist.
+    "2/30/2026",
+    "13/1/2026",
+    "0/5/2026",
+    // A hyphen between two numbers alone is a range's, not a date's.
+    "11-30",
+    // Half a date, a year alone, words.
+    "11/",
+    "11/30/",
+    "11/30/202",
+    "11/30 2026",
+    "2026",
+    "tomorrow",
+    "",
+  ])("does not read %j", (text) => {
+    expect(american(text)).toBeUndefined();
+  });
+
+  it("writes MM/DD/YYYY", () => {
+    expect(formatDate(new Date(2026, 10, 30), "en")).toBe("11/30/2026");
+    expect(formatDate(new Date(2026, 1, 1), "en")).toBe("02/01/2026");
+  });
+
+  it("reads back what it writes", () => {
+    const day = new Date(2027, 2, 9);
+    expect(american(formatDate(day, "en"))).toBe("2027-03-09");
+  });
+});
+
+describe("an American date with a time", () => {
+  const moment = (text: string) => parseMoment(text, "en", NOW);
+
+  it.each([
+    ["11/30/2026, 9:30", { date: "2026-11-30", time: "09:30" }],
+    ["11/30/2026 9:30", { date: "2026-11-30", time: "09:30" }],
+    ["11/30/2026 at 9:30", { date: "2026-11-30", time: "09:30" }],
+    ["11/30/2026 at 9:30 PM", { date: "2026-11-30", time: "21:30" }],
+    ["11/30/2026 9:30 pm", { date: "2026-11-30", time: "21:30" }],
+    ["11/30 9 am", { date: "2026-11-30", time: "09:00" }],
+    ["11/30, 9p", { date: "2026-11-30", time: "21:00" }],
+    ["11/30 0930", { date: "2026-11-30", time: "09:30" }],
+    ["11-30-2026 14:00", { date: "2026-11-30", time: "14:00" }],
+    ["11/30/2026", { date: "2026-11-30", time: "" }],
+    ["2026-11-30T09:30", { date: "2026-11-30", time: "09:30" }],
+  ])("reads %s", (text, expected) => {
+    expect(moment(text)).toEqual(expected);
+  });
+
+  it.each(["30.11.2026, 9:30", "30.11.2026 um 9:30", "11/30/2026 at", "11/30/2026, 25:00"])(
+    "does not read %j",
+    (text) => {
+      expect(moment(text)).toBeUndefined();
+    },
+  );
+
+  it("writes the date the American way and the time on the clock it is given", () => {
+    expect(formatMoment("2026-11-30T16:30", "en")).toBe("11/30/2026, 16:30");
+    expect(formatMoment("2026-11-30T16:30", "en", 12)).toBe("11/30/2026, 4:30 PM");
+    expect(formatMoment("2026-11-30", "en")).toBe("11/30/2026");
+    expect(formatMoment("nothing", "en")).toBe("");
+  });
+});
+
+describe("typed American ranges", () => {
+  const range = (text: string) => {
+    const read = parseRange(text, "en", NOW);
+    return read && [read.from, read.to].map((end) => end.date + (end.time && `T${end.time}`));
+  };
+
+  it.each([
+    ["11/14/2026 – 11/30/2026", ["2026-11-14", "2026-11-30"]],
+    ["11/14/2026 - 11/30/2026", ["2026-11-14", "2026-11-30"]],
+    ["11/14/2026-11/30/2026", ["2026-11-14", "2026-11-30"]],
+    ["11/14/2026 to 11/30/2026", ["2026-11-14", "2026-11-30"]],
+    ["11/14/2026 — 11/30/2026", ["2026-11-14", "2026-11-30"]],
+    ["11/14 – 11/30/2026", ["2026-11-14", "2026-11-30"]],
+    ["11/14-11/30", ["2026-11-14", "2026-11-30"]],
+    ["11/14 to 11/30", ["2026-11-14", "2026-11-30"]],
+    ["11-14-2026 - 11-30-2026", ["2026-11-14", "2026-11-30"]],
+    ["11-14-2026 to 11-30-2026", ["2026-11-14", "2026-11-30"]],
+    ["2026-11-14 - 2026-11-30", ["2026-11-14", "2026-11-30"]],
+    // A start without a year lies before its end.
+    ["12/28 – 1/3/2027", ["2026-12-28", "2027-01-03"]],
+    // Typed the wrong way round, the two change places.
+    ["11/30/2026 – 11/14/2026", ["2026-11-14", "2026-11-30"]],
+    ["11/14, 9:00 – 11/16, 17:00", ["2026-11-14T09:00", "2026-11-16T17:00"]],
+    ["11/14/2026 9 am to 11/16/2026 5 pm", ["2026-11-14T09:00", "2026-11-16T17:00"]],
+    ["11/14 9 am – 5 pm", ["2026-11-14T09:00", "2026-11-14T17:00"]],
+    ["11/14/2026 9-17", ["2026-11-14T09:00", "2026-11-14T17:00"]],
+  ])("reads %s", (text, expected) => {
+    expect(range(text)).toEqual(expected);
+  });
+
+  it.each([
+    // German ranges and German words.
+    "14.11. – 30.11.2026",
+    "14.–30.11.2026",
+    "11/14/2026 bis 11/30/2026",
+    // A day alone does not take its month from the end.
+    "14 – 11/30/2026",
+    // One date is not a range, however it is written.
+    "11/30/2026",
+    "11-30-2026",
+    "11-30-26",
+    "2026-11-30",
+    "11/14 –",
+    "– 11/30",
+  ])("does not read %j", (text) => {
+    expect(range(text)).toBeUndefined();
+  });
+
+  it("writes both ends the American way", () => {
+    expect(formatRange({ from: "2026-11-14", to: "2026-11-30" }, "en")).toBe(
+      "11/14/2026 – 11/30/2026",
+    );
+    expect(formatRange({ from: "2026-11-14T09:00", to: "2026-11-16T17:00" }, "en", 12)).toBe(
+      "11/14/2026, 9:00 AM – 11/16/2026, 5:00 PM",
+    );
+    expect(formatRange({ from: "", to: "" }, "en")).toBe("");
+  });
+
+  it("reads back what it writes", () => {
+    const written = formatRange({ from: "2026-11-14T09:00", to: "2026-11-16T17:00" }, "en", 12);
+    expect(range(written)).toEqual(["2026-11-14T09:00", "2026-11-16T17:00"]);
+  });
+});
+
+describe("the limits in English", () => {
+  const words = {
+    between: (min: string, max: string) => `between ${min} and ${max}`,
+    from: (min: string) => `from ${min}`,
+    until: (max: string) => `until ${max}`,
+  };
+
+  it("writes the days the way the English field reads them", () => {
+    expect(outsideLimits("2026-12-01", "2026-11-01", "2026-11-30", words, "en")).toBe(
+      "between 11/01/2026 and 11/30/2026",
+    );
+    expect(outsideLimits("2026-10-01", "2026-11-01", undefined, words, "en")).toBe(
+      "from 11/01/2026",
+    );
+    expect(outsideLimits("2026-12-01", undefined, "2026-11-30", words, "en")).toBe(
+      "until 11/30/2026",
+    );
+    expect(outsideLimits("2026-11-14", "2026-11-01", "2026-11-30", words, "en")).toBeUndefined();
+  });
+
+  it("keeps them German where no language is named", () => {
+    expect(outsideLimits("2026-12-01", "2026-11-01", "2026-11-30", words)).toBe(
+      "between 01.11.2026 and 30.11.2026",
+    );
+  });
+});
+
+describe("the examples a field shows", () => {
+  it("are the German ones the fields have always shown", () => {
+    expect(exampleDate("de")).toBe("30.11.2026");
+    expect(exampleMoment("de")).toBe("30.11.2026, 09:30");
+    expect(exampleMoment("de", 12)).toBe("30.11.2026, 9:30 AM");
+    expect(exampleRange("de")).toBe("14.11. – 30.11.2026");
+    expect(exampleTimedRange("de")).toBe("14.11., 09:00 – 16.11., 17:00");
+    expect(exampleTimedRange("de", 12)).toBe("14.11., 9:00 AM – 16.11., 5:00 PM");
+  });
+
+  it("are American in English", () => {
+    expect(exampleDate("en")).toBe("11/30/2026");
+    expect(exampleMoment("en")).toBe("11/30/2026, 09:30");
+    expect(exampleMoment("en", 12)).toBe("11/30/2026, 9:30 AM");
+    expect(exampleRange("en")).toBe("11/14 – 11/30/2026");
+    expect(exampleTimedRange("en")).toBe("11/14, 09:00 – 11/16, 17:00");
+    expect(exampleTimedRange("en", 12)).toBe("11/14, 9:00 AM – 11/16, 5:00 PM");
+  });
+
+  it.each(["de", "en"] as const)("are read by the field that shows them (%s)", (locale) => {
+    const day = parseDate(exampleDate(locale), locale, NOW);
+    expect(day && toIsoDate(day)).toBe("2026-11-30");
+    for (const hourCycle of [12, 24] as const) {
+      expect(parseMoment(exampleMoment(locale, hourCycle), locale, NOW)).toEqual({
+        date: "2026-11-30",
+        time: "09:30",
+      });
+      expect(parseRange(exampleTimedRange(locale, hourCycle), locale, NOW)).toEqual({
+        from: { date: "2026-11-14", time: "09:00" },
+        to: { date: "2026-11-16", time: "17:00" },
+      });
+    }
+    expect(parseRange(exampleRange(locale), locale, NOW)).toEqual({
+      from: { date: "2026-11-14", time: "" },
+      to: { date: "2026-11-30", time: "" },
+    });
+  });
+
+  it("are not read by the field of the other language", () => {
+    expect(parseDate(exampleDate("de"), "en", NOW)).toBeUndefined();
+    expect(parseDate(exampleDate("en"), "de", NOW)).toBeUndefined();
+    expect(parseRange(exampleRange("de"), "en", NOW)).toBeUndefined();
+    expect(parseRange(exampleRange("en"), "de", NOW)).toBeUndefined();
+  });
+});
+
+describe("the German readers beside the English ones", () => {
+  it("are the readers of `de`, form for form", () => {
+    for (const text of ["14.11.2026", "14.11.", "141126", "1.2.26", "11/30/2026", "nichts"]) {
+      expect(parseDate(text, "de", NOW)).toEqual(parseGermanDate(text, NOW));
+      expect(parseMoment(`${text} 9 Uhr`, "de", NOW)).toEqual(
+        parseGermanMoment(`${text} 9 Uhr`, NOW),
+      );
+      expect(parseRange(`14. – ${text}`, "de", NOW)).toEqual(
+        parseGermanRange(`14. – ${text}`, NOW),
+      );
+    }
+  });
+
+  it("do not read an American date", () => {
+    expect(parseGermanDate("11/30/2026", NOW)).toBeUndefined();
+    expect(parseGermanDate("11-30-2026", NOW)).toBeUndefined();
+    expect(parseGermanMoment("11/30/2026 at 9:30", NOW)).toBeUndefined();
+    expect(parseGermanRange("11/14 to 11/30", NOW)).toBeUndefined();
   });
 });

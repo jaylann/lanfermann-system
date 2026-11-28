@@ -81,10 +81,10 @@ export function CodeBlockLive({
   title,
   icon = FileCodeIcon,
   mark,
-  label = "Code",
+  label,
   prompt = false,
   fold,
-  foldLabel = (hidden) => `${hidden} weitere Zeilen`,
+  foldLabel,
   className,
   lineNumbers,
   marked,
@@ -120,7 +120,7 @@ export function CodeBlockLive({
       prompt={prompt && lines.length === 1 && !title}
       label={label}
       fold={fold}
-      foldLabel={fold === undefined ? undefined : foldLabel(lines.length - fold)}
+      foldLabel={fold === undefined ? undefined : foldLabel?.(lines.length - fold)}
       className={className}
       fileName={codeFileName(title)}
       wrap={wrap}

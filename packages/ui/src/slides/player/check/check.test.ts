@@ -8,6 +8,7 @@ import {
   CONTENT,
   cutsOff,
   lineBox,
+  markedSteps,
   stepIssue,
   toCanvas,
   union,
@@ -122,6 +123,29 @@ describe("the boxes of a slide", () => {
 });
 
 describe("the steps a slide's parts ask for", () => {
+  /** A box of the page that answers `[name]` selectors from a list of elements' attributes. */
+  const boxOf = (elements: readonly Record<string, string>[]) => ({
+    querySelectorAll(selector: string) {
+      const name = /^\[([a-z-]+)\]$/.exec(selector)?.[1];
+      if (name === undefined) throw new Error(`not a selector this box answers: ${selector}`);
+      return elements
+        .filter((attributes) => name in attributes)
+        .map((attributes) => ({ getAttribute: (asked: string) => attributes[asked] ?? null }));
+    },
+  });
+
+  it("reads the kit's own mark from the page, and not a deck's data-step", () => {
+    const box = boxOf([
+      { "data-slides-at": "1" },
+      { "data-step": "3" },
+      { "data-slides-at": "2", "data-step": "7" },
+    ]);
+    expect(markedSteps(box)).toEqual([1, 2]);
+    // A slide of two steps with a `data-step="3"` of the deck's own: nothing to report.
+    expect(stepIssue(markedSteps(box), 2)).toBeUndefined();
+    expect(markedSteps(boxOf([{ "data-step": "3" }]))).toEqual([]);
+  });
+
   it("lets parts pass that ask for no more steps than the slide has", () => {
     expect(stepIssue([], 0)).toBeUndefined();
     expect(stepIssue([1, 2, 2], 2)).toBeUndefined();

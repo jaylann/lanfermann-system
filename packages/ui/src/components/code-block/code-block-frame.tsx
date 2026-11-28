@@ -6,6 +6,7 @@ import { Button } from "@/components/button/button";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { CodeCopy } from "./code-copy";
 import { type CodeKeyOptions, CodeKeys } from "./code-keys";
@@ -31,8 +32,8 @@ type CodeBlockFrameProps = CodeKeyOptions & {
   mark?: ReactNode;
   /** A shell one-liner without a title: one row, a prompt before the command. */
   prompt: boolean;
-  /** The region's name when there is no title. */
-  label: string;
+  /** The region's name when there is no title. The table's word without it. */
+  label?: string;
   fold?: number;
   foldLabel?: string;
   className?: string;
@@ -57,12 +58,14 @@ export function CodeBlockFrame({
   icon,
   mark,
   prompt,
-  label,
+  label: labelProp,
   fold,
   foldLabel,
   className,
   ...keyOptions
 }: CodeBlockFrameProps) {
+  const { messages } = useLocale();
+  const label = labelProp ?? messages.codeBlock.label;
   const codeRef = useRef<HTMLPreElement>(null);
   const [wrapped, setWrapped] = useState(wrap);
   const copy = <CodeCopy text={copyText} codeRef={codeRef} {...keyOptions} />;
@@ -149,6 +152,7 @@ function CodeFold({
   label?: string;
   children: ReactNode;
 }) {
+  const { messages } = useLocale();
   const folds = fold !== undefined && lineCount > fold + 1;
   const [open, setOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -218,7 +222,7 @@ function CodeFold({
           onClick={() => setOpen((value) => !value)}
           className="text-fg-muted hover:text-fg"
         >
-          {label ?? `${lineCount - (fold ?? 0)} weitere Zeilen`}
+          {label ?? messages.codeBlock.fold(lineCount - (fold ?? 0))}
           <ChevronDownGlyph
             className={cn(
               "transition-[rotate] spring-seat motion-reduce:transition-none",

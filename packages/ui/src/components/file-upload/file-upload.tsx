@@ -23,6 +23,7 @@ import { CloseGlyph } from "@/internal/glyphs";
 import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 import {
   type FileRejection,
@@ -165,10 +166,10 @@ export type FileUploadZoneProps = Omit<ComponentProps<"div">, "title"> & {
  * There is no dashed border. Its button opens the system's file dialog.
  */
 export function FileUploadZone({
-  title = "Dateien hierher ziehen",
-  dropTitle = "Loslassen, um sie hinzuzufügen",
+  title,
+  dropTitle,
   description,
-  buttonLabel = "Dateien auswählen",
+  buttonLabel,
   variant = "tile",
   icon = Upload04Icon,
   className,
@@ -179,6 +180,7 @@ export function FileUploadZone({
   onPaste,
   ...props
 }: FileUploadZoneProps) {
+  const { messages } = useLocale();
   const { open, add, disabled } = useContext(FileUploadContext);
   // Entering a child fires a leave on the zone and an enter on the child: counted, the zone
   // knows when the file has really left it.
@@ -243,7 +245,13 @@ export function FileUploadZone({
         data-slot="file-upload-title"
         className="text-control font-medium text-fg group-data-disabled/zone:text-on-disabled"
       >
-        {over ? dropTitle : title}
+        {over
+          ? dropTitle === undefined
+            ? messages.fileUpload.dropTitle
+            : dropTitle
+          : title === undefined
+            ? messages.fileUpload.title
+            : title}
       </p>
       {description !== undefined && (
         <p
@@ -254,7 +262,7 @@ export function FileUploadZone({
         </p>
       )}
       <Button size="sm" disabled={disabled} onClick={open} className="mt-3">
-        {buttonLabel}
+        {buttonLabel === undefined ? messages.fileUpload.button : buttonLabel}
       </Button>
     </div>
   );
@@ -335,13 +343,6 @@ export function FileUploadList({ className, children, ref, ...props }: FileUploa
 /** Where a file stands: not begun, on its way, arrived, or failed. */
 export type FileUploadStatus = "waiting" | "uploading" | "done" | "error";
 
-const statusWords: Record<FileUploadStatus, string> = {
-  waiting: "Wartet",
-  uploading: "Wird hochgeladen",
-  done: "Hochgeladen",
-  error: "Fehlgeschlagen",
-};
-
 export type FileUploadItemProps = Omit<ComponentProps<"div">, "children"> & {
   /** The file's name, with its ending. */
   name: string;
@@ -419,13 +420,14 @@ export function FileUploadItem({
   error,
   onRetry,
   onRemove,
-  retryLabel = "Noch einmal versuchen",
-  removeLabel = "entfernen",
+  retryLabel,
+  removeLabel,
   statusLabels,
-  locale = "de-DE",
+  locale,
   className,
   ...props
 }: FileUploadItemProps) {
+  const { messages, tag } = useLocale();
   const fraction = Math.min(1, Math.max(0, progress ?? 0));
   const failed = status === "error";
   // What a failure said, kept while its line folds away after the file is tried again.
@@ -471,7 +473,9 @@ export function FileUploadItem({
             aria-atomic
             className="min-w-0 truncate text-fg"
           >
-            <span className="sr-only">{statusLabels?.[status] ?? statusWords[status]}: </span>
+            <span className="sr-only">
+              {statusLabels?.[status] ?? messages.fileUpload.status[status]}:{" "}
+            </span>
             {name}
           </span>
           <span
@@ -479,8 +483,8 @@ export function FileUploadItem({
             className="ml-auto shrink-0 text-sm whitespace-nowrap text-fg-muted tabular-nums"
           >
             {status === "uploading" && progress !== undefined
-              ? formatFileProgress(fraction * size, size, locale)
-              : formatFileSize(size, locale)}
+              ? formatFileProgress(fraction * size, size, locale ?? tag, messages.fileUpload.of)
+              : formatFileSize(size, locale ?? tag)}
           </span>
         </div>
         {/* The bar's row is open only while the file is on its way: it unfolds when the upload
@@ -538,7 +542,7 @@ export function FileUploadItem({
                     onClick={onRetry}
                     className="touch-target relative rounded-xs font-medium text-fg underline decoration-1 underline-offset-[0.25em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
-                    {retryLabel}
+                    {retryLabel === undefined ? messages.fileUpload.retry : retryLabel}
                   </button>
                 )}
               </div>
@@ -551,7 +555,9 @@ export function FileUploadItem({
           iconOnly
           size="sm"
           variant="quiet"
-          aria-label={`${name} ${removeLabel}`}
+          aria-label={
+            removeLabel === undefined ? messages.fileUpload.remove(name) : `${name} ${removeLabel}`
+          }
           data-slot="file-upload-remove"
           onClick={(event) => {
             // The key is about to go: hand the focus to the row beside this one.

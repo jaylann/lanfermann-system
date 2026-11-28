@@ -8,6 +8,7 @@ import { RollingNumber } from "@/components/rolling-number/rolling-number";
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type ActionBarProps = Omit<ComponentProps<"div">, "children"> & {
   /** There is a selection: the bar shows. */
@@ -67,10 +68,10 @@ const places = {
 export function ActionBar({
   open,
   count,
-  countLabel = () => "ausgewählt",
+  countLabel,
   onClear,
-  clearLabel = "Auswahl aufheben",
-  "aria-label": label = "Auswahl",
+  clearLabel,
+  "aria-label": label,
   position = "fixed",
   ground = "ink",
   className,
@@ -79,6 +80,7 @@ export function ActionBar({
   onKeyDown,
   ...props
 }: ActionBarProps) {
+  const { messages } = useLocale();
   // While it leaves it still says how many there were, not "0". And each time it arrives it
   // brings a count of its own (`key`): a number that is not seen yet has nothing to roll from.
   const [last, setLast] = useState(count);
@@ -113,7 +115,7 @@ export function ActionBar({
         data-slot="action-bar"
         data-theme={ground}
         data-open={open ? "" : undefined}
-        aria-label={label}
+        aria-label={label ?? messages.actionBar.label}
         // Unseen, it is out of reach of the keyboard and of assistive tech as well.
         inert={!open}
         // The caller's own handlers run beside the bar's, never in their place.
@@ -142,7 +144,9 @@ export function ActionBar({
           className="flex shrink-0 items-center gap-1.5 pr-2 font-medium whitespace-nowrap"
         >
           <RollingNumber key={arrivals} value={open ? count : last} />
-          <span className="text-fg-body">{countLabel(open ? count : last)}</span>
+          <span className="text-fg-body">
+            {countLabel ? countLabel(open ? count : last) : messages.actionBar.count}
+          </span>
         </p>
         <ToolbarPrimitive.Separator
           data-slot="action-bar-separator"
@@ -165,7 +169,7 @@ export function ActionBar({
               iconOnly
               size="sm"
               variant="quiet"
-              aria-label={clearLabel}
+              aria-label={clearLabel ?? messages.actionBar.clear}
               className="ml-1 shrink-0 text-fg-muted"
             />
           }

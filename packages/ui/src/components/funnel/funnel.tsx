@@ -1,8 +1,9 @@
 import type { ComponentProps, CSSProperties } from "react";
 
-import { chartFormat } from "@/internal/chart/format";
+import { chartFormat, shareOptions } from "@/internal/chart/format";
 import { fillStyle, troughFill } from "@/internal/trough";
 import { cn } from "@/lib/cn";
+import { Localized, LocalizedNumber } from "@/locale/localized";
 
 export type FunnelStep = {
   /** What happens at the step: „Angebot gesendet“. */
@@ -18,6 +19,10 @@ export type FunnelProps = Omit<ComponentProps<"ol">, "children"> & {
   data: readonly FunnelStep[];
   /** How the counts are written, as `Intl.NumberFormat` options. */
   format?: Intl.NumberFormatOptions;
+  /**
+   * The locale the counts are written with. Left out, it is the one of the nearest
+   * `LocaleProvider` (`de-DE` without one).
+   */
   locale?: string;
   /**
    * What each step's rate is measured against: the step before (`previous`, the default: where
@@ -44,15 +49,17 @@ export type FunnelProps = Omit<ComponentProps<"ol">, "children"> & {
 export function Funnel({
   data,
   format,
-  locale = "de-DE",
+  locale,
   rate = "previous",
-  rateLabels = { previous: "vom Schritt davor", first: "vom ersten Schritt" },
+  rateLabels,
   tone = "neutral",
   drawIn = true,
   className,
   ...props
 }: FunnelProps) {
-  const numbers = chartFormat(locale, format);
+  // With a locale of its own the figures are written here; without one a client leaf writes
+  // them in the provider's, which this server-safe file cannot read.
+  const numbers = locale === undefined ? null : chartFormat(locale, format);
   // What a step counts on the scale: nothing where it is below zero or no number (`NaN`).
   const amount = (step: FunnelStep | undefined) =>
     step && Number.isFinite(step.value) ? Math.max(0, step.value) : 0;
@@ -92,13 +99,29 @@ export function Funnel({
           >
             <span className="min-w-0 truncate text-fg-body">{step.name}</span>
             <span className="text-right whitespace-nowrap text-fg tabular-nums">
-              {numbers.value(step.value)}
+              {numbers ? (
+                numbers.value(step.value)
+              ) : (
+                <LocalizedNumber value={step.value} options={format} />
+              )}
             </span>
             <span className="w-[4ch] text-right whitespace-nowrap text-fg-muted tabular-nums">
               {kept !== null && index > 0 ? (
                 <>
-                  {numbers.share(kept)}
-                  <span className="sr-only"> {rateLabels[rate]}</span>
+                  {numbers ? (
+                    numbers.share(kept)
+                  ) : (
+                    <LocalizedNumber value={kept} options={shareOptions} />
+                  )}
+                  <span className="sr-only">
+                    {" "}
+                    {rateLabels?.[rate] ?? (
+                      <Localized
+                        ns="charts"
+                        name={rate === "first" ? "rateFirst" : "ratePrevious"}
+                      />
+                    )}
+                  </span>
                 </>
               ) : null}
             </span>

@@ -203,8 +203,11 @@ export function mayBeTransparent({ name, type = "" }: { name: string; type?: str
 }
 
 /** The word under a file's name: its extension as it is written (`PDF`), or its kind's word. */
-export function typeWord(file: { name: string; type?: string }): string {
+export function typeWord(
+  file: { name: string; type?: string },
+  words: Record<FileKind, string> = kindWords,
+): string {
   const extension = extensionOf(file.name);
   if (extension && extension.length <= 5) return extension.toUpperCase();
-  return kindWords[kindOf(file)];
+  return words[kindOf(file)];
 }

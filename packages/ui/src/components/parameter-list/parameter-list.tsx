@@ -2,6 +2,7 @@ import { type ComponentProps, Fragment, type ReactNode } from "react";
 
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 /**
  * What a function, a command or a tool takes: one row per parameter, its name and type on the
@@ -69,9 +70,9 @@ export function Parameter({
   type,
   required,
   defaultValue,
-  requiredLabel = "erforderlich",
-  optionalLabel = "optional",
-  defaultLabel = "Standard:",
+  requiredLabel,
+  optionalLabel,
+  defaultLabel,
   className,
   children,
   ...props
@@ -102,7 +103,9 @@ export function Parameter({
               data-required={required ? "" : undefined}
               className="text-sm text-fg-muted data-required:font-medium data-required:text-fg"
             >
-              {required ? requiredLabel : optionalLabel}
+              {required
+                ? (requiredLabel ?? <Localized ns="parameterList" name="required" />)
+                : (optionalLabel ?? <Localized ns="parameterList" name="optional" />)}
             </span>
           ) : null}
         </span>
@@ -112,7 +115,8 @@ export function Parameter({
         {children}
         {defaultValue !== undefined ? (
           <span data-slot="parameter-default" className="text-sm text-fg-muted">
-            {defaultLabel} <span className="text-fg-body">{defaultValue}</span>
+            {defaultLabel ?? <Localized ns="parameterList" name="default" />}{" "}
+            <span className="text-fg-body">{defaultValue}</span>
           </span>
         ) : null}
       </dd>

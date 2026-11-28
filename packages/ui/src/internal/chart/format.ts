@@ -28,6 +28,12 @@ export function axisOptions(options: Intl.NumberFormatOptions = {}): Intl.Number
   };
 }
 
+/** How a share of a whole is written: „38 %“. */
+export const shareOptions: Intl.NumberFormatOptions = {
+  style: "percent",
+  maximumFractionDigits: 0,
+};
+
 const cache = new Map<string, ChartFormat>();
 
 export function chartFormat(
@@ -39,7 +45,7 @@ export function chartFormat(
   if (found) return found;
   const full = numberFormat(locale, options);
   const compact = numberFormat(locale, axisOptions(options));
-  const percent = numberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
+  const percent = numberFormat(locale, shareOptions);
   const format: ChartFormat = {
     value: (value) => full.format(value),
     axis: (value) => compact.format(value),

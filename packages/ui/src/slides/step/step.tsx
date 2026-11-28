@@ -16,7 +16,7 @@ export type StepProps = {
 };
 
 /** A plain element that can carry the step itself: a tag name, not a component. */
-type Markable = { style?: CSSProperties; "data-step"?: number };
+type Markable = { style?: CSSProperties; "data-slides-at"?: number };
 
 /**
  * Marks a block of a slide to appear at a step, when the presenter clicks.
@@ -38,9 +38,9 @@ type Markable = { style?: CSSProperties; "data-step"?: number };
 export function Step({ at, children }: StepProps) {
   const step = stepAttributes(at);
   if (isValidElement<Markable>(children) && typeof children.type === "string") {
-    if (step["data-step"] === undefined) return children;
+    if (step["data-slides-at"] === undefined) return children;
     return cloneElement(children, {
-      "data-step": step["data-step"],
+      "data-slides-at": step["data-slides-at"],
       style: { ...children.props.style, ...step.style },
     });
   }

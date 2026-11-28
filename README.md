@@ -241,6 +241,31 @@ with `fonts/`), `classes.json` (the class names `player.css` defines: what a dec
 address picks another mode if `modes` allows it; by default that is every mode but the presenter's.
 The file runs from disk without a network.
 
+### Language
+
+Every component says its own words in German and formats numbers and dates with `de-DE`. A
+`LocaleProvider` around the app switches both to English (`en-US`):
+
+```tsx
+import { LocaleProvider } from "@lanfermann/ui";
+
+<LocaleProvider locale="en">{children}</LocaleProvider>;
+```
+
+A label or a `locale` passed to a component still wins. Server-safe parts (`Stat`, `Steps`,
+`Callout`, `Link` and the like) follow the provider too, for the words they render as text, for
+their default names (`Chip`'s remove key, the `Breadcrumbs` and `Pager` landmarks, the link of an
+`AnchorHeading`, a `FileThumbStack`) and for the figures of `Bullet` and `Funnel`. A Server
+Component that wants a word of its own passes it as before, from `getMessages(locale)` if it likes.
+`Combobox` and `Command` compare what is typed in the provider's language, and in the machine's
+without a provider. A chart takes its own words as `words` (`<BarChart words={{ chart: "Chart" }} />`)
+where one chart is worded without a provider. The typed date fields read and write the format of
+the language: 30.11.2026 in German, 11/30/2026 (month first, also 11/30, 11-30-2026 and "11/14 to
+11/30") in English, where a date with dots is not read. A time is on the field's own clock in
+both (`hourCycle`, 24 hours by default), and what is submitted stays the ISO value. `DateField`,
+`DateRangeField` and `TimeField` take `labels` for their validation messages and the sheet's
+keys.
+
 ### Consent (cookie banner)
 
 `ConsentProvider` asks before anything that stores or reads data in the browser is loaded, keeps

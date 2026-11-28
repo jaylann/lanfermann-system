@@ -9,7 +9,7 @@ import {
   buttonGroupKeyDisabledLook,
   buttonGroupKeyVariants,
 } from "@/components/button-group/button-group-variants";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { ChevronDownGlyph } from "@/internal/glyphs";
 import { ListMark, listTint } from "@/internal/list-mark";
@@ -248,6 +248,7 @@ export function SelectContent({
   ...props
 }: SelectContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -262,6 +263,7 @@ export function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(
             [
               listSheet,

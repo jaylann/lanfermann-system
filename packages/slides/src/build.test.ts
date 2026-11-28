@@ -5,7 +5,7 @@ import { expect, it } from "vitest";
 import { assetsFor, buildDeck } from "./build";
 import { checkDeck } from "./check";
 import { kitVersion } from "./kit";
-import { deckWith, describeWithKit, fixture } from "./testing";
+import { deckOf, deckWith, describeWithKit, fixture } from "./testing";
 import { formatDiagnostic } from "./types";
 
 const hash = (text: string) => `'sha256-${createHash("sha256").update(text).digest("base64")}'`;
@@ -116,10 +116,12 @@ describeWithKit("checkDeck, without a browser", () => {
     expect(await checkDeck(await fixture("sample"), { browser: false })).toEqual({
       ok: true,
       diagnostics: [],
+      layout: "skipped",
     });
     expect(await checkDeck(await fixture("pictures"), { browser: false })).toEqual({
       ok: true,
       diagnostics: [],
+      layout: "skipped",
     });
   });
 
@@ -128,6 +130,25 @@ describeWithKit("checkDeck, without a browser", () => {
     expect(result.ok).toBe(false);
     expect(result.diagnostics.map(formatDiagnostic)).toEqual([
       'deck.tsx:2:20 error import "lodash" is not allowed (import-not-allowed)',
+    ]);
+  });
+
+  it("says a reference directive once, though three readers refuse it", async () => {
+    // The static reading, the type check and the bundle each refuse it on their own.
+    const result = await checkDeck(
+      deckOf(
+        '/// <reference path="/etc/hosts" />\n/// <reference types="node" />\n' +
+          'import { Deck, Slide } from "@lanfermann/ui/slides";\n' +
+          'export default (<Deck title="Probe"><Slide /></Deck>);\n',
+      ),
+      { browser: false },
+    );
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics.map(formatDiagnostic)).toEqual([
+      "deck.tsx:1:1 error /// <reference path> is not allowed in a deck: a deck takes in its " +
+        "own files, React and the kit by import, and nothing else (reference-not-allowed)",
+      "deck.tsx:2:1 error /// <reference types> is not allowed in a deck: a deck takes in its " +
+        "own files, React and the kit by import, and nothing else (reference-not-allowed)",
     ]);
   });
 
@@ -169,11 +190,16 @@ describeWithKit("checkDeck, without a browser", () => {
     const auto = await checkDeck(source, { launch });
     expect(auto.ok).toBe(true);
     expect(auto.report).toBeUndefined();
+    expect(auto.layout).toBe("unavailable");
+    expect(auto.layoutHint).toBe(
+      "no browser started (install Chrome, or name a browser with SLIDES_BROWSER)",
+    );
     expect(auto.diagnostics).toMatchObject([
       { code: "browser-not-found", severity: "warning", file: "deck.tsx", line: 1 },
     ]);
     const asked = await checkDeck(source, { browser: true, launch });
     expect(asked.ok).toBe(false);
     expect(asked.diagnostics).toMatchObject([{ code: "browser-not-found", severity: "error" }]);
+    expect(asked.layout).toBe("unavailable");
   });
 });

@@ -1,7 +1,22 @@
+import { Logout01Icon, PaintBoardIcon, UserIcon } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, waitFor, within } from "storybook/test";
+import { useState } from "react";
+import { expect, fn, screen, waitFor, within } from "storybook/test";
 
-import { THEME_STORAGE_KEY } from "./theme-mode";
+import { Button } from "@/components/button/button";
+import {
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  MenuTrigger,
+} from "@/components/menu/menu";
+
+import { ThemeMenuItems, useThemeNames } from "./theme-menu";
+import { type Theme, THEME_STORAGE_KEY } from "./theme-mode";
 import { ThemeSwitch } from "./theme-switch";
 import { useTheme } from "./use-theme";
 
@@ -70,6 +85,59 @@ export const SegmentedDark: Story = {
 export const SegmentedWithLabels: Story = {
   args: { variant: "segmented", withLabels: true, defaultValue: "light" },
   parameters: { visual: { ...segments, viewport: { width: 420, height: 120 } } },
+};
+
+function AccountMenu({ open = false }: { open?: boolean }) {
+  const [theme, setTheme] = useState<Theme>("light");
+  const names = useThemeNames();
+  return (
+    <Menu defaultOpen={open} modal={!open}>
+      <MenuTrigger render={<Button>Konto</Button>} />
+      <MenuContent className="min-w-60">
+        <MenuItem icon={UserIcon}>Profil</MenuItem>
+        <MenuSub defaultOpen={open}>
+          <MenuSubTrigger icon={PaintBoardIcon} detail={names[theme]}>
+            Erscheinungsbild
+          </MenuSubTrigger>
+          <MenuSubContent>
+            <ThemeMenuItems value={theme} onValueChange={setTheme} />
+          </MenuSubContent>
+        </MenuSub>
+        <MenuSeparator />
+        <MenuItem icon={Logout01Icon}>Abmelden</MenuItem>
+      </MenuContent>
+    </Menu>
+  );
+}
+
+/**
+ * The same choice as rows of a menu (`ThemeMenuItems`): in an account menu the appearance is one
+ * setting among others. Its row names the chosen one, and the submenu holds the three with their
+ * symbols, the chosen one carrying the disc.
+ */
+export const InMenu: Story = {
+  parameters: {
+    layout: "padded",
+    visual: { viewport: { width: 560, height: 260 }, target: undefined, motion: [] },
+  },
+  render: () => <AccountMenu open />,
+};
+
+/** As a test: choosing a row in the submenu changes the appearance and what the row names. */
+export const InMenuKeyboard: Story = {
+  render: () => <AccountMenu />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Konto" }));
+    const row = await screen.findByRole("menuitem", { name: /Erscheinungsbild/ });
+    await expect(row).toHaveTextContent("Hell");
+    row.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    const dark = await screen.findByRole("menuitemradio", { name: "Dunkel" });
+    await expect(screen.getByRole("menuitemradio", { name: "Hell" })).toBeChecked();
+    await userEvent.click(dark);
+    await waitFor(() => expect(row).toHaveTextContent("Dunkel"));
+    await userEvent.keyboard("{Escape}{Escape}");
+  },
 };
 
 /**

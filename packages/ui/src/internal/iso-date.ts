@@ -1,8 +1,12 @@
 /**
  * Dates travel as ISO strings (`2026-11-14`): no time and no zone, safe to store and to post.
  * These helpers turn them into local `Date`s for a calendar and back, and read a date the way
- * it is typed in German.
+ * it is typed: in German (`30.11.2026`) or, for `en`, the American way (`11/30/2026`).
  */
+
+import type { Locale } from "@/locale/messages";
+
+import { worded, type Wording } from "./wording";
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -28,23 +32,94 @@ export function toIsoDate(date: Date): string {
   return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+/**
+ * How one language writes a date, and what it puts around one. Everything the readers and
+ * writers below differ in between German and English is here, so the two cannot drift apart
+ * anywhere else.
+ */
+type Grammar = {
+  /**
+   * The ways a date is typed. Each has three groups: the two numbers before the year, and the
+   * year (two or four digits, or missing where the way allows it).
+   */
+  dates: readonly RegExp[];
+  /** Which of the two numbers comes first. English never reads a day first. */
+  first: "day" | "month";
+  /** Day and month as they are written, with the year or without it ("14.11.", "11/14"). */
+  write: (day: string, month: string, year?: string) => string;
+  /** What stands between a date and its time when it is said outright: a comma, "um", "at". */
+  at: RegExp;
+  /** Every place a typed range could fall into two: a dash, a hyphen, "bis", "to". */
+  cut: RegExp;
+  /** Whether the start of a range may be a day alone that takes its month from the end ("14."). */
+  dayAlone: boolean;
+};
+
+const grammars: Record<Locale, Grammar> = {
+  de: {
+    dates: [/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2}|\d{4})?$/, /^(\d{2})(\d{2})(\d{2}|\d{4})$/],
+    first: "day",
+    write: (day, month, year = "") => `${day}.${month}.${year}`,
+    at: /^(.+?)\s*(?:,|\bum\b)\s*(.+)$/i,
+    cut: /\s*(?:–|—|\bbis\b|-)\s*/gi,
+    dayAlone: true,
+  },
+  en: {
+    // American: the month first, with slashes. Hyphens are read too, but only around a year
+    // ("11-30-2026"): between two numbers alone a hyphen is a range's. A date with dots is not
+    // read at all. Almost everywhere it is written day first, and "05.06.2026" would have to be
+    // guessed; the field says how it wants the date instead.
+    dates: [
+      /^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/,
+      /^(\d{1,2})-(\d{1,2})-(\d{2}|\d{4})$/,
+      /^(\d{2})(\d{2})(\d{2}|\d{4})$/,
+    ],
+    first: "month",
+    write: (day, month, year) => (year ? `${month}/${day}/${year}` : `${month}/${day}`),
+    at: /^(.+?)\s*(?:,|\bat\b)\s*(.+)$/i,
+    cut: /\s*(?:–|—|\bto\b|-)\s*/gi,
+    dayAlone: false,
+  },
+};
+
+/** A local date as it is written: `"14.11.2026"` in German, `"11/14/2026"` in English. */
+export function formatDate(date: Date, locale: Locale): string {
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return grammars[locale].write(
+    pad(date.getDate()),
+    pad(date.getMonth() + 1),
+    String(date.getFullYear()),
+  );
+}
+
 /** A local date as `"14.11.2026"`. */
 export function formatGermanDate(date: Date): string {
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
+  return formatDate(date, "de");
 }
 
 /**
- * Reads a typed date: `14.11.2026`, `14.11.26`, `1.2.2026`, `14.11.` (this year), `14112026`,
- * `141126`, and ISO. A two-digit year is in this century. `undefined` if it is not a real date.
+ * Reads a typed date, and ISO in either language. A two-digit year is in this century, a
+ * missing one is this year. `undefined` if it is not a real date.
+ *
+ * - `de`: `14.11.2026`, `14.11.26`, `1.2.2026`, `14.11.` (this year), `14112026`, `141126`.
+ * - `en`, always month first: `11/14/2026`, `11/14/26`, `2/1/2026`, `11/14` (this year),
+ *   `11-14-2026`, `11-14-26`, `11142026`, `111426`. Not `14.11.2026`, and no other date with
+ *   dots: it is never guessed which number is the day.
  */
-export function parseGermanDate(text: string, today: Date = new Date()): Date | undefined {
+export function parseDate(
+  text: string,
+  locale: Locale,
+  today: Date = new Date(),
+): Date | undefined {
   const typed = text.trim();
   const iso = parseIsoDate(typed);
   if (iso) return iso;
-  const match =
-    /^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2}|\d{4})?$/.exec(typed) ??
-    /^(\d{2})(\d{2})(\d{2}|\d{4})$/.exec(typed);
+  const grammar = grammars[locale];
+  let match: RegExpExecArray | null = null;
+  for (const way of grammar.dates) {
+    match = way.exec(typed);
+    if (match) break;
+  }
   if (!match) return undefined;
   const year =
     match[3] === undefined
@@ -52,7 +127,16 @@ export function parseGermanDate(text: string, today: Date = new Date()): Date | 
       : match[3].length === 2
         ? 2000 + Number(match[3])
         : Number(match[3]);
-  return fromParts(year, Number(match[2]), Number(match[1]));
+  const [day, month] = grammar.first === "day" ? [match[1], match[2]] : [match[2], match[1]];
+  return fromParts(year, Number(month), Number(day));
+}
+
+/**
+ * Reads a typed date: `14.11.2026`, `14.11.26`, `1.2.2026`, `14.11.` (this year), `14112026`,
+ * `141126`, and ISO. A two-digit year is in this century. `undefined` if it is not a real date.
+ */
+export function parseGermanDate(text: string, today: Date = new Date()): Date | undefined {
+  return parseDate(text, "de", today);
 }
 
 // --- times ---------------------------------------------------------------------------------------
@@ -87,6 +171,9 @@ const MERIDIEM = /\s*([ap])(?:\.?\s?m\.?)?$/i;
  * Reads a typed time and returns it as `"09:30"`: `9`, `09`, `9:30`, `9.30`, `930`, `0930`,
  * `9 Uhr`, `9:30 Uhr`, `9h`, and with AM or PM `9 pm`, `9:30 PM`, `930p`. `undefined` if it is
  * not a time of day.
+ *
+ * It reads for both languages: a time is typed alike in German and English, and how it is
+ * written back is the field's `hourCycle`, not the language.
  */
 export function parseGermanTime(text: string): string | undefined {
   const half = MERIDIEM.exec(text.trim())?.[1]?.toLowerCase();
@@ -139,21 +226,33 @@ export function splitIsoMoment(
   return { date, time: time ?? "" };
 }
 
-/** `"2026-11-14T09:30"` as `"14.11.2026, 09:30"`; a date alone as `"14.11.2026"`. */
-export function formatGermanMoment(value: string, hourCycle: HourCycle = 24): string {
+/**
+ * `"2026-11-14T09:30"` as it is written: `"14.11.2026, 09:30"` in German, `"11/14/2026, 09:30"`
+ * in English; a date alone as the date. The clock is the `hourCycle`'s in both.
+ */
+export function formatMoment(value: string, locale: Locale, hourCycle: HourCycle = 24): string {
   const moment = splitIsoMoment(value);
   if (!moment) return "";
-  const date = formatGermanDate(parseIsoDate(moment.date)!);
+  const date = formatDate(parseIsoDate(moment.date)!, locale);
   return moment.time ? `${date}, ${formatTime(moment.time, hourCycle)}` : date;
 }
 
+/** `"2026-11-14T09:30"` as `"14.11.2026, 09:30"`; a date alone as `"14.11.2026"`. */
+export function formatGermanMoment(value: string, hourCycle: HourCycle = 24): string {
+  return formatMoment(value, "de", hourCycle);
+}
+
 /**
- * Reads a typed date that may carry a time and returns it as ISO: `14.11.2026, 9:30`,
- * `14.11. 9 Uhr`, `14.11.2026 um 09:30`, `14.11.2026` (then the time is `""`). A number of four
- * digits after the date is a year from 1900 on and a time below that (`14.11. 0930`).
+ * Reads a typed date that may carry a time and returns it as ISO (the time is `""` for a date
+ * alone). A number of four digits after the date is a year from 1900 on and a time below that
+ * (`14.11. 0930`).
+ *
+ * - `de`: `14.11.2026, 9:30`, `14.11. 9 Uhr`, `14.11.2026 um 09:30`, `14.11.2026`.
+ * - `en`: `11/14/2026, 9:30`, `11/14 9 am`, `11/14/2026 at 9:30 PM`, `11/14/2026`.
  */
-export function parseGermanMoment(
+export function parseMoment(
   text: string,
+  locale: Locale,
   today: Date = new Date(),
 ): { date: string; time: string } | undefined {
   const typed = text.trim();
@@ -161,13 +260,13 @@ export function parseGermanMoment(
   if (iso) return iso;
 
   const read = (datePart: string, timePart: string) => {
-    const date = parseGermanDate(datePart, today);
+    const date = parseDate(datePart, locale, today);
     const time = parseGermanTime(timePart);
     return date && time ? { date: toIsoDate(date), time } : undefined;
   };
 
-  // Said outright: a comma or "um" stands between the two.
-  const marked = /^(.+?)\s*(?:,|\bum\b)\s*(.+)$/i.exec(typed);
+  // Said outright: a comma or "um" ("at") stands between the two.
+  const marked = grammars[locale].at.exec(typed);
   if (marked) return read(marked[1]!, marked[2]!);
 
   // Otherwise the last word may be the time, unless the whole thing is a date as it stands.
@@ -184,8 +283,20 @@ export function parseGermanMoment(
       if (moment) return moment;
     }
   }
-  const date = parseGermanDate(typed, today);
+  const date = parseDate(typed, locale, today);
   return date ? { date: toIsoDate(date), time: "" } : undefined;
+}
+
+/**
+ * Reads a typed date that may carry a time and returns it as ISO: `14.11.2026, 9:30`,
+ * `14.11. 9 Uhr`, `14.11.2026 um 09:30`, `14.11.2026` (then the time is `""`). A number of four
+ * digits after the date is a year from 1900 on and a time below that (`14.11. 0930`).
+ */
+export function parseGermanMoment(
+  text: string,
+  today: Date = new Date(),
+): { date: string; time: string } | undefined {
+  return parseMoment(text, "de", today);
 }
 
 // --- ranges ---------------------------------------------------------------------------------------
@@ -194,31 +305,76 @@ export function parseGermanMoment(
 export type IsoRange = { from: string; to: string };
 
 /**
- * The start of a range, read in the light of its end: "14." takes month and year from the end,
- * "14.11." the year. If that lands after the end, the month or year before is meant: "28.12. –
- * 03.01.2027" starts in 2026.
+ * The start of a range, read in the light of its end: "14." takes month and year from the end
+ * (German only), "14.11." or "11/14" the year. If that lands after the end, the month or year
+ * before is meant: "28.12. – 03.01.2027" starts in 2026.
  */
 function startBefore(
   text: string,
   end: { date: string; time: string },
+  locale: Locale,
 ): { date: string; time: string } | undefined {
   const last = parseIsoDate(end.date)!;
-  const day = /^(\d{1,2})\.?((?:\s|,).*)?$/.exec(text);
+  const day = grammars[locale].dayAlone ? /^(\d{1,2})\.?((?:\s|,).*)?$/.exec(text) : null;
   if (day) {
     const inMonth = (monthsBack: number) => {
       const month = new Date(last.getFullYear(), last.getMonth() - monthsBack, 1);
-      return parseGermanMoment(
+      return parseMoment(
         `${day[1]}.${month.getMonth() + 1}.${month.getFullYear()}${day[2] ?? ""}`,
+        locale,
       );
     };
     const same = inMonth(0);
     return same && same.date <= end.date ? same : (inMonth(1) ?? same);
   }
-  const start = parseGermanMoment(text, last);
+  const start = parseMoment(text, locale, last);
   if (!start || start.date <= end.date) return start;
   // Only a start without a year moves when the year it is read against does.
-  const yearBefore = parseGermanMoment(text, new Date(last.getFullYear() - 1, 0, 1));
+  const yearBefore = parseMoment(text, locale, new Date(last.getFullYear() - 1, 0, 1));
   return yearBefore && yearBefore.date !== start.date ? yearBefore : start;
+}
+
+/**
+ * Reads a typed range. A start without a year takes it from the end, and the two ends come back
+ * in order.
+ *
+ * - `de`: `14.11. – 30.11.2026`, `14.–30.11.2026` (the month from the end too), `14.11.2026 bis
+ *   30.11.2026`, `14.11.-30.11.`, and with times `14.11., 9:00 – 16.11., 17:00` or `14.11. 9–17
+ *   Uhr` (one day).
+ * - `en`: `11/14 – 11/30/2026`, `11/14/2026 to 11/30/2026`, `11/14-11/30`, `11-14-2026 -
+ *   11-30-2026`, and with times `11/14, 9:00 – 11/16, 17:00` or `11/14 9 am – 5 pm` (one day).
+ *   The start is always a whole date: a day alone ("14 – 11/30") is not read.
+ */
+export function parseRange(
+  text: string,
+  locale: Locale,
+  today: Date = new Date(),
+): { from: { date: string; time: string }; to: { date: string; time: string } } | undefined {
+  const typed = text.trim();
+  // Every place the text could fall into two: a dash, "bis" ("to"), or a hyphen (which a date
+  // written the ISO way or with hyphens contains too, so each hyphen is tried).
+  const cuts: [string, string][] = [];
+  for (const match of typed.matchAll(grammars[locale].cut)) {
+    cuts.push([typed.slice(0, match.index), typed.slice(match.index + match[0].length)]);
+  }
+  for (const [left, right] of cuts) {
+    if (left === "" || right === "") continue;
+    const to = parseMoment(right, locale, today);
+    if (to) {
+      const from = startBefore(left, to, locale);
+      if (!from) continue;
+      const ordered = `${from.date}T${from.time}` <= `${to.date}T${to.time}`;
+      return ordered ? { from, to } : { from: to, to: from };
+    }
+    // "14.11. 9–17 Uhr": the end is a time on the day of the start.
+    const from = parseMoment(left, locale, today);
+    const time = parseGermanTime(right);
+    if (from && from.time && time) {
+      const end = { date: from.date, time };
+      return from.time <= time ? { from, to: end } : { from: end, to: from };
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -230,38 +386,58 @@ export function parseGermanRange(
   text: string,
   today: Date = new Date(),
 ): { from: { date: string; time: string }; to: { date: string; time: string } } | undefined {
-  const typed = text.trim();
-  // Every place the text could fall into two: a dash, "bis", or a hyphen (which a date written
-  // the ISO way contains too, so each hyphen is tried).
-  const cuts: [string, string][] = [];
-  for (const match of typed.matchAll(/\s*(?:–|—|\bbis\b|-)\s*/gi)) {
-    cuts.push([typed.slice(0, match.index), typed.slice(match.index + match[0].length)]);
-  }
-  for (const [left, right] of cuts) {
-    if (left === "" || right === "") continue;
-    const to = parseGermanMoment(right, today);
-    if (to) {
-      const from = startBefore(left, to);
-      if (!from) continue;
-      const ordered = `${from.date}T${from.time}` <= `${to.date}T${to.time}`;
-      return ordered ? { from, to } : { from: to, to: from };
-    }
-    // "14.11. 9–17 Uhr": the end is a time on the day of the start.
-    const from = parseGermanMoment(left, today);
-    const time = parseGermanTime(right);
-    if (from && from.time && time) {
-      const end = { date: from.date, time };
-      return from.time <= time ? { from, to: end } : { from: end, to: from };
-    }
-  }
-  return undefined;
+  return parseRange(text, "de", today);
+}
+
+/**
+ * `{ from, to }` the way it is read: `"14.11.2026 – 30.11.2026"`, in English `"11/14/2026 –
+ * 11/30/2026"`, with times if it has them.
+ */
+export function formatRange(range: IsoRange, locale: Locale, hourCycle: HourCycle = 24): string {
+  const from = formatMoment(range.from, locale, hourCycle);
+  const to = formatMoment(range.to, locale, hourCycle);
+  return from && to ? `${from} – ${to}` : "";
 }
 
 /** `{ from, to }` the way it is read: `"14.11.2026 – 30.11.2026"`, with times if it has them. */
 export function formatGermanRange(range: IsoRange, hourCycle: HourCycle = 24): string {
-  const from = formatGermanMoment(range.from, hourCycle);
-  const to = formatGermanMoment(range.to, hourCycle);
-  return from && to ? `${from} – ${to}` : "";
+  return formatRange(range, "de", hourCycle);
+}
+
+// --- examples -------------------------------------------------------------------------------------
+
+/**
+ * What a field shows as an example of what it reads, in its placeholder and in the message for
+ * text it could not read. They are written by the same grammar the readers use, so an example
+ * can never name a form the field would refuse (a test reads each one back).
+ */
+const EXAMPLE = { from: "2026-11-14", until: "2026-11-16", to: "2026-11-30" };
+
+/** A date without its year, the short way a range starts: `"14.11."`, `"11/14"`. */
+function shortDate(iso: string, locale: Locale): string {
+  return grammars[locale].write(iso.slice(8, 10), iso.slice(5, 7));
+}
+
+/** `"30.11.2026"`, in English `"11/30/2026"`. */
+export function exampleDate(locale: Locale): string {
+  return formatMoment(EXAMPLE.to, locale);
+}
+
+/** `"30.11.2026, 09:30"`, in English `"11/30/2026, 09:30"`; on a 12-hour clock with `AM`. */
+export function exampleMoment(locale: Locale, hourCycle: HourCycle = 24): string {
+  return formatMoment(`${EXAMPLE.to}T09:30`, locale, hourCycle);
+}
+
+/** `"14.11. – 30.11.2026"`, in English `"11/14 – 11/30/2026"`. */
+export function exampleRange(locale: Locale): string {
+  return `${shortDate(EXAMPLE.from, locale)} – ${exampleDate(locale)}`;
+}
+
+/** `"14.11., 09:00 – 16.11., 17:00"`, in English `"11/14, 09:00 – 11/16, 17:00"`. */
+export function exampleTimedRange(locale: Locale, hourCycle: HourCycle = 24): string {
+  const end = (iso: string, time: string) =>
+    `${shortDate(iso, locale)}, ${formatTime(time, hourCycle)}`;
+  return `${end(EXAMPLE.from, DEFAULT_TIME)} – ${end(EXAMPLE.until, DEFAULT_END_TIME)}`;
 }
 
 /**
@@ -280,14 +456,59 @@ export function parseIsoInterval(interval: string | null | undefined): IsoRange 
   return splitIsoMoment(from) && splitIsoMoment(to) ? { from, to } : { from: "", to: "" };
 }
 
-/** Why a day cannot be chosen, as a sentence; nothing if it lies within the limits. */
-export function outsideLimits(date: string, min?: string, max?: string): string | undefined {
+/** The sentences that say why a day cannot be chosen, each with its days already written. */
+export type LimitWords = {
+  between: (min: string, max: string) => string;
+  from: (min: string) => string;
+  until: (max: string) => string;
+};
+
+const germanLimitWords: LimitWords = {
+  between: (min, max) => `Bitte wählen Sie ein Datum zwischen dem ${min} und dem ${max}.`,
+  from: (min) => `Bitte wählen Sie ein Datum ab dem ${min}.`,
+  until: (max) => `Bitte wählen Sie ein Datum bis zum ${max}.`,
+};
+
+/**
+ * The same sentences as a caller may give them to a date field (`labels.limits`): each a
+ * finished sentence, or a function that is handed the days as the field writes them.
+ */
+export type DateLimitLabels = {
+  /** The day lies outside `min` and `max`. */
+  between: Wording<[min: string, max: string]>;
+  /** The day lies before `min`, and there is no `max`. */
+  from: Wording<[min: string]>;
+  /** The day lies after `max`, and there is no `min`. */
+  until: Wording<[max: string]>;
+};
+
+/** The sentences a field says: the caller's where one was given, else the language's. */
+export function limitWords(
+  given: Partial<DateLimitLabels> | undefined,
+  defaults: LimitWords,
+): LimitWords {
+  return {
+    between: (min, max) => worded(given?.between ?? defaults.between, min, max),
+    from: (min) => worded(given?.from ?? defaults.from, min),
+    until: (max) => worded(given?.until ?? defaults.until, max),
+  };
+}
+
+/**
+ * Why a day cannot be chosen, as a sentence; nothing if it lies within the limits. The days are
+ * written the way the field of that language reads them.
+ */
+export function outsideLimits(
+  date: string,
+  min?: string,
+  max?: string,
+  words: LimitWords = germanLimitWords,
+  locale: Locale = "de",
+): string | undefined {
   if ((!min || date >= min) && (!max || date <= max)) return undefined;
-  const day = (iso: string) => formatGermanDate(parseIsoDate(iso)!);
-  if (min && max) return `Bitte wählen Sie ein Datum zwischen dem ${day(min)} und dem ${day(max)}.`;
-  return min
-    ? `Bitte wählen Sie ein Datum ab dem ${day(min)}.`
-    : `Bitte wählen Sie ein Datum bis zum ${day(max!)}.`;
+  const day = (iso: string) => formatDate(parseIsoDate(iso)!, locale);
+  if (min && max) return words.between(day(min), day(max));
+  return min ? words.from(day(min)) : words.until(day(max!));
 }
 
 // --- a range in a calendar ------------------------------------------------------------------------

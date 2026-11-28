@@ -3,6 +3,7 @@
 import { SquareLock02Icon } from "@hugeicons/core-free-icons";
 import {
   type ComponentProps,
+  type ReactNode,
   useContext,
   useEffect,
   useEffectEvent,
@@ -10,7 +11,7 @@ import {
   useState,
 } from "react";
 
-import { Button } from "@/components/button/button";
+import { Button, type ButtonProps } from "@/components/button/button";
 import { Icon } from "@/components/icon/icon";
 import { Input, type InputProps } from "@/components/input/input";
 import { InputGroup, InputGroupAddon } from "@/components/input-group/input-group";
@@ -19,9 +20,12 @@ import { FieldDisabledContext } from "@/internal/field-context";
 import { RevealKey, secretSymbolSize, swapSettle, useSwap } from "@/internal/reveal-key";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 /** How many discs stand before the ending: the length is nobody's business. */
 const MASK_DISCS = 8;
+/** The discs that stand where an ending would, when none is known. */
+const UNKNOWN_ENDING_DISCS = 4;
 
 /** How long the tick of a save stands in the Save key before the field turns back, in ms. */
 export const SAVED_SHOWN_MS = 900;
@@ -35,6 +39,12 @@ export type StoredSecretFieldProps = Omit<
    * Without it nothing is stored yet, and the field takes a first one.
    */
   ending?: string;
+  /**
+   * A secret is stored although no ending is known (a server that keeps none for a short value,
+   * so the ending does not give away a third of it). The field then shows discs only and says
+   * that a secret is set, without "endet auf". Left out, an `ending` alone says it is stored.
+   */
+  stored?: boolean;
   /** Whether a new secret is being typed in place of the stored one (controlled). */
   replacing?: boolean;
   /** Whether it is at first. */
@@ -59,6 +69,13 @@ export type StoredSecretFieldProps = Omit<
   savedLabel?: string;
   /** How long the tick stands before the field turns back, in ms. */
   savedHold?: number;
+  /**
+   * Something at the field's end, inside it, shown only while a new secret is typed: a key that
+   * does something with what is typed (a `StoredSecretFieldKey`). It opens its own room, so the
+   * eye glides aside for it. To save the field by itself use `saveLabel`, whose key stands
+   * beside the field; this slot is for a form that wants the key inside.
+   */
+  trailing?: ReactNode;
   /** That a secret is stored, as assistive tech hears it: „Gesetzt“. */
   storedLabel?: string;
   /** Before its ending, as assistive tech hears it: „endet auf“. */
@@ -100,20 +117,22 @@ export type StoredSecretFieldProps = Omit<
 export function StoredSecretField({
   ending,
   replacing: replacingProp,
+  stored: storedProp,
   defaultReplacing = false,
   onReplacingChange,
   size = "md",
   saveLabel,
   saving = false,
   saved = false,
-  savedLabel = "Gespeichert",
+  savedLabel,
   savedHold = SAVED_SHOWN_MS,
-  storedLabel = "Gesetzt",
-  endingLabel = "endet auf",
-  replaceLabel = "Ersetzen",
+  trailing,
+  storedLabel,
+  endingLabel,
+  replaceLabel,
   cancelLabel: _cancelLabel,
-  revealLabel = "Anzeigen",
-  hideLabel = "Verbergen",
+  revealLabel,
+  hideLabel,
   name,
   className,
   ref,
@@ -122,7 +141,9 @@ export function StoredSecretField({
   onBlur,
   ...props
 }: StoredSecretFieldProps) {
-  const stored = ending !== undefined && ending !== "";
+  const { messages } = useLocale();
+  const hasEnding = ending !== undefined && ending !== "";
+  const stored = storedProp ?? hasEnding;
   // A field that cannot be used keeps what is stored: its key cannot be pressed either.
   const off = useContext(FieldDisabledContext) || props.disabled === true;
   const [own, setOwn] = useState(defaultReplacing);
@@ -190,7 +211,9 @@ export function StoredSecretField({
   }, [confirming, savedHold]);
 
   // What assistive tech reads in the field, whatever it looks like.
-  const said = `${storedLabel}, ${endingLabel} ${ending ?? ""}`;
+  const said = hasEnding
+    ? `${storedLabel ?? messages.storedSecretField.stored}, ${endingLabel ?? messages.storedSecretField.ending} ${ending}`
+    : (storedLabel ?? messages.storedSecretField.stored);
   const saveShown = typing && (filled || confirming);
 
   const field = (
@@ -255,10 +278,35 @@ export function StoredSecretField({
             revealed={revealed}
             onRevealedChange={(next) => reveal.swap(() => setRevealed(next))}
             size={size}
-            revealLabel={revealLabel}
-            hideLabel={hideLabel}
+            revealLabel={revealLabel ?? messages.storedSecretField.reveal}
+            hideLabel={hideLabel ?? messages.storedSecretField.hide}
             swapping={turn.swapping}
           />
+          {trailing !== undefined && (
+            // Its room opens from nothing, as the Save key's does beside the field, so what
+            // stands before it glides aside instead of jumping.
+            <span
+              data-slot="stored-secret-field-trailing"
+              data-shown={filled ? "" : undefined}
+              inert={!filled}
+              className={cn(
+                "grid shrink-0 grid-cols-[0fr] transition-[grid-template-columns] delay-75 spring-glide motion-reduce:transition-none",
+                "data-shown:grid-cols-[1fr] data-shown:delay-0",
+              )}
+            >
+              <span className="min-w-0 overflow-x-clip">
+                <span
+                  className={cn(
+                    "flex w-max items-center pe-[3px]",
+                    "scale-96 opacity-0 transition-[opacity,scale] spring-leave motion-reduce:scale-100",
+                    filled && "scale-100 opacity-100 spring-seat",
+                  )}
+                >
+                  {trailing}
+                </span>
+              </span>
+            </span>
+          )}
         </>
       ) : (
         <>
@@ -308,8 +356,12 @@ export function StoredSecretField({
               {/* A SecretField's discs with the end kept instead of the start, chosen over the
                   words „Gesetzt, endet auf …4f2a“ (Justin, 2026-11-21). */}
               <span className="min-w-0 truncate font-mono text-fg">
-                <span className="text-fg-muted">{"•".repeat(MASK_DISCS)}</span>
-                {ending}
+                {/* Without an ending the row is as long as one with four characters at its end,
+                    so the secrets of a list end on one line whether or not their ending is known. */}
+                <span className="text-fg-muted">
+                  {"•".repeat(hasEnding ? MASK_DISCS : MASK_DISCS + UNKNOWN_ENDING_DISCS)}
+                </span>
+                {hasEnding ? ending : null}
               </span>
             </span>
           </span>
@@ -331,7 +383,7 @@ export function StoredSecretField({
             "focus-visible:outline-offset-0",
           )}
         >
-          {replaceLabel}
+          {replaceLabel ?? messages.storedSecretField.replace}
         </Button>
       )}
     </InputGroup>
@@ -375,8 +427,29 @@ export function StoredSecretField({
         </div>
       </div>
       <span role="status" className="sr-only">
-        {confirming ? savedLabel : ""}
+        {confirming ? (savedLabel ?? messages.storedSecretField.saved) : ""}
       </span>
     </div>
+  );
+}
+
+/**
+ * A key that stands inside a `StoredSecretField`, in its `trailing` slot: a small button cut to
+ * the field's inside, three pixels from its edge all round, so field and key read as one
+ * control. Word it as what it does with the typed secret („Prüfen“, „Speichern“).
+ */
+export function StoredSecretFieldKey({ className, ...props }: ButtonProps) {
+  return (
+    <Button
+      size="sm"
+      data-slot="stored-secret-field-key"
+      className={cn(
+        "h-[calc(var(--field-height)-6px)] shrink-0 rounded-[calc(var(--field-radius)-3px)] px-2.5",
+        // Inside the field there is no room for the usual 2px gap around the outline.
+        "focus-visible:outline-offset-0",
+        className,
+      )}
+      {...props}
+    />
   );
 }

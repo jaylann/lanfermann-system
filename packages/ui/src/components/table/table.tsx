@@ -1,7 +1,9 @@
+import type { useRender } from "@base-ui/react/use-render";
 import type { ComponentProps } from "react";
 
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { ArrowUpGlyph } from "@/internal/glyphs";
+import { renderAs } from "@/internal/render-as";
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
 
@@ -52,18 +54,42 @@ export type TableProps = Omit<ComponentProps<"table">, "aria-label" | "aria-labe
  *
  * Sorting, filtering and paging are the caller's state; the table only provides the slots.
  */
-export function Table({
+export function Table(props: TableProps) {
+  return <TableBox {...props} />;
+}
+
+export type TableSkeletonProps = Omit<
+  ComponentProps<"table">,
+  "aria-label" | "aria-labelledby" | "aria-hidden"
+> &
+  Pick<TableProps, "containerClassName" | "content" | "stack">;
+
+/**
+ * The shape of a table that is still loading: the same box, rule and cells, with `Skeleton`s in
+ * place of the values. It is not a region, has no name and takes no focus, so nothing inside a
+ * `SkeletonGroup` is a tab stop or is read out; the group's `label` says what is on its way.
+ * Build it from the table's own parts, with as many rows as the list usually has.
+ */
+export function TableSkeleton(props: TableSkeletonProps) {
+  return <TableBox skeleton {...props} />;
+}
+
+function TableBox({
   className,
   containerClassName,
   content = "data",
   stack = false,
+  skeleton = false,
   "aria-label": label,
   "aria-labelledby": labelledBy,
   ...props
-}: TableProps) {
+}: Omit<ComponentProps<"table">, "aria-hidden"> &
+  Pick<TableProps, "containerClassName" | "content" | "stack"> & { skeleton?: boolean }) {
   return (
     <div
       data-slot="table-container"
+      data-skeleton={skeleton ? "" : undefined}
+      aria-hidden={skeleton ? true : undefined}
       className={cn(
         // The rule and the focus outline are drawn here, outside the region's edge mask, which
         // would fade them with the columns.
@@ -77,7 +103,11 @@ export function Table({
         // stays inside the card's edge.
         "in-data-[slot=card]:border-t-0 in-data-[slot=card]:before:hidden",
         "in-data-[slot=card]:overflow-clip in-data-[slot=card]:rounded-none",
-        "in-data-[slot=card]:first:rounded-t-xl in-data-[slot=card]:last:rounded-b-xl",
+        // Only where the table really is the card's first or last part: as the card's own child,
+        // or the only thing in a wrapper (a `Loaded`) that is. Under a `CardBar` its band of
+        // column names keeps square corners, wrapper or not.
+        "[[data-slot=card]>&:first-child]:rounded-t-xl [[data-slot=card]>:first-child>&:first-child]:rounded-t-xl",
+        "[[data-slot=card]>&:last-child]:rounded-b-xl [[data-slot=card]>:last-child>&:last-child]:rounded-b-xl",
         "in-data-[slot=card]:has-[[data-slot=table-scroll]:focus-visible]:-outline-offset-2",
         containerClassName,
       )}
@@ -85,10 +115,10 @@ export function Table({
       <ScrollFade
         axis="x"
         data-slot="table-scroll"
-        role="region"
-        aria-label={label}
-        aria-labelledby={labelledBy}
-        tabIndex={0}
+        // A table that is only a shape is no stop for the keyboard and no region of the page.
+        {...(skeleton
+          ? undefined
+          : { role: "region", "aria-label": label, "aria-labelledby": labelledBy, tabIndex: 0 })}
         className={cn(
           // `relative`: what is positioned inside (a visually hidden column name, a touch target)
           // then belongs to this box and scrolls with it, instead of widening the page.
@@ -315,43 +345,69 @@ export function TableCell({
   );
 }
 
-export type TableSortButtonProps = ComponentProps<"button"> & {
+type TableSortShared = {
   /** The current direction, if the table is sorted by this column. */
   direction?: "ascending" | "descending";
+  /**
+   * The element to be the heading instead: a router's link component, which then gets the look,
+   * the arrow and the words (`render={<NextLink href="?sort=name" />}`).
+   */
+  render?: useRender.RenderProp;
 };
+
+export type TableSortButtonProps = TableSortShared &
+  (
+    | (ComponentProps<"button"> & { href?: undefined })
+    | (ComponentProps<"a"> & {
+        /**
+         * Where sorting by this column leads, when the order is kept in the address: the heading
+         * is then a real link, which a new tab and the Back button understand. `onClick` is still
+         * called; call `event.preventDefault()` there if a router takes over.
+         */
+        href: string;
+      })
+  );
+
+const sortButton = [
+  "group/sort touch-target relative -mx-1.5 inline-flex h-(--control-sm) items-center gap-1 rounded-sm px-1.5 text-sm text-fg-muted select-none",
+  "hover:bg-hover hover:text-fg data-direction:text-fg",
+  "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent",
+];
 
 /**
  * The heading of a sortable column, as a button. An arrow shows the direction and turns over
  * (`seat`) when it changes; an unsorted column shows it faintly under the pointer. Keep the state
  * yourself, and put the same direction on the `TableHead` as `sort`.
+ *
+ * With `href` it is a link of the same look, for a table whose order is part of the address, as
+ * `Pagination` does for its pages; with `render` it is a router's own link.
  */
 export function TableSortButton({
   className,
   direction,
+  render,
   children,
   ...props
 }: TableSortButtonProps) {
-  return (
-    <button
-      type="button"
-      data-slot="table-sort-button"
-      data-direction={direction}
-      className={cn(
-        "group/sort touch-target relative -mx-1.5 inline-flex h-(--control-sm) items-center gap-1 rounded-sm px-1.5 text-sm text-fg-muted select-none",
-        "hover:bg-hover hover:text-fg data-direction:text-fg",
-        "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      <ArrowUpGlyph
-        className={cn(
-          "transition-[rotate,opacity] spring-seat",
-          direction ? "opacity-100" : "opacity-0 group-hover/sort:opacity-50",
-          direction === "descending" && "rotate-180",
-        )}
-      />
-    </button>
-  );
+  const link = props.href !== undefined;
+  return renderAs(link ? "a" : "button", render, {
+    // A rendered element says itself what it is; a plain button must not submit a form.
+    ...(link || render ? undefined : { type: "button" }),
+    ...props,
+    "data-slot": "table-sort-button",
+    "data-direction": direction,
+    className: cn(sortButton, className),
+    children: (
+      <>
+        {children}
+        <ArrowUpGlyph
+          className={cn(
+            "transition-[rotate,opacity] spring-seat",
+            direction ? "opacity-100" : "opacity-0 group-hover/sort:opacity-50",
+            direction === "descending" && "rotate-180",
+          )}
+        />
+      </>
+    ),
+  });
 }

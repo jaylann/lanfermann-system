@@ -22,17 +22,17 @@ describe("Table by step", () => {
     expect(tr).toEqual([
       "<tr>",
       "<tr>",
-      '<tr data-step="1" style="--step-at:1">',
-      '<tr data-step="2" style="--step-at:2">',
+      '<tr data-slides-at="1" style="--step-at:1">',
+      '<tr data-slides-at="2" style="--step-at:2">',
     ]);
   });
 
   it("marks nothing without row steps, and a row past the list is there from the start", () => {
     expect(renderToStaticMarkup(<Table columns={columns} rows={rows} />)).not.toContain(
-      "data-step",
+      "data-slides-at",
     );
     const html = renderToStaticMarkup(<Table columns={columns} rows={rows} rowSteps={[1]} />);
-    expect(html.match(/data-step=/g)).toHaveLength(1);
+    expect(html.match(/data-slides-at=/g)).toHaveLength(1);
   });
 
   it("counts the highest row step", () => {

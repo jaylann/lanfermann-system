@@ -147,7 +147,7 @@ describe("steps and motion", () => {
   it("a step is shown or hidden by one rule that needs no live slide", () => {
     const reveal = all.find(
       (rule) =>
-        rule.selector === '[data-slot="slide"] [data-step]' &&
+        rule.selector === '[data-slot="slide"] [data-slides-at]' &&
         rule.within.join() === "@layer components",
     );
     expect(value(reveal, "--step-on")).toBe(
@@ -159,13 +159,23 @@ describe("steps and motion", () => {
   });
 
   it("a rule about steps names a slide or one of its parts", () => {
-    // `data-step` and `data-draw` are plain names. A page may use them for something of its
-    // own (the workshop's stories do), and this stylesheet is loaded beside it.
-    const marked = all.filter((rule) => /\[data-(step|draw)\]/.test(rule.selector));
+    // `data-draw` is a plain name, and this stylesheet is loaded beside pages that may use it
+    // for something of their own.
+    const marked = all.filter((rule) => /\[data-(slides-at|draw)\]/.test(rule.selector));
     expect(marked.length).toBeGreaterThan(0);
     for (const rule of marked)
       for (const selector of selectorsOf(rule.selector))
         expect(selector, rule.selector).toMatch(/\[data-slot="slide[-"]/);
+  });
+
+  it("leaves a deck's own data-step alone: no rule selects it", () => {
+    // The kit's mark is `data-slides-at`. A part of a deck that writes `data-step` for a purpose
+    // of its own was once shown and hidden by these rules (issue #111).
+    expect(all.filter((rule) => rule.selector.includes("[data-slides-at")).length).toBeGreaterThan(
+      5,
+    );
+    for (const rule of all) expect(rule.selector).not.toMatch(/\[data-step\b/);
+    expect(slides).not.toContain("data-step");
   });
 
   it("everything that moves is live, on a screen, and has a reduced-motion answer", () => {
@@ -219,7 +229,7 @@ describe("steps and motion", () => {
     );
     for (const slot of ["slide-footer", "slide-forms", "slide-scene"])
       expect(entrance?.selector).toContain(`[data-slot="${slot}"]`);
-    expect(entrance?.selector).toContain("[data-step]");
+    expect(entrance?.selector).toContain("[data-slides-at]");
     expect(entrance?.selector).toContain(':not([data-motion="none"])');
   });
 
@@ -254,7 +264,7 @@ describe("steps and motion", () => {
   it("a print shows every step", () => {
     const print = all.find(
       (rule) =>
-        rule.selector === '[data-slot="slide"] [data-step]' &&
+        rule.selector === '[data-slot="slide"] [data-slides-at]' &&
         rule.within.at(-1) === "@media print",
     );
     expect(value(print, "--step-on")).toBe("1");

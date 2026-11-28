@@ -55,7 +55,7 @@
  * named one by one so that the slide parts stay out: `dist/slides` is registered by slides.css,
  * and an app that shows no deck gets none of their classes (styles.test.ts checks the list).
  */
-@source "../dist/{components,internal,lib,motion}";
+@source "../dist/{components,internal,lib,locale,motion}";
 
 /* For app code that wants a dark variant: it follows the Ink ground, and everything in dark mode. */
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="ink"], [data-theme="ink"] *, [data-mode="dark"], [data-mode="dark"] *));

@@ -18,6 +18,7 @@ import { useLive } from "@/internal/presence";
 import { statusIcons, statusIconTone } from "@/internal/status-icon";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 export type BannerTone = "info" | "success" | "warning" | "danger";
 
@@ -43,13 +44,6 @@ const edge: Record<BannerTone, string> = {
  * under a container query.
  */
 const oneLine = "-my-[calc((var(--control-sm)-1lh)/2)]";
-
-const defaultToneLabels: Record<BannerTone, string> = {
-  info: "Hinweis",
-  success: "Erledigt",
-  warning: "Warnung",
-  danger: "Fehler",
-};
 
 export type BannerProps = Omit<ComponentProps<"div">, "title"> & {
   tone?: BannerTone;
@@ -97,7 +91,7 @@ export function Banner({
   defaultOpen = true,
   onOpenChange,
   dismissible = true,
-  closeLabel = "Hinweis schließen",
+  closeLabel,
   finalFocus,
   toneLabels,
   className,
@@ -105,6 +99,7 @@ export function Banner({
   ref,
   ...props
 }: BannerProps) {
+  const { messages } = useLocale();
   const [chosen, setChosen] = useState(defaultOpen);
   const shown = open ?? chosen;
   // What has been closed stays drawn until it has faded and its room has closed.
@@ -113,7 +108,7 @@ export function Banner({
   const leaving = drawn && !shown;
   const live = useLive();
   const grow = useRef<HTMLDivElement>(null);
-  const labels = { ...defaultToneLabels, ...toneLabels };
+  const labels = { ...messages.banner.tone, ...toneLabels };
 
   const close = () => {
     setChosen(false);
@@ -221,7 +216,7 @@ export function Banner({
                   iconOnly
                   size="sm"
                   variant="quiet"
-                  aria-label={closeLabel}
+                  aria-label={closeLabel ?? messages.banner.close}
                   onClick={close}
                   className="text-fg-muted"
                 >
