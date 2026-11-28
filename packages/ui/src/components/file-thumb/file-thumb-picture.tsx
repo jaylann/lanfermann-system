@@ -18,10 +18,13 @@ export function FileThumbPicture({
   kind,
   seeThrough,
   symbolSize = 16,
+  fit = "cover",
 }: {
   src: string;
   kind: FileSymbolKind;
   seeThrough: boolean;
+  /** `cover` fills the square and may crop; `contain` shows the whole picture inside it. */
+  fit?: "cover" | "contain";
   /** The size of the symbol that stands in for a picture that did not load. */
   symbolSize?: number;
 }) {
@@ -37,7 +40,12 @@ export function FileThumbPicture({
       onError={() => setFailed(src)}
       // The picture fills its square, so the checker (finer here, for a square of 32px) lies
       // behind the picture only, as everywhere.
-      className={cn("size-full object-cover", seeThrough && "checker [--checker-cell:0.25rem]")}
+      className={cn(
+        // Contained, the box is the picture as drawn, so the checker never shows in the bands
+        // beside it.
+        fit === "cover" ? "size-full object-cover" : "h-auto max-h-full w-auto max-w-full",
+        seeThrough && "checker [--checker-cell:0.25rem]",
+      )}
     />
   );
 }

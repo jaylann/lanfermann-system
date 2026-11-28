@@ -544,6 +544,24 @@ export const BrandRail: Story = {
 };
 
 /**
+ * In the comfortable density the rows are taller and their symbols start further in; the brand
+ * follows, because its inset is the rows' own.
+ */
+export const BrandComfortable: Story = {
+  parameters: { visual: shell },
+  render: (args) => (
+    <div data-density="comfortable" className="flex gap-6">
+      <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+        <Entries {...args} inline brand aria-label="Ausgeklappt" className="border-r-0" />
+      </div>
+      <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+        <Entries {...args} inline collapsed brand aria-label="Eingeklappt" className="border-r-0" />
+      </div>
+    </div>
+  ),
+};
+
+/**
  * As a test: the brand is one link with one name whatever the sidebar shows, and on the rail the
  * person's row names itself in a tooltip, which gives way once its menu is open.
  */

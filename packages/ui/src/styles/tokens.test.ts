@@ -221,6 +221,24 @@ describe("ground tokens", () => {
     expect(blocks).toBeGreaterThan(12);
   });
 
+  // A highlighted destructive row of a menu: the usual highlight lies over the danger wash, so
+  // the face its words stand on is the two mixed (`dangerRow` in menu.tsx).
+  it.each([...byScope.keys()])("a highlighted danger row reads on %s", (scope) => {
+    const tokens = byScope.get(scope)!;
+    const wash = tokens.get("--lf-danger-soft")!;
+    const hover = /^rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)$/.exec(tokens.get("--lf-hover") ?? "");
+    expect(hover, `--lf-hover on ${scope}`).not.toBeNull();
+    const alpha = Number(hover![4]);
+    const base = Number.parseInt(wash.slice(1), 16);
+    const face = [base >> 16, (base >> 8) & 255, base & 255]
+      .map((channel, index) =>
+        Math.round(Number(hover![index + 1]) * alpha + channel * (1 - alpha)),
+      )
+      .map((channel) => channel.toString(16).padStart(2, "0"))
+      .join("");
+    expect(contrast(tokens.get("--lf-danger")!, `#${face}`)).toBeGreaterThanOrEqual(TEXT);
+  });
+
   describe.each([...byScope.keys()])("contrast on %s", (scope) => {
     const tokens = byScope.get(scope)!;
     it.each(pairs)("%s on %s is at least %s:1", (foreground, background, minimum) => {

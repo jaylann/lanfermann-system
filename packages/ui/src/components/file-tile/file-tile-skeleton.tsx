@@ -16,6 +16,11 @@ export type FileTileSkeletonProps = Omit<ComponentProps<"div">, "children"> & {
   nameWidth?: string;
   /** How long the line of facts is. */
   metaWidth?: string;
+  /**
+   * `none` (the default): the shapes alone. `flat`: on the tile's face without its shadow, a
+   * white sheet with a hairline, where a grid of bare shapes would dissolve into its ground.
+   */
+  face?: "none" | "flat";
 };
 
 /**
@@ -29,14 +34,21 @@ export type FileTileSkeletonProps = Omit<ComponentProps<"div">, "children"> & {
 export function FileTileSkeleton({
   nameWidth = "68%",
   metaWidth = "42%",
+  face = "none",
   className,
   ...props
 }: FileTileSkeletonProps) {
   return (
     <div
       data-slot="file-tile-skeleton"
+      data-face={face}
       aria-hidden
-      className={cn("flex min-w-0 flex-col", fileTilePad, className)}
+      className={cn(
+        "flex min-w-0 flex-col",
+        fileTilePad,
+        face === "flat" && "rounded-xl bg-surface inset-ring inset-ring-hairline",
+        className,
+      )}
       {...props}
     >
       <Skeleton shape="block" className={cn("w-full", fileTileWell)} />

@@ -33,6 +33,11 @@ export type FileThumbProps = Omit<ComponentProps<"span">, "children"> & {
    */
   name?: string;
   type?: string;
+  /**
+   * `cover` (the default): the picture fills the square, cropped where it must be. `contain`:
+   * the whole picture inside the square, for a list of logos and marks whose edges matter.
+   */
+  fit?: "cover" | "contain";
 };
 
 /**
@@ -47,7 +52,15 @@ export type FileThumbProps = Omit<ComponentProps<"span">, "children"> & {
  * A picture that does not load gives way to the kind's symbol. Server-safe (the picture is a
  * small client part of its own).
  */
-export function FileThumb({ kind, src, name, type, className, ...props }: FileThumbProps) {
+export function FileThumb({
+  kind,
+  src,
+  name,
+  type,
+  fit = "cover",
+  className,
+  ...props
+}: FileThumbProps) {
   const seeThrough =
     (name !== undefined || type !== undefined) && mayBeTransparent({ name: name ?? "", type });
   return (
@@ -67,7 +80,7 @@ export function FileThumb({ kind, src, name, type, className, ...props }: FileTh
         )}
       >
         {src ? (
-          <FileThumbPicture src={src} kind={kind} seeThrough={seeThrough} />
+          <FileThumbPicture src={src} kind={kind} seeThrough={seeThrough} fit={fit} />
         ) : (
           <FileKindSymbol kind={kind} size={16} className="text-fg-muted" />
         )}
