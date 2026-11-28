@@ -17,16 +17,17 @@ export type FileTileSkeletonProps = Omit<ComponentProps<"div">, "children"> & {
   /** How long the line of facts is. */
   metaWidth?: string;
   /**
-   * `none` (the default): the shapes alone. `flat`: on the tile's face without its shadow, a
-   * white sheet with a hairline, where a grid of bare shapes would dissolve into its ground.
+   * `flat` (the default): on the tile's face without its shadow, a white sheet with a hairline,
+   * so a grid of loading tiles keeps the tiles' outline. `none`: the shapes alone, for a place
+   * where the face would stand out more than the tiles that come.
    */
   face?: "none" | "flat";
 };
 
 /**
  * The shape of a `FileTile` that is still on its way: its picture, the line of its name and the
- * line of its facts, each where the tile will have it. It has no face and no shadow: nothing
- * here can be handled yet, and only what moves casts a shadow.
+ * line of its facts, each where the tile will have it, on the tile's face without its shadow:
+ * nothing here can be handled yet, and only what moves casts a shadow.
  *
  * Put it inside a `SkeletonGroup` (or use `FileGridSkeleton`, which fills whole rows with them).
  * Server-safe.
@@ -34,7 +35,7 @@ export type FileTileSkeletonProps = Omit<ComponentProps<"div">, "children"> & {
 export function FileTileSkeleton({
   nameWidth = "68%",
   metaWidth = "42%",
-  face = "none",
+  face = "flat",
   className,
   ...props
 }: FileTileSkeletonProps) {
