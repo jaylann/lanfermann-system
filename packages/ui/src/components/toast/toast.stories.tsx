@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect } from "react";
-import { expect, screen, waitFor, within } from "storybook/test";
+import { expect, fn, screen, waitFor, within } from "storybook/test";
 
 import { Button } from "@/components/button/button";
 
@@ -166,6 +166,49 @@ export const Keyboard: Story = {
         expect(screen.queryByText("Entwurf gespeichert.")).not.toBeInTheDocument(),
       );
       await expect(button).toHaveFocus();
+    });
+  },
+};
+
+/** What the toast of the test below was asked to take back. */
+const undone = fn();
+
+/**
+ * Its key, as a test: „Rückgängig“ does what it says once and takes the toast with it, so the
+ * toast does not go on saying what is no longer so, with the same key to press again.
+ */
+export const Action: Story = {
+  beforeEach: () => () => toast.dismiss(),
+  render: () => (
+    <div className="min-h-[420px] p-8">
+      <Button
+        onClick={() =>
+          toast({
+            title: "In den Papierkorb gelegt.",
+            timeout: 0,
+            action: { label: "Rückgängig", onClick: undone },
+          })
+        }
+      >
+        Löschen
+      </Button>
+      <Toaster />
+    </div>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    undone.mockClear();
+
+    await step("the toast offers the way back", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Löschen" }));
+      await expect(await screen.findByText("In den Papierkorb gelegt.")).toBeInTheDocument();
+    });
+
+    await step("taking it closes the toast", async () => {
+      await userEvent.click(screen.getByRole("button", { name: "Rückgängig" }));
+      await expect(undone).toHaveBeenCalledTimes(1);
+      await waitFor(() =>
+        expect(screen.queryByText("In den Papierkorb gelegt.")).not.toBeInTheDocument(),
+      );
     });
   },
 };

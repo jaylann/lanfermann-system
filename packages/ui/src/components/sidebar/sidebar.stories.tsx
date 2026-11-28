@@ -22,7 +22,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
-import { expect, screen, waitFor } from "storybook/test";
+import { expect, screen, waitFor, within } from "storybook/test";
 
 import {
   AppShell,
@@ -608,6 +608,128 @@ export const Keyboard: Story = {
       await expect(canvas.getByRole("link", { name: "Rechnungen" })).not.toHaveAttribute(
         "aria-current",
       );
+    });
+  },
+};
+
+/**
+ * Where the keyboard is left when Strg B takes away what it stood on, as a test. The rail folds
+ * the subpages away and switches off the name a group folds under: from there the focus goes to
+ * the button that brings the sidebar back. An entry that stays on the rail keeps it.
+ */
+export const RailFocus: Story = {
+  parameters: { visual: shell },
+  render: (args) => (
+    <ShortcutProvider platform="other">
+      <AppShell>
+        <Entries {...args} folds />
+        <Page />
+      </AppShell>
+    </ShortcutProvider>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const trigger = canvas.getByRole("button", { name: "Seitenleiste" });
+    const toggle = () => userEvent.keyboard("{Control>}b{/Control}");
+
+    await step("from a subpage the focus goes to the sidebar's button", async () => {
+      canvas.getByRole("link", { name: "Entwürfe" }).focus();
+      await toggle();
+      await expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await waitFor(() => expect(trigger).toHaveFocus());
+      await toggle();
+      await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    });
+
+    await step("and from the name a group folds under", async () => {
+      canvas.getByRole("button", { name: "Verwaltung" }).focus();
+      await toggle();
+      await waitFor(() => expect(trigger).toHaveFocus());
+      await toggle();
+    });
+
+    await step("an entry that stays on the rail keeps the focus", async () => {
+      const customers = canvas.getByRole("link", { name: "Kunden" });
+      customers.focus();
+      await toggle();
+      await expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await expect(customers).toHaveFocus();
+    });
+  },
+};
+
+/** The same for a sidebar that leaves entirely: whatever held the focus hands it to the button. */
+export const HiddenFocus: Story = {
+  parameters: { visual: shell },
+  render: (args) => (
+    <ShortcutProvider platform="other">
+      <AppShell>
+        <Entries {...args} collapse="hidden" />
+        <Page />
+      </AppShell>
+    </ShortcutProvider>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const trigger = canvas.getByRole("button", { name: "Seitenleiste" });
+    canvas.getByRole("link", { name: "Kunden" }).focus();
+    await userEvent.keyboard("{Control>}b{/Control}");
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
+};
+
+/**
+ * The drawer of a narrow window, as a test: Tab stays on what can be seen (the way out that is
+ * kept for assistive tech is not one of its stops), a press on the sheet of „Mehr“ that
+ * chooses nothing leaves the drawer open, and a place chosen there closes it.
+ */
+export const PhoneKeyboard: Story = {
+  // The test's window is as narrow as a phone's, so the button opens the drawer.
+  globals: { viewport: { value: "mobile2", isRotated: false } },
+  parameters: { visual: phone },
+  render: (args) => (
+    <AppShell>
+      <Entries {...args} />
+      <Page />
+    </AppShell>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const trigger = canvas.getByRole("button", { name: "Seitenleiste" });
+    const drawer = () => screen.findByRole("dialog", { name: "Hauptnavigation" });
+
+    await step("the button opens the sidebar as a drawer", async () => {
+      await expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await userEvent.click(trigger);
+      await drawer();
+      await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    });
+
+    await step(
+      "Tab comes round from the last row to the first, past the unseen way out",
+      async () => {
+        const sheet = within(await drawer());
+        sheet.getByRole("button", { name: /Maria Huber/ }).focus();
+        await userEvent.tab();
+        await waitFor(() =>
+          expect(sheet.getByRole("button", { name: /Schreinerei Huber/ })).toHaveFocus(),
+        );
+        // The way out is still there for assistive tech, which reaches it without Tab.
+        await expect(sheet.getByRole("button", { name: "Schließen" })).toHaveAttribute(
+          "tabindex",
+          "-1",
+        );
+      },
+    );
+
+    await step("a press on the menu's sheet chooses nothing, and the drawer stays", async () => {
+      await userEvent.click(within(await drawer()).getByRole("button", { name: "Mehr" }));
+      await userEvent.click(await screen.findByRole("menu"));
+      await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    });
+
+    await step("a place chosen there closes the drawer", async () => {
+      await userEvent.click(screen.getByRole("menuitem", { name: "Vorlagen" }));
+      await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     });
   },
 };

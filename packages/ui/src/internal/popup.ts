@@ -20,11 +20,13 @@ export const listSheet = "rounded-xl bg-sheet p-1 text-fg depth-floating outline
 
 /**
  * A row in such a list. It takes the concentric radius of the sheet. The highlight is instant: it
- * follows the pointer and the arrow keys without lag. Focus stays on the popup, so the row has no
- * outline of its own.
+ * follows the pointer and the arrow keys without lag. The highlight is also the row's focus mark:
+ * in a `Select` and a `Combobox` the focus stays on the popup or the field, in a `Menu` the row
+ * itself has it. So the row draws no outline (`outline-hidden`, which keeps one for forced
+ * colours).
  */
 export const listItem = [
-  "flex min-h-(--control-item) cursor-default items-center gap-2.5 rounded-[calc(var(--radius-xl)-4px)] px-2.5 py-1 text-control text-fg outline-none select-none",
+  "flex min-h-(--control-item) cursor-default items-center gap-2.5 rounded-[calc(var(--radius-xl)-4px)] px-2.5 py-1 text-control text-fg outline-hidden select-none",
   "data-highlighted:bg-hover",
   // Forced colours drop the wash, so the highlighted row takes the system's selection colours.
   "forced-colors:data-highlighted:bg-[color:Highlight] forced-colors:data-highlighted:text-[color:HighlightText]",

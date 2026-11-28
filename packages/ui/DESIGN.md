@@ -591,7 +591,8 @@ Every component belongs to one of the four matters, and takes its treatment from
   puts the focus on the answer that changes nothing.
 - **Toasts** stack bottom right, newest in front. One enters from below, leaves by fading where it
   is, and one that was swiped away keeps going. Its key and its cross stand in the middle of its
-  height; the tone's icon stays with the title.
+  height; the tone's icon stays with the title. Its key answers it: pressed, the toast leaves
+  before the action runs, so „Rückgängig“ is not offered a second time.
 - **Consent** is a card in the bottom right corner (spanning the width on a phone) that does not
   take the page away: no scrim, nothing inert, Escape and a click elsewhere are no answer. It is
   a sheet on the page's ground, white on a light page and dark on a dark one. „Alle ablehnen“

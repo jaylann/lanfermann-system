@@ -10,7 +10,8 @@ import { cva, type VariantProps } from "class-variance-authority";
  * open.
  */
 export const navigationMenuEntryVariants = cva([
-  "group/entry inline-flex h-(--control-md) items-center gap-1.5 rounded-md px-3 text-control font-medium whitespace-nowrap text-fg-body select-none",
+  // Lower than 44px: under a finger it has the invisible target of that height (touch.css).
+  "group/entry touch-target relative inline-flex h-(--control-md) items-center gap-1.5 rounded-md px-3 text-control font-medium whitespace-nowrap text-fg-body select-none",
   "transition-colors duration-150 ease-out hover:bg-hover hover:text-fg data-popup-open:bg-hover data-popup-open:text-fg",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
   "data-active:text-fg data-disabled:pointer-events-none data-disabled:text-on-disabled",

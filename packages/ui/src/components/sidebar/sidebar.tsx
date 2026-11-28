@@ -70,6 +70,9 @@ const lengths = [
   "[--sidebar-current:var(--lf-tint)]",
 ].join(" ");
 
+/** What the rail puts out of the keyboard's reach: the subpages, and the name a group folds under. */
+const foldedOnRail = '[data-slot="sidebar-sub"], [data-slot="sidebar-group-title"]';
+
 export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
   /** The name of the navigation for assistive tech ("Hauptnavigation"). */
   "aria-label": string;
@@ -110,14 +113,17 @@ export function Sidebar({
   const gone = !open && collapse === "hidden";
 
   // A sidebar that leaves entirely takes the keyboard focus with it: hand it to the trigger.
+  // The rail takes it from what it folds away (a subpage) or switches off (a group's name).
   useEffect(() => {
     const sidebar = box.current;
-    if (!gone || !sidebar?.contains(document.activeElement)) return;
+    const focused = document.activeElement;
+    if (!(gone || rail) || !sidebar?.contains(focused)) return;
+    if (!gone && !focused?.closest(foldedOnRail)) return;
     sidebar
       .closest('[data-slot="app-shell"]')
       ?.querySelector<HTMLElement>('[data-slot="sidebar-trigger"]')
       ?.focus();
-  }, [gone]);
+  }, [gone, rail]);
 
   const layout = useMemo(() => ({ rail, label }), [rail, label]);
   const closeDrawer = state?.setDrawerOpen;
@@ -183,8 +189,12 @@ export function Sidebar({
                 {children}
               </div>
             </SidebarLayoutContext>
-            {/* The scrim and a swipe close it too; this is the way out for assistive tech. */}
-            <DrawerClose className="sr-only">Schließen</DrawerClose>
+            {/* The scrim and a swipe close it too; this is the way out for assistive tech. It is
+                not a stop for Tab: it cannot be seen, so the focus would be nowhere to the eye,
+                and the keyboard has Escape. */}
+            <DrawerClose tabIndex={-1} className="sr-only">
+              Schließen
+            </DrawerClose>
           </DrawerContent>
         </Drawer>
       ) : null}
@@ -792,8 +802,12 @@ export function SidebarMenu({
           align="start"
           sideOffset={drawer ? 4 : 14}
           alignOffset={drawer ? 0 : -4}
-          // A place was chosen: the drawer has done its work.
-          onClick={() => onNavigate?.()}
+          // A place was chosen: the drawer has done its work. A press on the sheet itself, on a
+          // group's name or on a row that is disabled chooses nothing.
+          onClick={(event) => {
+            const chosen = (event.target as Element).closest('[role^="menuitem"]');
+            if (chosen && chosen.getAttribute("aria-disabled") !== "true") onNavigate?.();
+          }}
         >
           {items}
         </MenuContent>

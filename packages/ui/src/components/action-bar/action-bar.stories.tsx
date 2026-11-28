@@ -1,7 +1,7 @@
 import { Delete02Icon, Download01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, waitFor } from "storybook/test";
+import { expect, fn, waitFor } from "storybook/test";
 
 import { Card } from "@/components/card/card";
 import { Checkbox } from "@/components/checkbox/checkbox";
@@ -51,13 +51,15 @@ type SelectionProps = {
   narrow?: boolean;
   /** What the bar is cut from: the dark sheet (the default) or the light one. */
   ground?: ActionBarProps["ground"];
+  /** Handlers of the caller's own on the bar, which listens for the same events itself. */
+  listeners?: Pick<ActionBarProps, "onFocus" | "onKeyDown">;
 };
 
 /**
  * A list of quotes whose rows can be ticked. The table needs nothing of its own for this: a
  * `Checkbox` per row, one in the head that stands for all of them, and the selection in state.
  */
-function Selection({ start = [], narrow = false, ground }: SelectionProps) {
+function Selection({ start = [], narrow = false, ground, listeners }: SelectionProps) {
   const [selected, setSelected] = useState<readonly string[]>(start);
   const all = selected.length === QUOTES.length;
   const toggle = (id: string) =>
@@ -107,6 +109,7 @@ function Selection({ start = [], narrow = false, ground }: SelectionProps) {
         open={selected.length > 0}
         count={selected.length}
         onClear={() => setSelected([])}
+        {...listeners}
       >
         {narrow ? (
           <>
@@ -204,14 +207,20 @@ export const Phone: Story = {
   render: () => <Selection start={["2026-0421", "2026-0418", "2026-0412"]} narrow />,
 };
 
+/** What the page of the test below hears from the bar: it listens for its keys and its focus too. */
+const heard = { onFocus: fn(), onKeyDown: fn() };
+
 /**
  * The keyboard path, as a test: ticking a row brings the bar without taking the focus, Tab
  * reaches it as one stop, the arrow keys move between its actions, and Escape takes the
- * selection back and returns the focus to where it came from.
+ * selection back and returns the focus to where it came from. The page listens for the bar's
+ * keys and focus itself, and the bar still does all of this.
  */
 export const Keyboard: Story = {
-  render: () => <Selection />,
+  render: () => <Selection listeners={heard} />,
   play: async ({ canvas, userEvent, step }) => {
+    heard.onFocus.mockClear();
+    heard.onKeyDown.mockClear();
     const row = (customer: string) =>
       canvas.getByRole("checkbox", { name: `Angebot für ${customer} auswählen` });
     const last = row("Gärtnerei Weiß");
@@ -241,6 +250,7 @@ export const Keyboard: Story = {
       last.focus();
       await userEvent.tab();
       await expect(canvas.getByRole("button", { name: "Senden" })).toHaveFocus();
+      await expect(heard.onFocus).toHaveBeenCalled();
       await userEvent.keyboard("{ArrowRight}");
       await expect(canvas.getByRole("button", { name: "Als PDF herunterladen" })).toHaveFocus();
       await userEvent.keyboard("{ArrowRight}");
@@ -251,6 +261,9 @@ export const Keyboard: Story = {
 
     await step("Escape takes the selection back, and the focus returns to the row", async () => {
       await userEvent.keyboard("{Escape}");
+      await expect(heard.onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({ key: "Escape" }),
+      );
       await expect(last).not.toBeChecked();
       await expect(row("Schreinerei Mustermann")).not.toBeChecked();
       await expect(last).toHaveFocus();
