@@ -195,7 +195,10 @@ export function Dumbbell({
         data-live={live || undefined}
         role="group"
         aria-roledescription="Diagramm"
-        aria-label={`${label}. Mit den Pfeiltasten durch die Zeilen gehen.`}
+        // The keys are named only where there is something to walk.
+        aria-label={
+          rows.length > 0 ? `${label}. Mit den Pfeiltasten durch die Zeilen gehen.` : label
+        }
         tabIndex={rows.length > 0 ? 0 : undefined}
         onKeyDown={onKeyDown}
         onBlur={hide}
@@ -224,7 +227,7 @@ export function Dumbbell({
               }
               className={cn(
                 lane,
-                "transition-[translate] spring-settle in-data-live:starting:opacity-0",
+                "transition-[translate] spring-settle motion-reduce:transition-none in-data-live:starting:opacity-0",
               )}
               style={laneAt(at(tick))}
             >
@@ -247,7 +250,10 @@ export function Dumbbell({
           {axis.ticks.map((tick) => (
             <div
               key={tick}
-              className={cn(lane, "transition-[translate] spring-settle")}
+              className={cn(
+                lane,
+                "transition-[translate] spring-settle motion-reduce:transition-none",
+              )}
               style={laneAt(at(tick))}
             >
               <div className="absolute inset-y-0 right-0 w-px translate-x-1/2 bg-hairline" />

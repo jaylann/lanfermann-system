@@ -426,3 +426,143 @@ export const HiddenSeries: Story = {
     });
   },
 };
+
+/** A field's name with a space in it: the area is still washed in the series' colour. */
+export const KeyWithASpace: Story = {
+  name: "Key with a space",
+  render: () => (
+    <TimeSeriesChart
+      className="w-[42rem] max-w-full"
+      label="Umsatz pro Tag"
+      variant="area"
+      data={revenue.map((day) => ({ tag: day.tag, "Umsatz netto": day.umsatz }))}
+      x="tag"
+      series={[{ key: "Umsatz netto", label: "Umsatz" }]}
+      format={euro}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const area = canvasElement.querySelector('path[data-shape="area"]');
+    // A reference the browser cannot read leaves the fill at its default, black.
+    await expect(getComputedStyle(area!).fill).toMatch(/^url\(/);
+  },
+};
+
+const visits = visitDays();
+const twoSources = [
+  { key: "suche", label: "Suche" },
+  { key: "direkt", label: "Direkt" },
+] as const;
+
+function SourceChoice() {
+  const [choice, setChoice] = useState("beide");
+  return (
+    <div className="flex w-[42rem] max-w-full flex-col items-start gap-4">
+      <SegmentedControl aria-label="Herkunft" value={choice} onValueChange={setChoice}>
+        <Segment value="beide">Suche und Direkt</Segment>
+        <Segment value="suche">Nur Suche</Segment>
+      </SegmentedControl>
+      <TimeSeriesChart
+        className="w-full"
+        label="Besuche nach Herkunft"
+        data={visits}
+        x="tag"
+        series={choice === "beide" ? twoSources : twoSources.slice(0, 1)}
+      />
+    </div>
+  );
+}
+
+/**
+ * A series hidden in the legend that then becomes the only one: it is drawn, since a single
+ * series has no legend to bring it back with.
+ */
+export const HiddenThenAlone: Story = {
+  name: "Hidden, then alone",
+  render: () => <SourceChoice />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const line = () => canvasElement.querySelector('path[data-series="suche"]');
+    await userEvent.click(canvas.getByRole("button", { name: "Suche" }));
+    await expect(line()).toBeNull();
+    await userEvent.click(canvas.getByRole("button", { name: "Nur Suche" }));
+    await waitFor(() => expect(line()).not.toBeNull());
+  },
+};
+
+function Revealed() {
+  const [view, setView] = useState("zahl");
+  return (
+    <div className="flex w-[42rem] max-w-full flex-col items-start gap-4">
+      <SegmentedControl aria-label="Ansicht" value={view} onValueChange={setView}>
+        <Segment value="zahl">Zahl</Segment>
+        <Segment value="verlauf">Verlauf</Segment>
+      </SegmentedControl>
+      <div hidden={view !== "verlauf"} className="w-full">
+        <TimeSeriesChart
+          label="Umsatz pro Tag"
+          data={revenue}
+          x="tag"
+          series={[{ key: "umsatz", label: "Umsatz" }]}
+          format={euro}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A chart that is not laid out at first (a closed panel): the axis column is measured when it
+ * shows, not at a width of nothing it would then ease open from.
+ */
+export const ShownLater: Story = {
+  name: "Shown later",
+  render: () => <Revealed />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const grid = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="time-series-chart-plot"]',
+    )!.parentElement!;
+    await expect(grid.style.getPropertyValue("--axis-width")).toBe("");
+    await userEvent.click(canvas.getByRole("button", { name: "Verlauf" }));
+    await waitFor(() =>
+      expect(grid.style.getPropertyValue("--axis-width")).toMatch(/^[1-9]\d*px$/),
+    );
+  },
+};
+
+/** Without data the plot is no stop, and its name does not ask for keys that would do nothing. */
+export const EmptyKeyboard: Story = {
+  name: "Empty, keyboard",
+  render: () => (
+    <TimeSeriesChart
+      className="w-[42rem] max-w-full"
+      label="Umsatz pro Tag"
+      data={[]}
+      x="tag"
+      series={[{ key: "umsatz", label: "Umsatz" }]}
+    />
+  ),
+  play: async ({ canvas }) => {
+    const plot = canvas.getByRole("group", { name: "Umsatz pro Tag" });
+    await expect(plot).not.toHaveAttribute("tabindex");
+  },
+};
+
+/** The first day of a new account: one value is a point, not an empty plot. */
+export const OnePoint: Story = {
+  name: "One point",
+  render: () => (
+    <TimeSeriesChart
+      className="w-[42rem] max-w-full"
+      label="Umsatz pro Tag"
+      data={revenue.slice(-1)}
+      x="tag"
+      series={[{ key: "umsatz", label: "Umsatz" }]}
+      format={euro}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const line = canvasElement.querySelector('path[data-shape="line"]');
+    // A line of no length, which its round caps draw as a dot; a move alone would draw nothing.
+    await expect(line?.getAttribute("d")).toMatch(/^M([\d.]+),([\d.]+)L\1,\2$/);
+  },
+};

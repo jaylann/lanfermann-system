@@ -20,7 +20,11 @@ export function useAxisColumn<Grid extends HTMLElement, Sizer extends HTMLElemen
     const box = grid.current;
     const labels = sizer.current;
     if (!box || !labels) return;
-    const fit = () => box.style.setProperty("--axis-width", `${labels.offsetWidth}px`);
+    // Not while the chart is not laid out (`display: none`, a panel that is closed): a width of
+    // 0 would be kept, and the column would ease open from nothing when the chart shows.
+    const fit = () => {
+      if (labels.offsetWidth > 0) box.style.setProperty("--axis-width", `${labels.offsetWidth}px`);
+    };
     fit();
     const frame = requestAnimationFrame(() => (box.dataset.sized = ""));
     const watch = new ResizeObserver(fit);

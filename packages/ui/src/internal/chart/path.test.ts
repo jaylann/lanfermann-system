@@ -63,8 +63,15 @@ describe("a line through a series", () => {
   });
 
   it("is one point where there is one", () => {
-    expect(linePath([{ x: 0.5, y: 0.5 }])).toBe("M500,500");
+    // A line of no length: round caps draw it as a dot, where a move alone draws nothing.
+    expect(linePath([{ x: 0.5, y: 0.5 }])).toBe("M500,500L500,500");
     expect(linePath([])).toBe("");
+  });
+
+  it("draws a value that stands between two gaps", () => {
+    expect(linePath(series([0.2, null, 0.5, null, 0.6]), "linear")).toBe(
+      "M0,200L0,200M500,500L500,500M1000,600L1000,600",
+    );
   });
 });
 

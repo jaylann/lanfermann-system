@@ -30,10 +30,13 @@ export function inferInterval(times: readonly number[]): TimeInterval {
     .map((time, index) => time - times[index]!)
     .sort((a, b) => a - b);
   const typical = gaps[gaps.length >> 1]!;
-  if (typical <= 1.5 * HOUR) return "hour";
+  // Each bound lies just under the next unit, so two points never share one label: points six
+  // hours apart are read by the hour (not four to a day), a fortnight apart by their date (not
+  // two to a month), a quarter apart by their month (not four to a year).
+  if (typical <= 18 * HOUR) return "hour";
   if (typical <= 1.5 * DAY) return "day";
-  if (typical <= 10 * DAY) return "week";
-  if (typical <= 45 * DAY) return "month";
+  if (typical <= 27 * DAY) return "week";
+  if (typical <= 300 * DAY) return "month";
   return "year";
 }
 
@@ -46,8 +49,9 @@ type Level = {
   typical: number;
 };
 
-const midnight = (date: Date) =>
-  date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
+// The first moment of a local day. Not "00:00": where summer time begins at midnight (Cairo,
+// Beirut, Santiago, Havana), that day starts at 01:00.
+const midnight = (date: Date) => new Date(date).setHours(0, 0, 0, 0) === date.getTime();
 const firstOfMonth = (date: Date) => midnight(date) && date.getDate() === 1;
 const newYear = (date: Date) => firstOfMonth(date) && date.getMonth() === 0;
 
@@ -99,6 +103,9 @@ function walk(unit: Level["unit"], start: number, end: number): Date[] {
   else date.setHours(0, 0, 0, 0);
   if (unit === "month" || unit === "year") date.setDate(1);
   if (unit === "year") date.setMonth(0);
+  // Back to the start of the day after every step: a day without a midnight starts at 01:00,
+  // and every day after it would be walked at 01:00 and never be a mark.
+  if (unit !== "hour") date.setHours(0, 0, 0, 0);
   const moments: Date[] = [];
   while (date.getTime() <= end) {
     if (date.getTime() >= start) moments.push(new Date(date));
@@ -106,6 +113,7 @@ function walk(unit: Level["unit"], start: number, end: number): Date[] {
     else if (unit === "day") date.setDate(date.getDate() + 1);
     else if (unit === "month") date.setMonth(date.getMonth() + 1);
     else date.setFullYear(date.getFullYear() + 1);
+    if (unit !== "hour") date.setHours(0, 0, 0, 0);
   }
   return moments;
 }

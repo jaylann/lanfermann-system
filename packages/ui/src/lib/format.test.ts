@@ -170,6 +170,9 @@ describe("relative time", () => {
   it("reads ISO strings and says nothing for what is no moment", () => {
     expect(formatRelativeTime("2026-11-20", { now })).toBe("gestern");
     expect(toTime("2026-11-20")).toBe(at(2026, 11, 20));
+    // A month or a year without a day starts at local midnight too, not at midnight in UTC.
+    expect(toTime("2026-11")).toBe(at(2026, 11, 1));
+    expect(toTime("2026")).toBe(at(2026, 1, 1));
     expect(formatRelativeTime("kein Datum", { now })).toBe("");
   });
 });

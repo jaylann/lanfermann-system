@@ -111,7 +111,8 @@ export function BarChart<Row>({
   const [said, setSaid] = useState("");
   const finger = useRef<number | null>(null);
 
-  const shown = series.filter((entry) => !hidden.has(entry.key));
+  // A single series has no legend to bring it back with: it shows, whatever was hidden before.
+  const shown = series.filter((entry) => series.length === 1 || !hidden.has(entry.key));
   const stacked = layout === "stacked" && shown.length > 1;
   const colorOf = (entry: BarChartSeries<Row>) =>
     series.length === 1
@@ -326,7 +327,10 @@ export function BarChart<Row>({
           data-live={live || undefined}
           role="group"
           aria-roledescription="Diagramm"
-          aria-label={`${label}. Mit den Pfeiltasten durch die Werte gehen.`}
+          // The keys are named only where there is something to walk.
+          aria-label={
+            data.length > 0 ? `${label}. Mit den Pfeiltasten durch die Werte gehen.` : label
+          }
           tabIndex={data.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
