@@ -3,6 +3,7 @@ import { useState } from "react";
 import { expect, screen, waitFor, within } from "storybook/test";
 
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
+import { LocaleProvider } from "@/locale/locale";
 
 import { TimeField } from "./time-field";
 
@@ -280,6 +281,177 @@ export const KeyboardTwelveHours: Story = {
       await userEvent.type(input, "9 pm{Enter}");
       await expect(value).toHaveTextContent("leer");
       await waitFor(() => expect(canvas.getByText(/zwischen 8:00 AM und 6:00 PM/)).toBeVisible());
+    });
+  },
+};
+
+/**
+ * Under a `LocaleProvider` with `en` the field speaks English. The clock is still its own: 24
+ * hours unless `hourCycle={12}` asks for AM and PM, as here.
+ */
+export const English: Story = {
+  parameters: { visual: { viewport: { width: 320, height: 380 }, clip: "viewport" } },
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Field className="w-40">
+        <FieldLabel>Pick-up</FieldLabel>
+        <TimeField {...args} hourCycle={12} defaultValue="16:30" defaultOpen />
+      </Field>
+    </LocaleProvider>
+  ),
+};
+
+/** Empty in English: the placeholder is an example on the field's clock. */
+export const EnglishEmpty: Story = {
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Field className="w-40">
+        <FieldLabel>Start</FieldLabel>
+        <TimeField {...args} />
+      </Field>
+    </LocaleProvider>
+  ),
+};
+
+function ReportedEnglish({ hourCycle }: { hourCycle?: 12 | 24 }) {
+  const [value, setValue] = useState("08:30");
+  return (
+    <LocaleProvider locale="en">
+      <Field className="w-72">
+        <FieldLabel>Call back from</FieldLabel>
+        <TimeField
+          value={value}
+          onValueChange={setValue}
+          min="08:00"
+          max="18:00"
+          hourCycle={hourCycle}
+          className="w-36"
+        />
+        <FieldError />
+        <FieldDescription>
+          Value: <span data-testid="value">{value === "" ? "empty" : value}</span>
+        </FieldDescription>
+      </Field>
+    </LocaleProvider>
+  );
+}
+
+/**
+ * As a test, in English: the language changes the words and not the clock. Times are written on
+ * 24 hours by default, read with AM and PM all the same, and the messages are English.
+ */
+export const KeyboardEnglish: Story = {
+  render: () => <ReportedEnglish />,
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Call back from");
+    const value = canvas.getByTestId("value");
+
+    await step("The time stays on the 24-hour clock", async () => {
+      await expect(input).toHaveValue("08:30");
+    });
+
+    await step("A time with PM is read and written back on 24 hours", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "4:15 pm");
+      await userEvent.tab();
+      await expect(input).toHaveValue("16:15");
+      await expect(value).toHaveTextContent("16:15");
+    });
+
+    await step("What is not a time is flagged, explained and not reported", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "noon{Enter}");
+      await expect(input).toHaveAttribute("aria-invalid", "true");
+      await expect(value).toHaveTextContent("empty");
+      await waitFor(() =>
+        expect(canvas.getByText("Enter a time, for example 09:30.")).toBeVisible(),
+      );
+    });
+
+    await step("A time outside the limits names them", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "7{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("Choose a time between 08:00 and 18:00.")).toBeVisible(),
+      );
+    });
+
+    await step("The list of times has an English name", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "9");
+      const list = await screen.findByRole("listbox", { name: "Times" });
+      await userEvent.click(within(list).getByRole("option", { name: "09:30" }));
+      await expect(value).toHaveTextContent("09:30");
+    });
+  },
+};
+
+/** As a test, in English on a 12-hour clock: the example and the limits are written with AM and PM. */
+export const KeyboardEnglishTwelveHours: Story = {
+  render: () => <ReportedEnglish hourCycle={12} />,
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Call back from");
+    const value = canvas.getByTestId("value");
+
+    await step("The time is written with AM", async () => {
+      await expect(input).toHaveValue("8:30 AM");
+    });
+
+    await step("Digits alone are a time", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "930");
+      await userEvent.tab();
+      await expect(input).toHaveValue("9:30 AM");
+      await expect(value).toHaveTextContent("09:30");
+    });
+
+    await step("The messages are written on the same clock", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "noon{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("Enter a time, for example 9:30 AM.")).toBeVisible(),
+      );
+      await userEvent.clear(input);
+      await userEvent.type(input, "9 pm{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("Choose a time between 8:00 AM and 6:00 PM.")).toBeVisible(),
+      );
+    });
+  },
+};
+
+/** As a test: `labels` puts the caller's messages in place of the language's. */
+export const KeyboardOwnWords: Story = {
+  render: () => (
+    <Field className="w-72">
+      <FieldLabel>Rückruf ab</FieldLabel>
+      <TimeField
+        max="18:00"
+        className="w-36"
+        labels={{
+          invalid: "Bitte eine Uhrzeit wie 9:30 eingeben.",
+          until: (max) => `Wir sind bis ${max} Uhr erreichbar.`,
+        }}
+      />
+      <FieldError />
+    </Field>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Rückruf ab");
+
+    await step("A sentence is said as it is", async () => {
+      await userEvent.type(input, "später{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("Bitte eine Uhrzeit wie 9:30 eingeben.")).toBeVisible(),
+      );
+    });
+
+    await step("A function is handed the limit as the field writes it", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "19{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("Wir sind bis 18:00 Uhr erreichbar.")).toBeVisible(),
+      );
     });
   },
 };

@@ -14,6 +14,8 @@ export const depthNames = [
   "pressed",
   "flat",
   "plug",
+  "swatch",
+  "swatch-chosen",
   "socket",
   "trough",
   "trough-control",
@@ -32,7 +34,7 @@ export const depthNames = [
   "none",
 ] as const;
 
-export const depthToneNames = ["key", "key-block", "accent", "danger", "thumb"] as const;
+export const depthToneNames = ["key", "key-block", "accent", "danger", "thumb", "swatch"] as const;
 
 const shadowNames = [
   "raised",
@@ -40,6 +42,7 @@ const shadowNames = [
   "pressed",
   "flat",
   "plug",
+  "swatch",
   "socket",
   "field",
   "field-focus",

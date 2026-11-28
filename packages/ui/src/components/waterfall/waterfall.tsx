@@ -25,8 +25,19 @@ import {
 } from "@/internal/chart/steps";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type { WaterfallStep };
+
+/** The words a `Waterfall` says on its own (`words`). */
+export type WaterfallWords = {
+  change: string;
+  running: string;
+  total: string;
+  chart: string;
+  hint: string;
+  step: string;
+};
 
 export type WaterfallProps = Omit<ComponentProps<"figure">, "children"> & {
   /** The steps in the order they add up; a `total` stands from zero and shows the sum so far. */
@@ -51,15 +62,19 @@ export type WaterfallProps = Omit<ComponentProps<"figure">, "children"> & {
   readout?: boolean;
   /** Whether the columns are uncovered from left to right where the chart first shows. */
   drawIn?: boolean;
-  /** The words of the readout: what a step adds, the sum after it, and a total. */
-  words?: { change?: string; running?: string; total?: string };
+  /**
+   * The chart's own words, for one chart worded without a `LocaleProvider`. In the readout
+   * and the table: what a step adds (`change`), the sum after it (`running`) and a total
+   * (`total`). For assistive tech: what the plot is called (`chart`), how its keyboard is
+   * explained after the name (`hint`) and the head of the table's first column (`step`). Each
+   * one left out is the provider's.
+   */
+  words?: Partial<WaterfallWords>;
   /** Data is being fetched again: the chart keeps its picture, quieter. */
   pending?: boolean;
   /** What stands in the plot without any data. */
   empty?: ReactNode;
 };
-
-const defaultWords = { change: "Veränderung", running: "Stand", total: "Summe" };
 
 /**
  * How a result is built from gains and losses: revenue, less material, less outside work,
@@ -75,7 +90,7 @@ export function Waterfall({
   data,
   label,
   format,
-  locale = "de-DE",
+  locale,
   height = 240,
   colors = "status",
   tone = "neutral",
@@ -83,19 +98,28 @@ export function Waterfall({
   drawIn = true,
   words: wordsProp,
   pending = false,
-  empty = "Für diesen Zeitraum gibt es noch keine Werte.",
+  empty,
   className,
   style,
   ...props
 }: WaterfallProps) {
+  const { messages, tag } = useLocale();
   const live = useLive();
   const { grid: axisGridRef, sizer: axisSizerRef } = useAxisColumn<
     HTMLDivElement,
     HTMLDivElement
   >();
-  const numbers = chartFormat(locale, format);
-  const signed = signedFormat(locale, format);
-  const words = { ...defaultWords, ...wordsProp };
+  const numbers = chartFormat(locale ?? tag, format);
+  const signed = signedFormat(locale ?? tag, format);
+  const words: WaterfallWords = {
+    change: messages.charts.change,
+    running: messages.charts.running,
+    total: messages.charts.total,
+    chart: messages.charts.chart,
+    hint: messages.charts.hintSteps,
+    step: messages.charts.step,
+    ...wordsProp,
+  };
   const [active, setActive] = useState<{
     index: number;
     shown: boolean;
@@ -260,14 +284,14 @@ export function Waterfall({
             </span>
           ))}
         </div>
-        {bars.length > 0 && <AxisLabels ticks={ticks} locale={locale} format={format} />}
+        {bars.length > 0 && <AxisLabels ticks={ticks} locale={locale ?? tag} format={format} />}
 
         <div
           data-slot="waterfall-plot"
           data-live={live || undefined}
           role="group"
-          aria-roledescription="Diagramm"
-          aria-label={`${label}. Mit den Pfeiltasten durch die Schritte gehen.`}
+          aria-roledescription={words.chart}
+          aria-label={`${label}. ${words.hint}`}
           tabIndex={bars.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -290,7 +314,7 @@ export function Waterfall({
 
           {bars.length === 0 && (
             <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-fg-muted">
-              {empty}
+              {empty === undefined ? messages.charts.empty : empty}
             </p>
           )}
 
@@ -440,7 +464,7 @@ export function Waterfall({
               {/* A name too long for its band is hyphenated by the language's rules
                   („Fremd-leistung“), not broken at any letter. */}
               <span
-                lang={String(locale).split("-")[0]}
+                lang={String(locale ?? tag).split("-")[0]}
                 className="text-balance hyphens-auto text-fg-muted"
               >
                 {data[index]!.name}
@@ -465,7 +489,7 @@ export function Waterfall({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Schritt</th>
+                <th scope="col">{words.step}</th>
                 <th scope="col">{words.change}</th>
                 <th scope="col">{words.running}</th>
               </tr>

@@ -12,7 +12,11 @@
 
 :root,
 [data-theme="paper"],
-[data-theme="tint"] {
+[data-mode="dark"] [data-mode="light"][data-theme="paper"],
+[data-mode="dark"] [data-mode="light"] [data-theme="paper"],
+[data-theme="tint"],
+[data-mode="dark"] [data-mode="light"][data-theme="tint"],
+[data-mode="dark"] [data-mode="light"] [data-theme="tint"] {
   --lf-danger: #bd1f3d;
   --lf-danger-soft: #ffebea;
   --lf-danger-solid: #bd1f3d;
@@ -35,13 +39,17 @@
 }
 
 /* On Tint the info wash would vanish into the ground, so it steps to white. */
-[data-theme="tint"] {
+[data-theme="tint"],
+[data-mode="dark"] [data-mode="light"][data-theme="tint"],
+[data-mode="dark"] [data-mode="light"] [data-theme="tint"] {
   --lf-info-soft: #ffffff;
 }
 
 /* Ink's, and in dark mode every ground's but Indigo's: the colours are made for a dark ground. */
 .dark,
 [data-theme="ink"],
+[data-mode="dark"] [data-mode="light"][data-theme="ink"],
+[data-mode="dark"] [data-mode="light"] [data-theme="ink"],
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
 [data-mode="dark"] [data-theme="paper"],
@@ -98,6 +106,8 @@
 
 /* Indigo is the ask: nothing competes with it. Statuses there are white, in words. */
 [data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"][data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"] [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
 [data-mode="dark"] [data-theme="indigo"] {
   --lf-danger: #ffffff;

@@ -115,6 +115,59 @@ export const Others: Story = {
   ),
 };
 
+// One empty page: enough for a browser's viewer to open, and for one that has none to show
+// what stands behind the frame.
+const PDF =
+  "data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgMzAwIDIwMF0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUj4+CiUlRU9GCg==";
+
+/**
+ * A PDF opens in the browser's own viewer. The frame has no face of its own: while the viewer
+ * loads, and in a browser that draws none inside a page, its symbol and type stand there
+ * instead of an empty box.
+ */
+export const Pdf: Story = {
+  parameters: { visual: { viewport: { width: 480, height: 420 } } },
+  render: () => (
+    <MediaPreview
+      src={PDF}
+      name="Angebot_Kowalski_Herbst.pdf"
+      type="application/pdf"
+      pdf="frame"
+      className="h-80 w-96"
+    />
+  ),
+};
+
+/**
+ * On a touch device (`auto`), or where asked for, there is no frame at all: the symbol, the
+ * type and a link that opens the file in a new tab.
+ */
+export const PdfLink: Story = {
+  parameters: {
+    visual: { viewport: { width: 390, height: 300 }, target: '[data-slot="link"]' },
+  },
+  render: () => (
+    <MediaPreview
+      src={PDF}
+      name="Angebot_Kowalski_Herbst.pdf"
+      type="application/pdf"
+      pdf="link"
+      className="h-52 w-full max-w-80"
+    />
+  ),
+};
+
+/** As a test: the link form loads no frame and offers the file in a new tab. */
+export const PdfLinkOpens: Story = {
+  render: () => <MediaPreview src={PDF} name="Angebot.pdf" type="application/pdf" pdf="link" />,
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole("link", { name: /PDF öffnen/ });
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("href", PDF);
+    await expect(document.querySelector('[data-slot="media-preview-document"]')).toBeNull();
+  },
+};
+
 /**
  * A video and a piece of audio play with the browser's own controls; only their length loads
  * until they are played. (The stories carry no media, so the controls stand empty.)

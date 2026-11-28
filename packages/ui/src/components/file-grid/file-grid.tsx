@@ -1,6 +1,5 @@
 "use client";
 
-import { cva } from "class-variance-authority";
 import {
   Children,
   type ComponentProps,
@@ -26,8 +25,11 @@ import {
 } from "@/internal/glide";
 import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { FileGridContext } from "./file-grid-context";
+import { FileGridSkeleton } from "./file-grid-skeleton";
+import { fileGrid } from "./file-grid-variants";
 
 /** A grid scrolls nowhere, but it is a region of its own and needs a name. */
 type Named =
@@ -46,24 +48,6 @@ export function columnsOf(template: string): number {
   return Math.max(1, tracks.length);
 }
 
-const fileGrid = cva(
-  [
-    "group/files relative grid gap-x-3 gap-y-6",
-    // As many columns as fit, each at least a tile wide, sharing what is left over.
-    "grid-cols-[repeat(auto-fill,minmax(min(var(--file-tile-min),100%),1fr))]",
-  ],
-  {
-    variants: {
-      size: {
-        /** Tiles at least 8rem wide: a narrow place, many small pictures. */
-        sm: "[--file-tile-min:8rem]",
-        /** Tiles at least 10rem wide: two on a phone, four or five beside an inspector. */
-        md: "[--file-tile-min:10rem]",
-      },
-    },
-  },
-);
-
 export type FileGridProps = Omit<ComponentProps<"div">, "aria-label" | "aria-labelledby"> &
   Named & {
     /** How wide a tile is at least. The grid fits as many columns as there is room for. */
@@ -74,7 +58,15 @@ export type FileGridProps = Omit<ComponentProps<"div">, "aria-label" | "aria-lab
      */
     onColumnsChange?: (columns: number) => void;
     /** `FileGridSection`s, each holding its `FileTile`s. */
-    children: ReactNode;
+    children?: ReactNode;
+    /**
+     * The folder is still loading: the grid shows the shapes of its tiles instead, in the same
+     * columns (`FileGridSkeleton`). `true` says „Die Dateien werden geladen.“ to assistive tech;
+     * a string says something more exact („Die Dateien in badges werden geladen.“).
+     */
+    loading?: boolean | string;
+    /** How many rows of shapes a loading grid shows. */
+    loadingRows?: number;
   };
 
 /**
@@ -94,13 +86,28 @@ export type FileGridProps = Omit<ComponentProps<"div">, "aria-label" | "aria-lab
  * the keyboard come from `useSelection`: spread its container props on the grid. Name it with
  * `aria-label` („Dateien in blogs/building-gbar“).
  */
-export function FileGrid({
+export function FileGrid({ loading = false, loadingRows, ...props }: FileGridProps) {
+  const { messages } = useLocale();
+  if (loading !== false) {
+    return (
+      <FileGridSkeleton
+        size={props.size}
+        rows={loadingRows}
+        label={typeof loading === "string" ? loading : messages.fileGrid.loading}
+        className={props.className}
+      />
+    );
+  }
+  return <LoadedFileGrid {...props} />;
+}
+
+function LoadedFileGrid({
   size = "md",
   onColumnsChange,
   className,
   children,
   ...props
-}: FileGridProps) {
+}: Omit<FileGridProps, "loading" | "loadingRows">) {
   const box = useRef<HTMLDivElement>(null);
   const live = useLive();
   const [glide] = useState(() => new Glide(box));

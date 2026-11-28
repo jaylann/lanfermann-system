@@ -54,6 +54,7 @@ import { ShortcutProvider } from "@/components/shortcut/shortcut";
 
 import {
   Sidebar,
+  SidebarBrand,
   SidebarButton,
   SidebarContent,
   SidebarFooter,
@@ -131,6 +132,8 @@ type EntriesProps = Partial<SidebarProps> & {
   folds?: boolean;
   /** Whether the menu beside the sidebar is open at first, so it shows in a still picture. */
   moreOpen?: boolean;
+  /** The product's mark in the header, in place of the workspace's menu. */
+  brand?: boolean;
 };
 
 /**
@@ -142,6 +145,7 @@ function Entries({
   subpage,
   folds = false,
   moreOpen = false,
+  brand = false,
   ...props
 }: EntriesProps) {
   const [at, setAt] = useState<{ page: Page | "mehr"; sub?: string }>({
@@ -183,43 +187,49 @@ function Entries({
   return (
     <Sidebar aria-label="Hauptnavigation" {...props}>
       <SidebarHeader>
-        <Menu>
-          <MenuTrigger
-            render={
-              <SidebarButton
-                menu
-                media={
-                  <Avatar size="sm">
-                    <AvatarFallback>{active?.initials}</AvatarFallback>
-                  </Avatar>
+        {brand ? (
+          <SidebarBrand href="#uebersicht" />
+        ) : (
+          <>
+            <Menu>
+              <MenuTrigger
+                render={
+                  <SidebarButton
+                    menu
+                    media={
+                      <Avatar size="sm">
+                        <AvatarFallback>{active?.initials}</AvatarFallback>
+                      </Avatar>
+                    }
+                    className="font-medium text-fg"
+                  />
                 }
-                className="font-medium text-fg"
-              />
-            }
-          >
-            {active?.name}
-          </MenuTrigger>
-          <MenuContent className="min-w-56">
-            <MenuGroup>
-              <MenuGroupLabel>Betriebe</MenuGroupLabel>
-              <MenuRadioGroup
-                value={business}
-                onValueChange={(value: string) => setBusiness(value)}
               >
-                {businesses.map((entry) => (
-                  <MenuRadioItem key={entry.value} value={entry.value}>
-                    {entry.name}
-                  </MenuRadioItem>
-                ))}
-              </MenuRadioGroup>
-            </MenuGroup>
-            <MenuSeparator />
-            <MenuItem>
-              <Icon icon={Add01Icon} size={16} className="text-fg-muted" />
-              Betrieb hinzufügen
-            </MenuItem>
-          </MenuContent>
-        </Menu>
+                {active?.name}
+              </MenuTrigger>
+              <MenuContent className="min-w-56">
+                <MenuGroup>
+                  <MenuGroupLabel>Betriebe</MenuGroupLabel>
+                  <MenuRadioGroup
+                    value={business}
+                    onValueChange={(value: string) => setBusiness(value)}
+                  >
+                    {businesses.map((entry) => (
+                      <MenuRadioItem key={entry.value} value={entry.value}>
+                        {entry.name}
+                      </MenuRadioItem>
+                    ))}
+                  </MenuRadioGroup>
+                </MenuGroup>
+                <MenuSeparator />
+                <MenuItem>
+                  <Icon icon={Add01Icon} size={16} className="text-fg-muted" />
+                  Betrieb hinzufügen
+                </MenuItem>
+              </MenuContent>
+            </Menu>
+          </>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -492,6 +502,161 @@ export const PhoneOpen: Story = {
       </AppShell>
     </Opened>
   ),
+};
+
+/**
+ * The product's mark in the header. It starts where the entries' symbols start; collapse the
+ * sidebar and the word gives its place to the symbol, which stands in the symbols' column.
+ */
+export const Brand: Story = {
+  parameters: {
+    visual: {
+      ...shell,
+      target: '[data-slot="sidebar-brand"]',
+      motion: [{ name: "collapse", click: '[data-slot="sidebar-trigger"]', frames: 10 }],
+    },
+  },
+  render: (args) => (
+    <AppShell>
+      <Entries {...args} brand />
+      <Page />
+    </AppShell>
+  ),
+};
+
+/** On the rail: the symbol over the symbols, and the person below named beside the avatar. */
+export const BrandRail: Story = {
+  parameters: {
+    visual: {
+      ...shell,
+      motion: [
+        { name: "expand", click: '[data-slot="sidebar-trigger"]', frames: 10 },
+        { name: "name", hover: '[data-slot="sidebar-button"]', frames: 6 },
+      ],
+    },
+  },
+  render: (args) => (
+    <AppShell defaultSidebarOpen={false}>
+      <Entries {...args} brand />
+      <Page />
+    </AppShell>
+  ),
+};
+
+/**
+ * In the comfortable density the rows are taller and their symbols start further in; the brand
+ * follows, because its inset is the rows' own.
+ */
+export const BrandComfortable: Story = {
+  parameters: { visual: shell },
+  render: (args) => (
+    <div data-density="comfortable" className="flex gap-6">
+      <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+        <Entries {...args} inline brand aria-label="Ausgeklappt" className="border-r-0" />
+      </div>
+      <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+        <Entries {...args} inline collapsed brand aria-label="Eingeklappt" className="border-r-0" />
+      </div>
+    </div>
+  ),
+};
+
+/**
+ * As a test: the brand is one link with one name whatever the sidebar shows, and on the rail the
+ * person's row names itself in a tooltip, which gives way once its menu is open.
+ */
+export const BrandAndRailNames: Story = {
+  parameters: { visual: shell },
+  render: (args) => (
+    <AppShell defaultSidebarOpen={false}>
+      <Entries {...args} brand />
+      <Page />
+    </AppShell>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getAllByRole("link", { name: "Lanfermann" })).toHaveLength(1);
+    await expect(canvas.queryAllByRole("img", { name: /Lanfermann/ })).toHaveLength(0);
+    // Its name begins with the initials on the avatar.
+    const person = canvas.getByRole("button", { name: /Maria Huber/ });
+    const named = () => document.querySelector('[data-slot="tooltip-content"]');
+    await userEvent.tab();
+    await userEvent.tab();
+    person.focus();
+    await waitFor(() => expect(named()).toHaveTextContent("Maria Huber"));
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(screen.getByRole("menu")).toBeVisible());
+    await waitFor(() => expect(named()).toBeNull());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    // Under the pointer as well, once the keyboard has left the row.
+    (document.activeElement as HTMLElement | null)?.blur();
+    await userEvent.hover(person);
+    await waitFor(() => expect(named()).toHaveTextContent("Maria Huber"), { timeout: 3000 });
+    await userEvent.unhover(person);
+    await userEvent.keyboard("{Escape}");
+  },
+};
+
+/**
+ * A sidebar that is shown rather than used: on a design page, beside the app's own. `inline`
+ * leaves the shell around it alone, so collapsing the real sidebar does not collapse the
+ * specimen, and it is as tall as its place. `collapsed` shows the rail of the same specimen.
+ */
+export const Inline: Story = {
+  parameters: { visual: { viewport: { width: 1100, height: 640 }, clip: "viewport" } },
+  render: (args) => (
+    <AppShell>
+      <Entries {...args} />
+      <Page>
+        <div className="mt-4 flex items-stretch gap-4">
+          <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+            <Entries
+              {...args}
+              inline
+              aria-label="Beispiel, ausgeklappt"
+              start="rechnungen"
+              className="border-r-0"
+            />
+          </div>
+          <div className="flex h-[26rem] overflow-hidden rounded-xl border border-hairline">
+            <Entries
+              {...args}
+              inline
+              collapsed
+              aria-label="Beispiel, eingeklappt"
+              className="border-r-0"
+            />
+          </div>
+        </div>
+      </Page>
+    </AppShell>
+  ),
+};
+
+/** As a test: the shell's trigger collapses the app's sidebar and leaves the specimen as it is. */
+export const InlineKeepsItsState: Story = {
+  parameters: { visual: { viewport: { width: 1100, height: 640 } } },
+  render: (args) => (
+    <AppShell>
+      <Entries {...args} />
+      <Page>
+        <div className="mt-4 flex h-[26rem]">
+          <Entries {...args} inline aria-label="Beispiel" />
+        </div>
+      </Page>
+    </AppShell>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const [own, specimen] = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-slot="sidebar"]:not([data-drawer])'),
+    );
+    await expect(specimen).toHaveAttribute("data-inline");
+    await expect(getComputedStyle(specimen!).position).toBe("relative");
+    await userEvent.click(canvas.getByRole("button", { name: "Seitenleiste" }));
+    await waitFor(() => expect(own).toHaveAttribute("data-state", "collapsed"));
+    await expect(specimen).toHaveAttribute("data-state", "expanded");
+    await expect(specimen).not.toHaveAttribute("id");
+  },
 };
 
 /**

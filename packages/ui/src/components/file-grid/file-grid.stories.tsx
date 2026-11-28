@@ -13,6 +13,7 @@ import {
 } from "@/components/file-tile/story-files";
 
 import { FileGrid, FileGridSection } from "./file-grid";
+import { FileGridSkeleton } from "./file-grid-skeleton";
 
 const meta = {
   title: "Components/FileGrid",
@@ -107,6 +108,41 @@ export const Logos: Story = {
 const SORTED = FILES.slice(0, 6).sort(byName);
 
 /** Files come and go: a new one joins at its place in the order, one is taken away. */
+/**
+ * A folder that is still loading: tiles in the grid's own columns, in whole rows. The shapes are
+ * where the pictures, names and facts will stand, without the tile's face: nothing can be
+ * handled yet.
+ */
+export const Loading: Story = {
+  parameters: { visual: { viewport: { width: 960, height: 520 } } },
+  render: () => <FileGrid aria-label="Dateien in blogs/building-gbar" loading />,
+};
+
+/** On a phone the same two rows are two tiles wide. */
+export const LoadingPhone: Story = {
+  parameters: { visual: { viewport: { width: 390, height: 520 } } },
+  render: () => <FileGridSkeleton label="Die Dateien werden geladen." />,
+};
+
+/** As a test: at every width the skeleton shows whole rows, and it says what is on its way. */
+export const LoadingRows: Story = {
+  render: () => (
+    <div className="w-[640px]">
+      <FileGridSkeleton label="Die Dateien werden geladen." rows={2} />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("status")).toHaveTextContent("Die Dateien werden geladen.");
+    const box = canvas.getByRole("status").getBoundingClientRect();
+    const tiles = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-slot="file-tile-skeleton"]'),
+    ).filter((tile) => tile.getBoundingClientRect().top < box.bottom - 1);
+    const tops = new Set(tiles.map((tile) => Math.round(tile.getBoundingClientRect().top)));
+    await expect(tops.size).toBe(2);
+    await expect(tiles.length % 2).toBe(0);
+  },
+};
+
 function Changing() {
   const [files, setFiles] = useState(SORTED);
   const arriving = files.some(({ id }) => id === ARRIVING.id);

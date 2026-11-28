@@ -15,7 +15,9 @@
  */
 
 :root,
-[data-theme="paper"] {
+[data-theme="paper"],
+[data-mode="dark"] [data-mode="light"][data-theme="paper"],
+[data-mode="dark"] [data-mode="light"] [data-theme="paper"] {
   --lf-code-text: #302f39;
   --lf-code-punct: #686775;
   --lf-code-comment: #686775;
@@ -36,7 +38,9 @@
   --lf-code-removed: #ffebea;
 }
 
-[data-theme="tint"] {
+[data-theme="tint"],
+[data-mode="dark"] [data-mode="light"][data-theme="tint"],
+[data-mode="dark"] [data-mode="light"] [data-theme="tint"] {
   --lf-code-text: #302f39;
   --lf-code-punct: #5f5e6e;
   --lf-code-comment: #5f5e6e;
@@ -59,6 +63,8 @@
 /* Ink's, and in dark mode every ground's but Indigo's. */
 .dark,
 [data-theme="ink"],
+[data-mode="dark"] [data-mode="light"][data-theme="ink"],
+[data-mode="dark"] [data-mode="light"] [data-theme="ink"],
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
 [data-mode="dark"] [data-theme="paper"],
@@ -123,6 +129,8 @@
 }
 
 [data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"][data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"] [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
 [data-mode="dark"] [data-theme="indigo"] {
   --lf-code-text: #ffffff;
@@ -235,7 +243,8 @@
   }
 
   /* A change carries its sign, so colour is never the only way to tell. The sign is read out
-     with its word (`data-label`) but never copied. */
+     with its word but never copied: the caller's (`data-label`), or the one the scroll region
+     sets in the page's language (`CodeScroll`), German where the lines stand on their own. */
   [data-slot="code-block-line"][data-kind="added"] {
     background-color: var(--lf-code-added);
   }
@@ -248,12 +257,18 @@
     user-select: none;
   }
   [data-slot="code-block-line"][data-kind="added"]::after {
-    content: "+" / attr(data-label);
+    content: "+" / var(--code-added-word, "hinzugefügt");
     color: var(--lf-success);
   }
   [data-slot="code-block-line"][data-kind="removed"]::after {
-    content: "−" / attr(data-label);
+    content: "−" / var(--code-removed-word, "entfernt");
     color: var(--lf-danger);
+  }
+  [data-slot="code-block-line"][data-kind="added"][data-label]::after {
+    content: "+" / attr(data-label);
+  }
+  [data-slot="code-block-line"][data-kind="removed"][data-label]::after {
+    content: "−" / attr(data-label);
   }
 
   /*

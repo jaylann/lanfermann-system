@@ -1,15 +1,20 @@
 import { Link04Icon } from "@hugeicons/core-free-icons";
+import { useId } from "react";
 
 import { Heading, type HeadingProps } from "@/components/heading/heading";
 import { Icon } from "@/components/icon/icon";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 export type AnchorHeadingProps = Omit<HeadingProps, "id" | "level"> & {
   /** The section's id: the part of the address after `#`. */
   id: string;
   /** `<h2>` to `<h4>`: a section of a page and its parts. The page's title is a `Heading`. */
   level?: 2 | 3 | 4;
-  /** The name of the link to the section, read out by a screen reader. */
+  /**
+   * The name of the link to the section, read out by a screen reader. Left out, it is the
+   * word of the nearest `LocaleProvider` („Link zu diesem Abschnitt“ without one).
+   */
   anchorLabel?: string;
 };
 
@@ -25,11 +30,12 @@ export type AnchorHeadingProps = Omit<HeadingProps, "id" | "level"> & {
 export function AnchorHeading({
   id,
   level = 2,
-  anchorLabel = "Link zu diesem Abschnitt",
+  anchorLabel,
   className,
   children,
   ...props
 }: AnchorHeadingProps) {
+  const wordId = useId();
   return (
     <Heading
       data-slot="anchor-heading"
@@ -44,6 +50,7 @@ export function AnchorHeading({
       <a
         href={`#${id}`}
         aria-label={anchorLabel}
+        aria-labelledby={anchorLabel === undefined ? wordId : undefined}
         data-slot="anchor-heading-link"
         className={cn(
           "touch-target relative inline-flex size-5 items-center justify-center rounded-xs align-middle text-fg-muted",
@@ -51,6 +58,14 @@ export function AnchorHeading({
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
         )}
       >
+        {/* No label of the caller's: the table's word names the link, because an attribute
+            cannot follow the provider from a server file. Hidden rather than only out of
+            sight, so it is not copied or found with the heading's text. */}
+        {anchorLabel === undefined && (
+          <span id={wordId} hidden>
+            <Localized ns="anchorHeading" name="label" />
+          </span>
+        )}
         <Icon icon={Link04Icon} size={16} />
       </a>
     </Heading>

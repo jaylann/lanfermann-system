@@ -3,7 +3,9 @@
 import { type ComponentProps, type ReactNode, useRef } from "react";
 
 import { CodeCopy, type CodeCopyLabels } from "@/components/code-block/code-copy";
+import { useCopyKeys } from "@/internal/copy-keys";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type QuoteProps = Omit<ComponentProps<"figure">, "children"> &
   CodeCopyLabels & {
@@ -28,15 +30,18 @@ export type QuoteProps = Omit<ComponentProps<"figure">, "children"> &
 export function Quote({
   label,
   copy,
-  copyLabel = "Text kopieren",
+  copyLabel,
   copiedLabel,
-  copiedMessage = "Der Text wurde kopiert.",
+  copiedMessage,
   failedLabel,
-  failedMessage = "Der Text wurde nicht kopiert. Er ist markiert und kann mit ⌘C kopiert werden.",
+  failedMessage: failedMessageProp,
   className,
   children,
   ...props
 }: QuoteProps) {
+  const { messages } = useLocale();
+  const copyKeys = useCopyKeys();
+  const failedMessage = failedMessageProp ?? messages.quote.failedMessage(copyKeys);
   const words = useRef<HTMLQuoteElement>(null);
   return (
     <figure
@@ -71,9 +76,9 @@ export function Quote({
           <CodeCopy
             text={copy}
             codeRef={words}
-            copyLabel={copyLabel}
+            copyLabel={copyLabel ?? messages.quote.copy}
             copiedLabel={copiedLabel}
-            copiedMessage={copiedMessage}
+            copiedMessage={copiedMessage ?? messages.quote.copiedMessage}
             failedLabel={failedLabel}
             failedMessage={failedMessage}
             // Sits in the bubble's corner: half a line up, so its middle meets the first line's.

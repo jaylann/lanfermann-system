@@ -45,7 +45,7 @@ export {
 export { type FileKind, kindOf } from "./components/attachment/kinds";
 export { Avatar, AvatarFallback, AvatarImage, type AvatarProps } from "./components/avatar/avatar";
 export { AvatarGroup, type AvatarGroupProps } from "./components/avatar-group/avatar-group";
-export { type AvatarPerson, type Presence } from "./components/avatar-group/people";
+export { type AvatarPerson, initialsOf, type Presence } from "./components/avatar-group/people";
 export { Badge, type BadgeProps } from "./components/badge/badge";
 export { Banner, type BannerProps, type BannerTone } from "./components/banner/banner";
 export {
@@ -53,6 +53,7 @@ export {
   type BarChartActive,
   type BarChartProps,
   type BarChartSeries,
+  type BarChartWords,
 } from "./components/bar-chart/bar-chart";
 export { BarList, type BarListItem, type BarListProps } from "./components/bar-list/bar-list";
 export {
@@ -112,6 +113,14 @@ export {
   CollapsibleTrigger,
   type CollapsibleTriggerProps,
 } from "./components/collapsible/collapsible";
+export { ColorField, type ColorFieldProps } from "./components/color-field/color-field";
+export {
+  ColorSwatch,
+  ColorSwatchGroup,
+  type ColorSwatchGroupProps,
+  type ColorSwatchProps,
+  type ColorSwatchSize,
+} from "./components/color-swatch/color-swatch";
 export {
   Combobox,
   ComboboxChips,
@@ -215,9 +224,14 @@ export {
   CtaTitle,
   type CtaTone,
 } from "./components/cta/cta";
-export { DateField, type DateFieldProps } from "./components/date-field/date-field";
+export {
+  DateField,
+  type DateFieldLabels,
+  type DateFieldProps,
+} from "./components/date-field/date-field";
 export {
   DateRangeField,
+  type DateRangeFieldLabels,
   type DateRangeFieldProps,
 } from "./components/date-range-field/date-range-field";
 export { type DateRangePreset, lastDays } from "./components/date-range-field/presets";
@@ -283,7 +297,12 @@ export {
   DrawerTitle,
   DrawerTrigger,
 } from "./components/drawer/drawer";
-export { Dumbbell, type DumbbellItem, type DumbbellProps } from "./components/dumbbell/dumbbell";
+export {
+  Dumbbell,
+  type DumbbellItem,
+  type DumbbellProps,
+  type DumbbellWords,
+} from "./components/dumbbell/dumbbell";
 export { EditableName, type EditableNameProps } from "./components/editable-name/editable-name";
 export {
   Empty,
@@ -316,16 +335,33 @@ export {
   type FileGridSectionProps,
 } from "./components/file-grid/file-grid";
 export {
+  FileGridSkeleton,
+  type FileGridSkeletonProps,
+} from "./components/file-grid/file-grid-skeleton";
+export {
   FileKindSymbol,
   type FileKindSymbolProps,
   type FileSymbolKind,
 } from "./components/file-kind-symbol/file-kind-symbol";
-export { FileThumb, type FileThumbProps } from "./components/file-thumb/file-thumb";
+export {
+  FileThumb,
+  type FileThumbProps,
+  FileThumbSkeleton,
+} from "./components/file-thumb/file-thumb";
+export {
+  FileThumbStack,
+  type FileThumbStackFile,
+  type FileThumbStackProps,
+} from "./components/file-thumb/file-thumb-stack";
 export {
   FileTile,
   type FileTileProps,
   type FileTileStatus,
 } from "./components/file-tile/file-tile";
+export {
+  FileTileSkeleton,
+  type FileTileSkeletonProps,
+} from "./components/file-tile/file-tile-skeleton";
 export {
   FileUpload,
   FileUploadItem,
@@ -347,10 +383,22 @@ export {
 } from "./components/file-upload/files";
 export { Form, type FormProps } from "./components/form/form";
 export { Funnel, type FunnelProps, type FunnelStep } from "./components/funnel/funnel";
-export { Ground, type GroundName, type GroundProps, useGround } from "./components/ground/ground";
+export {
+  Ground,
+  type GroundMode,
+  type GroundName,
+  type GroundProps,
+  useGround,
+  useGroundMode,
+} from "./components/ground/ground";
 export { Grow, type GrowProps } from "./components/grow/grow";
 export { Heading, type HeadingProps } from "./components/heading/heading";
-export { Heatmap, type HeatmapDay, type HeatmapProps } from "./components/heatmap/heatmap";
+export {
+  Heatmap,
+  type HeatmapDay,
+  type HeatmapProps,
+  type HeatmapWords,
+} from "./components/heatmap/heatmap";
 export {
   HoverCard,
   HoverCardContent,
@@ -359,6 +407,7 @@ export {
   type HoverCardTriggerProps,
 } from "./components/hover-card/hover-card";
 export { Icon, type IconProps, type IconSvgElement } from "./components/icon/icon";
+export { IconTile, type IconTileProps } from "./components/icon-tile/icon-tile";
 export { Input, type InputProps } from "./components/input/input";
 export {
   InputGroup,
@@ -564,6 +613,8 @@ export {
 } from "./components/side-nav/side-nav";
 export {
   Sidebar,
+  SidebarBrand,
+  type SidebarBrandProps,
   SidebarButton,
   type SidebarButtonProps,
   SidebarContent,
@@ -669,6 +720,8 @@ export {
   type TableProps,
   TableRow,
   type TableRowProps,
+  TableSkeleton,
+  type TableSkeletonProps,
   TableSortButton,
   type TableSortButtonProps,
 } from "./components/table/table";
@@ -689,6 +742,11 @@ export {
 export { Text, type TextProps } from "./components/text/text";
 export { Textarea, type TextareaProps } from "./components/textarea/textarea";
 export {
+  ThemeMenuItems,
+  type ThemeMenuItemsProps,
+  useThemeNames,
+} from "./components/theme-switch/theme-menu";
+export {
   type ColorMode,
   type Theme,
   THEME_STORAGE_KEY,
@@ -701,12 +759,17 @@ export {
   type UseThemeOptions,
   type UseThemeResult,
 } from "./components/theme-switch/use-theme";
-export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
+export {
+  TimeField,
+  type TimeFieldLabels,
+  type TimeFieldProps,
+} from "./components/time-field/time-field";
 export {
   TimeSeriesChart,
   type TimeSeriesChartActive,
   type TimeSeriesChartProps,
   type TimeSeriesChartSeries,
+  type TimeSeriesChartWords,
 } from "./components/time-series-chart/time-series-chart";
 export {
   Timeline,
@@ -763,8 +826,17 @@ export {
   Waterfall,
   type WaterfallProps,
   type WaterfallStep,
+  type WaterfallWords,
 } from "./components/waterfall/waterfall";
+export { readClipboard, writeClipboard } from "./internal/clipboard";
 export { cn, mergeClassName } from "./lib/cn";
+export {
+  type ColorTone,
+  colorTone,
+  contrastRatio,
+  parseHexColor,
+  relativeLuminance,
+} from "./lib/color";
 export {
   type DateOptions,
   formatDate,
@@ -780,4 +852,11 @@ export {
 } from "./lib/format";
 export { type Platform } from "./lib/shortcut";
 export { useMediaQuery } from "./lib/use-media-query";
+export {
+  LocaleProvider,
+  type LocaleProviderProps,
+  type LocaleValue,
+  useLocale,
+} from "./locale/locale";
+export { getMessages, type Locale, type Messages } from "./locale/messages";
 export { type SpringName, springs, transitions } from "./motion/springs";

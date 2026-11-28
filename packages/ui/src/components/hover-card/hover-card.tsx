@@ -2,7 +2,7 @@
 
 import { PreviewCard as PreviewCardPrimitive } from "@base-ui/react/preview-card";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { type LinkVariants, linkVariants } from "@/components/link/link-variants";
 import { popupMotion } from "@/internal/popup";
 import { mergeClassName } from "@/lib/cn";
@@ -50,6 +50,7 @@ export function HoverCardContent({
   ...props
 }: HoverCardContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <PreviewCardPrimitive.Portal>
       <PreviewCardPrimitive.Positioner
@@ -63,6 +64,7 @@ export function HoverCardContent({
         <PreviewCardPrimitive.Popup
           data-slot="hover-card-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(
             [
               "flex w-72 flex-col gap-2 rounded-xl bg-sheet p-4 text-control text-fg-body depth-floating",

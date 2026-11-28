@@ -17,7 +17,11 @@ export type CodeLinesOptions = {
   removed?: LineSpec;
   /** Long lines break instead of scrolling sideways. For prose-like code: Markdown, a log. */
   wrap?: boolean;
-  /** What the sign of an added and of a removed line is read out as. */
+  /**
+   * What the sign of an added and of a removed line is read out as. Left out, it is the word
+   * of the nearest `LocaleProvider`, which the block's scroll region hands to the style sheet
+   * (`CodeScroll`, code.css); „hinzugefügt“ and „entfernt“ without one.
+   */
   addedLabel?: string;
   removedLabel?: string;
 };
@@ -80,8 +84,8 @@ export function CodeRows({
   rows,
   lineNumbers = false,
   wrap = false,
-  addedLabel = "hinzugefügt",
-  removedLabel = "entfernt",
+  addedLabel,
+  removedLabel,
   style,
   ...props
 }: CodeRowsProps) {

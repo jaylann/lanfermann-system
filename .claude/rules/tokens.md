@@ -11,6 +11,10 @@ Intent and decisions: `packages/ui/DESIGN.md`.
   block after them. The dark selectors are always the three forms in `grounds.css`'s header
   (`:root[data-mode="dark"]:not([data-theme])`, `[data-mode="dark"][data-theme="x"]`,
   `[data-mode="dark"] [data-theme="x"]`); a test checks every dark block uses them.
+- A light scope (a region of a dark page that stays light, `<Ground mode="light">`): every block
+  that sets a ground's light values also lists `[data-mode="dark"] [data-mode="light"][data-theme="x"]`
+  and `[data-mode="dark"] [data-mode="light"] [data-theme="x"]`. A new light block needs both; a
+  test checks it.
 - `status.css` — danger, warning, success, info: text colour, `-soft` wash, `-solid` fill, `on-*`.
 - `depth.css` — every shadow, edge and gloss, as per-ground `--depth-*` knobs plus one `depth-*`
   utility per role. The only place the raised look is edited.

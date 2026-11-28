@@ -3,7 +3,9 @@
 import type { RefObject } from "react";
 
 import { CopyButton, type CopyButtonLabels } from "@/components/copy-button/copy-button";
+import { useCopyKeys } from "@/internal/copy-keys";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** The words of the copy key of a code block. */
 export type CodeCopyLabels = CopyButtonLabels;
@@ -23,22 +25,25 @@ type CodeCopyProps = CodeCopyLabels & {
 export function CodeCopy({
   text,
   codeRef,
-  copyLabel = "Code kopieren",
+  copyLabel,
   copiedLabel,
-  copiedMessage = "Der Code wurde kopiert.",
+  copiedMessage,
   failedLabel,
-  failedMessage = "Der Code wurde nicht kopiert. Er ist markiert und kann mit ⌘C kopiert werden.",
+  failedMessage: failedMessageProp,
   className,
 }: CodeCopyProps) {
+  const { messages } = useLocale();
+  const copyKeys = useCopyKeys();
+  const failedMessage = failedMessageProp ?? messages.codeBlock.failedMessage(copyKeys);
   return (
     <CopyButton
       data-slot="code-copy"
       size="sm"
       text={text}
       selectTarget={codeRef}
-      copyLabel={copyLabel}
+      copyLabel={copyLabel ?? messages.codeBlock.copy}
       copiedLabel={copiedLabel}
-      copiedMessage={copiedMessage}
+      copiedMessage={copiedMessage ?? messages.codeBlock.copiedMessage}
       failedLabel={failedLabel}
       failedMessage={failedMessage}
       className={cn("flex", className)}

@@ -11,17 +11,28 @@ import { PopoverClose, PopoverContent, PopoverTrigger } from "@/components/popov
 import { TimeField, type TimeFieldProps } from "@/components/time-field/time-field";
 import type { FieldSize } from "@/internal/field";
 import { FieldDisabledContext } from "@/internal/field-context";
+import { useLocale } from "@/locale/locale";
 
 /**
  * The button at the end of a date field that opens its calendar. A field that cannot be changed
  * (disabled, by itself or through its `Field`, or read-only) does not open one.
  */
-export function PickerButton({ size, disabled }: { size?: FieldSize; disabled?: boolean }) {
+export function PickerButton({
+  size,
+  disabled,
+  label,
+}: {
+  size?: FieldSize;
+  disabled?: boolean;
+  /** Names the button for assistive tech. „Kalender öffnen“ unless given. */
+  label?: string;
+}) {
+  const { messages } = useLocale();
   const off = useContext(FieldDisabledContext) || disabled;
   return (
     <PopoverTrigger
       render={
-        <InputGroupButton aria-label="Kalender öffnen" disabled={off}>
+        <InputGroupButton aria-label={label ?? messages.picker.open} disabled={off}>
           <Icon icon={Calendar03Icon} size={size === "sm" ? 14 : 16} />
         </InputGroupButton>
       }
@@ -39,14 +50,18 @@ export function PickerSheet({
   anchor,
   label,
   done = false,
+  doneLabel,
   children,
 }: {
   anchor: RefObject<HTMLElement | null>;
   /** Names the sheet for assistive tech: "Datum wählen". */
   label: string;
   done?: boolean;
+  /** What the button that closes the sheet says. „Fertig“ unless given. */
+  doneLabel?: string;
   children: ReactNode;
 }) {
+  const { messages } = useLocale();
   const sheet = useRef<HTMLDivElement>(null);
   return (
     <PopoverContent
@@ -66,7 +81,7 @@ export function PickerSheet({
         <PopoverClose
           render={
             <Button size="sm" variant="primary" className="self-end">
-              Fertig
+              {doneLabel ?? messages.picker.done}
             </Button>
           }
         />

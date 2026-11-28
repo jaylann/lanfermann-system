@@ -19,6 +19,8 @@ import {
 import { Button, type ButtonProps } from "@/components/button/button";
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "@/components/drawer/drawer";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
+import { Logomark } from "@/components/logo/logomark";
+import { Wordmark } from "@/components/logo/wordmark";
 import { Menu, MenuContent, MenuTrigger } from "@/components/menu/menu";
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { Shortcut } from "@/components/shortcut/shortcut";
@@ -33,6 +35,7 @@ import { ChevronRightGlyph } from "@/internal/glyphs";
 import { renderAs } from "@/internal/render-as";
 import { useTravellingMark } from "@/internal/travelling-mark";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { SidebarStateContext, useWideWindow } from "./sidebar-context";
 
@@ -78,6 +81,17 @@ export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
    * by a tooltip. `hidden`: nothing, and the page has the whole window.
    */
   collapse?: "rail" | "hidden";
+  /**
+   * A sidebar that is shown, not used as the app's own: a specimen on a design page, a preview
+   * in the settings, a figure in the docs. It ignores the `AppShell` around it (it neither
+   * collapses with the real sidebar nor waits in a drawer on a phone), does not stick to the
+   * window and is as tall as its content, or as its place makes it. `collapsed` shows its rail.
+   */
+  inline?: boolean;
+  /** With `inline`: show it collapsed, as `collapse` says. An inline sidebar holds no state. */
+  collapsed?: boolean;
+  /** The way out of the phone's drawer, as assistive tech hears it. */
+  closeLabel?: string;
 };
 
 /**
@@ -99,13 +113,19 @@ export type SidebarProps = Omit<ComponentProps<"div">, "aria-label"> & {
 export function Sidebar({
   "aria-label": label,
   collapse = "rail",
+  inline = false,
+  collapsed = false,
+  closeLabel,
   className,
   children,
   ...props
 }: SidebarProps) {
-  const state = useContext(SidebarStateContext);
+  const { messages } = useLocale();
+  const shell = useContext(SidebarStateContext);
+  // Inline, the shell around it is not its own: it stands as a sidebar without one does.
+  const state = inline ? null : shell;
   const box = useRef<HTMLDivElement>(null);
-  const open = state?.open ?? true;
+  const open = inline ? !collapsed : (state?.open ?? true);
   const rail = !open && collapse === "rail";
   const gone = !open && collapse === "hidden";
 
@@ -126,7 +146,7 @@ export function Sidebar({
     [label, closeDrawer],
   );
 
-  return (
+  const standing = (
     // Once one entry of the rail has named itself, its neighbours do so without the wait.
     <TooltipProvider>
       <SidebarLayoutContext value={layout}>
@@ -137,10 +157,14 @@ export function Sidebar({
           data-state={open ? "expanded" : "collapsed"}
           data-collapse={collapse}
           data-rail={rail ? "" : undefined}
+          data-inline={inline ? "" : undefined}
           inert={gone}
           className={cn(
             lengths,
-            "sticky top-0 z-10 h-dvh shrink-0 justify-end self-start overflow-hidden border-r border-hairline bg-ground text-control",
+            "shrink-0 justify-end overflow-hidden border-r border-hairline bg-ground text-control",
+            // The app's own sidebar stays in the window while the page scrolls; a specimen is
+            // part of the page and scrolls with it.
+            inline ? "relative" : "sticky top-0 z-10 h-dvh self-start",
             // Width is laid out on every frame, which the rule against it is about. Here the
             // page beside it has to be pushed, and it never happens on a phone.
             "w-(--sidebar-width) transition-[width,border-color] spring-settle",
@@ -184,12 +208,14 @@ export function Sidebar({
               </div>
             </SidebarLayoutContext>
             {/* The scrim and a swipe close it too; this is the way out for assistive tech. */}
-            <DrawerClose className="sr-only">Schließen</DrawerClose>
+            <DrawerClose className="sr-only">{closeLabel ?? messages.sidebar.close}</DrawerClose>
           </DrawerContent>
         </Drawer>
       ) : null}
     </TooltipProvider>
   );
+  // A trigger or entry inside a specimen must not reach the real shell either.
+  return inline ? <SidebarStateContext value={null}>{standing}</SidebarStateContext> : standing;
 }
 
 /** What stands above the entries and stays there: the workspace, the product's mark. */
@@ -202,6 +228,62 @@ export function SidebarHeader({ className, ...props }: ComponentProps<"div">) {
       {...props}
     />
   );
+}
+
+export type SidebarBrandProps = Omit<useRender.ComponentProps<"a">, "children"> & {
+  /** The brand as a word, shown while the sidebar is open and in the phone's drawer. */
+  wordmark?: ReactNode;
+  /** The brand as a symbol, shown on the rail, where the word does not fit. */
+  mark?: ReactNode;
+  /** The brand's name for assistive tech: the two drawings are one thing and are named once. */
+  label?: string;
+};
+
+/**
+ * The product's mark in a `SidebarHeader`, usually as the link home. It starts where the
+ * entries' symbols start. On the rail the word gives its place to the symbol, which stands in
+ * the symbols' column: the word leaves as the entries' names do and the symbol comes in its
+ * stead, a plain crossfade, so the header is never a word cut off at the rail's edge.
+ *
+ * Without `wordmark` and `mark` it is Lanfermann's own. Give it an `href`, or `render` a
+ * router's link.
+ */
+export function SidebarBrand({
+  wordmark = <Wordmark variant="short" size={20} aria-hidden />,
+  mark = <Logomark size={20} aria-hidden />,
+  label = "Lanfermann",
+  render,
+  className,
+  ...props
+}: SidebarBrandProps) {
+  return renderAs("a", render, {
+    ...props,
+    "data-slot": "sidebar-brand",
+    "aria-label": label,
+    className: cn(
+      "relative flex h-(--control-md) w-(--sidebar-row) shrink-0 items-center rounded-md ps-(--sidebar-pad)",
+      focusRing,
+      className,
+    ),
+    children: (
+      <>
+        <span data-slot="sidebar-brand-wordmark" className={cn("flex", leaves)}>
+          {wordmark}
+        </span>
+        <span
+          data-slot="sidebar-brand-mark"
+          // In the symbols' column: as wide as a symbol, the mark centred in it.
+          className={cn(
+            "pointer-events-none absolute left-(--sidebar-pad) flex w-4 justify-center",
+            "opacity-0 transition-opacity spring-leave",
+            "in-data-rail:opacity-100 in-data-rail:delay-75 in-data-rail:spring-settle",
+          )}
+        >
+          {mark}
+        </span>
+      </>
+    ),
+  });
 }
 
 /** What stands below the entries and stays there: the person who is signed in. */
@@ -829,7 +911,8 @@ export function SidebarButton({
   children,
   ...props
 }: SidebarButtonProps) {
-  return renderAs("button", render, {
+  const { rail } = useContext(SidebarLayoutContext);
+  const button = renderAs("button", render, {
     type: "button",
     ...props,
     "data-slot": "sidebar-button",
@@ -845,6 +928,17 @@ export function SidebarButton({
       </RowContent>
     ),
   });
+  // On the rail only the symbol or the avatar is left, so the row names itself beside it, as an
+  // entry does. As the trigger of a menu it gives way while that menu is open.
+  const expanded = (props as { "aria-expanded"?: boolean | "true" | "false" })["aria-expanded"];
+  return (
+    <Tooltip disabled={!rail || expanded === true || expanded === "true"}>
+      <TooltipTrigger render={button} />
+      <TooltipContent side="right" sideOffset={14}>
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 /** A window with its side panel. The dividing line steps aside while the sidebar is collapsed. */
@@ -882,11 +976,12 @@ export type SidebarTriggerProps = Omit<ButtonProps, "iconOnly" | "aria-label" | 
  * On a narrow window it opens the sidebar as a drawer. Its tooltip names the shortcut.
  */
 export function SidebarTrigger({
-  "aria-label": label = "Seitenleiste",
+  "aria-label": label,
   className,
   onClick,
   ...props
 }: SidebarTriggerProps) {
+  const { messages } = useLocale();
   const state = useContext(SidebarStateContext);
   const wide = useWideWindow();
   const expanded = state ? (wide ? state.open : state.drawerOpen) : true;
@@ -898,7 +993,7 @@ export function SidebarTrigger({
             variant="quiet"
             {...props}
             iconOnly
-            aria-label={label}
+            aria-label={label ?? messages.sidebar.trigger}
             aria-expanded={expanded}
             aria-controls={wide ? state?.id : undefined}
             data-slot="sidebar-trigger"
@@ -913,7 +1008,7 @@ export function SidebarTrigger({
         <SidebarGlyph />
       </TooltipTrigger>
       <TooltipContent side="bottom" className="flex items-center gap-2">
-        {label}
+        {label ?? messages.sidebar.trigger}
         {state?.shortcut ? <Shortcut keys={state.shortcut} /> : null}
       </TooltipContent>
     </Tooltip>

@@ -2,7 +2,7 @@
 
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { popupMotion } from "@/internal/popup";
 import { mergeClassName } from "@/lib/cn";
 
@@ -33,6 +33,7 @@ export function PopoverContent({
   ...props
 }: PopoverContentProps) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
@@ -48,6 +49,7 @@ export function PopoverContent({
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(
             [
               "flex w-72 flex-col gap-3 rounded-xl bg-sheet p-4 text-control text-fg-body depth-floating",

@@ -22,15 +22,18 @@ import { MiddleTruncate } from "@/components/middle-truncate/middle-truncate";
 import { Progress, ProgressTrack } from "@/components/progress/progress";
 import { TickGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
+
+import {
+  fileTileMeta,
+  fileTileName,
+  fileTilePad,
+  fileTileText,
+  fileTileWell,
+} from "./file-tile-shape";
 
 /** Where a file stands: on its way, arrived, or failed. */
 export type FileTileStatus = "uploading" | "done" | "error";
-
-const statusWords: Record<FileTileStatus, string> = {
-  uploading: "Wird hochgeladen",
-  done: "Hochgeladen",
-  error: "Fehlgeschlagen",
-};
 
 export type FileTileProps = Omit<ComponentProps<"div">, "children"> & {
   /** The file's or folder's name, as it is shown and read out: „Angebot_Kowalski_Herbst.pdf“. */
@@ -99,7 +102,7 @@ const fileTile = cva(
     variants: {
       shape: {
         /** A file: its picture or symbol above its name. */
-        tile: "p-1",
+        tile: fileTilePad,
         /**
          * A folder: one line in the files' columns (Justin, 2026-11-23, over a folder as large
          * as a file).
@@ -265,15 +268,16 @@ export function FileTile({
   progress,
   error,
   onRetry,
-  retryLabel = "Noch einmal versuchen",
+  retryLabel,
   statusLabels,
   variant = "file",
-  folderLabel = "Ordner",
+  folderLabel,
   dropOver = false,
   nameSlot,
   className,
   ...props
 }: FileTileProps) {
+  const { messages } = useLocale();
   const { inGrid } = useContext(FileGridContext);
   const kind = kindProp ?? (variant === "folder" ? "folder" : kindOf({ name, type }));
   const shape = variant === "folder" ? "row" : "tile";
@@ -290,19 +294,23 @@ export function FileTile({
   }
   const failed = status === "error";
   const fraction = Math.min(1, Math.max(0, progress ?? 0));
-  const words = { ...statusWords, ...statusLabels };
+  const words = { ...messages.fileTile.status, ...statusLabels };
 
   // Said before the name: a folder is named as one, a file that is not there yet by its state.
   const spoken = (
     <span className="sr-only">
-      {variant === "folder" ? `${folderLabel}: ` : status === "done" ? "" : `${words[status]}: `}
+      {variant === "folder"
+        ? `${folderLabel ?? messages.fileTile.folder}: `
+        : status === "done"
+          ? ""
+          : `${words[status]}: `}
     </span>
   );
 
   const title = (
     <span
       data-slot="file-tile-name"
-      className="flex min-w-0 items-center gap-1.5 text-control font-medium text-fg"
+      className={cn("flex min-w-0 items-center gap-1.5 text-fg", fileTileName)}
     >
       {shape === "row" && <SymbolOrMark kind={kind} />}
       {spoken}
@@ -314,7 +322,7 @@ export function FileTile({
     <span
       data-slot="file-tile-meta"
       // A line is kept even without facts, so every tile in a row of the grid is as tall.
-      className="min-h-[1lh] truncate text-sm text-fg-muted tabular-nums"
+      className={cn("truncate text-fg-muted tabular-nums", fileTileMeta)}
     >
       {meta}
     </span>
@@ -340,7 +348,8 @@ export function FileTile({
         <div
           data-slot="file-tile-preview"
           className={cn(
-            "relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-well",
+            "relative flex items-center justify-center overflow-hidden bg-well",
+            fileTileWell,
             // Its edge: a hairline drawn inside it, over the picture.
             "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:inset-ring after:inset-ring-hairline",
           )}
@@ -404,13 +413,13 @@ export function FileTile({
                   onClick={onRetry}
                   className="touch-target relative rounded-xs text-sm font-medium text-fg underline decoration-1 underline-offset-[0.25em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
-                  {retryLabel}
+                  {retryLabel === undefined ? messages.fileTile.retry : retryLabel}
                 </button>
               )}
             </div>
           )}
         </div>
-        <div className="flex min-w-0 flex-col px-1.5 pt-2 pb-1">
+        <div className={fileTileText}>
           {title}
           {metaLine}
         </div>

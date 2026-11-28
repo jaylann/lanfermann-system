@@ -8,6 +8,8 @@
  * `delete`, `up`, `down`, `left`, `right` and `plus`; anything else is the character itself.
  */
 
+import type { Locale } from "@/locale/messages";
+
 /** The two kinds of keyboard a shortcut is drawn for. */
 export type Platform = "apple" | "other";
 
@@ -19,33 +21,67 @@ type Modifier = "mod" | "ctrl" | "alt" | "shift";
 const modifiers: ReadonlySet<string> = new Set<Modifier>(["mod", "ctrl", "alt", "shift"]);
 
 /** What stands on the cap, and its name, where the two kinds of keyboard agree. */
-const shared: Record<string, ShortcutKey> = {
-  shift: { label: "⇧", name: "Umschalttaste" },
-  enter: { label: "↵", name: "Eingabetaste" },
-  esc: { label: "Esc", name: "Escape" },
-  tab: { label: "⇥", name: "Tabulatortaste" },
-  space: { label: "Leertaste", name: "Leertaste" },
-  backspace: { label: "⌫", name: "Rücktaste" },
-  up: { label: "↑", name: "Pfeil nach oben" },
-  down: { label: "↓", name: "Pfeil nach unten" },
-  left: { label: "←", name: "Pfeil nach links" },
-  right: { label: "→", name: "Pfeil nach rechts" },
-  plus: { label: "+", name: "Plus" },
+const shared: Record<Locale, Record<string, ShortcutKey>> = {
+  de: {
+    shift: { label: "⇧", name: "Umschalttaste" },
+    enter: { label: "↵", name: "Eingabetaste" },
+    esc: { label: "Esc", name: "Escape" },
+    tab: { label: "⇥", name: "Tabulatortaste" },
+    space: { label: "Leertaste", name: "Leertaste" },
+    backspace: { label: "⌫", name: "Rücktaste" },
+    up: { label: "↑", name: "Pfeil nach oben" },
+    down: { label: "↓", name: "Pfeil nach unten" },
+    left: { label: "←", name: "Pfeil nach links" },
+    right: { label: "→", name: "Pfeil nach rechts" },
+    plus: { label: "+", name: "Plus" },
+  },
+  en: {
+    shift: { label: "⇧", name: "Shift" },
+    enter: { label: "↵", name: "Enter" },
+    esc: { label: "Esc", name: "Escape" },
+    tab: { label: "⇥", name: "Tab" },
+    space: { label: "Space", name: "Space" },
+    backspace: { label: "⌫", name: "Backspace" },
+    up: { label: "↑", name: "Up arrow" },
+    down: { label: "↓", name: "Down arrow" },
+    left: { label: "←", name: "Left arrow" },
+    right: { label: "→", name: "Right arrow" },
+    plus: { label: "+", name: "Plus" },
+  },
 };
 
-/** Where they differ: an Apple keyboard prints symbols, the others print German words. */
-const perPlatform: Record<Platform, Record<string, ShortcutKey>> = {
-  apple: {
-    mod: { label: "⌘", name: "Befehlstaste" },
-    ctrl: { label: "⌃", name: "Control" },
-    alt: { label: "⌥", name: "Wahltaste" },
-    delete: { label: "⌦", name: "Entfernen" },
+/**
+ * Where they differ: an Apple keyboard prints symbols, the others print words in the language
+ * of the keyboard (Strg and Entf on a German one, Ctrl and Del on an English one).
+ */
+const perPlatform: Record<Locale, Record<Platform, Record<string, ShortcutKey>>> = {
+  de: {
+    apple: {
+      mod: { label: "⌘", name: "Befehlstaste" },
+      ctrl: { label: "⌃", name: "Control" },
+      alt: { label: "⌥", name: "Wahltaste" },
+      delete: { label: "⌦", name: "Entfernen" },
+    },
+    other: {
+      mod: { label: "Strg", name: "Steuerung" },
+      ctrl: { label: "Strg", name: "Steuerung" },
+      alt: { label: "Alt", name: "Alt" },
+      delete: { label: "Entf", name: "Entfernen" },
+    },
   },
-  other: {
-    mod: { label: "Strg", name: "Steuerung" },
-    ctrl: { label: "Strg", name: "Steuerung" },
-    alt: { label: "Alt", name: "Alt" },
-    delete: { label: "Entf", name: "Entfernen" },
+  en: {
+    apple: {
+      mod: { label: "⌘", name: "Command" },
+      ctrl: { label: "⌃", name: "Control" },
+      alt: { label: "⌥", name: "Option" },
+      delete: { label: "⌦", name: "Delete" },
+    },
+    other: {
+      mod: { label: "Ctrl", name: "Control" },
+      ctrl: { label: "Ctrl", name: "Control" },
+      alt: { label: "Alt", name: "Alt" },
+      delete: { label: "Del", name: "Delete" },
+    },
   },
 };
 
@@ -71,10 +107,18 @@ function tokens(keys: string): string[] {
     .filter(Boolean);
 }
 
-/** The keys of a shortcut in the order they are written, as they stand on that keyboard. */
-export function shortcutKeys(keys: string, platform: Platform): ShortcutKey[] {
+/**
+ * The keys of a shortcut in the order they are written, as they stand on that keyboard. The
+ * words on a keyboard that is not Apple's, and every spoken name, are in `locale`: German unless
+ * said otherwise.
+ */
+export function shortcutKeys(
+  keys: string,
+  platform: Platform,
+  locale: Locale = "de",
+): ShortcutKey[] {
   return tokens(keys).map((token) => {
-    const named = perPlatform[platform][token] ?? shared[token];
+    const named = perPlatform[locale][platform][token] ?? shared[locale][token];
     if (named) return named;
     const label = token.length === 1 ? token.toUpperCase() : token;
     return { label, name: label };
@@ -88,7 +132,7 @@ export function hasCommandKey(keys: string): boolean {
 
 /** Whether a shortcut is drawn differently on the two kinds of keyboard. */
 export function dependsOnPlatform(keys: string): boolean {
-  return tokens(keys).some((token) => token in perPlatform.apple);
+  return tokens(keys).some((token) => token in perPlatform.de.apple);
 }
 
 /** The parts of a key press a shortcut is compared with. A `KeyboardEvent` is one. */

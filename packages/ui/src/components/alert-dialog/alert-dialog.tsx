@@ -3,7 +3,7 @@
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
 import type { ComponentProps } from "react";
 
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import {
   overlayBackdrop,
   overlayDescription,
@@ -36,6 +36,7 @@ export function AlertDialogClose(props: AlertDialogPrimitive.Close.Props) {
 
 export function AlertDialogContent({ className, ...props }: AlertDialogPrimitive.Popup.Props) {
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <AlertDialogPrimitive.Portal>
       <AlertDialogPrimitive.Backdrop
@@ -46,6 +47,7 @@ export function AlertDialogContent({ className, ...props }: AlertDialogPrimitive
         <AlertDialogPrimitive.Popup
           data-slot="alert-dialog-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName([overlayPopup, "max-w-sm"], className)}
           {...props}
         />

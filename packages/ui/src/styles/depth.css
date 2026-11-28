@@ -74,7 +74,11 @@
 
 :root,
 [data-theme="paper"],
-[data-theme="tint"] {
+[data-mode="dark"] [data-mode="light"][data-theme="paper"],
+[data-mode="dark"] [data-mode="light"] [data-theme="paper"],
+[data-theme="tint"],
+[data-mode="dark"] [data-mode="light"][data-theme="tint"],
+[data-mode="dark"] [data-mode="light"] [data-theme="tint"] {
   /* neutral fitting: a white face that shades toward the bottom */
   --depth-surface-face: linear-gradient(rgb(42 37 82 / 0) 40%, rgb(42 37 82 / 0.085));
   --depth-surface-edge: rgb(19 18 28 / 0.12);
@@ -195,6 +199,8 @@
    near-black edges and shadows, the key inverted. */
 .dark,
 [data-theme="ink"],
+[data-mode="dark"] [data-mode="light"][data-theme="ink"],
+[data-mode="dark"] [data-mode="light"] [data-theme="ink"],
 :root[data-mode="dark"]:not([data-theme]),
 [data-mode="dark"][data-theme="paper"],
 [data-mode="dark"] [data-theme="paper"],
@@ -338,6 +344,8 @@
 }
 
 [data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"][data-theme="indigo"],
+[data-mode="dark"] [data-mode="light"] [data-theme="indigo"],
 [data-mode="dark"][data-theme="indigo"],
 [data-mode="dark"] [data-theme="indigo"] {
   --depth-surface-face: linear-gradient(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0));
@@ -463,6 +471,9 @@
   --shadow-plug:
     0 0 0 1px var(--d-edge, var(--depth-surface-edge)),
     0 1px 2px 0 var(--d-contact, var(--depth-surface-contact)), 0 0 0 0 transparent;
+  /* A swatch's disc at rest lies flat in its socket: no shadow, but a fitting's three layers, so
+     it can ease into `raised` once chosen. */
+  --shadow-swatch: 0 0 0 0 transparent, 0 0 0 0 transparent, 0 0 0 0 transparent;
 
   --inset-shadow-raised:
     inset 0 1px 0 0 var(--d-hi, var(--depth-surface-hi)),
@@ -580,6 +591,36 @@
 @utility depth-plug {
   @apply shadow-plug inset-shadow-raised;
   background-image: var(--d-face, var(--depth-surface-face));
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+/* A swatch's disc (`ColorSwatch`): a flat disc of its colour while it lies in its socket, and once
+   chosen a raised fitting in that colour, as `depth-raised` draws one under `depth-tone-swatch`
+   (Justin, 2026-11-28: the socket at rest, and the chosen one turns smoothly into the raised
+   cut). Both states keep a fitting's layers, so the box-shadow eases between them on the part's
+   own transition. The gloss lies on `::before` and fades there, because a gradient cannot ease;
+   it reads the face through `--swatch-face`, since the `--d-*` knobs do not inherit. */
+@utility depth-swatch {
+  @apply shadow-swatch inset-shadow-flat;
+  --swatch-face: var(--d-face, var(--depth-surface-face));
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: var(--swatch-face);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration-spring-seat) var(--ease-spring-seat);
+  }
+}
+@utility depth-swatch-chosen {
+  @apply shadow-raised inset-shadow-raised;
+  &::before {
+    opacity: 1;
+  }
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
     outline-offset: -1px;
@@ -752,4 +793,17 @@
   --d-ambient: var(--depth-thumb-ambient);
   --d-press: var(--depth-thumb-press);
   --d-face: var(--depth-thumb-face);
+}
+
+/* A fitting in a colour the caller brings (`--swatch`, a `ColorSwatch`): the lights of a coloured
+   key, and an edge and shadows mixed from the colour itself, as every fitting's are. The shadows
+   are the colour taken towards black, so a light colour does not glow on a dark ground. */
+@utility depth-tone-swatch {
+  --d-edge: color-mix(in oklab, var(--swatch) 80%, black);
+  --d-hi: var(--depth-accent-hi);
+  --d-lo: var(--depth-accent-lo);
+  --d-contact: color-mix(in srgb, color-mix(in oklab, var(--swatch) 45%, black) 35%, transparent);
+  --d-ambient: color-mix(in srgb, color-mix(in oklab, var(--swatch) 45%, black) 30%, transparent);
+  --d-press: var(--depth-accent-press);
+  --d-face: var(--depth-accent-face);
 }

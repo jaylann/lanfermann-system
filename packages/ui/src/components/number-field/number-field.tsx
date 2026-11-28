@@ -11,6 +11,7 @@ import {
 } from "@/internal/field";
 import { MinusGlyph, PlusGlyph } from "@/internal/glyphs";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type NumberFieldProps = NumberFieldPrimitive.Root.Props & {
   /** The size of the field, from the density. */
@@ -93,10 +94,11 @@ export function NumberFieldDecrement({
   children,
   ...props
 }: NumberFieldPrimitive.Decrement.Props) {
+  const { messages } = useLocale();
   return (
     <NumberFieldPrimitive.Decrement
       data-slot="number-field-decrement"
-      aria-label="Verringern"
+      aria-label={messages.numberField.decrement}
       className={mergeClassName(stepper, className)}
       {...props}
     >
@@ -111,10 +113,11 @@ export function NumberFieldIncrement({
   children,
   ...props
 }: NumberFieldPrimitive.Increment.Props) {
+  const { messages } = useLocale();
   return (
     <NumberFieldPrimitive.Increment
       data-slot="number-field-increment"
-      aria-label="Erhöhen"
+      aria-label={messages.numberField.increment}
       className={mergeClassName(stepper, className)}
       {...props}
     >

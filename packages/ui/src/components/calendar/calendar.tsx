@@ -6,16 +6,19 @@ import {
   type DayButtonProps,
   DayPicker,
   type Matcher,
+  type Modifiers,
   type MonthGridProps,
   type MonthProps,
 } from "react-day-picker";
-import { de } from "react-day-picker/locale";
+import { de, enUS } from "react-day-picker/locale";
 
 import { buttonVariants } from "@/components/button/button-variants";
 import { ChevronLeftGlyph, ChevronRightGlyph } from "@/internal/glyphs";
 import { parseIsoDate, toIsoDate } from "@/internal/iso-date";
 import { useToday } from "@/internal/today";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
+import { getMessages, type Locale, localeTags } from "@/locale/messages";
 
 import { CalendarSelection } from "./calendar-selection";
 
@@ -135,10 +138,44 @@ const navButton = cn(
 const NO_DAY = new Date(1900, 0, 1);
 
 /**
+ * A day's name for assistive tech: "Mittwoch, 18. November 2026", in English "Wednesday,
+ * November 18, 2026", with "Heute" before it and "ausgewählt" after it where they apply. The
+ * picker's own English name writes the day as "18th", which does not contain the "18" the day
+ * shows: a name has to hold what is seen, or voice control cannot press it. German is word for
+ * word what the picker says itself. Made once per language, so the picker is handed the same
+ * labels on every render and keeps what it has worked out.
+ */
+function dayLabels(locale: Locale) {
+  const words = getMessages(locale).calendar;
+  const written = new Intl.DateTimeFormat(localeTags[locale], {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return {
+    labelDayButton: (date: Date, modifiers: Modifiers) => {
+      const day = written.format(date);
+      const named = modifiers.today ? `${words.today}, ${day}` : day;
+      return modifiers.selected ? `${named}, ${words.selected}` : named;
+    },
+  };
+}
+
+const labels: Record<Locale, ReturnType<typeof dayLabels>> = {
+  de: dayLabels("de"),
+  en: dayLabels("en"),
+};
+
+/** The day a week starts on, as react-day-picker counts them. */
+const MONDAY = 1 as const;
+
+/**
  * What both kinds of calendar share: the limits, the look, German weekdays from Monday, and the
  * month to open on: the one of what is chosen, else today's.
  */
 function useCalendarProps({ min, max, className }: CalendarCommon, chosen?: Date) {
+  const { locale } = useLocale();
   const first = parseIsoDate(min);
   const last = parseIsoDate(max);
   const disabled: Matcher[] = [
@@ -153,9 +190,12 @@ function useCalendarProps({ min, max, className }: CalendarCommon, chosen?: Date
   return {
     start: blank ? "blank" : "month",
     props: {
-      locale: de,
-      // German weekdays run from Monday on the left, whatever the page around it does; the
-      // selection is drawn for that.
+      // The picker's own words for the month keys and the grid, in the language.
+      locale: locale === "en" ? enUS : de,
+      labels: labels[locale],
+      // The week runs from Monday on the left in both languages, whatever the page around it
+      // does; the selection is drawn for that.
+      weekStartsOn: MONDAY,
       dir: "ltr",
       showOutsideDays: true,
       fixedWeeks: true,

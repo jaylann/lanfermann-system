@@ -11,6 +11,7 @@ import {
 import { ChevronLeftGlyph, ChevronRightGlyph, GapGlyph } from "@/internal/glyphs";
 import { useTravellingMark } from "@/internal/travelling-mark";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /** A gap between page numbers, where pages were left out. */
 const GAP = "gap";
@@ -108,21 +109,24 @@ export function Pagination({
   onPageChange,
   variant = "numbered",
   siblings = 1,
-  "aria-label": label = "Seiten",
-  pageLabel = "Seite {page}",
-  positionLabel = "Seite {page} von {pages}",
-  previousLabel = "Vorherige Seite",
-  nextLabel = "Nächste Seite",
+  "aria-label": label,
+  pageLabel,
+  positionLabel,
+  previousLabel,
+  nextLabel,
   className,
   ...props
 }: PaginationProps) {
+  const { messages } = useLocale();
   const list = useRef<HTMLUListElement>(null);
   const mark = useRef<HTMLLIElement>(null);
   useTravellingMark(list, mark, { enabled: variant === "numbered" });
 
+  const pageName = pageLabel ?? messages.pagination.page;
+  const position = positionLabel ?? messages.pagination.position;
   const hrefOf = (to: number) => (typeof href === "string" ? fill(href, to, pages) : href?.(to));
   const nameOf = (to: number) =>
-    typeof pageLabel === "string" ? fill(pageLabel, to, pages) : pageLabel(to);
+    typeof pageName === "string" ? fill(pageName, to, pages) : pageName(to);
 
   /**
    * What an arrow or a number says and does. One that leads nowhere (back from the first page,
@@ -176,18 +180,16 @@ export function Pagination({
       <nav
         data-slot="pagination"
         data-variant="compact"
-        aria-label={label}
+        aria-label={label ?? messages.pagination.label}
         className={cn("flex items-center gap-3", className)}
         {...props}
       >
         <span data-slot="pagination-position" className="text-sm text-fg-muted tabular-nums">
-          {typeof positionLabel === "string"
-            ? fill(positionLabel, page, pages)
-            : positionLabel(page, pages)}
+          {typeof position === "string" ? fill(position, page, pages) : position(page, pages)}
         </span>
-        <ButtonGroup size="sm" aria-label={label}>
-          {step(page - 1, previousLabel, <ChevronLeftGlyph />)}
-          {step(page + 1, nextLabel, <ChevronRightGlyph />)}
+        <ButtonGroup size="sm" aria-label={label ?? messages.pagination.label}>
+          {step(page - 1, previousLabel ?? messages.pagination.previous, <ChevronLeftGlyph />)}
+          {step(page + 1, nextLabel ?? messages.pagination.next, <ChevronRightGlyph />)}
         </ButtonGroup>
       </nav>
     );
@@ -218,7 +220,7 @@ export function Pagination({
     <nav
       data-slot="pagination"
       data-variant="numbered"
-      aria-label={label}
+      aria-label={label ?? messages.pagination.label}
       className={className}
       {...props}
     >
@@ -230,7 +232,7 @@ export function Pagination({
       >
         <li>
           {go(page - 1, {
-            label: previousLabel,
+            label: previousLabel ?? messages.pagination.previous,
             className: arrow,
             children: (
               <ChevronLeftGlyph
@@ -264,7 +266,7 @@ export function Pagination({
         )}
         <li>
           {go(page + 1, {
-            label: nextLabel,
+            label: nextLabel ?? messages.pagination.next,
             className: arrow,
             children: (
               <ChevronRightGlyph

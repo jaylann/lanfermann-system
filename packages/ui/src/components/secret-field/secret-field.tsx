@@ -7,10 +7,12 @@ import { Input, type InputProps } from "@/components/input/input";
 import { InputGroup, InputGroupButton } from "@/components/input-group/input-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
 import { CopyMarks, useCopy } from "@/internal/copy";
+import { useCopyKeys } from "@/internal/copy-keys";
 import type { FieldSize } from "@/internal/field";
 import { RevealKey, secretSymbolSize, swapSettle, useSwap } from "@/internal/reveal-key";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
+import { useLocale } from "@/locale/locale";
 
 /** How many discs stand for a hidden value at most: its length is nobody's business. */
 const MASK_LENGTH = 24;
@@ -78,17 +80,20 @@ export function SecretField({
   onRevealedChange,
   visibleStart = 0,
   onCopied,
-  revealLabel = "Anzeigen",
-  hideLabel = "Verbergen",
-  copyLabel = "Kopieren",
-  copiedLabel = "Kopiert",
-  copiedMessage = "In die Zwischenablage kopiert.",
-  failedLabel = "Markiert",
-  failedMessage = "Nicht kopiert. Der Wert ist markiert und kann mit ⌘C kopiert werden.",
+  revealLabel,
+  hideLabel,
+  copyLabel,
+  copiedLabel,
+  copiedMessage,
+  failedLabel,
+  failedMessage: failedMessageProp,
   className,
   ref,
   ...props
 }: SecretFieldProps) {
+  const { messages } = useLocale();
+  const copyKeys = useCopyKeys();
+  const failedMessage = failedMessageProp ?? messages.secretField.failedMessage(copyKeys);
   const [own, setOwn] = useState(defaultRevealed);
   const revealed = !hideable || (revealedProp ?? own);
   const field = useRef<HTMLInputElement>(null);
@@ -145,8 +150,8 @@ export function SecretField({
             revealed={revealed}
             onRevealedChange={show}
             size={size}
-            revealLabel={revealLabel}
-            hideLabel={hideLabel}
+            revealLabel={revealLabel ?? messages.secretField.reveal}
+            hideLabel={hideLabel ?? messages.secretField.hide}
           />
         )}
         <Tooltip>
@@ -154,7 +159,7 @@ export function SecretField({
             closeOnClick={false}
             render={
               <InputGroupButton
-                aria-label={copyLabel}
+                aria-label={copyLabel ?? messages.secretField.copy}
                 data-secret-key="copy"
                 onClick={() => void copy()}
               >
@@ -163,12 +168,20 @@ export function SecretField({
             }
           />
           <TooltipContent>
-            {state === "idle" ? copyLabel : state === "failed" ? failedLabel : copiedLabel}
+            {state === "idle"
+              ? (copyLabel ?? messages.secretField.copy)
+              : state === "failed"
+                ? (failedLabel ?? messages.secretField.failed)
+                : (copiedLabel ?? messages.secretField.copied)}
           </TooltipContent>
         </Tooltip>
       </InputGroup>
       <span role="status" className="sr-only">
-        {state === "copied" ? copiedMessage : state === "failed" ? failedMessage : ""}
+        {state === "copied"
+          ? (copiedMessage ?? messages.secretField.copiedMessage)
+          : state === "failed"
+            ? failedMessage
+            : ""}
       </span>
     </>
   );

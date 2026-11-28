@@ -15,6 +15,19 @@ function press(key: string, held: Partial<KeyPress> = {}): KeyPress {
 }
 
 describe("shortcutKeys", () => {
+  it("writes the words of an English keyboard when asked to", () => {
+    const labels = (keys: string) => shortcutKeys(keys, "other", "en").map((key) => key.label);
+    expect(labels("mod+delete")).toEqual(["Ctrl", "Del"]);
+    expect(labels("space")).toEqual(["Space"]);
+    expect(shortcutKeys("mod+shift+up", "apple", "en").map((key) => key.name)).toEqual([
+      "Command",
+      "Shift",
+      "Up arrow",
+    ]);
+    // German stays the default.
+    expect(shortcutKeys("mod+delete", "other").map((key) => key.label)).toEqual(["Strg", "Entf"]);
+  });
+
   it("draws the command key of each kind of keyboard", () => {
     expect(shortcutKeys("mod+k", "apple").map((key) => key.label)).toEqual(["⌘", "K"]);
     expect(shortcutKeys("mod+k", "other").map((key) => key.label)).toEqual(["Strg", "K"]);

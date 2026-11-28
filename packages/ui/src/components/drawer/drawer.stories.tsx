@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import { expect, screen, waitFor, within } from "storybook/test";
 
 import { Badge } from "@/components/badge/badge";
@@ -145,6 +145,111 @@ export const RightOpen: Story = {
 export const LeftOpen: Story = {
   parameters: { visual: { viewport: { width: 900, height: 560 } } },
   render: () => <DetailDrawer side="left" defaultOpen />,
+};
+
+const FACTS = [
+  ["Typ", "PNG-Bild"],
+  ["Größe", "1,8 MB"],
+  ["Maße", "2400 × 1600"],
+  ["Hochgeladen", "24. November 2026"],
+  ["Von", "Justin Lanfermann"],
+  ["Ordner", "Kunden / Bäckerei Sommer"],
+  ["Aufrufe", "1.204"],
+  ["Zuletzt geöffnet", "Heute, 09:12"],
+  ["Sichtbarkeit", "Öffentlich"],
+  ["Prüfsumme", "9f2c…41ab"],
+] as const;
+
+/** A file's details on a phone: more than the sheet is tall, with its keys at the foot. */
+function FileDrawer({ scrollTo }: { scrollTo?: "middle" | "end" }) {
+  const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // For the pictures: the body as it stands part way down, or at its end. The sheet mounts
+    // a frame after the story, so wait until there is something to scroll.
+    if (!scrollTo) return;
+    let frame = requestAnimationFrame(function place() {
+      const box = body.current;
+      const far = box ? box.scrollHeight - box.clientHeight : 0;
+      if (!box || far <= 0) {
+        frame = requestAnimationFrame(place);
+        return;
+      }
+      box.scrollTop = scrollTo === "end" ? far : Math.round(far / 2);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [scrollTo]);
+  return (
+    <div className="flex min-h-[640px] items-start justify-center p-6">
+      <Drawer defaultOpen modal={false}>
+        <DrawerTrigger render={<Button />}>Datei</DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>schaufenster-herbst.png</DrawerTitle>
+            <DrawerDescription>Im Ordner „Bäckerei Sommer“.</DrawerDescription>
+          </DrawerHeader>
+          <DrawerBody ref={body}>
+            <dl className="flex flex-col text-control">
+              {FACTS.map(([name, value]) => (
+                <div
+                  key={name}
+                  className="flex justify-between gap-6 border-b border-hairline py-2.5"
+                >
+                  <dt className="text-fg-muted">{name}</dt>
+                  <dd className="text-right text-fg">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="flex flex-col gap-2 pt-4">
+              <Button>Umbenennen</Button>
+              <Button>Verschieben</Button>
+              <Button>Adresse kopieren</Button>
+              <Button>Als Markdown kopieren</Button>
+            </div>
+          </DrawerBody>
+          <DrawerFooter>
+            <DrawerClose render={<Button variant="primary" />}>Fertig</DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </div>
+  );
+}
+
+/**
+ * Taller than the sheet: the body scrolls between the title and the keys, and fades at its foot
+ * while more waits there. Nothing is masked at the top, where it starts.
+ */
+export const Scrolling: Story = {
+  render: () => <FileDrawer />,
+};
+
+/** Part way down both edges fade: no line stands cut in half under the title. */
+export const ScrolledPartWay: Story = {
+  render: () => <FileDrawer scrollTo="middle" />,
+};
+
+/** At its end the foot is whole again and only the top fades. */
+export const ScrolledToEnd: Story = {
+  render: () => <FileDrawer scrollTo="end" />,
+};
+
+/**
+ * As a test: the body says which of its edges has more, a key at its foot that takes the focus
+ * is brought clear of the fade, and `fade={false}` leaves the body unmasked.
+ */
+export const ScrollEdges: Story = {
+  render: () => <FileDrawer />,
+  play: async ({ userEvent }) => {
+    const body = document.querySelector<HTMLElement>('[data-slot="drawer-body"]')!;
+    await waitFor(() => expect(body).toHaveAttribute("data-overflow", "end"));
+    await expect(body).toHaveAttribute("data-scroll-fade", "y");
+    const last = screen.getByRole("button", { name: "Als Markdown kopieren" });
+    last.focus();
+    await waitFor(() => expect(body).toHaveAttribute("data-overflow", "start"));
+    const box = body.getBoundingClientRect();
+    await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(box.bottom + 1);
+    await userEvent.keyboard("{Escape}");
+  },
 };
 
 /**

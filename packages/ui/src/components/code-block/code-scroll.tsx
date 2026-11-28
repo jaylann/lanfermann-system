@@ -1,9 +1,10 @@
 "use client";
 
-import { type ReactNode, type RefObject, useRef } from "react";
+import { type CSSProperties, type ReactNode, type RefObject, useRef } from "react";
 
 import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 type CodeScrollProps = {
   /** The name of the code: a screen reader announces it when the code takes focus. */
@@ -24,6 +25,14 @@ type CodeScrollProps = {
 export function CodeScroll({ label, codeRef, className, preClassName, children }: CodeScrollProps) {
   const ref = useRef<HTMLDivElement>(null);
   useScrollEdges(ref);
+  // What the sign of a changed line is read out as where the line was given no word of its
+  // own. The lines are drawn on the server and their sign is generated content, so the word
+  // reaches them as a CSS string (code.css).
+  const { added, removed } = useLocale().messages.codeBlock;
+  const signWords = {
+    "--code-added-word": JSON.stringify(added),
+    "--code-removed-word": JSON.stringify(removed),
+  } as CSSProperties;
 
   return (
     <div
@@ -38,7 +47,7 @@ export function CodeScroll({ label, codeRef, className, preClassName, children }
       tabIndex={0}
       className={cn("min-w-0 overflow-x-auto focus-visible:outline-hidden", className)}
     >
-      <pre ref={codeRef} className={cn("m-0 w-full font-mono", preClassName)}>
+      <pre ref={codeRef} style={signWords} className={cn("m-0 w-full font-mono", preClassName)}>
         {children}
       </pre>
     </div>

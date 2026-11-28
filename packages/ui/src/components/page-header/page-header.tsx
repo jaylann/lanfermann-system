@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 
 import { Heading, type HeadingProps } from "@/components/heading/heading";
+import { Skeleton, SkeletonGroup } from "@/components/skeleton/skeleton";
 import { Text, type TextProps } from "@/components/text/text";
 import { cn } from "@/lib/cn";
 
@@ -72,14 +73,37 @@ export function PageHeaderTitle({
  * offen, drei warten auf eine Antwort.“ Muted, under the title. With `as="div"` it can carry
  * an `AvatarGroup` before the words.
  */
-export function PageHeaderDescription({ className, ...props }: TextProps) {
+export type PageHeaderDescriptionProps = TextProps & {
+  /**
+   * The line is still loading (its numbers come from the server): say what is on its way, as a
+   * sentence („Die Zahl der Angebote wird geladen.“). The line then holds its shape, which shows
+   * itself after a fifth of a second like every skeleton, and is read out as that sentence.
+   */
+  loading?: string;
+};
+
+export function PageHeaderDescription({
+  className,
+  loading,
+  children,
+  ...props
+}: PageHeaderDescriptionProps) {
   return (
     <Text
       data-slot="page-header-description"
       tone="muted"
       className={cn("col-start-1 mt-1 max-w-[42rem] text-pretty", className)}
       {...props}
-    />
+    >
+      {loading === undefined ? (
+        children
+      ) : (
+        // A span: the line is a paragraph, and a `div` may not stand in one.
+        <SkeletonGroup as="span" label={loading}>
+          <Skeleton className="w-80" />
+        </SkeletonGroup>
+      )}
+    </Text>
   );
 }
 

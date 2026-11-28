@@ -4,6 +4,7 @@ import { expect, screen, waitFor, within } from "storybook/test";
 
 import type { DateRange } from "@/components/calendar/calendar";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
+import { LocaleProvider } from "@/locale/locale";
 
 import { DateRangeField } from "./date-range-field";
 import { lastDays } from "./presets";
@@ -370,5 +371,209 @@ export const KeyboardWithTimes: Story = {
         await expect(input).toHaveValue("23.11.2026, 07:30 – 25.11.2026, 12:00");
       },
     );
+  },
+};
+
+/**
+ * Under a `LocaleProvider` with `en` both ends are written and typed the American way, month
+ * first. What it submits is the same ISO interval.
+ */
+export const English: Story = {
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Field className="w-72">
+        <FieldLabel>Service period</FieldLabel>
+        <DateRangeField {...args} defaultValue={{ from: "2026-11-16", to: "2026-11-27" }} />
+      </Field>
+    </LocaleProvider>
+  ),
+};
+
+/** Empty in English: the placeholder is an example the field reads. */
+export const EnglishEmpty: Story = {
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Field className="w-72">
+        <FieldLabel>Service period</FieldLabel>
+        <DateRangeField {...args} />
+      </Field>
+    </LocaleProvider>
+  ),
+};
+
+/**
+ * The sheet in English, with presets: `lastDays` names them in the field's language, and the
+ * field says the name of the one the range is.
+ */
+export const EnglishOpen: Story = {
+  parameters: { visual: { viewport: { width: 700, height: 470 }, clip: "viewport" } },
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Opened>
+        <Field className="w-72">
+          <FieldLabel>Period</FieldLabel>
+          <DateRangeField
+            {...args}
+            presets={lookBack}
+            defaultValue={{ from: "2026-10-18", to: "2026-11-14" }}
+          />
+        </Field>
+      </Opened>
+    </LocaleProvider>
+  ),
+};
+
+/** The sheet in English with times: "From", "to" and "Done" under the calendar. */
+export const EnglishOpenWithTimes: Story = {
+  parameters: { visual: { viewport: { width: 480, height: 570 }, clip: "viewport" } },
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Opened>
+        <Field className="w-96 max-w-full">
+          <FieldLabel>Booking</FieldLabel>
+          <DateRangeField
+            {...args}
+            time
+            hourCycle={12}
+            defaultValue={{ from: "2026-11-16T08:00", to: "2026-11-18T16:30" }}
+          />
+        </Field>
+      </Opened>
+    </LocaleProvider>
+  ),
+};
+
+function ReportedEnglish() {
+  const [value, setValue] = useState<DateRange>({ from: "2026-11-16", to: "2026-11-27" });
+  return (
+    <LocaleProvider locale="en">
+      <Field className="w-96 max-w-full">
+        <FieldLabel>Period</FieldLabel>
+        <DateRangeField
+          value={value}
+          onValueChange={setValue}
+          today="2026-11-14"
+          presets={lookBack}
+        />
+        <FieldError />
+        <FieldDescription>
+          Value:{" "}
+          <span data-testid="value">
+            {value.from === "" ? "empty" : `${value.from}/${value.to}`}
+          </span>
+        </FieldDescription>
+      </Field>
+    </LocaleProvider>
+  );
+}
+
+/**
+ * As a test, in English: American ranges are read with a dash, a hyphen or "to" and reported as
+ * two ISO dates in order; a German range is flagged, and the message names the American format;
+ * a preset is named and read in English; the calendar speaks English.
+ */
+export const KeyboardEnglish: Story = {
+  render: () => <ReportedEnglish />,
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Period");
+    const value = canvas.getByTestId("value");
+
+    await step("The range is shown the American way", async () => {
+      await expect(input).toHaveValue("11/16/2026 – 11/27/2026");
+      await expect(value).toHaveTextContent("2026-11-16/2026-11-27");
+    });
+
+    await step("A short form is read: the start takes its year from the end", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "12/1-12/12/26");
+      await userEvent.tab();
+      await expect(input).toHaveValue("12/01/2026 – 12/12/2026");
+      await expect(value).toHaveTextContent("2026-12-01/2026-12-12");
+    });
+
+    await step("Ends typed the wrong way round, with 'to', are put in order", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "12/20/2026 to 12/18/2026{Enter}");
+      await expect(input).toHaveValue("12/18/2026 – 12/20/2026");
+      await expect(value).toHaveTextContent("2026-12-18/2026-12-20");
+    });
+
+    await step("One date alone is a range of that day, with hyphens too", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "12-24-2026{Enter}");
+      await expect(value).toHaveTextContent("2026-12-24/2026-12-24");
+    });
+
+    await step("A German range is not guessed: flagged, explained, not reported", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "14.11. – 30.11.2026{Enter}");
+      await expect(input).toHaveAttribute("aria-invalid", "true");
+      await expect(value).toHaveTextContent("empty");
+      await waitFor(() =>
+        expect(
+          canvas.getByText("Enter a date range, for example 11/14 – 11/30/2026."),
+        ).toBeVisible(),
+      );
+    });
+
+    await step("A preset's English name, typed, is that preset", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "last 7 days{Enter}");
+      await expect(input).toHaveValue("Last 7 days");
+      await expect(value).toHaveTextContent("2026-11-08/2026-11-14");
+    });
+
+    await step("In the calendar two presses make the range, and it speaks English", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Open calendar" }));
+      const sheet = await screen.findByRole("dialog", { name: "Choose a date range" });
+      // The sheet eases in: it is there at once and seen a moment later.
+      await waitFor(() =>
+        expect(within(sheet).getByRole("group", { name: "Presets" })).toBeVisible(),
+      );
+      await expect(within(sheet).getByRole("button", { name: "Last 28 days" })).toBeVisible();
+      await userEvent.click(within(sheet).getByRole("button", { name: /November 26, 2026/ }));
+      await userEvent.click(within(sheet).getByRole("button", { name: /November 17, 2026/ }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await expect(input).toHaveValue("11/17/2026 – 11/26/2026");
+      await expect(input).not.toHaveAttribute("aria-invalid");
+      await expect(value).toHaveTextContent("2026-11-17/2026-11-26");
+    });
+  },
+};
+
+/**
+ * As a test: `labels` puts the caller's words in place of the language's, and without a
+ * `LocaleProvider` the example in them is the German one.
+ */
+export const KeyboardOwnWords: Story = {
+  render: () => (
+    <Field className="w-96 max-w-full">
+      <FieldLabel>Zeitraum</FieldLabel>
+      <DateRangeField
+        today="2026-11-14"
+        max="2026-12-31"
+        labels={{
+          invalid: (example) => `So wird es gelesen: ${example}.`,
+          limits: { until: "Dieses Jahr endet am 31.12." },
+          open: "Kalender zeigen",
+        }}
+      />
+      <FieldError />
+    </Field>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Zeitraum");
+
+    await step("The messages and the button's name are the caller's", async () => {
+      await expect(input).toHaveAttribute("placeholder", "z. B. 14.11. – 30.11.2026");
+      await userEvent.type(input, "nächste Woche{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("So wird es gelesen: 14.11. – 30.11.2026.")).toBeVisible(),
+      );
+      await userEvent.clear(input);
+      await userEvent.type(input, "28.12. – 3.1.2027{Enter}");
+      await waitFor(() => expect(canvas.getByText("Dieses Jahr endet am 31.12.")).toBeVisible());
+      await expect(canvas.getByRole("button", { name: "Kalender zeigen" })).toBeVisible();
+    });
   },
 };

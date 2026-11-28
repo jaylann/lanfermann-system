@@ -9,6 +9,7 @@ import { extent, share, valueAxis } from "@/internal/chart/scale";
 import { relativeChange, signedFormat } from "@/internal/chart/steps";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 export type DumbbellItem = {
   /** What the row is: a service, a project, a person. */
@@ -42,7 +43,17 @@ export type DumbbellProps = Omit<ComponentProps<"figure">, "children"> & {
   drawIn?: boolean;
   /** The word for the change in the readout and the table. */
   changeLabel?: string;
+  /**
+   * The chart's own words, for one chart worded without a `LocaleProvider`: what assistive
+   * tech calls it (`chart`), how its keyboard is explained after the name (`hint`) and the
+   * head of the table's first column (`row`). Each one left out is the provider's. (`labels`
+   * names the two values; the word for the change is `changeLabel`.)
+   */
+  words?: Partial<DumbbellWords>;
 };
+
+/** The words a `Dumbbell` says on its own (`words`). */
+export type DumbbellWords = { chart: string; hint: string; row: string };
 
 /**
  * A value before and after, per row: last year's prices against this year's, the hours planned
@@ -58,20 +69,28 @@ export function Dumbbell({
   labels,
   label,
   format,
-  locale = "de-DE",
+  locale,
   sort = false,
   tone = "neutral",
   zero = false,
   readout = true,
   drawIn = true,
-  changeLabel = "Veränderung",
+  changeLabel,
+  words: wordsProp,
   className,
   ...props
 }: DumbbellProps) {
+  const { messages, tag } = useLocale();
+  const words: DumbbellWords = {
+    chart: messages.charts.chart,
+    hint: messages.charts.hintRows,
+    row: messages.charts.row,
+    ...wordsProp,
+  };
   const live = useLive();
-  const numbers = chartFormat(locale, format);
-  const signedPercent = signedFormat(locale, { style: "percent", maximumFractionDigits: 0 });
-  const signed = signedFormat(locale, format);
+  const numbers = chartFormat(locale ?? tag, format);
+  const signedPercent = signedFormat(locale ?? tag, { style: "percent", maximumFractionDigits: 0 });
+  const signed = signedFormat(locale ?? tag, format);
   const [active, setActive] = useState<{ index: number; shown: boolean; entry: number } | null>(
     null,
   );
@@ -124,7 +143,7 @@ export function Dumbbell({
         color: "transparent",
         mark: "swatch",
         value: changeOf(index),
-        label: changeLabel,
+        label: changeLabel ?? messages.charts.change,
       },
     ];
   };
@@ -194,8 +213,8 @@ export function Dumbbell({
         data-slot="dumbbell-plot"
         data-live={live || undefined}
         role="group"
-        aria-roledescription="Diagramm"
-        aria-label={`${label}. Mit den Pfeiltasten durch die Zeilen gehen.`}
+        aria-roledescription={words.chart}
+        aria-label={`${label}. ${words.hint}`}
         tabIndex={rows.length > 0 ? 0 : undefined}
         onKeyDown={onKeyDown}
         onBlur={hide}
@@ -340,10 +359,10 @@ export function Dumbbell({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">Zeile</th>
+                <th scope="col">{words.row}</th>
                 <th scope="col">{labels[0]}</th>
                 <th scope="col">{labels[1]}</th>
-                <th scope="col">{changeLabel}</th>
+                <th scope="col">{changeLabel ?? messages.charts.change}</th>
               </tr>
             </thead>
             <tbody>

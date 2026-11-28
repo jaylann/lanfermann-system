@@ -7,15 +7,19 @@ import { InputGroup } from "@/components/input-group/input-group";
 import { Popover } from "@/components/popover/popover";
 import type { FieldSize } from "@/internal/field";
 import {
+  type DateLimitLabels,
   DEFAULT_END_TIME,
   DEFAULT_TIME,
-  formatGermanRange,
+  exampleRange,
+  exampleTimedRange,
+  formatRange,
   type HourCycle,
+  limitWords,
   outsideLimits,
-  parseGermanMoment,
-  parseGermanRange,
   parseIsoDate,
   parseIsoInterval,
+  parseMoment,
+  parseRange,
   splitIsoMoment,
   toIsoInterval,
 } from "@/internal/iso-date";
@@ -23,9 +27,29 @@ import { ListMark } from "@/internal/list-mark";
 import { PickerButton, pickerRow, PickerSheet, PickerTime } from "@/internal/picker-sheet";
 import { useToday } from "@/internal/today";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
+import { worded, type Wording } from "@/internal/wording";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { type DateRangePreset, presetOf } from "./presets";
+
+/**
+ * The words a `DateRangeField` says on its own. Each is the language's (`LocaleProvider`)
+ * unless given; a message is a finished sentence, or a function that is handed what the default
+ * names.
+ */
+export type DateRangeFieldLabels = {
+  /** The text is not a range. Handed an example the field would read: "14.11. – 30.11.2026". */
+  invalid: Wording<[example: string]>;
+  /** With `time`: handed "14.11., 09:00 – 16.11., 17:00", on the field's clock. */
+  invalidWithTime: Wording<[example: string]>;
+  /** A day lies outside `min` and `max`. Handed the limits as the field writes them. */
+  limits: Partial<DateLimitLabels>;
+  /** Names the button that opens the calendar, for assistive tech: „Kalender öffnen“. */
+  open: string;
+  /** With `time`: the button that closes the sheet, „Fertig“. */
+  done: string;
+};
 
 export type DateRangeFieldProps = Omit<
   TypedInputProps,
@@ -62,6 +86,8 @@ export type DateRangeFieldProps = Omit<
   presets?: readonly DateRangePreset[];
   /** Names the presets for assistive tech. */
   presetsLabel?: string;
+  /** Any of the field's other words, in place of the language's (`DateRangeFieldLabels`). */
+  labels?: Partial<DateRangeFieldLabels>;
 };
 
 type End = { date: string; time: string };
@@ -87,6 +113,10 @@ function settle(from: End, to: End, time: boolean): DateRange {
  * day, `14.11. 9–17 Uhr`. One date alone is a range of that day. In the calendar the first press
  * sets one end and the second the other; with times, each end has a small `TimeField` under it.
  *
+ * Under a `LocaleProvider` with `en` it is typed and written the American way, month first:
+ * `11/14 – 11/30/2026`, `11/14/2026 to 11/30/2026`, `11/14-11/30`; with times `11/14, 9:00 –
+ * 11/16, 17:00` or `11/14 9 am – 5 pm`. Dates with dots are not read there.
+ *
  * The value is `{ from, to }` in ISO strings. Inside a `Form`, `name` submits both as one ISO
  * interval, `2026-11-14/2026-11-30`: split it at the slash.
  *
@@ -107,21 +137,27 @@ export function DateRangeField({
   className,
   today,
   presets,
-  presetsLabel = "Schnellauswahl",
+  presetsLabel,
+  labels,
   disabled,
   ...props
 }: DateRangeFieldProps) {
+  const { locale, messages } = useLocale();
+  const limits = limitWords(labels?.limits, messages.dateField.limits);
+  const outside = (date: string) => outsideLimits(date, min, max, limits, locale);
   const todayIso = useToday(today);
   const now = parseIsoDate(todayIso);
-  const example =
-    hourCycle === 12 ? "14.11., 9:00 AM – 16.11., 5:00 PM" : "14.11., 09:00 – 16.11., 17:00";
+  const example = time ? exampleTimedRange(locale, hourCycle) : exampleRange(locale);
   // A preset is named in the field (Justin, 2026-11-21); a booking's times are not in a name.
   const named = !time;
+  /** What a preset is called: as `lastDays` counts it, in the field's language, or its label. */
+  const nameOf = (preset: DateRangePreset) =>
+    preset.days === undefined ? preset.label : messages.dateRangeField.lastDays(preset.days);
   /** The range as the field writes it: a preset's name, or its two ends. */
   const showOn = (on: string) => (interval: string) => {
     const range = parseIsoInterval(interval);
     const preset = named ? presetOf(presets, range, on) : undefined;
-    return preset ? preset.label : formatGermanRange(range, hourCycle);
+    return preset ? nameOf(preset) : formatRange(range, locale, hourCycle);
   };
   const typed = useTypedValue({
     // Inside, the range is its interval string: one value to compare and to submit.
@@ -129,30 +165,30 @@ export function DateRangeField({
     defaultValue: toIsoInterval(defaultValue),
     onValueChange: onValueChange && ((interval) => onValueChange(parseIsoInterval(interval))),
     show: showOn(todayIso),
+    writtenIn: locale,
     read: (text) => {
       // A preset's name, typed, is that preset.
       const preset =
         named && todayIso
-          ? presets?.find((each) => each.label.toLowerCase() === text.trim().toLowerCase())
+          ? presets?.find((each) => nameOf(each).toLowerCase() === text.trim().toLowerCase())
           : undefined;
       if (preset) {
         const range = preset.range(todayIso);
-        const outside = outsideLimits(range.from, min, max) ?? outsideLimits(range.to, min, max);
-        if (outside) return { problem: outside };
+        const problem = outside(range.from) ?? outside(range.to);
+        if (problem) return { problem };
         return toIsoInterval(range);
       }
-      const day = parseGermanMoment(text, now);
-      const read = parseGermanRange(text, now) ?? (day && { from: day, to: day });
+      const day = parseMoment(text, locale, now);
+      const read = parseRange(text, locale, now) ?? (day && { from: day, to: day });
       if (!read) {
         return {
           problem: time
-            ? `Bitte geben Sie Beginn und Ende ein, zum Beispiel ${example}.`
-            : "Bitte geben Sie einen Zeitraum ein, zum Beispiel 14.11. – 30.11.2026.",
+            ? worded(labels?.invalidWithTime ?? messages.dateRangeField.invalidWithTime, example)
+            : worded(labels?.invalid ?? messages.dateRangeField.invalid, example),
         };
       }
-      const outside =
-        outsideLimits(read.from.date, min, max) ?? outsideLimits(read.to.date, min, max);
-      if (outside) return { problem: outside };
+      const problem = outside(read.from.date) ?? outside(read.to.date);
+      if (problem) return { problem };
       return toIsoInterval(settle(read.from, read.to, time));
     },
   });
@@ -199,13 +235,14 @@ export function DateRangeField({
   const unavailable = (preset: DateRangePreset) => {
     const days = preset.range(todayIso);
     if (days.from === "") return true;
-    return (outsideLimits(days.from, min, max) ?? outsideLimits(days.to, min, max)) !== undefined;
+    return (outside(days.from) ?? outside(days.to)) !== undefined;
   };
   const presetList = presets && presets.length > 0 && (
     <PresetList
       presets={presets}
       chosen={chosen}
-      label={presetsLabel}
+      label={presetsLabel ?? messages.dateRangeField.presets}
+      nameOf={nameOf}
       unavailable={unavailable}
       onPick={pick}
     />
@@ -215,7 +252,7 @@ export function DateRangeField({
     <Popover open={open} onOpenChange={setOpen}>
       <InputGroup ref={field} data-slot="date-range-field" size={size} className={className}>
         <TypedInput
-          placeholder={time ? `z. B. ${example}` : "z. B. 14.11. – 30.11.2026"}
+          placeholder={messages.dateField.example(example)}
           text={typed.text}
           onTextChange={typed.setText}
           onCommit={typed.commit}
@@ -226,9 +263,14 @@ export function DateRangeField({
           {...props}
           data-slot="date-range-field-input"
         />
-        <PickerButton size={size} disabled={disabled || props.readOnly} />
+        <PickerButton size={size} disabled={disabled || props.readOnly} label={labels?.open} />
       </InputGroup>
-      <PickerSheet anchor={field} label="Zeitraum wählen" done={time}>
+      <PickerSheet
+        anchor={field}
+        label={messages.dateRangeField.sheet}
+        done={time}
+        doneLabel={labels?.done}
+      >
         <div className="flex flex-col gap-3 sm:flex-row">
           {presetList}
           <Calendar
@@ -255,14 +297,14 @@ export function DateRangeField({
         {time && (
           <div className={pickerRow}>
             <PickerTime
-              label="Von"
+              label={messages.dateRangeField.from}
               hourCycle={hourCycle}
               value={clock.from}
               // Text that is no time is not taken: the field goes back to the time it had.
               onValueChange={(next) => next !== "" && setClock("from", next)}
             />
             <PickerTime
-              label="bis"
+              label={messages.dateRangeField.to}
               hourCycle={hourCycle}
               value={clock.to}
               onValueChange={(next) => next !== "" && setClock("to", next)}
@@ -287,12 +329,14 @@ function PresetList({
   presets,
   chosen,
   label,
+  nameOf,
   unavailable,
   onPick,
 }: {
   presets: readonly DateRangePreset[];
   chosen: DateRangePreset | undefined;
   label: string;
+  nameOf: (preset: DateRangePreset) => string;
   unavailable: (preset: DateRangePreset) => boolean;
   onPick: (preset: DateRangePreset) => void;
 }) {
@@ -320,7 +364,7 @@ function PresetList({
               "disabled:pointer-events-none disabled:text-on-disabled",
             )}
           >
-            {preset.label}
+            {nameOf(preset)}
             <ListMark on={on} className="ml-auto" />
           </button>
         );

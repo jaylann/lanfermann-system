@@ -4,11 +4,10 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/button/button";
-import { useGround } from "@/components/ground/ground";
+import { useGround, useGroundMode } from "@/components/ground/ground";
 import { CloseGlyph } from "@/internal/glyphs";
 import {
   overlayBackdrop,
-  overlayBody,
   overlayDescription,
   overlayFooter,
   overlayHeader,
@@ -16,7 +15,9 @@ import {
   overlayTitle,
   overlayViewport,
 } from "@/internal/overlay";
+import { OverlayBody, type OverlayBodyProps } from "@/internal/overlay-body";
 import { cn, mergeClassName } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 /**
  * A task that needs the whole attention for a moment: a short form, a detail, a choice. The page
@@ -49,10 +50,12 @@ export function DialogContent({
   className,
   children,
   hideClose = false,
-  closeLabel = "Schließen",
+  closeLabel,
   ...props
 }: DialogContentProps) {
+  const { messages } = useLocale();
   const ground = useGround();
+  const groundMode = useGroundMode();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop data-slot="dialog-backdrop" className={overlayBackdrop} />
@@ -60,6 +63,7 @@ export function DialogContent({
         <DialogPrimitive.Popup
           data-slot="dialog-content"
           data-theme={ground}
+          data-mode={groundMode}
           className={mergeClassName(overlayPopup, className)}
           {...props}
         >
@@ -72,7 +76,7 @@ export function DialogContent({
                   iconOnly
                   size="sm"
                   variant="quiet"
-                  aria-label={closeLabel}
+                  aria-label={closeLabel ?? messages.dialog.close}
                   className="absolute top-3 right-3 text-fg-muted"
                 />
               }
@@ -112,8 +116,8 @@ export function DialogDescription({ className, ...props }: DialogPrimitive.Descr
 }
 
 /** The content. It scrolls when it is taller than the window allows. */
-export function DialogBody({ className, ...props }: ComponentProps<"div">) {
-  return <div data-slot="dialog-body" className={cn(overlayBody, className)} {...props} />;
+export function DialogBody(props: OverlayBodyProps) {
+  return <OverlayBody data-slot="dialog-body" {...props} />;
 }
 
 export function DialogFooter({ className, ...props }: ComponentProps<"div">) {

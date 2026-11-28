@@ -4,6 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Icon } from "@/components/icon/icon";
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 export type StatGroupProps = ComponentProps<"div"> & {
   /**
@@ -85,13 +86,31 @@ export function StatLabel({ className, ...props }: ComponentProps<"p">) {
  * The figure, large and in tabular digits. Plain text, or a `RollingNumber`. It never breaks: a
  * figure split over two lines reads as two.
  */
-export function StatValue({ className, ...props }: ComponentProps<"p">) {
+export function StatValue({
+  total,
+  className,
+  children,
+  ...props
+}: ComponentProps<"p"> & {
+  /**
+   * What the figure is a part of, with its word: „von 7“. It stands after the figure, smaller
+   * and muted, so „2 von 7“ reads as one fact with the 2 as what counts.
+   */
+  total?: ReactNode;
+}) {
   return (
     <p
       data-slot="stat-value"
       className={cn("text-xl font-medium whitespace-nowrap text-fg tabular-nums", className)}
       {...props}
-    />
+    >
+      {children}
+      {total !== undefined && (
+        <span data-slot="stat-value-total" className="ms-1.5 text-base font-normal text-fg-muted">
+          {total}
+        </span>
+      )}
+    </p>
   );
 }
 
@@ -105,12 +124,6 @@ const toneClass = {
   negative: "text-danger",
   neutral: "text-fg-muted",
 } as const;
-
-const defaultTrendLabels: Record<StatTrend, string> = {
-  up: "Gestiegen",
-  down: "Gesunken",
-  flat: "Unverändert",
-};
 
 export type StatChangeProps = ComponentProps<"p"> & {
   trend: StatTrend;
@@ -143,7 +156,6 @@ export function StatChange({
   children,
   ...props
 }: StatChangeProps) {
-  const labels = { ...defaultTrendLabels, ...trendLabels };
   return (
     <p
       data-slot="stat-change"
@@ -170,7 +182,9 @@ export function StatChange({
           toneClass[tone],
         )}
       >
-        <span className="sr-only">{labels[trend]}: </span>
+        <span className="sr-only">
+          {trendLabels?.[trend] ?? <Localized ns="stat" name={trend} />}:{" "}
+        </span>
         {children}
       </span>
       {context !== undefined && <span className="text-fg-muted">{context}</span>}

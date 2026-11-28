@@ -21,6 +21,7 @@ import {
   type Platform,
   shortcutKeys,
 } from "@/lib/shortcut";
+import { useLocale } from "@/locale/locale";
 
 const PlatformContext = createContext<Platform | undefined>(undefined);
 
@@ -76,9 +77,10 @@ export type ShortcutProps = Omit<ComponentProps<"kbd">, "children"> & {
  */
 export function Shortcut({ keys, platform: fixed, className, ...props }: ShortcutProps) {
   const known = useKnownPlatform();
+  const { locale } = useLocale();
   const platform = fixed ?? known ?? "other";
   const waits = fixed === undefined && known === undefined && dependsOnPlatform(keys);
-  const caps = shortcutKeys(keys, platform);
+  const caps = shortcutKeys(keys, platform, locale);
   return (
     <kbd
       data-slot="shortcut"
