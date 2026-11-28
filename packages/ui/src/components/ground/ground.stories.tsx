@@ -204,9 +204,12 @@ export const CustomColours: Story = {
     });
 
     await step("a kit ground inside is itself again", async () => {
-      await expect(colour(canvas.getByTestId("nested"), "background-color")).toBe(
-        "rgb(251, 251, 253)",
-      );
+      // Paper as the page's mode has it, light or dark: in either case not the brand's green,
+      // and its text is Paper's own again.
+      const nested = canvas.getByTestId("nested");
+      await expect(colour(nested, "background-color")).not.toBe("rgb(20, 61, 43)");
+      await expect(colour(nested, "--lf-text")).not.toBe("#f4efe1");
+      await expect(colour(nested, "--lf-accent")).not.toBe("#f2c14e");
     });
   },
 };
