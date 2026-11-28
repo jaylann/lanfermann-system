@@ -33,12 +33,26 @@ function wordStarts(text: string, from: number, to: number): number[] {
   return starts;
 }
 
-/** Just after the last white space at or after `from`: how far the finished words reach. */
+/** Scripts whose words are written without a space between them. */
+const unspaced = /[\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Thai}\p{sc=Lao}\p{sc=Khmer}]/u;
+
+/**
+ * How far the finished words reach: just after the last white space at or after `from`. In a
+ * script written without spaces (Japanese, Chinese, Thai) a sentence would wait unseen for a
+ * space that never comes, so there the words after that are counted too, and only the last
+ * one, which may still be growing, is held back.
+ */
 function finishedUpTo(text: string, from: number): number {
+  let reach = from;
   for (let index = text.length - 1; index >= from; index -= 1) {
-    if (/\s/.test(text.charAt(index))) return index + 1;
+    if (/\s/.test(text.charAt(index))) {
+      reach = index + 1;
+      break;
+    }
   }
-  return from;
+  if (segmenter && unspaced.test(text.slice(reach)))
+    return wordStarts(text, reach, text.length).at(-1) ?? reach;
+  return reach;
 }
 
 export type Advanced = {

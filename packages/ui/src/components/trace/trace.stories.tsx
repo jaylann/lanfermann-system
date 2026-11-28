@@ -274,6 +274,10 @@ export const Keyboard: Story = {
       await userEvent.keyboard("{Enter}");
       await expect(opens).toHaveAttribute("aria-expanded", "true");
       await waitFor(() => expect(canvas.getByText("RE-2026-115")).toBeVisible());
+      // What the reader opens is theirs to read: the live list does not say it as a step that joined.
+      await expect(
+        canvas.getByText("RE-2026-115").closest('[data-slot="trace-detail"]'),
+      ).toHaveAttribute("aria-live", "off");
     });
 
     await step("Enter closes it again", async () => {

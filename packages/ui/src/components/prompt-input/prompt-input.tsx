@@ -30,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/to
 import { fieldShellGrowing, focusFieldControl } from "@/internal/field";
 import { StopGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 import { promptKey, TOUCH_ONLY } from "./keys";
@@ -143,6 +144,15 @@ export function PromptInput({
   const textareaId = useId();
   const canSend = !disabled && (value.trim() !== "" || attachments > 0);
 
+  // The text as it stands now, for a send that fails later; null once the prompt is gone.
+  const latest = useRef<string | null>(value);
+  useLayoutEffect(() => {
+    latest.current = value;
+    return () => {
+      latest.current = null;
+    };
+  });
+
   const focusText = () => document.getElementById(textareaId)?.focus();
 
   const send = () => {
@@ -153,11 +163,7 @@ export function PromptInput({
     if (result instanceof Promise) {
       result.catch(() => {
         // Not sent: what was typed comes back, unless something new has been typed since.
-        setOwn((now) => {
-          if (now !== "") return now;
-          onValueChange?.(sent);
-          return sent;
-        });
+        if (latest.current === "") setValue(sent);
       });
     }
   };
@@ -191,6 +197,8 @@ export function PromptInput({
   };
 
   const hasFiles = (event: DragEvent) => event.dataTransfer.types.includes("Files");
+  // The caller's own handlers are heard first; spread onto the form they would replace these.
+  const { onDragEnter, onDragOver, onDragLeave, onDrop, ...rest } = props;
 
   return (
     <PromptContext value={context}>
@@ -206,22 +214,26 @@ export function PromptInput({
         // A file let go over the field is taken; the browser must never open it instead. A
         // count of enters and leaves, so moving over the keys inside does not flicker the halo.
         onDragEnter={(event) => {
+          onDragEnter?.(event);
           if (!hasFiles(event) || disabled) return;
           event.preventDefault();
           drags.current += 1;
           setDragging(true);
         }}
         onDragOver={(event) => {
+          onDragOver?.(event);
           if (!hasFiles(event)) return;
           event.preventDefault();
           event.dataTransfer.dropEffect = disabled ? "none" : "copy";
         }}
         onDragLeave={(event) => {
+          onDragLeave?.(event);
           if (!hasFiles(event)) return;
           drags.current = Math.max(0, drags.current - 1);
           if (drags.current === 0) setDragging(false);
         }}
         onDrop={(event) => {
+          onDrop?.(event);
           if (!hasFiles(event)) return;
           event.preventDefault();
           drags.current = 0;
@@ -229,7 +241,7 @@ export function PromptInput({
           addFiles([...event.dataTransfer.files]);
           focusText();
         }}
-        {...props}
+        {...rest}
       >
         <Grow
           data-slot="prompt-input-field"
@@ -271,9 +283,11 @@ const textLook =
 export function PromptInputTextarea({
   label = "Nachricht an die KI",
   className,
+  onChange,
   onKeyDown,
   onPaste,
   placeholder,
+  ref,
   ...props
 }: PromptInputTextareaProps) {
   const prompt = usePrompt("PromptInputTextarea");
@@ -309,7 +323,7 @@ export function PromptInputTextarea({
   return (
     <div data-slot="prompt-input-text" className="grid min-w-0 [grid-area:text]">
       <textarea
-        ref={area}
+        ref={mergeRefs(area, ref)}
         id={prompt.textareaId}
         data-slot="prompt-input-textarea"
         data-field-control=""
@@ -322,7 +336,10 @@ export function PromptInputTextarea({
         disabled={prompt.disabled}
         placeholder={placeholder}
         enterKeyHint={prompt.touchOnly ? "enter" : "send"}
-        onChange={(event) => prompt.setValue(event.target.value)}
+        onChange={(event) => {
+          onChange?.(event);
+          prompt.setValue(event.target.value);
+        }}
         onKeyDown={keyDown}
         onPaste={paste}
         className={cn(
@@ -369,7 +386,12 @@ export type PromptInputAttachProps = Omit<
  * The paper clip: opens the file picker. What is chosen is sorted like a drop and handed to
  * `onFilesAdded`; the same file can be chosen again.
  */
-export function PromptInputAttach({ label = "Datei anhängen", className }: PromptInputAttachProps) {
+export function PromptInputAttach({
+  label = "Datei anhängen",
+  className,
+  disabled,
+  ...props
+}: PromptInputAttachProps) {
   const prompt = usePrompt("PromptInputAttach");
   const input = useRef<HTMLInputElement>(null);
   return (
@@ -378,11 +400,12 @@ export function PromptInputAttach({ label = "Datei anhängen", className }: Prom
         <TooltipTrigger
           render={
             <Button
+              {...props}
               iconOnly
               variant="quiet"
               aria-label={label}
               data-slot="prompt-input-attach"
-              disabled={prompt.disabled}
+              disabled={prompt.disabled || disabled}
               onClick={() => input.current?.click()}
               className={cn(innerKey, "text-fg-muted hover:text-fg", className)}
             >
@@ -441,7 +464,16 @@ export function PromptInputSubmit({
             type={prompt.running ? "button" : "submit"}
             disabled={!prompt.running && !prompt.canSend}
             focusableWhenDisabled
-            onClick={prompt.running ? prompt.stop : undefined}
+            // Stop only stops. When `onStop` ends `running` at once, the key is a submit key
+            // again by the time the browser acts on this click, and would send what is typed.
+            onClick={
+              prompt.running
+                ? (event) => {
+                    event.preventDefault();
+                    prompt.stop();
+                  }
+                : undefined
+            }
             // The press does not take the keyboard from the text, so a phone's keyboard stays.
             onMouseDown={(event) => {
               if (document.activeElement?.id === prompt.textareaId) event.preventDefault();
