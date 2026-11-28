@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { expect, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
+import { useLive } from "@/internal/presence";
 
 import { RollingNumber } from "./rolling-number";
 
@@ -170,5 +171,45 @@ export const Contract: Story = {
         .filter((animation) => (animation as CSSTransition).transitionProperty === "--roll");
       await expect(rolling).toHaveLength(1);
     });
+  },
+};
+
+/** Counts what moves in the frame after the number's columns first show. */
+function Watched({ children }: { children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const live = useLive();
+  useEffect(() => {
+    const element = box.current;
+    if (!element) return;
+    const watch = new MutationObserver(() => {
+      if (!element.querySelector('[data-slot="rolling-number-place"]')) return;
+      watch.disconnect();
+      requestAnimationFrame(() => {
+        element.dataset.moving = String(element.getAnimations({ subtree: true }).length);
+      });
+    });
+    watch.observe(element, { childList: true, subtree: true });
+    return () => watch.disconnect();
+  }, []);
+  return (
+    <div ref={box} data-watch data-live={live ? "" : undefined}>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * As a test: inside a list that is live already (a chart's axis, a live table) a number that
+ * first shows stands still. Its places open only for the number's own changes.
+ */
+export const InsideALiveBox: Story = {
+  render: () => (
+    <Watched>
+      <RollingNumber value={1234} />
+    </Watched>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector<HTMLElement>("[data-watch]");
+    await waitFor(() => expect(box?.dataset.moving).toBe("0"));
   },
 };

@@ -50,13 +50,18 @@ export function SegmentedBar({
   legend = true,
   drawIn = true,
   className,
+  onPointerLeave,
   ...props
 }: SegmentedBarProps) {
   const numbers = chartFormat(locale, format);
   const [active, setActive] = useState<string | null>(null);
   const bar = useRef<HTMLDivElement>(null);
 
-  const total = data.reduce((sum, item) => sum + Math.max(0, item.value), 0);
+  // What a part weighs: nothing where it is below zero or no number (`NaN`), so one such part
+  // does not take the whole bar with it.
+  const amount = (item: SegmentedBarItem) =>
+    Number.isFinite(item.value) ? Math.max(0, item.value) : 0;
+  const total = data.reduce((sum, item) => sum + amount(item), 0);
   type Part = {
     item: SegmentedBarItem;
     key: string;
@@ -67,7 +72,7 @@ export function SegmentedBar({
   };
   // Each part starts where the one before it ends.
   const parts = data.reduce<Part[]>((list, item, index) => {
-    const share = total > 0 ? Math.max(0, item.value) / total : 0;
+    const share = total > 0 ? amount(item) / total : 0;
     const start = list.at(-1)?.end ?? 0;
     return [...list, { item, key: item.key ?? item.name, index, share, start, end: start + share }];
   }, []);
@@ -106,8 +111,11 @@ export function SegmentedBar({
       data-slot="segmented-bar"
       data-size={size}
       className={cn("flex min-w-0 flex-col gap-3", className)}
-      onPointerLeave={() => setActive(null)}
       {...props}
+      onPointerLeave={(event) => {
+        onPointerLeave?.(event);
+        setActive(null);
+      }}
     >
       <div
         ref={bar}

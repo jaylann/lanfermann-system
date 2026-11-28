@@ -53,16 +53,22 @@ export function Funnel({
   ...props
 }: FunnelProps) {
   const numbers = chartFormat(locale, format);
-  const first = Math.max(0, data[0]?.value ?? 0);
+  // What a step counts on the scale: nothing where it is below zero or no number (`NaN`).
+  const amount = (step: FunnelStep | undefined) =>
+    step && Number.isFinite(step.value) ? Math.max(0, step.value) : 0;
+  const first = amount(data[0]);
   const fill = tone === "accent" ? "bg-accent" : "bg-fg";
   const ghost = tone === "accent" ? "bg-accent/20" : "bg-fg/12";
 
   return (
     <ol data-slot="funnel" className={cn("flex min-w-0 flex-col gap-4", className)} {...props}>
       {data.map((step, index) => {
-        const before = index > 0 ? Math.max(0, data[index - 1]!.value) : null;
-        const value = Math.max(0, step.value);
-        const share = first > 0 ? value / first : 0;
+        const before = index > 0 ? amount(data[index - 1]) : null;
+        const value = amount(step);
+        // A step larger than the first fills its track and no more: a fill past the end would be
+        // pushed out of the track at its start.
+        const ofFirst = (count: number) => (first > 0 ? Math.min(1, count / first) : 0);
+        const share = ofFirst(value);
         const against = rate === "first" ? first : before;
         const kept = against !== null && against > 0 ? value / against : null;
         const bar = (fraction: number, kind: string, extra?: CSSProperties) => (
@@ -102,7 +108,7 @@ export function Funnel({
               className="relative col-span-full block h-2 overflow-hidden rounded-full"
             >
               {before !== null &&
-                bar(first > 0 ? before / first : 0, ghost, {
+                bar(ofFirst(before), ghost, {
                   "--chart-grow-index": index - 1,
                 } as CSSProperties)}
               {bar(share, fill, { "--chart-grow-index": index } as CSSProperties)}

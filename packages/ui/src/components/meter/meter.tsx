@@ -33,19 +33,28 @@ export type MeterProps = MeterPrimitive.Root.Props & {
  *
  * Name it with a `MeterLabel` or an `aria-label`. `MeterValue` shows a percentage; give it a
  * function to say it in the unit people think in ("3 von 5"). Without children it is the bare
- * track.
+ * track. The value is written in German unless `locale` says otherwise, on the server as in the
+ * browser.
  */
-export function Meter({ className, children, tone = "neutral", ...props }: MeterProps) {
+export function Meter({
+  className,
+  children,
+  tone = "neutral",
+  // Base UI would write in the language of whatever runs it: the server's, then the browser's.
+  locale = "de-DE",
+  ...props
+}: MeterProps) {
+  // A value that is no number (`NaN`) measures nothing, as Base UI reports it.
+  const fill = Number.isNaN(props.value) ? 0 : fillFraction(props.value, props.min, props.max);
   return (
     <MeterPrimitive.Root
       data-slot="meter"
       data-tone={tone}
+      locale={locale}
       className={mergeClassName(["group/meter", gaugeRoot], className)}
       {...props}
     >
-      <MeterFill value={fillFraction(props.value, props.min, props.max)}>
-        {children ?? <MeterTrack />}
-      </MeterFill>
+      <MeterFill value={fill}>{children ?? <MeterTrack />}</MeterFill>
     </MeterPrimitive.Root>
   );
 }

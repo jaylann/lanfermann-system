@@ -136,7 +136,12 @@ export function Tracker({
     }));
     if (how.keyboard) setSaid(sentence(index));
   };
-  const hide = () => setScrub((old) => (old?.shown ? { ...old, shown: false, touch: false } : old));
+  const hide = () => {
+    setScrub((old) => (old?.shown ? { ...old, shown: false, touch: false } : old));
+    // Emptied, so a cell is said again when the reader comes back to it: a line that has not
+    // changed is not announced.
+    setSaid("");
+  };
 
   const indexAt = (event: PointerEvent<HTMLElement>) => {
     const box = event.currentTarget.getBoundingClientRect();

@@ -90,7 +90,9 @@ export function RollingNumber({
     rolls: nextRolls({}, parts.places, 0),
     swaps: 0,
   }));
-  if (model.value !== value || model.text !== parts.text) {
+  // `Object.is`: a value that is no number (`NaN`) is not equal to itself, and would be taken for
+  // a change on every render, without end.
+  if (!Object.is(model.value, value) || model.text !== parts.text) {
     const swap = model.unit !== parts.unit;
     setModel({
       value,

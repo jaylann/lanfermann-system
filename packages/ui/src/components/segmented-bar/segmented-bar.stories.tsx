@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
 import { Card, CardBar } from "@/components/card/card";
@@ -146,5 +147,41 @@ export const Change: Story = {
         </Button>
       </div>
     );
+  },
+};
+
+/**
+ * As a test: pointing at a part quiets the others, and leaving the bar brings them back, also
+ * where the caller listens for the pointer leaving.
+ */
+export const Pointing: Story = {
+  render: () => (
+    <SegmentedBar
+      className="w-[34rem] max-w-full"
+      label="Rechnungen nach Stand"
+      data={invoices}
+      format={euro}
+      onPointerLeave={(event) => {
+        event.currentTarget.dataset.left = "";
+      }}
+    />
+  ),
+  play: async ({ canvasElement, userEvent, step }) => {
+    const bar = canvasElement.querySelector<HTMLElement>('[data-slot="segmented-bar"]')!;
+    const parts = () => [...bar.querySelectorAll<HTMLElement>('[role="img"] > div > div')];
+    const quiet = () => bar.querySelectorAll("[data-quiet]");
+
+    await step("Pointing at a part quiets the other two", async () => {
+      await expect(parts()).toHaveLength(3);
+      await userEvent.hover(parts()[0]!);
+      await waitFor(() => expect(quiet()).toHaveLength(2));
+      await expect(parts()[0]).not.toHaveAttribute("data-quiet");
+    });
+
+    await step("Leaving the bar brings them back, and the caller hears it", async () => {
+      await userEvent.unhover(parts()[0]!);
+      await waitFor(() => expect(quiet()).toHaveLength(0));
+      await expect(bar).toHaveAttribute("data-left");
+    });
   },
 };

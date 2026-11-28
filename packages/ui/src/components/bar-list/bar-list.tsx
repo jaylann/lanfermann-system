@@ -16,6 +16,7 @@ import { useReducedMotion } from "@/internal/reduced-motion";
 import { renderAs } from "@/internal/render-as";
 import { fillStyle, troughFill, troughTrack } from "@/internal/trough";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 
 export type BarListItem = {
   /** What the row is: a customer, a page, a source. */
@@ -86,6 +87,7 @@ export function BarList({
   variant: bar = "wash",
   drawIn = true,
   className,
+  ref,
   ...props
 }: BarListProps) {
   const live = useLive();
@@ -93,10 +95,15 @@ export function BarList({
   const list = useRef<HTMLUListElement>(null);
   const numbers = chartFormat(locale, format);
 
-  const total = data.reduce((sum, item) => sum + Math.max(0, item.value), 0);
-  const ranked = sort ? [...data].sort((a, b) => b.value - a.value) : [...data];
+  // What a row weighs on the scale: nothing where it is below zero or no number (`NaN`), so one
+  // such row does not take the bars of all the others with it.
+  const amount = (item: BarListItem) => (Number.isFinite(item.value) ? Math.max(0, item.value) : 0);
+  const total = data.reduce((sum, item) => sum + amount(item), 0);
+  // A row without a number goes last.
+  const order = (item: BarListItem) => (Number.isNaN(item.value) ? -Infinity : item.value);
+  const ranked = sort ? [...data].sort((a, b) => order(b) - order(a) || 0) : [...data];
   const rows = limit === undefined ? ranked : ranked.slice(0, limit);
-  const largest = Math.max(0, ...rows.map((item) => item.value));
+  const largest = Math.max(0, ...rows.map(amount));
   const keyOf = (item: BarListItem) => item.key ?? item.name;
 
   // A row that changes place glides there: measured before and after, moved back by the
@@ -123,7 +130,7 @@ export function BarList({
 
   return (
     <ul
-      ref={list}
+      ref={mergeRefs(list, ref)}
       data-slot="bar-list"
       data-variant={bar}
       data-live={live || undefined}
@@ -131,7 +138,7 @@ export function BarList({
       {...props}
     >
       {rows.map((item, index) => {
-        const fraction = largest > 0 ? Math.max(0, item.value) / largest : 0;
+        const fraction = largest > 0 ? amount(item) / largest : 0;
         const fill = (
           <span
             aria-hidden
@@ -177,7 +184,7 @@ export function BarList({
             </span>
             {share && (
               <span className="w-[4ch] text-right whitespace-nowrap text-fg-muted tabular-nums">
-                {numbers.share(total > 0 ? Math.max(0, item.value) / total : 0)}
+                {numbers.share(total > 0 ? amount(item) / total : 0)}
               </span>
             )}
           </>

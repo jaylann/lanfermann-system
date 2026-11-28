@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect } from "storybook/test";
+import { expect, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
 import { Card, CardBar } from "@/components/card/card";
@@ -200,5 +200,52 @@ export const Keyboard: Story = {
     await userEvent.tab();
     await expect(canvas.getByRole("link", { name: "Direkt 2.964" })).toHaveFocus();
     await expect(canvas.getByRole("list", { name: "Besuche nach Herkunft" })).toBeVisible();
+  },
+};
+
+/**
+ * As a test: a caller's `ref` gets the list, and the rows still glide to their new places when
+ * the ranking changes.
+ */
+export const ReorderWithRef: Story = {
+  name: "Reorder, with a ref",
+  render: function Render() {
+    const [week, setWeek] = useState(0);
+    return (
+      <div className="flex w-[30rem] max-w-full flex-col gap-5">
+        <BarList
+          ref={(node) => {
+            node?.setAttribute("data-held", "");
+          }}
+          aria-label="Umsatz nach Kunde"
+          data={weeks[week]!}
+          format={euro}
+        />
+        <Button
+          variant="secondary"
+          className="self-start"
+          data-step="next"
+          onClick={() => setWeek(1)}
+        >
+          Dezember zeigen
+        </Button>
+      </div>
+    );
+  },
+  play: async ({ canvasElement, userEvent, step }) => {
+    const list = canvasElement.querySelector<HTMLElement>('[data-slot="bar-list"]')!;
+    const gliding = () =>
+      [...list.children]
+        .flatMap((row) => row.getAnimations())
+        .filter((animation) => (animation as CSSTransition).transitionProperty === "translate");
+
+    await step("The caller's ref holds the list", async () => {
+      await expect(list).toHaveAttribute("data-held");
+    });
+
+    await step("The ranking changes: the rows glide to their places", async () => {
+      await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-step="next"]')!);
+      await waitFor(() => expect(gliding().length).toBeGreaterThan(0));
+    });
   },
 };

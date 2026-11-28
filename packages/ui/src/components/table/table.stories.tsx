@@ -1,7 +1,14 @@
 import { Copy01Icon, Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { type ReactNode, useEffect, useRef, useState } from "react";
-import { expect } from "storybook/test";
+import {
+  type ReactNode,
+  type Ref,
+  type TransitionEventHandler,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { expect, waitFor } from "storybook/test";
 
 import { kindOf } from "@/components/attachment/kinds";
 import { Badge } from "@/components/badge/badge";
@@ -491,7 +498,13 @@ export const Stacked: Story = {
 const LIST = FILES.slice(0, 6).sort((a, b) => a.name.localeCompare(b.name, "de"));
 
 /** A folder's files as a list whose rows come and go: one is added, one is taken away. */
-function ChangingFiles() {
+function ChangingFiles({
+  bodyRef,
+  onRowTransitionEnd,
+}: {
+  bodyRef?: Ref<HTMLTableSectionElement>;
+  onRowTransitionEnd?: TransitionEventHandler<HTMLTableRowElement>;
+}) {
   const [files, setFiles] = useState(LIST);
   return (
     <div className="flex w-full max-w-2xl flex-col gap-4">
@@ -531,9 +544,9 @@ function ChangingFiles() {
               <TableHead numeric>Größe und Stand</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody live>
+          <TableBody live ref={bodyRef}>
             {files.map((file) => (
-              <TableRow key={file.id}>
+              <TableRow key={file.id} onTransitionEnd={onRowTransitionEnd}>
                 <TableCell className="w-full max-w-0">
                   <span className="flex min-w-0 items-center gap-2 font-medium text-fg">
                     <FileKindSymbol
@@ -570,4 +583,45 @@ export const Live: Story = {
     },
   },
   render: () => <ChangingFiles />,
+};
+
+/**
+ * As a test: a caller's `ref` on a live body gets the element and the rows below still glide
+ * into the place of one that is taken away; a row's own `onTransitionEnd` is still called.
+ */
+export const LiveWithRef: Story = {
+  name: "Live, with a ref",
+  render: () => (
+    <ChangingFiles
+      bodyRef={(node) => {
+        node?.setAttribute("data-held", "");
+      }}
+      onRowTransitionEnd={(event) => {
+        event.currentTarget.dataset.ended = "";
+      }}
+    />
+  ),
+  play: async ({ canvasElement, userEvent, step }) => {
+    const body = canvasElement.querySelector<HTMLElement>('[data-slot="table-body"]')!;
+    const gliding = () =>
+      [...body.children]
+        .flatMap((row) => row.getAnimations())
+        .filter((animation) => (animation as CSSTransition).transitionProperty === "translate");
+
+    await step("The caller's ref holds the body", async () => {
+      await expect(body).toHaveAttribute("data-held");
+      await waitFor(() => expect(body).toHaveAttribute("data-live"));
+    });
+
+    await step("A row is taken away: the rows below glide up into its place", async () => {
+      await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-step="remove"]')!);
+      await waitFor(() => expect(gliding().length).toBeGreaterThan(0), { timeout: 3000 });
+    });
+
+    await step("A row's own handler hears its transitions", async () => {
+      await waitFor(() => expect(body.querySelector("[data-ended]")).not.toBeNull(), {
+        timeout: 3000,
+      });
+    });
+  },
 };
