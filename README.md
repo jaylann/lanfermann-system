@@ -253,11 +253,14 @@ import { LocaleProvider } from "@lanfermann/ui";
 ```
 
 A label or a `locale` passed to a component still wins. Server-safe parts (`Stat`, `Steps`,
-`Callout`, `Link` and the like) follow the provider for the words they render as text; a label
-that is an attribute (`Chip`'s `removeLabel`, `Breadcrumbs`' `label`, `AnchorHeading`'s
-`anchorLabel`) and the `locale` of `Bullet` and `Funnel` are passed from a Server Component, with
-the words from `getMessages(locale)`. The typed date and time fields read the German formats
-(30.11.2026, 14:30) in both languages.
+`Callout`, `Link` and the like) follow the provider too, for the words they render as text, for
+their default names (`Chip`'s remove key, the `Breadcrumbs` and `Pager` landmarks, the link of an
+`AnchorHeading`, a `FileThumbStack`) and for the figures of `Bullet` and `Funnel`. A Server
+Component that wants a word of its own passes it as before, from `getMessages(locale)` if it likes.
+`Combobox` and `Command` compare what is typed in the provider's language, and in the machine's
+without a provider. A chart takes its own words as `words` (`<BarChart words={{ chart: "Chart" }} />`)
+where one chart is worded without a provider. The typed date and time fields read the German
+formats (30.11.2026, 14:30) in both languages.
 
 ### Consent (cookie banner)
 
