@@ -98,7 +98,7 @@ export function AvatarGroup({
   };
 
   const everyone = listOf(
-    people.map((person) => personLabel(person, words)),
+    people.map((person) => personLabel(person, words, locale)),
     locale,
   );
   // Initials and the number stand in the middle of what is seen of a tile, not of the tile:
@@ -107,13 +107,13 @@ export function AvatarGroup({
   const tiles: { key: string; tip: ReactNode; content: ReactNode }[] = front.map(
     (person, index) => ({
       key: `${index}:${person.name}`,
-      tip: personLabel(person, words),
+      tip: personLabel(person, words, locale),
       content: (
         <>
           <Avatar size={size} {...cut(index, person.presence !== undefined)}>
             {person.src && <AvatarImage src={person.src} />}
             <AvatarFallback className={centred(index === 0)}>
-              {person.initials ?? initialsOf(person.name)}
+              {person.initials ?? initialsOf(person.name, locale)}
             </AvatarFallback>
           </Avatar>
           {person.presence && (
@@ -131,7 +131,7 @@ export function AvatarGroup({
     tiles.push({
       key: "rest",
       tip: listOf(
-        rest.map((person) => personLabel(person, words)),
+        rest.map((person) => personLabel(person, words, locale)),
         locale,
       ),
       content: (
@@ -156,8 +156,9 @@ export function AvatarGroup({
 
   return (
     <div
-      role="img"
-      aria-label={label ? `${label}: ${everyone}` : everyone}
+      // With nobody in it there is nothing to name, and an image without a name is an error.
+      role={people.length > 0 ? "img" : undefined}
+      aria-label={people.length === 0 ? undefined : label ? `${label}: ${everyone}` : everyone}
       data-slot="avatar-group"
       data-size={size}
       style={

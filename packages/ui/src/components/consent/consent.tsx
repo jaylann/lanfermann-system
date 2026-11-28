@@ -45,7 +45,8 @@ type ConsentContextValue = {
   /** Whether the banner is on screen. */
   open: boolean;
   allows: (id: string) => boolean;
-  decide: (granted: string[]) => void;
+  /** `keepSession`: the answer only adds a service; what was loaded once stays (see the store). */
+  decide: (granted: string[], options?: { keepSession?: boolean }) => void;
   openSettings: () => void;
 };
 
@@ -183,8 +184,8 @@ export function ConsentProvider({
   );
 
   const decide = useCallback(
-    (granted: string[], hold = 0) => {
-      const { reload } = store.decide(granted);
+    (granted: string[], hold = 0, keepSession = false) => {
+      const { reload } = store.decide(granted, { keepSession });
       setPanel((previous) => ({ ...previous, open: false }));
       if (hold > 0) {
         setHolding(true);
@@ -210,7 +211,7 @@ export function ConsentProvider({
       handle,
       open,
       allows,
-      decide: (granted) => decide(granted),
+      decide: (granted, options) => decide(granted, 0, options?.keepSession),
       openSettings,
     }),
     [config, merged, store, snapshot, handle, open, allows, decide, openSettings],
@@ -409,7 +410,7 @@ export function useConsent(): UseConsentResult {
     acceptAll: () =>
       decide(config.categories.flatMap((category) => category.services.map((s) => s.id))),
     rejectAll: () => decide([]),
-    save: decide,
+    save: (granted) => decide(granted),
     openSettings,
   };
 }

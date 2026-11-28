@@ -19,12 +19,15 @@ export type AvatarPerson = {
 };
 
 /** „Anna Weber“ → „AW“, „Cher“ → „C“. */
-export function initialsOf(name: string): string {
+export function initialsOf(name: string, locale: Intl.LocalesArgument = "de-DE"): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return "";
-  const first = words[0]!.charAt(0);
-  const last = words.length > 1 ? words.at(-1)!.charAt(0) : "";
-  return (first + last).toLocaleUpperCase();
+  // The first character, not the first half of one: „𠮷田“ starts with a pair of code units.
+  const letter = (word: string) => [...word][0] ?? "";
+  const first = letter(words[0]!);
+  const last = words.length > 1 ? letter(words.at(-1)!) : "";
+  // In a named locale, as `personLabel` below: the server and the browser must agree.
+  return (first + last).toLocaleUpperCase(locale);
 }
 
 /**
@@ -34,9 +37,12 @@ export function initialsOf(name: string): string {
 export function personLabel(
   person: AvatarPerson,
   presenceLabels: Record<Presence, string> = defaultPresenceLabels,
+  // Named, not the runtime's own: a server and a browser set to Turkish would lower an „I“
+  // differently, and the group's name would differ between the two.
+  locale: Intl.LocalesArgument = "de-DE",
 ): string {
   return person.presence
-    ? `${person.name} (${presenceLabels[person.presence].toLocaleLowerCase()})`
+    ? `${person.name} (${presenceLabels[person.presence].toLocaleLowerCase(locale)})`
     : person.name;
 }
 

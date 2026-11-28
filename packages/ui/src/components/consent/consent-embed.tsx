@@ -6,6 +6,7 @@ import {
   type CSSProperties,
   type ReactNode,
   useCallback,
+  useRef,
   useState,
 } from "react";
 
@@ -52,17 +53,30 @@ export function ConsentEmbed({
   const allowed = allows(serviceId);
   const [loaded, setLoaded] = useState(false);
 
+  /** The reader pressed a key of this placeholder: the focus follows the content in. */
+  const follow = useRef(false);
+
   // `load` does not bubble, but it can be caught on the way down. Content without anything to
-  // load (no frame, no picture) counts as loaded at once.
+  // load (no frame, no picture) counts as loaded at once. So does a `<video>`: it never says
+  // `load`, and whether it says `loadeddata` before it is played depends on the browser, while
+  // it draws its own poster and waiting state. A picture that failed is shown as well (its
+  // alternative text), rather than left invisible behind the spinner.
   const watch = useCallback((element: HTMLDivElement | null) => {
     if (!element) return;
-    if (!element.querySelector("iframe, img, video")) {
+    // The key that was pressed is gone with the placeholder, and the focus with it.
+    if (follow.current) element.focus({ preventScroll: true });
+    follow.current = false;
+    if (!element.querySelector("iframe, img")) {
       setLoaded(true);
       return;
     }
     const done = () => setLoaded(true);
     element.addEventListener("load", done, true);
-    return () => element.removeEventListener("load", done, true);
+    element.addEventListener("error", done, true);
+    return () => {
+      element.removeEventListener("load", done, true);
+      element.removeEventListener("error", done, true);
+    };
   }, []);
 
   const box = cn(
@@ -91,9 +105,12 @@ export function ConsentEmbed({
         )}
         <div
           ref={watch}
+          // Takes the focus when the reader loads the content from the placeholder. It is no
+          // control, so it wears no ring (forced colours still draw one: `outline-hidden`).
+          tabIndex={-1}
           data-slot="consent-embed-content"
           className={cn(
-            "size-full transition-opacity spring-settle *:size-full",
+            "size-full transition-opacity spring-settle *:size-full focus:outline-hidden",
             loaded ? "opacity-100" : "opacity-0",
           )}
         >
@@ -142,12 +159,23 @@ export function ConsentEmbed({
           )}
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-1">
-          <Button onClick={() => store.grantOnce(serviceId)}>{labels.embedLoadOnce}</Button>
+          <Button
+            onClick={() => {
+              follow.current = true;
+              store.grantOnce(serviceId);
+            }}
+          >
+            {labels.embedLoadOnce}
+          </Button>
           {/* Only once the banner is answered: before, this would answer it for every service. */}
           {decided && (
             <Button
               variant="quiet"
-              onClick={() => decide([...(snapshot.record?.granted ?? []), serviceId])}
+              onClick={() => {
+                follow.current = true;
+                // It adds this service; another one that was loaded once stays loaded.
+                decide([...(snapshot.record?.granted ?? []), serviceId], { keepSession: true });
+              }}
             >
               {labels.embedAlways(service)}
             </Button>

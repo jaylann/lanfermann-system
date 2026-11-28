@@ -99,19 +99,18 @@ export function ConsentCard({
   const third = useRef<HTMLButtonElement>(null);
   /** When the views last swapped: the button that swapped them ignores presses until then. */
   const swappedAt = useRef(Number.NEGATIVE_INFINITY);
-  const firstView = useRef(true);
+  const focusedView = useRef(view);
 
   const all = useMemo(
     () => config.categories.flatMap((category) => category.services.map((service) => service.id)),
     [config],
   );
 
-  // Focus follows the view, so a screen reader hears where it is; not on the first render.
+  // Focus follows the view, so a screen reader hears where it is; not on the first render. (The
+  // view is compared, not a first run counted: Strict Mode runs the effect twice on mount.)
   useEffect(() => {
-    if (firstView.current) {
-      firstView.current = false;
-      return;
-    }
+    if (focusedView.current === view) return;
+    focusedView.current = view;
     if (view === "settings") settingsTitle.current?.focus({ preventScroll: true });
     else third.current?.focus({ preventScroll: true });
   }, [view]);
@@ -369,7 +368,8 @@ function CategoryRow({
               </span>
             )}
             <Switch
-              checked={on === services.length}
+              // A category without services has nothing to grant: it must not stand as switched on.
+              checked={services.length > 0 && on === services.length}
               onCheckedChange={(checked) =>
                 set(
                   services.map((service) => service.id),
@@ -448,7 +448,8 @@ function ServiceFacts({ labels, service, toggle }: ServiceFactsProps) {
             <dt className="text-fg-muted">{labels.stored}</dt>
             <dd className="min-w-0 text-fg-body">
               {service.storage.map((entry) => (
-                <span key={entry.name} className="block">
+                // A service may keep the same name as a cookie and in local storage.
+                <span key={`${entry.kind ?? "cookie"}:${entry.name}`} className="block">
                   <code className="font-mono text-[0.9em] break-all">{entry.name}</code>
                   {` (${labels.storageKind[entry.kind ?? "cookie"]}, ${entry.duration})`}
                 </span>

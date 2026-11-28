@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { createRef, useState } from "react";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { Button } from "@/components/button/button";
 import { buttonVariants } from "@/components/button/button-variants";
@@ -129,11 +129,23 @@ export const Phone: Story = {
   ),
 };
 
+/**
+ * What a page may pass to the banner for its own use: a listener and a ref. Neither may take the
+ * place of the banner's own, which take the closed strip out of the page and hand the focus on.
+ */
+const heard = fn();
+const held = createRef<HTMLDivElement>();
+
 /** Tests the keyboard path: the close key closes it, and the focus lands on the page. */
 export const Keyboard: Story = {
   render: () => (
     <div>
-      <Banner tone="warning" title="Ihre Testphase endet in drei Tagen.">
+      <Banner
+        ref={held}
+        tone="warning"
+        title="Ihre Testphase endet in drei Tagen."
+        onTransitionEnd={heard}
+      >
         Wählen Sie einen Tarif.
       </Banner>
       <Page />
@@ -148,6 +160,8 @@ export const Keyboard: Story = {
       await waitFor(() =>
         expect(canvasElement.querySelector('[data-slot="banner-strip"]')).toBeNull(),
       );
+      await expect(heard).toHaveBeenCalled();
+      await expect(held.current).toHaveAttribute("data-slot", "banner");
     });
     await step("The focus is on the page, not lost", async () => {
       await expect(canvas.getByRole("main")).toHaveFocus();

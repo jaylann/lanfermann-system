@@ -133,8 +133,12 @@ export const consentLabels: ConsentLabels = {
         ? "1 Jahr"
         : `${days / 365} Jahre`
       : days % 30 === 0
-        ? `${days / 30} Monate`
-        : `${days} Tage`,
+        ? days === 30
+          ? "1 Monat"
+          : `${days / 30} Monate`
+        : days === 1
+          ? "1 Tag"
+          : `${days} Tage`,
   consentServiceName: "Einwilligung",
   consentServiceProvider: "Diese Website",
   consentServicePurpose: "Speichert diese Auswahl, damit sie nicht bei jedem Besuch erscheint.",

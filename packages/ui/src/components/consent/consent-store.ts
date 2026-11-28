@@ -312,8 +312,12 @@ export function createConsentStore(config: ConsentConfig, options: ConsentStoreO
       persist = handler;
     },
 
-    /** Stores an answer: exactly these services are granted, every other one is not. */
-    decide(grantedIds: Iterable<string>): ConsentDecision {
+    /**
+     * Stores an answer: exactly these services are granted, every other one is not.
+     * `keepSession` leaves the services loaded once as they are: for an answer that only adds a
+     * service (an embed's „immer laden“) and was not asked about the others.
+     */
+    decide(grantedIds: Iterable<string>, { keepSession = false } = {}): ConsentDecision {
       const before = getSnapshot();
       const granted = [...new Set(grantedIds)].filter((id) => services.has(id));
       const record: ConsentRecord = { revision: config.revision, decidedAt: now(), granted };
@@ -330,7 +334,7 @@ export function createConsentStore(config: ConsentConfig, options: ConsentStoreO
           });
       }
       // A service loaded once and not granted now is refused with the rest.
-      const dropped = [...session].filter((id) => !granted.includes(id));
+      const dropped = keepSession ? [] : [...session].filter((id) => !granted.includes(id));
       if (dropped.length) session = new Set([...session].filter((id) => granted.includes(id)));
       const after = getSnapshot();
       const change = diff(before, after);

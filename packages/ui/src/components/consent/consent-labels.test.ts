@@ -39,6 +39,11 @@ describe("the facts of the first layer", () => {
     ]);
   });
 
+  it("says how long the consent cookie is kept, one of a unit in the singular", () => {
+    const said = [1, 7, 30, 180, 365, 730].map((days) => consentLabels.duration(days));
+    expect(said).toEqual(["1 Tag", "7 Tage", "1 Monat", "6 Monate", "1 Jahr", "2 Jahre"]);
+  });
+
   it("joins lists the German way", () => {
     expect(joinGerman(["a"])).toBe("a");
     expect(joinGerman(["a", "b"])).toBe("a und b");
