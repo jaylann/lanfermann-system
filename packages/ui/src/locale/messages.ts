@@ -90,14 +90,15 @@ const german = {
   },
   dateRangeField: {
     presets: "Schnellauswahl",
-    invalid: "Bitte geben Sie einen Zeitraum ein, zum Beispiel 14.11. – 30.11.2026.",
+    /** Around an example the field would read, in the format of its language. */
+    invalid: (example: string) => `Bitte geben Sie einen Zeitraum ein, zum Beispiel ${example}.`,
     invalidWithTime: (example: string) =>
       `Bitte geben Sie Beginn und Ende ein, zum Beispiel ${example}.`,
     sheet: "Zeitraum wählen",
     /** The names of the two times under the calendar. */
     from: "Von",
     to: "bis",
-    /** A preset's name, for `lastDays(7, …)`: the helper itself names it in German. */
+    /** The name of a preset from `lastDays(7)` that was given none of its own. */
     lastDays: (count: number) => `Letzte ${count} Tage`,
   },
   fileGrid: {
@@ -351,10 +352,19 @@ const german = {
     open: "Kalender öffnen",
     done: "Fertig",
   },
+  calendar: {
+    /** What a day's name carries for assistive tech: "Heute, Samstag, 14. November 2026". */
+    today: "Heute",
+    selected: "ausgewählt",
+  },
   dateField: {
-    /** The field reads the German formats in every language, so the examples stay German dates. */
-    invalid: "Bitte geben Sie ein Datum ein, zum Beispiel 30.11.2026.",
-    invalidWithTime: "Bitte geben Sie Datum und Uhrzeit ein, zum Beispiel 30.11.2026, 09:30.",
+    /**
+     * Around an example the field would read. It comes from the formatter of the language
+     * (30.11.2026, in English 11/30/2026), as the days in `limits` do.
+     */
+    invalid: (example: string) => `Bitte geben Sie ein Datum ein, zum Beispiel ${example}.`,
+    invalidWithTime: (example: string) =>
+      `Bitte geben Sie Datum und Uhrzeit ein, zum Beispiel ${example}.`,
     limits: {
       between: (min: string, max: string) =>
         `Bitte wählen Sie ein Datum zwischen dem ${min} und dem ${max}.`,
@@ -469,7 +479,7 @@ export const en: Messages = {
   },
   dateRangeField: {
     presets: "Presets",
-    invalid: "Enter a date range, for example 14.11. – 30.11.2026.",
+    invalid: (example) => `Enter a date range, for example ${example}.`,
     invalidWithTime: (example) => `Enter a start and an end, for example ${example}.`,
     sheet: "Choose a date range",
     from: "From",
@@ -700,9 +710,13 @@ export const en: Messages = {
     open: "Open calendar",
     done: "Done",
   },
+  calendar: {
+    today: "Today",
+    selected: "selected",
+  },
   dateField: {
-    invalid: "Enter a date, for example 30.11.2026.",
-    invalidWithTime: "Enter a date and a time, for example 30.11.2026, 09:30.",
+    invalid: (example) => `Enter a date, for example ${example}.`,
+    invalidWithTime: (example) => `Enter a date and a time, for example ${example}.`,
     limits: {
       between: (min, max) => `Choose a date between ${min} and ${max}.`,
       from: (min) => `Choose a date from ${min} on.`,

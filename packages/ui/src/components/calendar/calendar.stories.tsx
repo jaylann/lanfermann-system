@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor } from "storybook/test";
 
+import { LocaleProvider } from "@/locale/locale";
+
 import { Calendar } from "./calendar";
 
 const meta = {
@@ -192,5 +194,103 @@ export const RangeKeyboard: Story = {
         await expect(shape).not.toHaveAttribute("data-empty");
       },
     );
+  },
+};
+
+/**
+ * Under a `LocaleProvider` with `en`: the month and the weekdays are English. The week still
+ * starts on Monday, the selection is drawn for that.
+ */
+export const English: Story = {
+  args: { mode: "range", defaultValue: { from: "2026-11-18", to: "2026-11-27" } },
+  decorators: [
+    (Story) => (
+      <LocaleProvider locale="en">
+        <Story />
+      </LocaleProvider>
+    ),
+  ],
+};
+
+/** What the calendar says to assistive tech, each word of it. */
+const said = (canvasElement: HTMLElement) => ({
+  weekdays: [...canvasElement.querySelectorAll("thead th")].map(
+    (cell) => `${cell.textContent} ${cell.getAttribute("aria-label")}`,
+  ),
+  keys: [...canvasElement.querySelectorAll("nav button")].map((key) =>
+    key.getAttribute("aria-label"),
+  ),
+});
+
+/**
+ * As a test, in English: nothing German is left. The month, the weekdays (from Monday), the two
+ * month keys, the grid's name and every day's name are English, and so is "selected".
+ */
+export const KeyboardEnglish: Story = {
+  args: { defaultValue: "2026-11-18" },
+  decorators: English.decorators,
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    await step("The month, the weekdays and the keys are English", async () => {
+      await expect(canvas.getByText("November 2026")).toBeVisible();
+      await expect(canvas.getByRole("grid", { name: "November 2026" })).toBeVisible();
+      await expect(said(canvasElement)).toEqual({
+        weekdays: [
+          "Mo Monday",
+          "Tu Tuesday",
+          "We Wednesday",
+          "Th Thursday",
+          "Fr Friday",
+          "Sa Saturday",
+          "Su Sunday",
+        ],
+        keys: ["Go to the Previous Month", "Go to the Next Month"],
+      });
+    });
+
+    await step("The days are named in English, today and the chosen one too", async () => {
+      await expect(
+        canvas.getByRole("button", { name: "Today, Saturday, November 14, 2026" }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole("button", { name: "Wednesday, November 18, 2026, selected" }),
+      ).toBeVisible();
+    });
+
+    await step("The next month is English as well", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Go to the Next Month" }));
+      await expect(canvas.getByRole("grid", { name: "December 2026" })).toBeVisible();
+      await expect(canvas.getByRole("button", { name: "Tuesday, December 1, 2026" })).toBeVisible();
+    });
+  },
+};
+
+/** As a test: without a `LocaleProvider` every one of those words is German, as it was. */
+export const WordsGerman: Story = {
+  args: { defaultValue: "2026-11-18" },
+  play: async ({ canvas, canvasElement, step }) => {
+    await step("The month, the weekdays and the keys are German", async () => {
+      await expect(canvas.getByRole("grid", { name: "November 2026" })).toBeVisible();
+      await expect(said(canvasElement)).toEqual({
+        weekdays: [
+          "Mo Montag",
+          "Di Dienstag",
+          "Mi Mittwoch",
+          "Do Donnerstag",
+          "Fr Freitag",
+          "Sa Samstag",
+          "So Sonntag",
+        ],
+        keys: ["Zum vorherigen Monat", "Zum nächsten Monat"],
+      });
+    });
+
+    await step("The days are named in German", async () => {
+      await expect(
+        canvas.getByRole("button", { name: "Heute, Samstag, 14. November 2026" }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole("button", { name: "Mittwoch, 18. November 2026, ausgewählt" }),
+      ).toBeVisible();
+    });
   },
 };

@@ -31,7 +31,8 @@ export type LocaleProviderProps = {
  * and dates are formatted with. Put it once around the app, with the language of the page. A
  * label or a `locale` passed to a component still wins. Without a provider everything is German.
  *
- * The typed date and time fields read the German formats (30.11.2026, 14:30) in both languages.
+ * The typed date fields read and write the format of the language: 30.11.2026 in German,
+ * 11/30/2026 in English. What they submit is the ISO value in both.
  */
 export function LocaleProvider({ locale, children }: LocaleProviderProps) {
   return <LocaleContext value={locale}>{children}</LocaleContext>;
