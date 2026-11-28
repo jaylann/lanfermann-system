@@ -32,7 +32,7 @@ export const depthNames = [
   "none",
 ] as const;
 
-export const depthToneNames = ["key", "key-block", "accent", "danger", "thumb"] as const;
+export const depthToneNames = ["key", "key-block", "accent", "danger", "thumb", "swatch"] as const;
 
 const shadowNames = [
   "raised",

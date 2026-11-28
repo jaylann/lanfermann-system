@@ -112,6 +112,15 @@ export {
   CollapsibleTrigger,
   type CollapsibleTriggerProps,
 } from "./components/collapsible/collapsible";
+export { ColorField, type ColorFieldProps } from "./components/color-field/color-field";
+export {
+  ColorSwatch,
+  ColorSwatchGroup,
+  type ColorSwatchGroupProps,
+  type ColorSwatchLook,
+  type ColorSwatchProps,
+  type ColorSwatchSize,
+} from "./components/color-swatch/color-swatch";
 export {
   Combobox,
   ComboboxChips,
@@ -800,6 +809,13 @@ export {
 } from "./components/waterfall/waterfall";
 export { readClipboard, writeClipboard } from "./internal/clipboard";
 export { cn, mergeClassName } from "./lib/cn";
+export {
+  type ColorTone,
+  colorTone,
+  contrastRatio,
+  parseHexColor,
+  relativeLuminance,
+} from "./lib/color";
 export {
   type DateOptions,
   formatDate,
