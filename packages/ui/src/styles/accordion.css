@@ -20,12 +20,40 @@
  * Pointed at means `:hover` on a device that can hover, and `:active` everywhere, so a finger
  * gets the wash while it is down, as a cell does on iOS. `data-quiet` (the `quiet` prop) takes no
  * wash: the lines stay and only the chevron answers.
+ *
+ * Straight in a `Card` the card's edge holds the block (the last section of this file): the
+ * lines run to the card's edges and stay, and a wash is its whole row, as a table's row is there.
+ *
+ * The knobs, all set on the root so an accordion inside another starts from its own:
+ *   --accordion-inset        how far a wash stands inside its row's lines
+ *   --accordion-gutter       from the row's edge to its text
+ *   --accordion-indent       from the gutter to the answer's text; a row with a symbol sets it
+ *   --accordion-wash-radius  the corners of a wash
+ *   --accordion-line-aside   the opacity of a line beside a wash (0: it steps aside)
  */
 
 [data-slot="accordion"] {
   --accordion-inset: 2px;
+  --accordion-gutter: 0.75rem;
+  --accordion-indent: 0px;
+  --accordion-wash-radius: var(--radius-base);
+  --accordion-line-aside: 0;
   position: relative;
   padding-top: 1px;
+}
+
+/* The answer of a row with a symbol starts under its title: past the plate (40px, or 36px for an
+   `IconTile size="sm"`) and the 12px after it. */
+[data-slot="accordion-item"]:has(
+  > [data-slot="accordion-header"] [data-slot="accordion-trigger-media"]
+) {
+  --accordion-indent: 3.25rem;
+}
+
+[data-slot="accordion-item"]:has(
+  > [data-slot="accordion-header"] [data-slot="accordion-trigger-media"] > [data-size="sm"]
+) {
+  --accordion-indent: 3rem;
 }
 
 /* ---- Lines ---- */
@@ -66,7 +94,7 @@
   position: absolute;
   inset: var(--accordion-inset) 0;
   z-index: -1;
-  border-radius: var(--radius-base);
+  border-radius: var(--accordion-wash-radius);
   background-color: var(--lf-hover);
   opacity: 0;
   pointer-events: none;
@@ -77,7 +105,8 @@
 
 /* Open, the wash is a lid: the tail's corners on top, square below where the answer goes on. */
 [data-slot="accordion-trigger"][data-panel-open]::before {
-  border-radius: calc(var(--radius-base) * 1.5) calc(var(--radius-base) * 1.5) 0 0;
+  border-radius: calc(var(--accordion-wash-radius) * 1.5) calc(var(--accordion-wash-radius) * 1.5) 0
+    0;
   transition:
     opacity var(--transition-duration-spring-snap) var(--ease-spring-snap),
     border-radius var(--transition-duration-spring-settle) var(--ease-spring-settle);
@@ -89,7 +118,7 @@
   position: absolute;
   inset: var(--accordion-inset) 0 calc(var(--accordion-inset) + 1px);
   z-index: -1;
-  border-radius: calc(var(--radius-base) * 1.5);
+  border-radius: calc(var(--accordion-wash-radius) * 1.5);
   background-color: var(--lf-hover);
   opacity: 0;
   pointer-events: none;
@@ -120,7 +149,7 @@
             > [data-slot="accordion-trigger"]:hover
         )
       )::after {
-      opacity: 0;
+      opacity: var(--accordion-line-aside);
     }
 
     &:has(
@@ -128,7 +157,7 @@
           > [data-slot="accordion-header"]
           > [data-slot="accordion-trigger"]:hover
       )::before {
-      opacity: 0;
+      opacity: var(--accordion-line-aside);
     }
   }
 }
@@ -154,7 +183,7 @@
           > [data-slot="accordion-trigger"]:active
       )
     )::after {
-    opacity: 0;
+    opacity: var(--accordion-line-aside);
   }
 
   &:has(
@@ -162,7 +191,79 @@
         > [data-slot="accordion-header"]
         > [data-slot="accordion-trigger"]:active
     )::before {
-    opacity: 0;
+    opacity: var(--accordion-line-aside);
+  }
+}
+
+/* ---- In a card ---- */
+
+/*
+ * Straight in a `Card` (its own child, not in a `CardContent`) the card's edge is the block's
+ * edge. The lines run from edge to edge and the text stands on the card's inset, 20px as in a
+ * `CardBar` and a table's outer cells. A wash is the whole row between its lines, which stay:
+ * a rounded wash would stop short of the card's edge that the lines reach. The card's corners
+ * clip the first and the last wash, so a focus ring stands inside its row.
+ */
+[data-slot="card"] > [data-slot="accordion"] {
+  --accordion-inset: 0px;
+  --accordion-gutter: 1.25rem;
+  --accordion-wash-radius: 0px;
+  --accordion-line-aside: 1;
+  overflow: clip;
+
+  &
+    > [data-slot="accordion-item"]
+    > [data-slot="accordion-header"]
+    > [data-slot="accordion-trigger"] {
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+  }
+
+  &:first-child {
+    border-start-start-radius: var(--radius-xl);
+    border-start-end-radius: var(--radius-xl);
+
+    /* The ring of the row in a corner of the card follows that corner. */
+    & > [data-slot="accordion-item"]:first-child > * > [data-slot="accordion-trigger"] {
+      border-start-start-radius: var(--radius-xl);
+      border-start-end-radius: var(--radius-xl);
+    }
+  }
+
+  &:last-child {
+    border-end-start-radius: var(--radius-xl);
+    border-end-end-radius: var(--radius-xl);
+
+    &
+      > [data-slot="accordion-item"]:last-child:not([data-open])
+      > *
+      > [data-slot="accordion-trigger"] {
+      border-end-start-radius: var(--radius-xl);
+      border-end-end-radius: var(--radius-xl);
+    }
+  }
+
+  /* One edge per boundary: the card's edge or the line under a `CardBar` opens the block… */
+  &:is(:first-child, [data-slot="card-bar"] + *) {
+    padding-top: 0;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  /* …and the card's edge or the line over a `CardFooter` closes it. */
+  &:is(:last-child, :has(+ [data-slot="card-footer"])) > [data-slot="accordion-item"]:last-child {
+    padding-bottom: 0;
+
+    &::before {
+      bottom: 0;
+    }
+
+    &::after {
+      display: none;
+    }
   }
 }
 
