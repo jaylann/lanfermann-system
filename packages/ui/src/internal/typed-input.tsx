@@ -137,6 +137,12 @@ export type TypedValueOptions = {
   read: (text: string) => string | { problem: string };
   /** Writes a value the way the field shows it. */
   show: (value: string) => string;
+  /**
+   * Names the way `show` writes, where that can change while the field stands (the language of
+   * a date). When it does, a value the field holds is written anew: left as it was, the text
+   * would be in a format the field no longer reads.
+   */
+  writtenIn?: string;
 };
 
 /**
@@ -149,6 +155,7 @@ export function useTypedValue({
   onValueChange,
   read,
   show,
+  writtenIn,
 }: TypedValueOptions) {
   const [inner, setInner] = useState(defaultValue ?? "");
   const current = value ?? inner;
@@ -161,6 +168,14 @@ export function useTypedValue({
     setShown(current);
     setText(show(current));
     setProblem("");
+  }
+
+  // The way it is written changed under a value (the page switched its language): write it again.
+  // Text that could not be read has no value to write and stays to be corrected.
+  const [way, setWay] = useState(writtenIn);
+  if (way !== writtenIn) {
+    setWay(writtenIn);
+    if (current !== "") setText(show(current));
   }
 
   // The value as last reported. One event can change it twice (typing ends, then a pick), and

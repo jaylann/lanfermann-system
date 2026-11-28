@@ -215,9 +215,14 @@ export {
   CtaTitle,
   type CtaTone,
 } from "./components/cta/cta";
-export { DateField, type DateFieldProps } from "./components/date-field/date-field";
+export {
+  DateField,
+  type DateFieldLabels,
+  type DateFieldProps,
+} from "./components/date-field/date-field";
 export {
   DateRangeField,
+  type DateRangeFieldLabels,
   type DateRangeFieldProps,
 } from "./components/date-range-field/date-range-field";
 export { type DateRangePreset, lastDays } from "./components/date-range-field/presets";
@@ -735,7 +740,11 @@ export {
   type UseThemeOptions,
   type UseThemeResult,
 } from "./components/theme-switch/use-theme";
-export { TimeField, type TimeFieldProps } from "./components/time-field/time-field";
+export {
+  TimeField,
+  type TimeFieldLabels,
+  type TimeFieldProps,
+} from "./components/time-field/time-field";
 export {
   TimeSeriesChart,
   type TimeSeriesChartActive,

@@ -20,8 +20,25 @@ import {
 import { ListMark } from "@/internal/list-mark";
 import { listItem, listSheet, popupMotion } from "@/internal/popup";
 import { TypedInput, type TypedInputProps, useTypedValue } from "@/internal/typed-input";
+import { worded, type Wording } from "@/internal/wording";
 import { cn } from "@/lib/cn";
 import { useLocale } from "@/locale/locale";
+
+/**
+ * The messages a `TimeField` says on its own. Each is the language's (`LocaleProvider`) unless
+ * given: a finished sentence, or a function that is handed what the default names, written on
+ * the field's clock.
+ */
+export type TimeFieldLabels = {
+  /** The text is not a time. Handed an example the field would read: "09:30". */
+  invalid: Wording<[example: string]>;
+  /** The time lies outside `min` and `max`. */
+  between: Wording<[min: string, max: string]>;
+  /** The time lies before `min`, and there is no `max`. */
+  from: Wording<[min: string]>;
+  /** The time lies after `max`, and there is no `min`. */
+  until: Wording<[max: string]>;
+};
 
 export type TimeFieldProps = Omit<
   TypedInputProps,
@@ -49,6 +66,8 @@ export type TimeFieldProps = Omit<
   defaultOpen?: boolean;
   /** The size of the field, from the density. */
   size?: FieldSize;
+  /** Any of the field's own messages, in place of the language's (`TimeFieldLabels`). */
+  labels?: Partial<TimeFieldLabels>;
 };
 
 /**
@@ -61,7 +80,8 @@ export type TimeFieldProps = Omit<
  * `930`, `9:30`, `9.30`, `9 Uhr`, `9 pm` all become a time. On a phone it brings up the digits.
  *
  * `hourCycle={12}` writes and offers the times with AM and PM. The value is `"09:30"` either
- * way: 24 hours, no zone. Inside a `Form`, `name` submits exactly that.
+ * way: 24 hours, no zone. Inside a `Form`, `name` submits exactly that. The clock is this prop's
+ * in every language: a `LocaleProvider` changes the field's words, not how a time is written.
  */
 export function TimeField({
   value,
@@ -74,6 +94,7 @@ export function TimeField({
   defaultOpen,
   size = "md",
   className,
+  labels,
   disabled,
   readOnly,
   ...props
@@ -91,18 +112,24 @@ export function TimeField({
     read: (text) => {
       const time = parseGermanTime(text);
       if (!time) {
-        return { problem: messages.timeField.invalid(written("09:30")) };
+        return {
+          problem: worded(labels?.invalid ?? messages.timeField.invalid, written("09:30")),
+        };
       }
       if ((!min || time >= min) && (!max || time <= max)) return time;
       if (min && max) {
         return {
-          problem: messages.timeField.between(written(min), written(max)),
+          problem: worded(
+            labels?.between ?? messages.timeField.between,
+            written(min),
+            written(max),
+          ),
         };
       }
       return {
         problem: min
-          ? messages.timeField.from(written(min))
-          : messages.timeField.until(written(max!)),
+          ? worded(labels?.from ?? messages.timeField.from, written(min))
+          : worded(labels?.until ?? messages.timeField.until, written(max!)),
       };
     },
   });

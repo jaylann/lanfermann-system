@@ -5,6 +5,7 @@ import { expect, screen, waitFor, within } from "storybook/test";
 import { Button } from "@/components/button/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
 import { Form } from "@/components/form/form";
+import { LocaleProvider } from "@/locale/locale";
 
 import { DateField } from "./date-field";
 
@@ -365,6 +366,287 @@ export const InForm: Story = {
       await userEvent.type(input, "1.12.");
       await userEvent.click(submit);
       await expect(sent).toHaveTextContent('{"gueltig":"2026-12-01"}');
+    });
+  },
+};
+
+/**
+ * Under a `LocaleProvider` with `en` the date is written and typed the American way, month
+ * first. What it submits is the same ISO date.
+ */
+export const English: Story = {
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Field className="w-56">
+        <FieldLabel>Valid until</FieldLabel>
+        <DateField {...args} defaultValue="2026-11-30" />
+        <FieldDescription>The offer expires after that day.</FieldDescription>
+      </Field>
+    </LocaleProvider>
+  ),
+};
+
+/** Empty in English: the placeholder is an example the field reads. */
+export const EnglishEmpty: Story = {
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Field className="w-56">
+        <FieldLabel>Valid until</FieldLabel>
+        <DateField {...args} />
+      </Field>
+    </LocaleProvider>
+  ),
+};
+
+/**
+ * The sheet in English: the month's name, the weekdays (still from Monday), "Time" and "Done".
+ */
+export const EnglishOpen: Story = {
+  parameters: { visual: { viewport: { width: 380, height: 570 }, clip: "viewport" } },
+  render: (args) => (
+    <LocaleProvider locale="en">
+      <Opened>
+        <Field className="w-64">
+          <FieldLabel>Appointment on</FieldLabel>
+          <DateField {...args} time defaultValue="2026-11-30T09:30" />
+        </Field>
+      </Opened>
+    </LocaleProvider>
+  ),
+};
+
+function ReportedEnglish({ time = false }: { time?: boolean }) {
+  const [value, setValue] = useState(time ? "2026-11-30T09:30" : "2026-11-30");
+  return (
+    <LocaleProvider locale="en">
+      <Field className="w-72">
+        <FieldLabel>{time ? "Appointment on" : "Valid until"}</FieldLabel>
+        <DateField
+          time={time}
+          value={value}
+          onValueChange={setValue}
+          today="2026-11-14"
+          max="2026-12-31"
+        />
+        <FieldError />
+        <FieldDescription>
+          Value: <span data-testid="value">{value === "" ? "empty" : value}</span>
+        </FieldDescription>
+      </Field>
+    </LocaleProvider>
+  );
+}
+
+/**
+ * As a test, in English: American dates are read in their short forms and reported as ISO; a
+ * German date is not turned round but flagged, and the message names the American format; the
+ * limit is written that way too; the calendar speaks English.
+ */
+export const KeyboardEnglish: Story = {
+  render: () => <ReportedEnglish />,
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Valid until");
+    const value = canvas.getByTestId("value");
+
+    await step("The ISO value is shown the American way", async () => {
+      await expect(input).toHaveValue("11/30/2026");
+      await expect(value).toHaveTextContent("2026-11-30");
+    });
+
+    await step("A short form is read on leaving the field: the month comes first", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "12/5/26");
+      await userEvent.tab();
+      await expect(input).toHaveValue("12/05/2026");
+      await expect(value).toHaveTextContent("2026-12-05");
+    });
+
+    await step("Without a year, with hyphens and as digits alone", async () => {
+      for (const [typed, written, iso] of [
+        ["12/24", "12/24/2026", "2026-12-24"],
+        ["12-6-2026", "12/06/2026", "2026-12-06"],
+        ["120726", "12/07/2026", "2026-12-07"],
+      ] as const) {
+        await userEvent.clear(input);
+        await userEvent.type(input, `${typed}{Enter}`);
+        await expect(input).toHaveValue(written);
+        await expect(value).toHaveTextContent(iso);
+      }
+    });
+
+    await step("A German date is not guessed: flagged, explained, not reported", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "05.12.2026{Enter}");
+      await expect(input).toHaveAttribute("aria-invalid", "true");
+      await expect(input).toHaveValue("05.12.2026");
+      await expect(value).toHaveTextContent("empty");
+      await waitFor(() =>
+        expect(canvas.getByText("Enter a date, for example 11/30/2026.")).toBeVisible(),
+      );
+    });
+
+    await step("A day after the limit names the limit the American way", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "1/5/2027{Enter}");
+      await expect(value).toHaveTextContent("empty");
+      await waitFor(() =>
+        expect(canvas.getByText("Choose a date up to 12/31/2026.")).toBeVisible(),
+      );
+    });
+
+    await step("The calendar speaks English and writes the day the American way", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Open calendar" }));
+      const sheet = await screen.findByRole("dialog", { name: "Choose a date" });
+      // The sheet eases in: it is there at once and seen a moment later.
+      await waitFor(() =>
+        expect(within(sheet).getByRole("grid", { name: "November 2026" })).toBeVisible(),
+      );
+      await userEvent.click(within(sheet).getByRole("button", { name: /November 20, 2026/ }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await expect(input).toHaveValue("11/20/2026");
+      await expect(input).not.toHaveAttribute("aria-invalid");
+      await expect(value).toHaveTextContent("2026-11-20");
+    });
+  },
+};
+
+/**
+ * As a test, in English with a time: the date is American, the clock is the field's own (24
+ * hours unless asked otherwise), and "at" stands between the two as "um" does in German.
+ */
+export const KeyboardEnglishWithTime: Story = {
+  render: () => <ReportedEnglish time />,
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Appointment on");
+    const value = canvas.getByTestId("value");
+
+    await step("Date and time are shown, the time on 24 hours", async () => {
+      await expect(input).toHaveValue("11/30/2026, 09:30");
+    });
+
+    await step("A date with a time is read, with AM and PM too", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "12/5 at 4:15 pm{Enter}");
+      await expect(input).toHaveValue("12/05/2026, 16:15");
+      await expect(value).toHaveTextContent("2026-12-05T16:15");
+    });
+
+    await step("What cannot be read is explained with an example that can", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "5.12. 9 Uhr{Enter}");
+      await expect(value).toHaveTextContent("empty");
+      await waitFor(() =>
+        expect(
+          canvas.getByText("Enter a date and a time, for example 11/30/2026, 09:30."),
+        ).toBeVisible(),
+      );
+    });
+
+    await step("The sheet's keys are English", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Open calendar" }));
+      const sheet = await screen.findByRole("dialog", { name: "Choose a date and a time" });
+      // The sheet eases in: it is there at once and seen a moment later.
+      await waitFor(() => expect(within(sheet).getByLabelText("Time")).toBeVisible());
+      await userEvent.click(within(sheet).getByRole("button", { name: "Done" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+  },
+};
+
+/**
+ * As a test: without a `LocaleProvider` nothing has changed. The field shows, reads and explains
+ * German dates, and an American date is not one.
+ */
+export const KeyboardGermanUnchanged: Story = {
+  render: () => (
+    <Field className="w-72">
+      <FieldLabel>Gültig bis</FieldLabel>
+      <DateField today="2026-11-14" min="2026-11-01" />
+      <FieldError />
+    </Field>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Gültig bis");
+
+    await step("The placeholder is a German date", async () => {
+      await expect(input).toHaveAttribute("placeholder", "z. B. 30.11.2026");
+    });
+
+    await step("German forms are read as before", async () => {
+      for (const [typed, written] of [
+        ["30.11.", "30.11.2026"],
+        ["5.12.26", "05.12.2026"],
+        ["241226", "24.12.2026"],
+      ] as const) {
+        await userEvent.clear(input);
+        await userEvent.type(input, `${typed}{Enter}`);
+        await expect(input).toHaveValue(written);
+        await expect(input).not.toHaveAttribute("aria-invalid");
+      }
+    });
+
+    await step("An American date is not read, and the message is the German one", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "11/30/2026{Enter}");
+      await expect(input).toHaveAttribute("aria-invalid", "true");
+      await waitFor(() =>
+        expect(
+          canvas.getByText("Bitte geben Sie ein Datum ein, zum Beispiel 30.11.2026."),
+        ).toBeVisible(),
+      );
+    });
+
+    await step("The limit is written the German way, and the button is German", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "1.10.2026{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("Bitte wählen Sie ein Datum ab dem 01.11.2026.")).toBeVisible(),
+      );
+      await expect(canvas.getByRole("button", { name: "Kalender öffnen" })).toBeVisible();
+    });
+  },
+};
+
+/**
+ * As a test: `labels` puts the caller's words in place of the language's, as a sentence or as a
+ * function of what the default names.
+ */
+export const KeyboardOwnWords: Story = {
+  render: () => (
+    <Field className="w-72">
+      <FieldLabel>Termin am</FieldLabel>
+      <DateField
+        time
+        today="2026-11-14"
+        min="2026-11-14"
+        labels={{
+          invalidWithTime: (example) => `So wird es gelesen: ${example}.`,
+          limits: { from: (min) => `Frühestens am ${min}.` },
+          open: "Kalender zeigen",
+          done: "Übernehmen",
+        }}
+      />
+      <FieldError />
+    </Field>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByLabelText("Termin am");
+
+    await step("The messages are the caller's", async () => {
+      await userEvent.type(input, "morgen{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByText("So wird es gelesen: 30.11.2026, 09:30.")).toBeVisible(),
+      );
+      await userEvent.clear(input);
+      await userEvent.type(input, "1.11.2026 9 Uhr{Enter}");
+      await waitFor(() => expect(canvas.getByText("Frühestens am 14.11.2026.")).toBeVisible());
+    });
+
+    await step("So are the two keys of the sheet", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Kalender zeigen" }));
+      const sheet = await screen.findByRole("dialog", { name: "Datum und Uhrzeit wählen" });
+      await userEvent.click(within(sheet).getByRole("button", { name: "Übernehmen" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     });
   },
 };
