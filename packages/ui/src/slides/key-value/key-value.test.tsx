@@ -17,9 +17,9 @@ describe("KeyValue by step", () => {
     );
     const rows = html.match(/<div [^>]*>/g) ?? [];
     expect(rows).toHaveLength(2);
-    expect(rows[0]).not.toContain("data-step");
+    expect(rows[0]).not.toContain("data-slides-at");
     expect(rows[0]).toContain("grid-template-columns:");
-    expect(rows[1]).toContain('data-step="2"');
+    expect(rows[1]).toContain('data-slides-at="2"');
     expect(rows[1]).toMatch(/style="--step-at:2;grid-template-columns:[^"]+"/);
   });
 

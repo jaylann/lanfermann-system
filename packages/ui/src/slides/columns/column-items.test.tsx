@@ -16,15 +16,15 @@ describe("Columns and Steps by step", () => {
         ]}
       />,
     );
-    expect(html.match(/data-step="2" style="--step-at:2"/g)).toHaveLength(2);
-    expect(html.match(/data-step=/g)).toHaveLength(2);
+    expect(html.match(/data-slides-at="2" style="--step-at:2"/g)).toHaveLength(2);
+    expect(html.match(/data-slides-at=/g)).toHaveLength(2);
   });
 
   it("marks nothing when no item has a step", () => {
     const html = renderToStaticMarkup(
       <Columns items={[{ title: "Website" }, { title: "Profil" }]} />,
     );
-    expect(html).not.toContain("data-step");
+    expect(html).not.toContain("data-slides-at");
     expect(html).not.toContain("--step-at");
   });
 

@@ -9,8 +9,10 @@ import { Children, type CSSProperties, isValidElement, type ReactNode } from "re
  *
  * Two things carry a step through a slide:
  *
- * - **CSS, for plain markup.** A part marks an element with `stepAttributes(at)`: `data-step`
- *   and the custom property `--step-at`. Whoever shows the slide step by step sets
+ * - **CSS, for plain markup.** A part marks an element with `stepAttributes(at)`:
+ *   `data-slides-at` and the custom property `--step-at`. The attribute carries the kit's
+ *   prefix, so a `data-step` in a deck's own markup stays the deck's: it is neither counted nor
+ *   styled. Whoever shows the slide step by step sets
  *   `--slide-step` on an element around it (the player does, on the box of each slide), and
  *   `slides.css` works out from the two whether the element is shown. Without `--slide-step`
  *   everything is shown: a plain `Deck`, a print and the check see the whole slide.
@@ -23,7 +25,7 @@ import { Children, type CSSProperties, isValidElement, type ReactNode } from "re
 
 /** What marks an element as belonging to a step. Spread it onto the element. */
 export type StepAttributes = {
-  "data-step"?: number;
+  "data-slides-at"?: number;
   style?: CSSProperties;
 };
 
@@ -36,7 +38,7 @@ export function stepAttributes(at: number | undefined): StepAttributes {
   if (at === undefined || !Number.isFinite(at) || at <= 0) return {};
   const step = Math.trunc(at);
   // A custom property: not in React's style type.
-  return { "data-step": step, style: { "--step-at": step } as CSSProperties };
+  return { "data-slides-at": step, style: { "--step-at": step } as CSSProperties };
 }
 
 /** The highest step among items that may each carry one, e.g. the columns of a `Columns`. */
@@ -68,9 +70,9 @@ function counterOf(type: unknown): Counting["slideSteps"] {
 
 /**
  * How many steps what is written here asks for: the highest step of any element in the tree.
- * An element says so itself (`data-step` on plain markup, a part's `slideSteps`); the tree is
- * followed through `children` only, so what a deck's own component draws inside is not seen. Such
- * a component takes `steps` where it is used (see `flattenSlides`).
+ * An element says so itself (`data-slides-at` on plain markup, a part's `slideSteps`); the tree
+ * is followed through `children` only, so what a deck's own component draws inside is not seen.
+ * Such a component takes `steps` where it is used (see `flattenSlides`).
  */
 export function countSteps(node: ReactNode): number {
   let highest = 0;
@@ -78,7 +80,7 @@ export function countSteps(node: ReactNode): number {
     Children.forEach(nodes, (child) => {
       if (!isValidElement<Record<string, unknown>>(child)) return;
       const { props } = child;
-      const marked = props["data-step"];
+      const marked = props["data-slides-at"];
       if (typeof marked === "number" && Number.isFinite(marked))
         highest = Math.max(highest, marked);
       const counted = counterOf(child.type)?.(props);

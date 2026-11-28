@@ -152,7 +152,10 @@ export default (
       notes="Erst der Befund. Klick: was es kostet. Klick: was wir daraus machen."
     >
       <Title>Ein Rückruf am selben Tag entscheidet.</Title>
-      <Body>Wer eine Anfrage schickt, hat meist drei Betriebe angeschrieben.</Body>
+      <Body>
+        {/* A name of the deck's own. The kit's steps are `data-slides-at`: this is none. */}
+        <span data-step={3}>Wer eine Anfrage schickt,</span> hat meist drei Betriebe angeschrieben.
+      </Body>
       <Step at={1}>
         <Body>Den Auftrag bekommt, wer sich zuerst meldet, nicht wer am günstigsten ist.</Body>
       </Step>

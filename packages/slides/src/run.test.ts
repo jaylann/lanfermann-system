@@ -3,7 +3,7 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { parsePackage } from "./pack";
 import { HELP, run } from "./run";
@@ -26,14 +26,26 @@ async function slides(...argv: string[]) {
 
 /** Runs the command line in the given folder, for a test that runs it more than once there. */
 async function slidesIn(cwd: string, ...argv: string[]) {
+  return slidesWith({ cwd }, ...argv);
+}
+
+/** Runs the command line in a folder and, where one is given, with an environment of its own. */
+async function slidesWith(io: { cwd: string; env?: NodeJS.ProcessEnv }, ...argv: string[]) {
   const out: string[] = [];
   const err: string[] = [];
   const code = await run(argv, {
     out: (line) => out.push(line),
     err: (line) => err.push(line),
-    cwd,
+    ...io,
   });
-  return { code, out, err, cwd };
+  return { code, out, err, cwd: io.cwd };
+}
+
+/** The command line on a machine whose `SLIDES_BROWSER` names a program that is not there. */
+async function slidesWithoutBrowser(...argv: string[]) {
+  const cwd = await mkdtemp(join(tmpdir(), "lf-slides-run-"));
+  made.push(cwd);
+  return slidesWith({ cwd, env: { SLIDES_BROWSER: "/nowhere/there-is-no-browser-here" } }, ...argv);
 }
 
 describe("slides, called without a deck", () => {
@@ -48,7 +60,10 @@ describe("slides, called without a deck", () => {
       "build <dir>",
       "pack <dir>",
       "unpack <file> <dir>",
-      "--no-browser",
+      "--browser | --no-browser",
+      '"layout not checked"',
+      "{ ok, diagnostics, report,",
+      '"unavailable"',
       "--template blank",
       "--force",
       "{ file, bytes, sha256 }",
@@ -85,6 +100,10 @@ describe("slides, called without a deck", () => {
     expect((await slides("init", "a", "b")).code).toBe(2);
     expect((await slides("check", "a", "b")).code).toBe(2);
     expect(await slides("check", "x", "--fast")).toMatchObject({ code: 2 });
+    expect(await slides("check", "x", "--browser", "--no-browser")).toMatchObject({
+      code: 2,
+      err: ["slides: check takes --browser or --no-browser, not both.", "See slides --help."],
+    });
     expect((await slides("dev", fixturePath("sample"), "--port", "http")).err[0]).toBe(
       "slides: --port takes a number from 0 to 65535.",
     );
@@ -139,7 +158,100 @@ describeWithKit("slides check", () => {
         },
       ],
       report: null,
+      // Not measured, and not for want of a browser: the deck's error comes first.
+      layout: "skipped",
     });
+  });
+
+  const NO_BROWSER =
+    "layout not checked: no browser started (install Chrome, or name a browser with SLIDES_BROWSER)";
+
+  it("does not let a pass without a browser read like a whole one", async () => {
+    const { code, out, err } = await slidesWithoutBrowser("check", fixturePath("sample"));
+    expect(code).toBe(0);
+    expect(err).toEqual([]);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toMatch(
+      /^deck\.tsx:1:1 warning the layout was not checked: the browser did not start: .+ \(browser-not-found\)$/,
+    );
+    expect(out[1]).toBe(`check passed: 10 slides, 0 errors, 1 warning, ${NO_BROWSER}`);
+  });
+
+  it("fails without a browser when --browser asks for the layout", async () => {
+    const { code, out } = await slidesWithoutBrowser("check", fixturePath("sample"), "--browser");
+    expect(code).toBe(1);
+    expect(out[0]).toMatch(
+      /^deck\.tsx:1:1 error the layout was not checked: .+ \(browser-not-found\)$/,
+    );
+    expect(out[1]).toBe(`check failed: 10 slides, 1 error, 0 warnings, ${NO_BROWSER}`);
+  });
+
+  it("says in --json whether the layout was measured, and keeps its exit codes", async () => {
+    const auto = await slidesWithoutBrowser("check", fixturePath("sample"), "--json");
+    expect(auto.code).toBe(0);
+    expect(auto.out).toHaveLength(1);
+    expect(JSON.parse(auto.out[0] ?? "")).toMatchObject({
+      ok: true,
+      diagnostics: [{ code: "browser-not-found", severity: "warning" }],
+      report: null,
+      layout: "unavailable",
+    });
+
+    const asked = await slidesWithoutBrowser("check", fixturePath("sample"), "--json", "--browser");
+    expect(asked.code).toBe(1);
+    expect(JSON.parse(asked.out[0] ?? "")).toMatchObject({
+      ok: false,
+      diagnostics: [{ code: "browser-not-found", severity: "error" }],
+      report: null,
+      layout: "unavailable",
+    });
+
+    const skipped = await slidesWithoutBrowser(
+      "check",
+      fixturePath("sample"),
+      "--json",
+      "--no-browser",
+    );
+    expect(skipped.code).toBe(0);
+    expect(JSON.parse(skipped.out[0] ?? "")).toEqual({
+      ok: true,
+      diagnostics: [],
+      report: null,
+      layout: "skipped",
+    });
+  });
+
+  it("leaves the browser alone for a deck with an error, and says the layout was not checked", async () => {
+    // With a browser that is not there: asking for it would add a line about it.
+    expect(await slidesWithoutBrowser("check", fixturePath("bad-import"))).toMatchObject({
+      code: 1,
+      out: [
+        'deck.tsx:2:20 error import "lodash" is not allowed (import-not-allowed)',
+        "check failed: 1 slide, 1 error, 0 warnings, layout not checked",
+      ],
+    });
+  });
+
+  it("names the install where playwright-core is missing", async () => {
+    vi.doMock("playwright-core", () => {
+      throw new Error("Cannot find package 'playwright-core'");
+    });
+    try {
+      const { code, out } = await slides("check", fixturePath("sample"));
+      expect(code).toBe(0);
+      expect(out).toEqual([
+        "deck.tsx:1:1 warning the layout was not checked: playwright-core is not installed " +
+          "(it drives the browser; add it with `bun add -d playwright-core` or " +
+          "`npm i -D playwright-core`) (browser-not-found)",
+        "check passed: 10 slides, 0 errors, 1 warning, layout not checked: playwright-core is " +
+          "not installed (bun add -d playwright-core, or npm i -D playwright-core)",
+      ]);
+      const asked = await slides("check", fixturePath("sample"), "--browser", "--json");
+      expect(asked.code).toBe(1);
+      expect(JSON.parse(asked.out[0] ?? "")).toMatchObject({ ok: false, layout: "unavailable" });
+    } finally {
+      vi.doUnmock("playwright-core");
+    }
   });
 
   it("reads a folder relative to where it is called", async () => {

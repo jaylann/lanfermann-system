@@ -73,7 +73,8 @@ function deckPlugin(files: Readonly<Record<string, string>>, entry: string): Plu
         contents: `module.exports = globalThis.__LF_SLIDES__.${args.path};`,
         loader: "js",
       }));
-      // A picture is named, not carried: `deckHtml` puts its data URL where the name stands.
+      // A picture is named, not carried: `deckHtml` puts its data URL or its address where
+      // the name stands.
       setup.onLoad({ filter: /.*/, namespace: IMAGE }, (args) => ({
         contents: `export default ${JSON.stringify(assetKey(args.path))};`,
         loader: "js",
@@ -116,7 +117,7 @@ function errorOf(message: Message): DeckError {
  * A deck imports `react`, `react/jsx-runtime`, `@lanfermann/ui/slides` and its own files by
  * relative path; anything else is an `import` error. Code that does not parse is a `syntax`
  * error. An import of a picture becomes the picture's name (`./bilder/werkbank.png`), which
- * `deckHtml` replaces by its data URL.
+ * `deckHtml` replaces by what its `assets` say: the picture's data URL, or its address.
  *
  * With `stripNotes`, every `notes` attribute is taken out before the deck is compiled, and the
  * script is searched for the notes' words afterwards; see ./notes.ts for the rules. What breaks

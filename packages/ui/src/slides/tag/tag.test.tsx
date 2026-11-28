@@ -18,8 +18,8 @@ describe("Tags by step", () => {
     );
     expect(html).toContain('text-fg">Anfahrt</p>');
     expect(html).toContain('text-fg"><em>Preise</em></p>');
-    expect(html).toContain('text-fg" data-step="2" style="--step-at:2">Bewertungen</p>');
-    expect(html.match(/data-step=/g)).toHaveLength(1);
+    expect(html).toContain('text-fg" data-slides-at="2" style="--step-at:2">Bewertungen</p>');
+    expect(html.match(/data-slides-at=/g)).toHaveLength(1);
   });
 
   it("counts the steps of tags written with one", () => {

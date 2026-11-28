@@ -16,13 +16,13 @@ describe("markers by step", () => {
     expect(html).toContain(
       '<div style="position:absolute;left:40px;top:60px"><p data-slot="slide-marker"',
     );
-    expect(html).not.toContain("data-step");
+    expect(html).not.toContain("data-slides-at");
   });
 
   it("marks the box of a marker with a step, in a browser and on a phone", () => {
     const marker = { n: 2, x: 40, y: 60, step: 2 };
     const expected =
-      '<div data-step="2" style="--step-at:2;position:absolute;left:40px;top:60px"><p data-slot="slide-marker"';
+      '<div data-slides-at="2" style="--step-at:2;position:absolute;left:40px;top:60px"><p data-slot="slide-marker"';
     expect(
       renderToStaticMarkup(<BrowserFrame url="ihr-betrieb.de" markers={[marker]} />),
     ).toContain(expected);

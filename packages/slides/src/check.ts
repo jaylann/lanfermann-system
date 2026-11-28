@@ -29,6 +29,15 @@ export type CheckResult = {
   diagnostics: Diagnostic[];
   /** `window.__slidesReport` as the player wrote it, when the deck was drawn. */
   report?: unknown;
+  /**
+   * Whether the layout was measured. `checked`: it was, and `report` is there. `skipped`: it
+   * was not asked for (`browser: false`), or the deck has an error that comes first (it does
+   * not compile, or it never came to rest in the browser). `unavailable`: no browser could be
+   * driven here, so a deck that passes has still not been looked at.
+   */
+  layout: "checked" | "skipped" | "unavailable";
+  /** With `unavailable`: what is missing and what to do about it, in a few words. */
+  layoutHint?: string;
 };
 
 /** The compiler's ways to say that an import leads nowhere, which the static check says better. */
@@ -82,6 +91,7 @@ export async function checkDeck(
   }
 
   let report: unknown;
+  let layoutHint: string | undefined;
   const browser = options.browser ?? "auto";
   if (browser !== false && js !== undefined && !hasErrors(diagnostics)) {
     try {
@@ -102,6 +112,7 @@ export async function checkDeck(
           severity: "error",
         });
       } else if (error instanceof BrowserUnavailableError) {
+        layoutHint = error.hint;
         diagnostics.push({
           file: entry,
           line: 1,
@@ -117,7 +128,9 @@ export async function checkDeck(
   }
 
   const sorted = sortDiagnostics(diagnostics, entry);
-  return report === undefined
-    ? { ok: !hasErrors(sorted), diagnostics: sorted }
-    : { ok: !hasErrors(sorted), diagnostics: sorted, report };
+  const result = { ok: !hasErrors(sorted), diagnostics: sorted };
+  if (report !== undefined) return { ...result, report, layout: "checked" };
+  return layoutHint === undefined
+    ? { ...result, layout: "skipped" }
+    : { ...result, layout: "unavailable", layoutHint };
 }

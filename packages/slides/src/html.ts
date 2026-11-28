@@ -26,8 +26,17 @@ export type DeckHtmlOptions = {
   csp?: string;
   /**
    * The pictures of the deck: the text a picture is named by in the script (an address, or
-   * `./bilder/werkbank.png` for a file of the deck) to its data URL. Each name that stands in
-   * the script as a string is replaced, so the file loads nothing.
+   * `./bilder/werkbank.png` for a file of the deck) to where the page finds it. Each name that
+   * stands in the script as a string is replaced by its value. A value is one of three kinds:
+   *
+   * - a data URL (`data:image/png;base64,…`): the picture is in the file, which loads nothing;
+   * - an absolute `https:` address (`https://cdn.example.com/a.png`), without a user name;
+   * - a path on the page's own origin: `/decks/a.png`, `./a.png` or `../a.png`.
+   *
+   * Anything else (`http:`, another scheme, `//host/a.png`, a bare word, a value with a blank
+   * or a backslash in it) is a `TypeError`. A file with addresses or paths is for a server that
+   * publishes the pictures beside it, and `deckCsp` allows exactly their origins; the layout
+   * check and the PDF open a file without a network, so they take data URLs.
    */
   assets?: Readonly<Record<string, string>>;
 };
@@ -71,24 +80,80 @@ function commentText(text: string): string {
   return text.replaceAll("<!--", "<! --").replaceAll("-->", "-- >").replaceAll("--!>", "--! >");
 }
 
-/** The deck's script with each picture's name replaced by its data URL. */
-function withAssets(js: string, assets: Readonly<Record<string, string>>): string {
-  let code = js;
+/** Where a page gets a picture from: out of itself, from its own origin, or from another. */
+type AssetPlace = { from: "data" } | { from: "self" } | { from: "origin"; origin: string };
+
+/**
+ * A blank, a control character or a backslash: a browser drops or rewrites them in an address,
+ * so `/\host` and a `/` followed by a tab and `/host` would both name another server.
+ */
+const isUnsafeInAddress = (value: string) =>
+  [...value].some((char) => char <= " " || char === "\u007f" || char === "\\");
+/** A host as a policy can name it (`host-source` of CSP): letters, digits, hyphens and dots. */
+const POLICY_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.?$/;
+
+/**
+ * Which of the three kinds of value an asset is, or `undefined` for one `deckHtml` refuses.
+ * The origin of an address is the one a browser would ask, as the URL parser reads it.
+ */
+function assetPlace(value: string): AssetPlace | undefined {
+  if (value.startsWith("data:")) return { from: "data" };
+  if (isUnsafeInAddress(value)) return undefined;
+  // A path of the page's own origin. `//host` names another one, so it is not among them.
+  if (/^(?:\/(?!\/)|\.\.?\/)/.test(value)) return { from: "self" };
+  if (!/^https:\/\//i.test(value) || !URL.canParse(value)) return undefined;
+  const url = new URL(value);
+  if (url.protocol !== "https:" || url.username !== "" || url.password !== "") return undefined;
+  // A host with `*`, `;` or `,` in it would say something else in a policy than it names.
+  return POLICY_HOST.test(url.hostname) ? { from: "origin", origin: url.origin } : undefined;
+}
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * The deck's script with each picture's name replaced by its value, and what `img-src` has to
+ * allow besides `data:` for those values to load: `'self'` first, then the origins by name.
+ */
+function withAssets(
+  js: string,
+  assets: Readonly<Record<string, string>>,
+): { code: string; sources: string[] } {
+  let self = false;
+  const origins = new Set<string>();
+  const replacements = new Map<string, string>();
   for (const [name, url] of Object.entries(assets)) {
-    if (!url.startsWith("data:")) {
-      throw new TypeError(`The asset ${JSON.stringify(name)} is not a data URL.`);
+    const place = assetPlace(url);
+    if (place === undefined) {
+      // The name only: the value may be long, or hold what belongs in no log.
+      throw new TypeError(
+        `The asset ${JSON.stringify(name)} is neither a data URL, an https address nor a path ` +
+          "on the page's own origin (/…, ./… or ../…).",
+      );
     }
-    const replacement = JSON.stringify(url);
+    if (place.from === "self") self = true;
+    else if (place.from === "origin") origins.add(place.origin);
     // As a string of its own, in each way a bundler may quote it: never as a part of a longer
     // text, which could be another picture's name.
     for (const quoted of [JSON.stringify(name), `'${name}'`, `\`${name}\``]) {
-      code = code.split(quoted).join(replacement);
+      replacements.set(quoted, JSON.stringify(url));
     }
   }
-  return code;
+  const sources = [...(self ? ["'self'"] : []), ...[...origins].sort()];
+  if (replacements.size === 0) return { code: js, sources };
+  // In one pass over the script as the bundler wrote it: a value that reads like another
+  // picture's name (`./a.png` is both a name and a path) is not replaced a second time.
+  const names = [...replacements.keys()].sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(names.map(escapeRegExp).join("|"), "g");
+  return { code: js.replace(pattern, (found) => replacements.get(found) ?? found), sources };
 }
 
-type Parts = { kit: Kit; style: string; scripts: string[] };
+type Parts = {
+  kit: Kit;
+  style: string;
+  scripts: string[];
+  /** What `img-src` allows besides `data:`: nothing for a deck whose pictures are all inline. */
+  imageSources: string[];
+};
 
 /** The inline parts of a file, exactly as they stand in it: what a policy's hashes are of. */
 function partsOf(
@@ -98,14 +163,12 @@ function partsOf(
   const kit = loadKit();
   const options = { mode, modes: MODES[mode], ...(pdfUrl === undefined ? {} : { pdf: pdfUrl }) };
   const mount = `__LF_SLIDES__.mount(__LF_DECK__.default,${JSON.stringify(options).replaceAll("<", "\\u003c")});`;
+  const deck = assets ? withAssets(js, assets) : { code: js, sources: [] };
   return {
     kit,
     style: inlineStyle(`${kit.fonts}\n${kit.css}`),
-    scripts: [
-      inlineScript(kit.script),
-      inlineScript(assets ? withAssets(js, assets) : js),
-      inlineScript(mount),
-    ],
+    scripts: [inlineScript(kit.script), inlineScript(deck.code), inlineScript(mount)],
+    imageSources: deck.sources,
   };
 }
 
@@ -117,22 +180,27 @@ export type CspExtras = {
 };
 
 /**
- * A strict policy for the file `deckHtml` makes from the same script and options: nothing is
- * loaded from anywhere, the inline style and scripts are allowed by the hash of their exact
- * text, pictures and fonts only as data. Pass it back as `csp`.
+ * A strict policy for the file `deckHtml` makes from the same script and options: the inline
+ * style and scripts are allowed by the hash of their exact text, fonts only as data, and
+ * pictures as data and from where `assets` says they are. With data URLs alone that is
+ * `img-src data:`, and the file loads nothing from anywhere. A path on the page's own origin
+ * adds `'self'`, an `https:` address its origin (each once, in order of name), and nothing
+ * wider: no scheme, no wildcard. Pass it back as `csp`.
+ *
+ * Throws the `TypeError` `deckHtml` rejects with, for an asset that is none of the three kinds.
  */
 export function deckCsp(
   js: string,
   options: Pick<DeckHtmlOptions, "mode" | "pdfUrl" | "assets">,
   extras: CspExtras = {},
 ): string {
-  const { style, scripts } = partsOf(js, options);
+  const { style, scripts, imageSources } = partsOf(js, options);
   const hashes = [...scripts, ...(extras.scripts ?? [])].map((code) => `'sha256-${sha256(code)}'`);
   return [
     "default-src 'none'",
     `style-src 'sha256-${sha256(style)}'`,
     `script-src ${hashes.join(" ")}`,
-    "img-src data:",
+    ["img-src data:", ...imageSources].join(" "),
     "font-src data:",
     ...(extras.connectSelf ? ["connect-src 'self'"] : []),
     "base-uri 'none'",

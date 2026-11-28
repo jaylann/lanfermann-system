@@ -27,11 +27,11 @@ const stepAt = (at: number, children: ReactNode) => createElement(Step, { at, ch
 
 describe("stepAttributes", () => {
   it("marks an element with the step and its custom property", () => {
-    expect(stepAttributes(2)).toEqual({ "data-step": 2, style: { "--step-at": 2 } });
+    expect(stepAttributes(2)).toEqual({ "data-slides-at": 2, style: { "--step-at": 2 } });
   });
 
   it("drops the fraction of a step", () => {
-    expect(stepAttributes(2.7)).toEqual({ "data-step": 2, style: { "--step-at": 2 } });
+    expect(stepAttributes(2.7)).toEqual({ "data-slides-at": 2, style: { "--step-at": 2 } });
   });
 
   it("marks nothing for no step, zero, a negative or an endless one", () => {
@@ -57,8 +57,18 @@ describe("maxStep", () => {
 });
 
 describe("countSteps", () => {
-  it("reads plain data-step attributes", () => {
-    expect(countSteps(p({ "data-step": 2 }, "Rückruf"))).toBe(2);
+  it("reads plain data-slides-at attributes", () => {
+    expect(countSteps(p({ "data-slides-at": 2 }, "Rückruf"))).toBe(2);
+  });
+
+  it("does not count a deck's own data-step: that name is not the kit's", () => {
+    expect(countSteps(createElement("div", { "data-step": 3 }, "Schritt drei"))).toBe(0);
+    const tree = createElement(
+      "section",
+      null,
+      createElement("div", { "data-step": 3 }, p({ "data-slides-at": 1 }, "Rückruf")),
+    );
+    expect(countSteps(tree)).toBe(1);
   });
 
   it("reads a part's slideSteps from its props without drawing it", () => {
@@ -72,10 +82,10 @@ describe("countSteps", () => {
     const tree = createElement(
       "div",
       null,
-      p({ "data-step": 1 }),
+      p({ "data-slides-at": 1 }),
       createElement(Fragment, null, [
-        p({ key: "a", "data-step": 2 }),
-        createElement("div", { key: "b" }, p({ "data-step": 4 })),
+        p({ key: "a", "data-slides-at": 2 }),
+        createElement("div", { key: "b" }, p({ "data-slides-at": 4 })),
       ]),
     );
     expect(countSteps(tree)).toBe(4);
@@ -143,7 +153,7 @@ describe("Step", () => {
   it("marks one plain element itself and keeps its own style", () => {
     const element = step(2, p({ className: "slide-span-6", style: { width: 800 } }, "Rückruf"));
     expect(element.type).toBe("p");
-    expect(element.props["data-step"]).toBe(2);
+    expect(element.props["data-slides-at"]).toBe(2);
     expect(element.props.className).toBe("slide-span-6");
     expect(element.props.style).toEqual({ width: 800, "--step-at": 2 });
     expect(element.props.children).toBe("Rückruf");
@@ -158,7 +168,7 @@ describe("Step", () => {
       const element = step(1, children);
       expect(element.type).toBe("div");
       expect(element.props["data-slot"]).toBe("slide-step");
-      expect(element.props["data-step"]).toBe(1);
+      expect(element.props["data-slides-at"]).toBe(1);
       expect(element.props.style).toEqual({ "--step-at": 1 });
       expect(element.props.children).toBe(children);
     }

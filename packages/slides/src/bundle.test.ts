@@ -87,6 +87,28 @@ describeWithKit("bundleDeck", () => {
     expect(result.errors).toMatchObject([{ kind: "import", code, file: "deck.tsx", line: 2 }]);
   });
 
+  it("refuses a reference directive, which the bundler itself would pass over", async () => {
+    const result = await bundleDeck(
+      deckOf(
+        `/// <reference types="node" />\n${HEAD}export default (<Deck title="Probe"><Slide /></Deck>);\n`,
+      ),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.js).toBeUndefined();
+    expect(result.errors).toEqual([
+      {
+        kind: "import",
+        code: "reference-not-allowed",
+        file: "deck.tsx",
+        line: 1,
+        column: 1,
+        message:
+          "/// <reference types> is not allowed in a deck: a deck takes in its own files, " +
+          "React and the kit by import, and nothing else",
+      },
+    ]);
+  });
+
   it("refuses a forbidden import in a file of the deck that only another file imports", async () => {
     const result = await bundleDeck(
       deckWith(SLIDE, 'import { teil } from "./parts/teil";\nconsole.log(teil);'),

@@ -9,7 +9,7 @@ describe("Flow by step", () => {
   it("keeps the arrow one path when nothing comes at a step", () => {
     const html = renderToStaticMarkup(<Flow nodes={[{ title: "Anfrage" }, { title: "Termin" }]} />);
     expect(html).toContain('d="M0 12H45M36 3l9 9-9 9"');
-    expect(html).not.toContain("data-step");
+    expect(html).not.toContain("data-slides-at");
     expect(html).not.toContain("pathLength");
   });
 
@@ -17,9 +17,11 @@ describe("Flow by step", () => {
     const html = renderToStaticMarkup(
       <Flow nodes={[{ title: "Anfrage" }, { title: "Rückruf", step: 1 }, { title: "Termin" }]} />,
     );
-    expect(html).toContain('data-slot="slide-flow-node" data-step="1"');
+    expect(html).toContain('data-slot="slide-flow-node" data-slides-at="1"');
     // The arrow into the second box and the one out of it both come with it.
-    expect(html.match(/data-slot="slide-flow-arrow" data-draw="" data-step="1"/g)).toHaveLength(2);
+    expect(
+      html.match(/data-slot="slide-flow-arrow" data-draw="" data-slides-at="1"/g),
+    ).toHaveLength(2);
     expect(html).toContain('data-slot="slide-flow-line" d="M0 12H45" pathLength="1"');
     expect(html).toContain('data-slot="slide-flow-head" d="M36 3l9 9-9 9"');
   });

@@ -363,7 +363,7 @@ export function DiagramCanvas({
           const step = stepAttributes(node.step);
           // A marker of a box that comes at a step is held by a box that carries the step: the
           // disc itself takes no attributes but its place.
-          return step["data-step"] === undefined ? (
+          return step["data-slides-at"] === undefined ? (
             <Marker
               key={`m${index}`}
               n={node.marker}

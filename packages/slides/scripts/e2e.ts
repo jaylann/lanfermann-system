@@ -54,7 +54,15 @@ const recordsOf = (value: unknown) => listOf(value).filter(isRecord);
 
 /** Runs the built command line in the folder the files are written to. */
 function slides(...args: string[]) {
-  const run = spawnSync(process.execPath, [cli, ...args], { cwd: out, encoding: "utf8" });
+  return slidesWith({}, ...args);
+}
+/** The same, with variables of the environment set for this one process. */
+function slidesWith(env: NodeJS.ProcessEnv, ...args: string[]) {
+  const run = spawnSync(process.execPath, [cli, ...args], {
+    cwd: out,
+    encoding: "utf8",
+    env: { ...process.env, ...env },
+  });
   return { code: run.status, stdout: run.stdout, stderr: run.stderr };
 }
 const readJson = (text: string): unknown => {
@@ -132,8 +140,40 @@ function groundWidths(pdf: Buffer): number[] {
   const report = isRecord(json) ? json.report : undefined;
   const reported = isRecord(report) ? recordsOf(report.slides) : [];
   check(
-    "check --json: prints { ok, diagnostics, report } and nothing else",
-    isRecord(json) && json.ok === true && listOf(json.diagnostics).length === 0 && isRecord(report),
+    "check --json: prints { ok, diagnostics, report, layout } and nothing else",
+    isRecord(json) &&
+      json.ok === true &&
+      listOf(json.diagnostics).length === 0 &&
+      isRecord(report) &&
+      Object.keys(json).sort().join() === "diagnostics,layout,ok,report",
+  );
+  check(
+    "check --json: says the layout was measured",
+    isRecord(json) && json.layout === "checked",
+    isRecord(json) ? String(json.layout) : "",
+  );
+  const asked = slides("check", fixture("sample"), "--browser");
+  check(
+    "check --browser: passes where a browser is there, with the same line",
+    asked.code === 0 && asked.stdout.trim() === "check passed: 10 slides, 0 errors, 0 warnings",
+    `exit ${asked.code} ${asked.stdout.trim()}`,
+  );
+  // A browser that is not there, for these two runs: a pass says what it did not look at.
+  const nowhere = { SLIDES_BROWSER: join(out, "no-browser-here") };
+  const blind = slidesWith(nowhere, "check", fixture("sample"));
+  check(
+    "check without a browser: passes with a warning and says the layout was not checked",
+    blind.code === 0 &&
+      (blind.stdout.trim().split("\n").at(-1) ?? "").startsWith(
+        "check passed: 10 slides, 0 errors, 1 warning, layout not checked: no browser started",
+      ),
+    `exit ${blind.code} ${blind.stdout.trim()}`,
+  );
+  const blindAsked = slidesWith(nowhere, "check", fixture("sample"), "--browser");
+  check(
+    "check --browser without a browser: exits 1",
+    blindAsked.code === 1 && blindAsked.stdout.includes("check failed: 10 slides, 1 error"),
+    `exit ${blindAsked.code} ${blindAsked.stdout.trim()}`,
   );
   check(
     "check --json: the report is ok and has ten slides",
@@ -600,11 +640,15 @@ if (existsSync(motionFile)) {
     return false;
   };
   // The block a `Step` wraps carries the step; the part inside it knows nothing of it.
-  const takeaway = '[data-slot="stage"] [data-step="2"]';
+  const takeaway = '[data-slot="stage"] [data-slides-at="2"]';
   check(
     "motion: what comes at a later step is not shown yet, and keeps its place",
     (await opacityOf(takeaway)) === "0" &&
       ((await page.locator(takeaway).boundingBox())?.height ?? 0) > 0,
+  );
+  check(
+    "motion: a data-step of the deck's own markup is no step: it is shown from the start",
+    (await opacityOf('[data-slot="stage"] [data-step="3"]')) === "1",
   );
   await page.keyboard.press("ArrowRight");
   check("motion: ArrowRight takes a step first", await hashIs(page, "#/rueckruf.1"), page.url());
@@ -615,6 +659,7 @@ if (existsSync(motionFile)) {
     await settled(() => opacityOf(takeaway), "1"),
   );
   await page.keyboard.press("ArrowRight");
+  // Two steps, not three: the deck's own `data-step={3}` on this slide is not counted.
   check("motion: after the last step comes the next slide", await shows(page, "leistungen"));
   await page.keyboard.press("ArrowLeft");
   check(

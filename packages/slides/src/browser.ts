@@ -18,6 +18,18 @@ export type BrowserChoice = {
 /** No browser could be started: `playwright-core` is not installed, or Chrome is not. */
 export class BrowserUnavailableError extends Error {
   override readonly name = "BrowserUnavailableError";
+  /**
+   * What is missing and what to do about it, short enough for the end of a summary line:
+   * `playwright-core is not installed (bun add -d playwright-core, …)`. The message itself
+   * when none was given.
+   */
+  readonly hint: string;
+
+  constructor(message: string, options: ErrorOptions & { hint?: string } = {}) {
+    const { hint, ...rest } = options;
+    super(message, rest);
+    this.hint = hint ?? message;
+  }
 }
 
 /** The page was opened, and the player in it never said it was done. */
@@ -49,7 +61,10 @@ async function loadPlaywright() {
     throw new BrowserUnavailableError(
       "playwright-core is not installed (it drives the browser; add it with " +
         "`bun add -d playwright-core` or `npm i -D playwright-core`)",
-      { cause },
+      {
+        cause,
+        hint: "playwright-core is not installed (bun add -d playwright-core, or npm i -D playwright-core)",
+      },
     );
   }
 }
@@ -67,7 +82,10 @@ async function launch(choice: BrowserChoice): Promise<Browser> {
           : { channel: choice.channel ?? "chrome" }),
     });
   } catch (cause) {
-    throw new BrowserUnavailableError(`the browser did not start: ${firstLine(cause)}`, { cause });
+    throw new BrowserUnavailableError(`the browser did not start: ${firstLine(cause)}`, {
+      cause,
+      hint: "no browser started (install Chrome, or name a browser with SLIDES_BROWSER)",
+    });
   }
 }
 
