@@ -52,7 +52,7 @@
     "@lanfermann/ui": "workspace:*",
     "@types/react": "^19.3.0",
     "esbuild": "^0.28.2",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "playwright-core": "^1.65.0"
