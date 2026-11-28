@@ -3,6 +3,7 @@ import { type ComponentProps, type ReactNode, useId } from "react";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 import {
   chipDisabledLook,
@@ -27,9 +28,15 @@ export type ChipProps = Omit<ComponentProps<"span">, "children"> & {
   onRemove?: () => void;
   /**
    * What the key that takes the chip away is called, as one verb. The chip's own text is said
-   * before it: "Bezahlt entfernen".
+   * before it: "Bezahlt entfernen". Left out, it is the word of the nearest `LocaleProvider`
+   * („Entfernen“ without one).
    */
   removeLabel?: string;
+  /**
+   * The whole name of that key, for a sentence in which the verb does not come last ("Remove
+   * report.pdf"). It replaces the chip's text and `removeLabel` in the name.
+   */
+  removeName?: string;
   /** It cannot be taken away right now, and lies flat. */
   disabled?: boolean;
   /**
@@ -68,7 +75,8 @@ export function Chip({
   icon,
   lead,
   onRemove,
-  removeLabel = "Entfernen",
+  removeLabel,
+  removeName,
   disabled = false,
   variant = "plug",
   className,
@@ -77,6 +85,7 @@ export function Chip({
 }: ChipProps) {
   const labelId = useId();
   const removeId = useId();
+  const wordId = useId();
   const removable = onRemove !== undefined && !disabled;
   return (
     <span
@@ -102,9 +111,15 @@ export function Chip({
           type="button"
           id={removeId}
           data-slot="chip-remove"
-          aria-label={removeLabel}
-          // The chip's text, then the verb: "Bezahlt entfernen".
-          aria-labelledby={`${labelId} ${removeId}`}
+          aria-label={removeName ?? removeLabel}
+          // The chip's text, then the verb: "Bezahlt entfernen". The verb is the caller's
+          // label, or the table's word in a hidden element (an attribute cannot follow the
+          // provider from a server file). A whole name of the caller's stands alone.
+          aria-labelledby={
+            removeName === undefined
+              ? `${labelId} ${removeLabel === undefined ? wordId : removeId}`
+              : undefined
+          }
           onClick={(event) => {
             // The key is about to go: hand the focus to the chip beside this one, so the
             // keyboard stays in the row.
@@ -115,6 +130,11 @@ export function Chip({
           }}
           className={chipRemoveKey}
         >
+          {removeLabel === undefined && removeName === undefined && (
+            <span id={wordId} hidden>
+              <Localized ns="chip" name="remove" />
+            </span>
+          )}
           <CloseGlyph width={8} height={8} />
         </button>
       )}

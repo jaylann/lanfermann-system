@@ -243,7 +243,8 @@
   }
 
   /* A change carries its sign, so colour is never the only way to tell. The sign is read out
-     with its word (`data-label`) but never copied. */
+     with its word but never copied: the caller's (`data-label`), or the one the scroll region
+     sets in the page's language (`CodeScroll`), German where the lines stand on their own. */
   [data-slot="code-block-line"][data-kind="added"] {
     background-color: var(--lf-code-added);
   }
@@ -256,12 +257,18 @@
     user-select: none;
   }
   [data-slot="code-block-line"][data-kind="added"]::after {
-    content: "+" / attr(data-label);
+    content: "+" / var(--code-added-word, "hinzugefügt");
     color: var(--lf-success);
   }
   [data-slot="code-block-line"][data-kind="removed"]::after {
-    content: "−" / attr(data-label);
+    content: "−" / var(--code-removed-word, "entfernt");
     color: var(--lf-danger);
+  }
+  [data-slot="code-block-line"][data-kind="added"][data-label]::after {
+    content: "+" / attr(data-label);
+  }
+  [data-slot="code-block-line"][data-kind="removed"][data-label]::after {
+    content: "−" / attr(data-label);
   }
 
   /*

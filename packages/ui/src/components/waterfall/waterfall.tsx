@@ -29,6 +29,16 @@ import { useLocale } from "@/locale/locale";
 
 export type { WaterfallStep };
 
+/** The words a `Waterfall` says on its own (`words`). */
+export type WaterfallWords = {
+  change: string;
+  running: string;
+  total: string;
+  chart: string;
+  hint: string;
+  step: string;
+};
+
 export type WaterfallProps = Omit<ComponentProps<"figure">, "children"> & {
   /** The steps in the order they add up; a `total` stands from zero and shows the sum so far. */
   data: readonly WaterfallStep[];
@@ -52,8 +62,14 @@ export type WaterfallProps = Omit<ComponentProps<"figure">, "children"> & {
   readout?: boolean;
   /** Whether the columns are uncovered from left to right where the chart first shows. */
   drawIn?: boolean;
-  /** The words of the readout: what a step adds, the sum after it, and a total. */
-  words?: { change?: string; running?: string; total?: string };
+  /**
+   * The chart's own words, for one chart worded without a `LocaleProvider`. In the readout
+   * and the table: what a step adds (`change`), the sum after it (`running`) and a total
+   * (`total`). For assistive tech: what the plot is called (`chart`), how its keyboard is
+   * explained after the name (`hint`) and the head of the table's first column (`step`). Each
+   * one left out is the provider's.
+   */
+  words?: Partial<WaterfallWords>;
   /** Data is being fetched again: the chart keeps its picture, quieter. */
   pending?: boolean;
   /** What stands in the plot without any data. */
@@ -95,10 +111,13 @@ export function Waterfall({
   >();
   const numbers = chartFormat(locale ?? tag, format);
   const signed = signedFormat(locale ?? tag, format);
-  const words = {
+  const words: WaterfallWords = {
     change: messages.charts.change,
     running: messages.charts.running,
     total: messages.charts.total,
+    chart: messages.charts.chart,
+    hint: messages.charts.hintSteps,
+    step: messages.charts.step,
     ...wordsProp,
   };
   const [active, setActive] = useState<{
@@ -271,8 +290,8 @@ export function Waterfall({
           data-slot="waterfall-plot"
           data-live={live || undefined}
           role="group"
-          aria-roledescription={messages.charts.chart}
-          aria-label={`${label}. ${messages.charts.hintSteps}`}
+          aria-roledescription={words.chart}
+          aria-label={`${label}. ${words.hint}`}
           tabIndex={bars.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -470,7 +489,7 @@ export function Waterfall({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">{messages.charts.step}</th>
+                <th scope="col">{words.step}</th>
                 <th scope="col">{words.change}</th>
                 <th scope="col">{words.running}</th>
               </tr>

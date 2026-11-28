@@ -1,11 +1,11 @@
 import type { ComponentProps, CSSProperties } from "react";
 
-import { chartFormat } from "@/internal/chart/format";
+import { chartFormat, shareOptions } from "@/internal/chart/format";
 import { lane, laneAt } from "@/internal/chart/lane";
 import { share, valueAxis } from "@/internal/chart/scale";
 import { fillStyle, troughFill } from "@/internal/trough";
 import { cn } from "@/lib/cn";
-import { Localized } from "@/locale/localized";
+import { Localized, LocalizedNumber } from "@/locale/localized";
 
 export type BulletItem = {
   /** What is measured against its goal: „Umsatz im November“. */
@@ -31,6 +31,10 @@ export type BulletProps = Omit<ComponentProps<"ul">, "children"> & {
   data: readonly BulletItem[];
   /** How amounts are written, as `Intl.NumberFormat` options. */
   format?: Intl.NumberFormatOptions;
+  /**
+   * The locale the amounts are written with. Left out, it is the one of the nearest
+   * `LocaleProvider` (`de-DE` without one).
+   */
   locale?: string;
   /** The word between a value and its goal: „38.400 € von 50.000 €“. */
   of?: string;
@@ -54,7 +58,7 @@ export type BulletProps = Omit<ComponentProps<"ul">, "children"> & {
 export function Bullet({
   data,
   format,
-  locale = "de-DE",
+  locale,
   of,
   ofTarget,
   tone = "neutral",
@@ -69,7 +73,12 @@ export function Bullet({
       {...props}
     >
       {data.map((item, index) => {
-        const numbers = chartFormat(locale, item.format ?? format);
+        const options = item.format ?? format;
+        // With a locale of its own the figures are written here; without one a client leaf
+        // writes them in the provider's, which this server-safe file cannot read.
+        const numbers = locale === undefined ? null : chartFormat(locale, options);
+        const written = (value: number) =>
+          numbers ? numbers.value(value) : <LocalizedNumber value={value} options={options} />;
         // A tenth past the largest amount, so a goal at the end of the scale still shows whole.
         const end =
           item.max ??
@@ -88,15 +97,19 @@ export function Bullet({
           >
             <span className="min-w-0 truncate text-fg-body">{item.name}</span>
             <span className="whitespace-nowrap tabular-nums @[26rem]:text-right">
-              <span className="text-fg">{numbers.value(item.value)}</span>
+              <span className="text-fg">{written(item.value)}</span>
               {item.target !== undefined && (
                 <span className="text-fg-muted">
                   {" "}
-                  {of ?? <Localized ns="charts" name="of" />} {numbers.value(item.target)}
+                  {of ?? <Localized ns="charts" name="of" />} {written(item.target)}
                   {reached !== null && (
                     <>
                       {" · "}
-                      {numbers.share(reached)}{" "}
+                      {numbers ? (
+                        numbers.share(reached)
+                      ) : (
+                        <LocalizedNumber value={reached} options={shareOptions} />
+                      )}{" "}
                       {ofTarget ?? <Localized ns="charts" name="ofTarget" />}
                     </>
                   )}

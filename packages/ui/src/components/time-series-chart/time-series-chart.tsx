@@ -104,7 +104,16 @@ export type TimeSeriesChartProps<Row> = Omit<ComponentProps<"figure">, "children
   pending?: boolean;
   /** What stands in the plot without any data. */
   empty?: ReactNode;
+  /**
+   * The chart's own words, for one chart worded without a `LocaleProvider`: what assistive
+   * tech calls the plot (`chart`), how its keyboard is explained after the name (`hint`) and
+   * the head of the table's first column (`time`). Each one left out is the provider's.
+   */
+  words?: Partial<TimeSeriesChartWords>;
 };
+
+/** The words a `TimeSeriesChart` says on its own (`words`). */
+export type TimeSeriesChartWords = { chart: string; hint: string; time: string };
 
 type Scrub = { index: number; shown: boolean; entry: number; touch: boolean; keyboard: boolean };
 
@@ -150,11 +159,18 @@ export function TimeSeriesChart<Row>({
   onActiveChange,
   pending = false,
   empty,
+  words: wordsProp,
   className,
   style,
   ...props
 }: TimeSeriesChartProps<Row>) {
   const { messages, tag } = useLocale();
+  const words: TimeSeriesChartWords = {
+    chart: messages.charts.chart,
+    hint: messages.charts.hintValues,
+    time: messages.charts.time,
+    ...wordsProp,
+  };
   // An id that may stand in `url(#…)`.
   const id = `chart${useId().replace(/[^\w-]/g, "")}`;
   const live = useLive();
@@ -388,8 +404,8 @@ export function TimeSeriesChart<Row>({
           data-live={live || undefined}
           data-scrubbing={active?.shown && active.touch ? "touch" : undefined}
           role="group"
-          aria-roledescription={messages.charts.chart}
-          aria-label={`${label}. ${messages.charts.hintValues}`}
+          aria-roledescription={words.chart}
+          aria-label={`${label}. ${words.hint}`}
           tabIndex={rows.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -610,7 +626,7 @@ export function TimeSeriesChart<Row>({
             <caption>{label}</caption>
             <thead>
               <tr>
-                <th scope="col">{messages.charts.time}</th>
+                <th scope="col">{words.time}</th>
                 {series.map((entry) => (
                   <th key={entry.key} scope="col">
                     {entry.label}

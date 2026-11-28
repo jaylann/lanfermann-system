@@ -256,8 +256,12 @@ const german = {
     latest: "Neueste",
   },
   attachment: {
-    /** One verb, said after the file's name. */
-    remove: "entfernen",
+    /**
+     * The name of the key that takes a file away. `said` is what a screen reader has read of
+     * the file before the verb since there was a key (its name, in a chip also its size or
+     * status), and German keeps it; a language that puts the verb first names the file alone.
+     */
+    remove: (name: string, said: string) => `${said} entfernen`,
     status: {
       uploading: "Wird hochgeladen",
       done: "Hochgeladen",
@@ -627,7 +631,7 @@ export const en: Messages = {
     latest: "Latest",
   },
   attachment: {
-    remove: "remove",
+    remove: (name) => `Remove ${name}`,
     status: {
       uploading: "Uploading",
       done: "Uploaded",
