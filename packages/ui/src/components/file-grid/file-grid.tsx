@@ -25,8 +25,10 @@ import {
 } from "@/internal/glide";
 import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { useLocale } from "@/locale/locale";
 
 import { FileGridContext } from "./file-grid-context";
+import { FileGridSkeleton } from "./file-grid-skeleton";
 import { fileGrid } from "./file-grid-variants";
 
 /** A grid scrolls nowhere, but it is a region of its own and needs a name. */
@@ -56,7 +58,15 @@ export type FileGridProps = Omit<ComponentProps<"div">, "aria-label" | "aria-lab
      */
     onColumnsChange?: (columns: number) => void;
     /** `FileGridSection`s, each holding its `FileTile`s. */
-    children: ReactNode;
+    children?: ReactNode;
+    /**
+     * The folder is still loading: the grid shows the shapes of its tiles instead, in the same
+     * columns (`FileGridSkeleton`). `true` says „Die Dateien werden geladen.“ to assistive tech;
+     * a string says something more exact („Die Dateien in badges werden geladen.“).
+     */
+    loading?: boolean | string;
+    /** How many rows of shapes a loading grid shows. */
+    loadingRows?: number;
   };
 
 /**
@@ -76,13 +86,28 @@ export type FileGridProps = Omit<ComponentProps<"div">, "aria-label" | "aria-lab
  * the keyboard come from `useSelection`: spread its container props on the grid. Name it with
  * `aria-label` („Dateien in blogs/building-gbar“).
  */
-export function FileGrid({
+export function FileGrid({ loading = false, loadingRows, ...props }: FileGridProps) {
+  const { messages } = useLocale();
+  if (loading !== false) {
+    return (
+      <FileGridSkeleton
+        size={props.size}
+        rows={loadingRows}
+        label={typeof loading === "string" ? loading : messages.fileGrid.loading}
+        className={props.className}
+      />
+    );
+  }
+  return <LoadedFileGrid {...props} />;
+}
+
+function LoadedFileGrid({
   size = "md",
   onColumnsChange,
   className,
   children,
   ...props
-}: FileGridProps) {
+}: Omit<FileGridProps, "loading" | "loadingRows">) {
   const box = useRef<HTMLDivElement>(null);
   const live = useLive();
   const [glide] = useState(() => new Glide(box));

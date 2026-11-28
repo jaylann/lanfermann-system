@@ -115,7 +115,7 @@ const SORTED = FILES.slice(0, 6).sort(byName);
  */
 export const Loading: Story = {
   parameters: { visual: { viewport: { width: 960, height: 520 } } },
-  render: () => <FileGridSkeleton label="Die Dateien werden geladen." />,
+  render: () => <FileGrid aria-label="Dateien in blogs/building-gbar" loading />,
 };
 
 /** On a phone the same two rows are two tiles wide. */

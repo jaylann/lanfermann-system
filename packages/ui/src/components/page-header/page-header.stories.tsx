@@ -5,7 +5,6 @@ import { AvatarGroup } from "@/components/avatar-group/avatar-group";
 import { Badge } from "@/components/badge/badge";
 import { Button } from "@/components/button/button";
 import { Icon } from "@/components/icon/icon";
-import { Skeleton, SkeletonGroup } from "@/components/skeleton/skeleton";
 
 import {
   PageHeader,
@@ -48,18 +47,15 @@ export const Default: Story = {
 };
 
 /**
- * The line under the title while its numbers load: the line stays a paragraph, and the group in
- * it is a `span` (`SkeletonGroup as="span"`), so it waits its fifth of a second like any other.
+ * The line under the title while its numbers load (`loading`, with the sentence that is read
+ * out): it stays a paragraph and holds its shape, which waits its fifth of a second like any
+ * other skeleton.
  */
 export const DescriptionLoading: Story = {
   render: () => (
     <PageHeader>
       <PageHeaderTitle>Angebote.</PageHeaderTitle>
-      <PageHeaderDescription>
-        <SkeletonGroup as="span" label="Die Zahl der Angebote wird geladen.">
-          <Skeleton className="w-80" />
-        </SkeletonGroup>
-      </PageHeaderDescription>
+      <PageHeaderDescription loading="Die Zahl der Angebote wird geladen." />
       <PageHeaderActions>
         <Button variant="primary">
           <Icon icon={Add01Icon} />

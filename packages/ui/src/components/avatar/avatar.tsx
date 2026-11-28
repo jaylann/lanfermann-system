@@ -4,7 +4,7 @@ import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { CSSProperties } from "react";
 
-import { type Presence } from "@/components/avatar-group/people";
+import { initialsOf, type Presence } from "@/components/avatar-group/people";
 import { AVATAR_GAP, avatarGeometry, cutMask } from "@/internal/avatar-cut";
 import { PresenceDot } from "@/internal/presence-dot";
 import { mergeClassName } from "@/lib/cn";
@@ -37,6 +37,13 @@ export type AvatarProps = AvatarPrimitive.Root.Props &
     presence?: Presence;
     /** The word assistive tech hears for the presence. „Online“, „Abwesend“, „Offline“. */
     presenceLabel?: string;
+    /**
+     * Whose avatar it is. Without children the avatar then shows the name's initials („Anna
+     * Weber“ gives „AW“, by the rule of `initialsOf`), so every place that shows one login
+     * derives them the same way. The name is not read out: it stands in the text beside the
+     * avatar; an avatar that stands alone takes an `aria-label`.
+     */
+    name?: string;
   };
 
 /**
@@ -44,7 +51,16 @@ export type AvatarProps = AvatarPrimitive.Root.Props &
  * two initials inside; the initials show until the picture has loaded, or if there is none.
  * Several people at once are an `AvatarGroup`.
  */
-export function Avatar({ className, size, presence, presenceLabel, style, ...props }: AvatarProps) {
+export function Avatar({
+  className,
+  size,
+  presence,
+  presenceLabel,
+  name,
+  children,
+  style,
+  ...props
+}: AvatarProps) {
   const { messages } = useLocale();
   const root = (cut?: string, cutRtl?: string) => {
     const vars = { "--avatar-cut": cut, "--avatar-cut-rtl": cutRtl } as CSSProperties;
@@ -61,7 +77,10 @@ export function Avatar({ className, size, presence, presenceLabel, style, ...pro
         }
         className={mergeClassName(avatarVariants({ size }), className)}
         {...props}
-      />
+      >
+        {children ??
+          (name === undefined ? null : <AvatarFallback>{initialsOf(name)}</AvatarFallback>)}
+      </AvatarPrimitive.Root>
     );
   };
   if (!presence) return root();

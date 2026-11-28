@@ -100,6 +100,9 @@ const german = {
     /** A preset's name, for `lastDays(7, …)`: the helper itself names it in German. */
     lastDays: (count: number) => `Letzte ${count} Tage`,
   },
+  fileGrid: {
+    loading: "Die Dateien werden geladen.",
+  },
   fileTile: {
     retry: "Noch einmal versuchen",
     folder: "Ordner",
@@ -472,6 +475,9 @@ export const en: Messages = {
     from: "From",
     to: "to",
     lastDays: (count) => `Last ${count} days`,
+  },
+  fileGrid: {
+    loading: "The files are loading.",
   },
   fileTile: {
     retry: "Try again",
