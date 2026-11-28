@@ -2,7 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, screen, waitFor } from "storybook/test";
 
+import { AnchorHeading } from "@/components/anchor-heading/anchor-heading";
+import { Attachment } from "@/components/attachment/attachment";
+import { BreadcrumbItem, BreadcrumbLink, Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
+import { Bullet } from "@/components/bullet/bullet";
 import { Button } from "@/components/button/button";
+import { Chip } from "@/components/chip/chip";
+import { CodeBlock } from "@/components/code-block/code-block";
 import { CopyButton } from "@/components/copy-button/copy-button";
 import {
   Dialog,
@@ -13,6 +19,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/dialog/dialog";
+import { FileThumbStack } from "@/components/file-thumb/file-thumb-stack";
+import { Funnel } from "@/components/funnel/funnel";
+import { Pager, PagerLink } from "@/components/pager/pager";
 import { Pagination } from "@/components/pagination/pagination";
 import { SearchField } from "@/components/search-field/search-field";
 import { Tracker, type TrackerItem } from "@/components/tracker/tracker";
@@ -254,6 +263,260 @@ export const GermanWithoutProvider: Story = {
       await waitFor(() =>
         expect(canvas.getByRole("button", { name: "Suche leeren" })).toBeVisible(),
       );
+    });
+  },
+};
+
+/** The words of the plain parts that are the caller's own. */
+type PlainCopy = {
+  docs: string;
+  guides: string;
+  section: string;
+  state: string;
+  before: string;
+  after: string;
+  goals: string;
+  goal: string;
+  flow: string;
+  written: string;
+  sent: string;
+  chipFile: string;
+  tileFile: string;
+  /** A file whose key was given a verb by the caller, which is said after its name. */
+  ownFile: string;
+  ownVerb: string;
+  stack: [string, string, string];
+};
+
+const plainEnglish: PlainCopy = {
+  docs: "Docs",
+  guides: "Guides",
+  section: "Sending a quote",
+  state: "Paid",
+  before: "Writing a quote",
+  after: "Reminders",
+  goals: "Goals in November",
+  goal: "Revenue in November",
+  flow: "Quotes in November",
+  written: "Quotes written",
+  sent: "Quotes sent",
+  chipFile: "report.pdf",
+  tileFile: "floor-plan.pdf",
+  ownFile: "invoice-0042.pdf",
+  ownVerb: "delete",
+  stack: ["quote.pdf", "invoice.pdf", "notes.txt"],
+};
+
+const plainGerman: PlainCopy = {
+  docs: "Doku",
+  guides: "Anleitungen",
+  section: "Ein Angebot senden",
+  state: "Bezahlt",
+  before: "Ein Angebot schreiben",
+  after: "Erinnerungen",
+  goals: "Ziele im November",
+  goal: "Umsatz im November",
+  flow: "Angebote im November",
+  written: "Angebote geschrieben",
+  sent: "Angebote gesendet",
+  chipFile: "Angebot-Kornprobst.pdf",
+  tileFile: "Grundriss.pdf",
+  ownFile: "Rechnung-0042.pdf",
+  ownVerb: "löschen",
+  stack: ["Angebot.pdf", "Rechnung.pdf", "Notizen.txt"],
+};
+
+const euros: Intl.NumberFormatOptions = {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+};
+
+/**
+ * The parts that are plain markup and may be drawn on the server: a heading with its link, a
+ * trail, a chip, the way on, a stack of files, a change in code, goals and a flow; and a file
+ * with its remove key. None was handed a label or a locale. Their default names are text of
+ * the table (an attribute could not follow the provider), and their figures are written by it.
+ */
+function PlainParts({ copy }: { copy: PlainCopy }) {
+  return (
+    <div className="flex max-w-2xl flex-col gap-6 p-8">
+      <Breadcrumbs>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="#docs">{copy.docs}</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="#guides">{copy.guides}</BreadcrumbLink>
+        </BreadcrumbItem>
+      </Breadcrumbs>
+      <AnchorHeading id="section">{copy.section}</AnchorHeading>
+      <div className="flex flex-wrap items-center gap-4">
+        <Chip onRemove={() => {}}>{copy.state}</Chip>
+        <Attachment variant="chip" name={copy.chipFile} size={248_000} onRemove={() => {}} />
+        <Attachment
+          variant="chip"
+          name={copy.ownFile}
+          size={248_000}
+          onRemove={() => {}}
+          removeLabel={copy.ownVerb}
+        />
+        <Attachment variant="tile" name={copy.tileFile} size={1_240_000} onRemove={() => {}} />
+        <FileThumbStack
+          files={copy.stack.map((name) => ({ name, kind: name.endsWith(".pdf") ? "pdf" : "file" }))}
+        />
+      </div>
+      <CodeBlock
+        language="ts"
+        code={"const rate = 0.19;\nconst rate = 0.07;\nexport { rate };"}
+        removed={1}
+        added={2}
+      />
+      <Bullet
+        aria-label={copy.goals}
+        format={euros}
+        data={[{ name: copy.goal, value: 38_400, target: 50_000 }]}
+      />
+      <Funnel
+        aria-label={copy.flow}
+        data={[
+          { name: copy.written, value: 1240 },
+          { name: copy.sent, value: 1054 },
+        ]}
+      />
+      <Pager>
+        <PagerLink direction="previous" href="#before" title={copy.before} />
+        <PagerLink direction="next" href="#after" title={copy.after} />
+      </Pager>
+    </div>
+  );
+}
+
+/** What a changed line's sign is read out as: the second half of the generated content. */
+function signWord(canvasElement: HTMLElement, kind: "added" | "removed"): string {
+  const line = canvasElement.querySelector(`[data-slot="code-block-line"][data-kind="${kind}"]`);
+  return line ? getComputedStyle(line, "::after").content : "";
+}
+
+/**
+ * The plain parts in English: the way on says "Previous page" and "Next page", the goals read
+ * "€38,400 of €50,000 · 77% of target" and the flow counts "1,240". What only assistive tech
+ * hears (the names of the trail, the keys and the stack) is checked in the test below.
+ */
+export const EnglishPlain: Story = {
+  parameters: { visual: { viewport: { width: 860, height: 720 } } },
+  render: () => (
+    <LocaleProvider locale="en">
+      <PlainParts copy={plainEnglish} />
+    </LocaleProvider>
+  ),
+};
+
+/**
+ * The plain parts under `locale="en"`, as a test: each names itself in English and writes its
+ * figures the American way, though none of them reads the provider itself.
+ */
+export const EnglishPlainParts: Story = {
+  ...EnglishPlain,
+  play: async ({ canvas, canvasElement, step }) => {
+    await step("the trail, the way on and their links are named in English", async () => {
+      await expect(canvas.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+      const pager = canvas.getByRole("navigation", { name: "More pages" });
+      await expect(pager).toBeVisible();
+      await expect(
+        canvas.getByRole("link", { name: "Previous page Writing a quote" }),
+      ).toBeVisible();
+      await expect(canvas.getByRole("link", { name: "Next page Reminders" })).toBeVisible();
+    });
+
+    await step("the heading's link is called Link to this section", async () => {
+      await expect(canvas.getByRole("link", { name: "Link to this section" })).toHaveAttribute(
+        "href",
+        "#section",
+      );
+    });
+
+    await step("the keys that take something away say what", async () => {
+      await expect(canvas.getByRole("button", { name: "Paid Remove" })).toBeVisible();
+      await expect(canvas.getByRole("button", { name: "Remove report.pdf" })).toBeVisible();
+      await expect(canvas.getByRole("button", { name: "Remove floor-plan.pdf" })).toBeVisible();
+      // A verb of the caller's keeps its place after what the chip says.
+      await expect(
+        canvas.getByRole("button", { name: "invoice-0042.pdf 248 KB delete" }),
+      ).toBeVisible();
+      await expect(canvas.queryByRole("button", { name: /entfernen/i })).toBeNull();
+    });
+
+    await step("the stack counts its files in English", async () => {
+      await expect(canvas.getByRole("img", { name: "3 files" })).toBeVisible();
+    });
+
+    await step("a changed line's sign is read as added or removed", async () => {
+      await expect(signWord(canvasElement, "added")).toContain('"added"');
+      await expect(signWord(canvasElement, "removed")).toContain('"removed"');
+    });
+
+    await step("the goals and the flow write their figures the American way", async () => {
+      const goals = canvas.getByRole("list", { name: "Goals in November" });
+      await expect(goals).toHaveTextContent("€38,400 of €50,000 · 77% of target");
+      const flow = canvas.getByRole("list", { name: "Quotes in November" });
+      await expect(flow).toHaveTextContent("1,240");
+      await expect(flow).toHaveTextContent("85% of the previous step");
+    });
+  },
+};
+
+/**
+ * The same plain parts without a provider, as a test: named and written in German, word for
+ * word as before they followed a locale.
+ */
+export const GermanPlainParts: Story = {
+  parameters: { visual: { viewport: { width: 860, height: 720 } } },
+  render: () => <PlainParts copy={plainGerman} />,
+  play: async ({ canvas, canvasElement, step }) => {
+    await step("the trail, the way on and their links are named in German", async () => {
+      await expect(canvas.getByRole("navigation", { name: "Pfad" })).toBeVisible();
+      await expect(canvas.getByRole("navigation", { name: "Weitere Seiten" })).toBeVisible();
+      await expect(
+        canvas.getByRole("link", { name: "Vorherige Seite Ein Angebot schreiben" }),
+      ).toBeVisible();
+      await expect(canvas.getByRole("link", { name: "Nächste Seite Erinnerungen" })).toBeVisible();
+    });
+
+    await step("the heading's link is called Link zu diesem Abschnitt", async () => {
+      await expect(canvas.getByRole("link", { name: "Link zu diesem Abschnitt" })).toHaveAttribute(
+        "href",
+        "#section",
+      );
+    });
+
+    await step("the keys that take something away say the name, then the verb", async () => {
+      await expect(canvas.getByRole("button", { name: "Bezahlt Entfernen" })).toBeVisible();
+      await expect(
+        canvas.getByRole("button", { name: "Angebot-Kornprobst.pdf 248 KB entfernen" }),
+      ).toBeVisible();
+      // The table's sentence reads as a verb of the caller's does, which is how the name was
+      // put together before: what the chip says, then the verb.
+      await expect(
+        canvas.getByRole("button", { name: "Rechnung-0042.pdf 248 KB löschen" }),
+      ).toBeVisible();
+      await expect(canvas.getByRole("button", { name: "Grundriss.pdf entfernen" })).toBeVisible();
+    });
+
+    await step("the stack counts its files in German", async () => {
+      await expect(canvas.getByRole("img", { name: "3 Dateien" })).toBeVisible();
+    });
+
+    await step("a changed line's sign is read as hinzugefügt or entfernt", async () => {
+      await expect(signWord(canvasElement, "added")).toContain('"hinzugefügt"');
+      await expect(signWord(canvasElement, "removed")).toContain('"entfernt"');
+    });
+
+    await step("the goals and the flow write their figures the German way", async () => {
+      const goals = canvas.getByRole("list", { name: "Ziele im November" });
+      await expect(goals).toHaveTextContent("38.400 € von 50.000 € · 77 % vom Ziel");
+      const flow = canvas.getByRole("list", { name: "Angebote im November" });
+      await expect(flow).toHaveTextContent("1.240");
+      await expect(flow).toHaveTextContent("85 % vom Schritt davor");
     });
   },
 };
