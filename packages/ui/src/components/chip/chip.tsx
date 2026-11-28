@@ -32,6 +32,11 @@ export type ChipProps = Omit<ComponentProps<"span">, "children"> & {
    * („Entfernen“ without one).
    */
   removeLabel?: string;
+  /**
+   * The whole name of that key, for a sentence in which the verb does not come last ("Remove
+   * report.pdf"). It replaces the chip's text and `removeLabel` in the name.
+   */
+  removeName?: string;
   /** It cannot be taken away right now, and lies flat. */
   disabled?: boolean;
   /**
@@ -71,6 +76,7 @@ export function Chip({
   lead,
   onRemove,
   removeLabel,
+  removeName,
   disabled = false,
   variant = "plug",
   className,
@@ -105,11 +111,15 @@ export function Chip({
           type="button"
           id={removeId}
           data-slot="chip-remove"
-          aria-label={removeLabel}
+          aria-label={removeName ?? removeLabel}
           // The chip's text, then the verb: "Bezahlt entfernen". The verb is the caller's
           // label, or the table's word in a hidden element (an attribute cannot follow the
-          // provider from a server file).
-          aria-labelledby={`${labelId} ${removeLabel === undefined ? wordId : removeId}`}
+          // provider from a server file). A whole name of the caller's stands alone.
+          aria-labelledby={
+            removeName === undefined
+              ? `${labelId} ${removeLabel === undefined ? wordId : removeId}`
+              : undefined
+          }
           onClick={(event) => {
             // The key is about to go: hand the focus to the chip beside this one, so the
             // keyboard stays in the row.
@@ -120,7 +130,7 @@ export function Chip({
           }}
           className={chipRemoveKey}
         >
-          {removeLabel === undefined && (
+          {removeLabel === undefined && removeName === undefined && (
             <span id={wordId} hidden>
               <Localized ns="chip" name="remove" />
             </span>

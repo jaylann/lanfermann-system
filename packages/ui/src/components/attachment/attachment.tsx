@@ -39,7 +39,11 @@ export type AttachmentProps = Omit<ComponentProps<"div">, "children"> & {
   error?: string;
   /** With it there is a key that takes the file away again. */
   onRemove?: () => void;
-  /** What the key that takes it away is called, as one verb after the file's name. */
+  /**
+   * What the key that takes it away is called, as one verb after the file's name. Left out,
+   * the key is named by the sentence of the nearest `LocaleProvider`: „Angebot.pdf entfernen“,
+   * "Remove report.pdf".
+   */
   removeLabel?: string;
   /** Where the file can be opened: the tile becomes a link to it. */
   href?: string;
@@ -82,7 +86,7 @@ export function Attachment({
   status = "done",
   error,
   onRemove,
-  removeLabel: removeLabelProp,
+  removeLabel,
   href,
   variant: variantProp,
   chipVariant = "plug",
@@ -95,10 +99,12 @@ export function Attachment({
   const placed = useContext(AttachmentVariantContext);
   const variant = variantProp ?? placed;
   const labels = { ...messages.attachment.status, ...statusLabels };
-  const removeLabel = removeLabelProp ?? messages.attachment.remove;
   const kind = kindOf({ name, type });
   const picture = kind === "image" && src !== undefined;
   const sizeWord = size === undefined ? undefined : formatFileSize(size, locale ?? tag);
+  /** The remove key's whole name where the caller gave no verb; `said` is what stands before it. */
+  const removeName = (said: string) =>
+    removeLabel === undefined ? messages.attachment.remove(name, said) : undefined;
 
   /** In front: the arc on the way, the danger symbol after a failure, else the kind. */
   const mark = (small: boolean) =>
@@ -125,6 +131,19 @@ export function Attachment({
         title={name}
         onRemove={onRemove}
         removeLabel={removeLabel}
+        // A chip says its size or its status after the name.
+        removeName={removeName(
+          [
+            name,
+            status === "error"
+              ? labels.error
+              : status === "uploading"
+                ? labels.uploading
+                : sizeWord,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        )}
         className={cn("max-w-64", className)}
         lead={
           <span
@@ -164,6 +183,7 @@ export function Attachment({
       href={href}
       onRemove={onRemove}
       removeLabel={removeLabel}
+      removeName={removeName(name)}
       status={status}
       className={className}
       mark={mark(false)}
@@ -188,7 +208,9 @@ type TileProps = Omit<ComponentProps<"div">, "children"> & {
   picture?: string;
   href?: string;
   onRemove?: () => void;
-  removeLabel: string;
+  /** The caller's verb, said after the name; or the key's whole name from the table. */
+  removeLabel: string | undefined;
+  removeName: string | undefined;
   status: AttachmentStatus;
   mark: ReactNode;
   meta: ReactNode;
@@ -201,6 +223,7 @@ function AttachmentTile({
   href,
   onRemove,
   removeLabel,
+  removeName,
   status,
   mark,
   meta,
@@ -215,8 +238,8 @@ function AttachmentTile({
       type="button"
       id={removeId}
       data-slot="attachment-remove"
-      aria-label={removeLabel}
-      aria-labelledby={`${nameId} ${removeId}`}
+      aria-label={removeName ?? removeLabel}
+      aria-labelledby={removeName === undefined ? `${nameId} ${removeId}` : undefined}
       onClick={onRemove}
       className={cn(
         chipRemoveKey,
