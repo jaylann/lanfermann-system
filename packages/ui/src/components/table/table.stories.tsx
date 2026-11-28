@@ -329,6 +329,38 @@ export const SortLinksKeyboard: Story = {
   },
 };
 
+/** As a test: `render` hands the look and the arrow to a router's own link element. */
+export const SortRendered: Story = {
+  render: () => (
+    <Table aria-label="Angebote">
+      <TableHeader>
+        <TableRow>
+          <TableHead sort="ascending">
+            <TableSortButton
+              direction="ascending"
+              render={<a href="?sort=customer&dir=desc" data-router-link="" />}
+            >
+              Kunde
+            </TableSortButton>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell>Bäckerei Kornprobst</TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  ),
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole("link", { name: "Kunde" });
+    await expect(link).toHaveAttribute("data-router-link");
+    await expect(link).toHaveAttribute("data-slot", "table-sort-button");
+    await expect(link).not.toHaveAttribute("type");
+    await expect(link.querySelector("svg")).not.toBeNull();
+  },
+};
+
 const LINES = [
   { item: "Website, sechs Seiten", quantity: 1, unit: "pauschal", price: 2400 },
   { item: "Google-Unternehmensprofil", quantity: 1, unit: "pauschal", price: 380 },

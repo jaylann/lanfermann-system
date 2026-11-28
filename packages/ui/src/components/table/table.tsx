@@ -1,7 +1,9 @@
+import type { useRender } from "@base-ui/react/use-render";
 import type { ComponentProps } from "react";
 
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
 import { ArrowUpGlyph } from "@/internal/glyphs";
+import { renderAs } from "@/internal/render-as";
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
 
@@ -346,6 +348,11 @@ export function TableCell({
 type TableSortShared = {
   /** The current direction, if the table is sorted by this column. */
   direction?: "ascending" | "descending";
+  /**
+   * The element to be the heading instead: a router's link component, which then gets the look,
+   * the arrow and the words (`render={<NextLink href="?sort=name" />}`).
+   */
+  render?: useRender.RenderProp;
 };
 
 export type TableSortButtonProps = TableSortShared &
@@ -373,46 +380,34 @@ const sortButton = [
  * yourself, and put the same direction on the `TableHead` as `sort`.
  *
  * With `href` it is a link of the same look, for a table whose order is part of the address, as
- * `Pagination` does for its pages.
+ * `Pagination` does for its pages; with `render` it is a router's own link.
  */
 export function TableSortButton({
   className,
   direction,
+  render,
   children,
   ...props
 }: TableSortButtonProps) {
-  const arrow = (
-    <ArrowUpGlyph
-      className={cn(
-        "transition-[rotate,opacity] spring-seat",
-        direction ? "opacity-100" : "opacity-0 group-hover/sort:opacity-50",
-        direction === "descending" && "rotate-180",
-      )}
-    />
-  );
-  if (props.href !== undefined) {
-    return (
-      <a
-        data-slot="table-sort-button"
-        data-direction={direction}
-        className={cn(sortButton, className)}
-        {...props}
-      >
+  const link = props.href !== undefined;
+  return renderAs(link ? "a" : "button", render, {
+    // A rendered element says itself what it is; a plain button must not submit a form.
+    ...(link || render ? undefined : { type: "button" }),
+    ...props,
+    "data-slot": "table-sort-button",
+    "data-direction": direction,
+    className: cn(sortButton, className),
+    children: (
+      <>
         {children}
-        {arrow}
-      </a>
-    );
-  }
-  return (
-    <button
-      type="button"
-      data-slot="table-sort-button"
-      data-direction={direction}
-      className={cn(sortButton, className)}
-      {...props}
-    >
-      {children}
-      {arrow}
-    </button>
-  );
+        <ArrowUpGlyph
+          className={cn(
+            "transition-[rotate,opacity] spring-seat",
+            direction ? "opacity-100" : "opacity-0 group-hover/sort:opacity-50",
+            direction === "descending" && "rotate-180",
+          )}
+        />
+      </>
+    ),
+  });
 }
