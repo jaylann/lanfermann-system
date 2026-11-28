@@ -658,6 +658,12 @@ export {
   StatValue,
 } from "./components/stat/stat";
 export {
+  StatTab,
+  type StatTabProps,
+  StatTabsList,
+  type StatTabsListProps,
+} from "./components/stat/stat-tabs";
+export {
   Step,
   type StepProps,
   Steps,
