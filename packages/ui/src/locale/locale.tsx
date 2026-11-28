@@ -18,7 +18,8 @@ const values: Record<Locale, LocaleValue> = {
   en: { locale: "en", tag: localeTags.en, messages: en },
 };
 
-const LocaleContext = createContext<Locale>("de");
+// `null` is "no provider": the words are German then, but what sorts stays the machine's.
+const LocaleContext = createContext<Locale | null>(null);
 
 export type LocaleProviderProps = {
   /** The language every component below speaks where it was given no label of its own. */
@@ -39,5 +40,16 @@ export function LocaleProvider({ locale, children }: LocaleProviderProps) {
 
 /** The language set by the nearest `LocaleProvider`, German without one. */
 export function useLocale(): LocaleValue {
-  return values[useContext(LocaleContext)];
+  return values[useContext(LocaleContext) ?? "de"];
+}
+
+/**
+ * The tag of the nearest `LocaleProvider`, and `undefined` without one. For what a component
+ * left to the machine before there was a provider (the collation of a `Combobox` and a
+ * `Command`): under a provider it follows the page's language, without one nothing changes.
+ * Internal.
+ */
+export function useProvidedTag(): string | undefined {
+  const locale = useContext(LocaleContext);
+  return locale === null ? undefined : localeTags[locale];
 }

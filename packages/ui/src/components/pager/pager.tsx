@@ -1,5 +1,5 @@
 import type { useRender } from "@base-ui/react/use-render";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useId } from "react";
 
 import { ActionArrow } from "@/internal/arrow";
 import { renderAs } from "@/internal/render-as";
@@ -7,7 +7,10 @@ import { cn } from "@/lib/cn";
 import { Localized } from "@/locale/localized";
 
 export type PagerProps = ComponentProps<"nav"> & {
-  /** The name of the navigation for assistive tech. */
+  /**
+   * The name of the navigation for assistive tech. Left out, it is the word of the nearest
+   * `LocaleProvider` („Weitere Seiten“ without one).
+   */
   label?: string;
 };
 
@@ -16,14 +19,28 @@ export type PagerProps = ComponentProps<"nav"> & {
  * each named by its title. Put a `PagerLink` with `direction="previous"` and one with `"next"`;
  * at either end of the sequence leave that one out, and the other keeps its side.
  */
-export function Pager({ label = "Weitere Seiten", className, children, ...props }: PagerProps) {
+export function Pager({ label, className, children, ...props }: PagerProps) {
+  const wordId = useId();
+  // Named by the caller (`label`, or an attribute of its own): nothing is added.
+  const named =
+    label !== undefined ||
+    props["aria-label"] !== undefined ||
+    props["aria-labelledby"] !== undefined;
   return (
     <nav
       data-slot="pager"
       aria-label={label}
+      aria-labelledby={named ? undefined : wordId}
       className={cn("grid gap-3 border-t border-hairline pt-6 sm:grid-cols-2 sm:gap-6", className)}
       {...props}
     >
+      {/* The table's word, hidden, as the navigation's name: an attribute cannot follow the
+          provider from a server file, a text can. */}
+      {!named && (
+        <span id={wordId} hidden>
+          <Localized ns="pager" name="label" />
+        </span>
+      )}
       {children}
     </nav>
   );

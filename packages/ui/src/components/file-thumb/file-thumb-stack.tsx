@@ -1,4 +1,4 @@
-import type { ComponentProps, CSSProperties } from "react";
+import { type ComponentProps, type CSSProperties, useId } from "react";
 
 import { mayBeTransparent } from "@/components/attachment/kinds";
 import {
@@ -6,6 +6,7 @@ import {
   type FileSymbolKind,
 } from "@/components/file-kind-symbol/file-kind-symbol";
 import { cn } from "@/lib/cn";
+import { LocalizedSentence } from "@/locale/localized";
 
 import { FileThumbPicture } from "./file-thumb-picture";
 
@@ -32,7 +33,10 @@ export type FileThumbStackProps = Omit<ComponentProps<"span">, "children"> & {
    * the other, the lower ones showing at two edges.
    */
   look?: "fan" | "row" | "pile";
-  /** What the stack is for assistive tech: „4 Dateien“. */
+  /**
+   * What the stack is for assistive tech: „4 Dateien“. Left out, it is the sentence of the
+   * nearest `LocaleProvider` (German without one).
+   */
   countLabel?: (count: number) => string;
 };
 
@@ -59,18 +63,25 @@ export function FileThumbStack({
   files,
   max = 4,
   look = "fan",
-  countLabel = (count) => (count === 1 ? "1 Datei" : `${count} Dateien`),
+  countLabel,
   className,
   ...props
 }: FileThumbStackProps) {
   const shown = files.slice(0, max);
   const more = files.length - shown.length;
+  const wordId = useId();
+  // Named by the caller (`countLabel`, or an attribute of its own): nothing is added.
+  const named =
+    countLabel !== undefined ||
+    props["aria-label"] !== undefined ||
+    props["aria-labelledby"] !== undefined;
   return (
     <span
       data-slot="file-thumb-stack"
       data-look={look}
       role="img"
-      aria-label={countLabel(files.length)}
+      aria-label={countLabel?.(files.length)}
+      aria-labelledby={named ? undefined : wordId}
       className={cn("relative isolate inline-flex shrink-0 items-center", className)}
       {...props}
     >
@@ -124,6 +135,13 @@ export function FileThumbStack({
           className="absolute -right-2 -bottom-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-raised depth-plug px-1.5 text-xs font-medium text-fg tabular-nums"
         >
           +{more}
+        </span>
+      )}
+      {/* The table's sentence, hidden, as the picture's name: an attribute cannot follow the
+          provider from a server file, a text can. Last, so the cards keep their places. */}
+      {!named && (
+        <span id={wordId} hidden>
+          <LocalizedSentence ns="fileThumbStack" name="count" args={[files.length]} />
         </span>
       )}
     </span>

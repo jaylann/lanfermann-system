@@ -1,12 +1,16 @@
 import type { useRender } from "@base-ui/react/use-render";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useId } from "react";
 
 import { ChevronRightGlyph } from "@/internal/glyphs";
 import { renderAs } from "@/internal/render-as";
 import { cn } from "@/lib/cn";
+import { Localized } from "@/locale/localized";
 
 export type BreadcrumbsProps = ComponentProps<"nav"> & {
-  /** The name of the trail for assistive tech. */
+  /**
+   * The name of the trail for assistive tech. Left out, it is the word of the nearest
+   * `LocaleProvider` („Pfad“ without one).
+   */
   label?: string;
 };
 
@@ -19,9 +23,28 @@ export type BreadcrumbsProps = ComponentProps<"nav"> & {
  * for a group that is none. The page itself may end the trail as `BreadcrumbPage`; leave it out
  * when its title follows right below.
  */
-export function Breadcrumbs({ label = "Pfad", className, children, ...props }: BreadcrumbsProps) {
+export function Breadcrumbs({ label, className, children, ...props }: BreadcrumbsProps) {
+  const wordId = useId();
+  // Named by the caller (`label`, or an attribute of its own): nothing is added.
+  const named =
+    label !== undefined ||
+    props["aria-label"] !== undefined ||
+    props["aria-labelledby"] !== undefined;
   return (
-    <nav data-slot="breadcrumbs" aria-label={label} className={className} {...props}>
+    <nav
+      data-slot="breadcrumbs"
+      aria-label={label}
+      aria-labelledby={named ? undefined : wordId}
+      className={className}
+      {...props}
+    >
+      {/* The table's word, hidden, as the trail's name: an attribute cannot follow the
+          provider from a server file, a text can. */}
+      {!named && (
+        <span id={wordId} hidden>
+          <Localized ns="breadcrumbs" name="label" />
+        </span>
+      )}
       <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-fg-muted">
         {children}
       </ol>
