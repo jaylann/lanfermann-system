@@ -246,6 +246,46 @@ export const Keyboard: Story = {
         expect(canvas.queryByText(/Bitte geben Sie ein Datum ein/)).not.toBeInTheDocument(),
       );
     });
+
+    const button = canvas.getByRole("button", { name: "Kalender öffnen" });
+
+    await step("Opened from the keyboard, the sheet starts on the chosen day", async () => {
+      await waitFor(() => expect(button).toHaveFocus());
+      await userEvent.keyboard("{Enter}");
+      const sheet = await screen.findByRole("dialog", { name: "Datum wählen" });
+      await waitFor(() =>
+        expect(within(sheet).getByRole("button", { name: /, 20\. November 2026/ })).toHaveFocus(),
+      );
+    });
+
+    await step("The arrows walk on into the next month, and the next year", async () => {
+      const sheet = screen.getByRole("dialog", { name: "Datum wählen" });
+      await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+      await waitFor(() =>
+        expect(within(sheet).getByRole("button", { name: /, 4\. Dezember 2026/ })).toHaveFocus(),
+      );
+      await userEvent.keyboard("{PageDown}");
+      await waitFor(() =>
+        expect(within(sheet).getByRole("button", { name: /, 4\. Januar 2027/ })).toHaveFocus(),
+      );
+    });
+
+    await step("Enter takes the day and the focus is back on the button", async () => {
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await expect(input).toHaveValue("04.01.2027");
+      await expect(value).toHaveTextContent("2027-01-04");
+      await waitFor(() => expect(button).toHaveFocus());
+    });
+
+    await step("Escape leaves the sheet without a change", async () => {
+      await userEvent.keyboard("{Enter}");
+      await screen.findByRole("dialog", { name: "Datum wählen" });
+      await userEvent.keyboard("{ArrowRight}{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await expect(value).toHaveTextContent("2027-01-04");
+      await waitFor(() => expect(button).toHaveFocus());
+    });
   },
 };
 
@@ -365,6 +405,12 @@ export const InForm: Story = {
       await userEvent.type(input, "1.12.");
       await userEvent.click(submit);
       await expect(sent).toHaveTextContent('{"gueltig":"2026-12-01"}');
+    });
+
+    await step("Enter in the field submits what was just typed, already read", async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "2.12.{Enter}");
+      await waitFor(() => expect(sent).toHaveTextContent('{"gueltig":"2026-12-02"}'));
     });
   },
 };

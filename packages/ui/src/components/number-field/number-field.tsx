@@ -59,6 +59,8 @@ export function NumberFieldInput({ className, ...props }: NumberFieldPrimitive.I
     <NumberFieldPrimitive.Input
       data-slot="number-field-input"
       data-field-control=""
+      // What a screen reader says the field is. Base UI's own word is English ("Number field").
+      aria-roledescription="Zahlenfeld"
       className={mergeClassName(
         [
           bareControl,

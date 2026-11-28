@@ -178,7 +178,9 @@ function Board() {
                     />
                   </Field>
                   <Field name="role">
-                    <FieldLabel>Rolle</FieldLabel>
+                    <FieldLabel nativeLabel={false} render={<div />}>
+                      Rolle
+                    </FieldLabel>
                     <Select items={ROLES} name="role" defaultValue="mitarbeit">
                       <SelectTrigger className="w-full" />
                       <SelectContent>

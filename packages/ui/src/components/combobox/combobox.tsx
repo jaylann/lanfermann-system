@@ -176,8 +176,12 @@ export function Combobox<Value, Multiple extends boolean | undefined = false, It
         }}
         onValueChange={changed}
         onOpenChange={(open, details) => {
-          // Several values are taken in a row: a choice does not close the list.
-          if (multiple && !open && details.reason === "item-press") details.cancel();
+          // Several values are taken in a row: a choice does not close the list. The caller is
+          // not told of a close that does not happen, or one that holds `open` would close it.
+          if (multiple && !open && details.reason === "item-press") {
+            details.cancel();
+            return;
+          }
           onOpenChange?.(open, details);
         }}
         {...props}
@@ -237,7 +241,7 @@ export function ComboboxInput({
           innerButton,
           // It arrives with the first choice and leaves by fading, like every exit. A disabled
           // field has nothing to take back.
-          "transition-[opacity,scale] spring-snap data-disabled:hidden data-starting-style:scale-75 data-starting-style:opacity-0",
+          "transition-[opacity,scale] spring-snap data-disabled:hidden data-starting-style:scale-75 data-starting-style:opacity-0 motion-reduce:data-starting-style:scale-100",
           "data-ending-style:opacity-0 data-ending-style:spring-leave",
         )}
       >
@@ -454,7 +458,7 @@ export function ComboboxChips({
         aria-label={clearLabel}
         className={cn(
           innerButton,
-          "mt-1 transition-[opacity,scale] spring-snap data-disabled:hidden data-starting-style:scale-75 data-starting-style:opacity-0",
+          "mt-1 transition-[opacity,scale] spring-snap data-disabled:hidden data-starting-style:scale-75 data-starting-style:opacity-0 motion-reduce:data-starting-style:scale-100",
           "data-ending-style:opacity-0 data-ending-style:spring-leave",
         )}
       >
@@ -604,7 +608,9 @@ export function ComboboxItem({
 }
 
 /** A group of rows. Pass the group's `items`, then a `ComboboxGroupLabel` and a `ComboboxCollection`. */
-export const ComboboxGroup = ComboboxPrimitive.Group;
+export function ComboboxGroup(props: ComboboxPrimitive.Group.Props) {
+  return <ComboboxPrimitive.Group data-slot="combobox-group" {...props} />;
+}
 
 /** Renders the rows of the `ComboboxGroup` it stands in: a function of each item. */
 export const ComboboxCollection = ComboboxPrimitive.Collection;

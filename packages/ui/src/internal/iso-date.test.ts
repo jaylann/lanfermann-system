@@ -120,6 +120,11 @@ describe("a date with a time", () => {
     for (const value of ["", "2026-11-31T09:30", "2026-11-14T24:00", "09:30", undefined]) {
       expect(splitIsoMoment(value), String(value)).toBeUndefined();
     }
+    // A "T" with no time after it, or with more than a time: not a moment, and not passed on.
+    for (const value of ["2026-11-14T", "2026-11-14T09:30T10:00", "2026-11-14T09:30T"]) {
+      expect(splitIsoMoment(value), value).toBeUndefined();
+    }
+    expect(parseIsoInterval("2026-11-14T/2026-11-30")).toEqual({ from: "", to: "" });
     expect(formatGermanMoment("2026-11-14T09:30")).toBe("14.11.2026, 09:30");
     expect(formatGermanMoment("2026-11-14")).toBe("14.11.2026");
     expect(formatGermanMoment("morgen")).toBe("");

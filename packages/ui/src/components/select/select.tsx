@@ -50,6 +50,9 @@ type Options = ReadonlyArray<SelectOption<unknown>>;
 // Lets the trigger and the items look up an option's icon without it being passed twice.
 const OptionsContext = createContext<Options | undefined>(undefined);
 
+/** Whether several options can be chosen: their rows then carry the tick, not the disc. */
+const MultipleContext = createContext(false);
+
 function isGroup(item: object): item is SelectOptionGroup<unknown> {
   return "items" in item && Array.isArray(item.items);
 }
@@ -88,7 +91,9 @@ export function Select<Value, Multiple extends boolean | undefined = false>({
   const options = useMemo(() => flattenOptions(items), [items]);
   return (
     <OptionsContext value={options}>
-      <SelectPrimitive.Root items={items} {...props} />
+      <MultipleContext value={props.multiple === true}>
+        <SelectPrimitive.Root items={items} {...props} />
+      </MultipleContext>
     </OptionsContext>
   );
 }
@@ -107,7 +112,8 @@ function renderValue(
   placeholder: ReactNode,
   size: keyof typeof iconSize,
 ) {
-  if (value === null || value === undefined) {
+  // Nothing chosen. Where several can be, that is an empty list, not `null`.
+  if (value === null || value === undefined || (Array.isArray(value) && value.length === 0)) {
     return <span className="text-fg-muted italic">{placeholder}</span>;
   }
   const find = (candidate: unknown) => options.find((option) => Object.is(option.value, candidate));
@@ -139,7 +145,7 @@ const selectTriggerVariants = cva(
   [
     // A fitting, not a socket: it is pressed, so it is raised like a button. The value inside is
     // set like typed text (regular weight, left-aligned).
-    "inline-flex min-w-40 shrink-0 items-center justify-between gap-2 bg-raised depth-raised text-left text-fg select-none",
+    "touch-target relative inline-flex min-w-40 shrink-0 items-center justify-between gap-2 bg-raised depth-raised text-left text-fg select-none",
     "transition-[box-shadow,background-color,scale] spring-seat",
     "hover:depth-raised-hover hover:spring-snap active:bg-raised-pressed active:depth-pressed active:spring-snap",
     "data-popup-open:bg-raised-pressed data-popup-open:depth-pressed",
@@ -168,7 +174,9 @@ export type SelectTriggerProps = Omit<SelectPrimitive.Trigger.Props, "children">
   };
 
 /**
- * Shows the chosen value and opens the list. Give it a name: a `FieldLabel` or `aria-label`.
+ * Shows the chosen value and opens the list. Give it a name: an `aria-label`, or a `FieldLabel`
+ * that is no native label (`<FieldLabel nativeLabel={false} render={<div />}>`, as Base UI asks
+ * for a select: its trigger is a button, not an input).
  * Inside a `ButtonGroup` it is one key of the group's fitting and takes the group's size.
  */
 export function SelectTrigger({
@@ -281,11 +289,12 @@ export type SelectItemProps = SelectPrimitive.Item.Props & {
 /**
  * One option. Its label starts at the row's left edge, where the group's label does. An icon,
  * if the option has one, stands before the label; a detail stands at the right edge. Both are
- * muted. The chosen one carries the disc at the right end; where the options have a detail, it
- * stands on the tint instead (`listTint`).
+ * muted. The chosen one carries the disc at the right end (the tick where several can be chosen);
+ * where the options have a detail, it stands on the tint instead (`listTint`).
  */
 export function SelectItem({ className, children, icon, detail, ...props }: SelectItemProps) {
   const options = useContext(OptionsContext);
+  const multiple = useContext(MultipleContext);
   const option = options?.find((candidate) => Object.is(candidate.value, props.value));
   const resolvedIcon = icon ?? option?.icon;
   const resolvedDetail = detail ?? option?.detail;
@@ -307,12 +316,14 @@ export function SelectItem({ className, children, icon, detail, ...props }: Sele
           {resolvedDetail}
         </span>
       )}
-      {!tinted && <ListMark className="ml-auto" />}
+      {!tinted && <ListMark kind={multiple ? "multiple" : "single"} className="ml-auto" />}
     </SelectPrimitive.Item>
   );
 }
 
-export const SelectGroup = SelectPrimitive.Group;
+export function SelectGroup(props: SelectPrimitive.Group.Props) {
+  return <SelectPrimitive.Group data-slot="select-group" {...props} />;
+}
 
 export function SelectGroupLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) {
   return (

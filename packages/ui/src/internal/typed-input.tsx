@@ -36,7 +36,8 @@ export type TypedInputProps = Omit<
  *   `onFormSubmit` (it looks for `data-form-value`), where Base UI would report the text.
  *
  * It is the `Field`'s control like any `Input`: label, description and focus on an invalid
- * submit all work as usual.
+ * submit all work as usual. One thing differs: a `validate` on that `Field` is handed what the
+ * control holds, which is the text as shown ("14.11.2026"), not the value.
  */
 export function TypedInput({
   text,
@@ -120,6 +121,8 @@ export function TypedInput({
             name={name}
             value={formValue}
             disabled={visible.disabled}
+            // A field that stands outside its form names it; the value has to go there too.
+            form={visible.form}
           />
         </>
       )}

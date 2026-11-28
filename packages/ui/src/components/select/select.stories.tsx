@@ -275,3 +275,55 @@ export const Keyboard: Story = {
     });
   },
 };
+
+/**
+ * As a test, with several to choose: nothing chosen shows the placeholder, also where the options
+ * carry icons; the list stays open after a choice; and a chosen row carries the tick of what is
+ * on or off, not the disc of one choice.
+ */
+export const KeyboardMultiple: Story = {
+  render: () => (
+    <Field className="w-64">
+      <FieldLabel nativeLabel={false} render={<div />}>
+        Gewerke
+      </FieldLabel>
+      <Select multiple items={TRADES_WITH_ICONS} modal={false}>
+        <SelectTrigger placeholder="Bitte wählen" className="w-full" />
+        <SelectContent>
+          {TRADES_WITH_ICONS.map((trade) => (
+            <SelectItem key={trade.value} value={trade.value}>
+              {trade.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Field>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const trigger = canvas.getByRole("combobox", { name: "Gewerke" });
+
+    await step("Nothing chosen: the placeholder stands in the trigger", async () => {
+      await expect(trigger).toHaveTextContent("Bitte wählen");
+    });
+
+    await step("Two are taken in a row, and each carries the tick", async () => {
+      await userEvent.click(trigger);
+      const list = await screen.findByRole("listbox");
+      await waitFor(() => expect(list).toBeVisible());
+      await userEvent.click(within(list).getByRole("option", { name: "Bäckerei" }));
+      await userEvent.click(within(list).getByRole("option", { name: "Metzgerei" }));
+      await expect(list).toBeVisible();
+      const chosen = within(list).getByRole("option", { name: "Bäckerei" });
+      await expect(chosen).toHaveAttribute("aria-selected", "true");
+      const mark = chosen.querySelector('[data-slot="list-mark"]');
+      await expect(mark?.querySelector("svg")).not.toBeNull();
+      await expect(mark?.querySelector(".mark")).toBeNull();
+    });
+
+    await step("Closed, the trigger names both", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
+      await expect(trigger).toHaveTextContent("Bäckerei, Metzgerei");
+    });
+  },
+};
