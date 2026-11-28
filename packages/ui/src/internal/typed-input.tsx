@@ -204,6 +204,14 @@ export function useTypedValue({
       setProblem("");
       change(next);
     },
+    /**
+     * A value read while typing goes on, because the text is already whole (the sixth digit of
+     * a colour): it is reported, and the text stays as it was typed until typing ends.
+     */
+    take: (next: string) => {
+      setProblem("");
+      change(next);
+    },
     /** Typing has ended. Returns why the text cannot be used, or nothing. */
     commit: (): string | undefined => {
       if (text.trim() === "") {

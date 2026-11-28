@@ -351,6 +351,18 @@ const german = {
     /** The name of a stack of files (an attribute: a Server Component passes it). */
     count: (count: number) => (count === 1 ? "1 Datei" : `${count} Dateien`),
   },
+  colorSwatchGroup: {
+    /** What assistive tech calls the palette when the caller names none. */
+    label: "Farbe",
+  },
+  colorField: {
+    invalid: "Bitte geben Sie eine Farbe als Hex-Wert ein, zum Beispiel #5b4fcf.",
+    /** The placeholder, around an example the field would read. */
+    example: (example: string) => `z. B. ${example}`,
+    /** The line under the field: the ratio against the other colour, and whether text reads. */
+    contrastEnough: (ratio: string) => `Kontrast ${ratio} : 1, reicht für Text`,
+    contrastLow: (ratio: string) => `Kontrast ${ratio} : 1, zu wenig für Text`,
+  },
   picker: {
     /** The key at the end of a date field, and the key that closes its sheet. */
     open: "Kalender öffnen",
@@ -709,6 +721,15 @@ export const en: Messages = {
   },
   fileThumbStack: {
     count: (count) => (count === 1 ? "1 file" : `${count} files`),
+  },
+  colorSwatchGroup: {
+    label: "Color",
+  },
+  colorField: {
+    invalid: "Please enter a color as a hex value, for example #5b4fcf.",
+    example: (example: string) => `e.g. ${example}`,
+    contrastEnough: (ratio: string) => `Contrast ${ratio}:1, enough for text`,
+    contrastLow: (ratio: string) => `Contrast ${ratio}:1, too low for text`,
   },
   picker: {
     open: "Open calendar",

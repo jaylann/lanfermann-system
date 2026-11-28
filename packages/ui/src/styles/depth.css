@@ -761,3 +761,16 @@
   --d-press: var(--depth-thumb-press);
   --d-face: var(--depth-thumb-face);
 }
+
+/* A fitting in a colour the caller brings (`--swatch`, a `ColorSwatch`): the lights of a coloured
+   key, and an edge and shadows mixed from the colour itself, as every fitting's are. The shadows
+   are the colour taken towards black, so a light colour does not glow on a dark ground. */
+@utility depth-tone-swatch {
+  --d-edge: color-mix(in oklab, var(--swatch) 80%, black);
+  --d-hi: var(--depth-accent-hi);
+  --d-lo: var(--depth-accent-lo);
+  --d-contact: color-mix(in srgb, color-mix(in oklab, var(--swatch) 45%, black) 35%, transparent);
+  --d-ambient: color-mix(in srgb, color-mix(in oklab, var(--swatch) 45%, black) 30%, transparent);
+  --d-press: var(--depth-accent-press);
+  --d-face: var(--depth-accent-face);
+}
