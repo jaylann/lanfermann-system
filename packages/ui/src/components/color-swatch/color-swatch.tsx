@@ -12,23 +12,11 @@ import { useLocale } from "@/locale/locale";
 /** How large the swatches of a group are: the height of a control of that size. */
 export type ColorSwatchSize = "sm" | "md" | "lg";
 
-/**
- * How a swatch is cut. `socket` (the default): a disc of the colour lying in a socket ring,
- * which it fills when it is chosen, as a `Radio`'s disc does. `raised`: a round fitting in the
- * colour, lit from above, which goes down under a press.
- */
-export type ColorSwatchLook = "socket" | "raised";
-
-const SwatchContext = createContext<{ size: ColorSwatchSize; look: ColorSwatchLook }>({
-  size: "md",
-  look: "socket",
-});
+const SwatchContext = createContext<{ size: ColorSwatchSize }>({ size: "md" });
 
 export type ColorSwatchGroupProps = RadioGroupPrimitive.Props<string> & {
   /** The size of every swatch, from the density. */
   size?: ColorSwatchSize;
-  /** How the swatches are cut. */
-  look?: ColorSwatchLook;
 };
 
 /**
@@ -40,20 +28,14 @@ export type ColorSwatchGroupProps = RadioGroupPrimitive.Props<string> & {
  * ("Farbe des Codes"); without one it is called "Farbe". Keep a palette to a row or two, and
  * offer a `ColorField` beside it where any colour may be taken.
  */
-export function ColorSwatchGroup({
-  size = "md",
-  look = "socket",
-  className,
-  ...props
-}: ColorSwatchGroupProps) {
+export function ColorSwatchGroup({ size = "md", className, ...props }: ColorSwatchGroupProps) {
   const { messages } = useLocale();
   const named = props["aria-label"] !== undefined || props["aria-labelledby"] !== undefined;
   return (
-    <SwatchContext value={{ size, look }}>
+    <SwatchContext value={{ size }}>
       <RadioGroupPrimitive
         data-slot="color-swatch-group"
         data-size={size}
-        data-look={look}
         aria-label={named ? undefined : messages.colorSwatchGroup.label}
         // On a touch screen every swatch has a 44px target; the wider gap keeps them apart.
         className={mergeClassName("flex flex-wrap gap-2 pointer-coarse:gap-3", className)}
@@ -69,27 +51,17 @@ const swatchSize: Record<ColorSwatchSize, string> = {
   lg: "size-(--control-lg)",
 };
 
-/** What carries the swatch: the socket's ring, or nothing under a fitting. */
-const swatchRing: Record<ColorSwatchLook, string> = {
-  socket: "bg-surface depth-socket",
-  raised: "",
-};
-
 /**
- * The disc of colour. In a socket it lies 3px inside the ring, comes a little closer under the
- * pointer and fills the ring once chosen. As a fitting it wears a key's depth in its own hue.
+ * The disc of colour. At rest it lies flat 3px inside its socket ring and comes a little closer
+ * under the pointer. Chosen, it fills the ring and rises into a fitting of its own colour, lit
+ * from above, on the same spring (`depth-swatch` / `depth-swatch-chosen`). Disabled, it lies
+ * flat and small again, also when it is the chosen one.
  */
-const swatchDisc: Record<ColorSwatchLook, string> = {
-  socket: [
-    "scale-[0.8] group-hover:scale-[0.88] group-data-checked:scale-100",
-    "group-data-disabled:scale-[0.8]",
-  ].join(" "),
-  raised: [
-    "depth-raised depth-tone-swatch group-hover:depth-raised-hover",
-    "group-active:depth-pressed group-data-checked:depth-plug",
-    "group-data-disabled:scale-[0.8] group-data-disabled:depth-none",
-  ].join(" "),
-};
+const swatchDisc = [
+  "depth-swatch depth-tone-swatch scale-[0.8]",
+  "group-hover:scale-[0.88] group-data-checked:scale-100 group-data-checked:depth-swatch-chosen",
+  "group-data-disabled:scale-[0.8] group-data-disabled:depth-swatch",
+].join(" ");
 
 /**
  * The tick is black or white, whichever reads on the colour: these two are not tokens of a
@@ -133,7 +105,7 @@ export function ColorSwatch({
   style,
   ...props
 }: ColorSwatchProps) {
-  const { size, look } = useContext(SwatchContext);
+  const { size } = useContext(SwatchContext);
   const known = tone ?? colorTone(color);
   return (
     <RadioPrimitive.Root
@@ -146,7 +118,7 @@ export function ColorSwatch({
         [
           "group touch-target relative inline-flex shrink-0 items-center justify-center rounded-full",
           swatchSize[size],
-          swatchRing[look],
+          "bg-surface depth-socket",
           "transition-[box-shadow,background-color,scale] spring-seat hover:spring-snap active:scale-[0.92] active:spring-snap",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
           "data-disabled:pointer-events-none data-disabled:bg-disabled data-disabled:depth-flat",
@@ -161,16 +133,17 @@ export function ColorSwatch({
         style={known === undefined ? { color: TICK_FROM_COLOR } : undefined}
         className={cn(
           // A colour is content, not chrome: forced colours must not repaint it.
-          "flex size-full items-center justify-center rounded-full bg-(--swatch) inset-ring inset-ring-hairline forced-color-adjust-none",
+          "relative flex size-full items-center justify-center rounded-full bg-(--swatch) inset-ring inset-ring-hairline forced-color-adjust-none",
           "transition-[box-shadow,scale] spring-seat group-hover:spring-snap group-active:spring-snap",
           tickTone[known ?? "dark"],
-          swatchDisc[look],
+          swatchDisc,
         )}
       >
-        {/* As in a checkbox: the tick draws in (short leg first) and simply fades out. */}
+        {/* As in a checkbox: the tick draws in (short leg first) and simply fades out. It stands
+            over the disc's gloss, which lies on the disc's `::before`. */}
         <TickGlyph
           className={cn(
-            "opacity-0 transition-[stroke-dashoffset,opacity] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-checked:opacity-100 group-data-checked:[stroke-dashoffset:0]",
+            "relative opacity-0 transition-[stroke-dashoffset,opacity] duration-150 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-checked:opacity-100 group-data-checked:[stroke-dashoffset:0]",
             size === "lg" && "size-3.5",
           )}
         />

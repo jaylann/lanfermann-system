@@ -6,12 +6,7 @@ import { Button } from "@/components/button/button";
 import { Radio, RadioGroup } from "@/components/radio/radio";
 import { LocaleProvider } from "@/locale/locale";
 
-import {
-  ColorSwatch,
-  ColorSwatchGroup,
-  type ColorSwatchGroupProps,
-  type ColorSwatchLook,
-} from "./color-swatch";
+import { ColorSwatch, ColorSwatchGroup, type ColorSwatchGroupProps } from "./color-swatch";
 
 const meta = {
   title: "Components/ColorSwatch",
@@ -54,8 +49,9 @@ function Palette(props: ColorSwatchGroupProps) {
 }
 
 /**
- * One colour out of a palette. Each disc lies in a socket ring; the chosen one fills it and
- * carries a tick, dark on a light colour and white on a dark one.
+ * One colour out of a palette. Each disc lies flat in a socket ring; the chosen one fills it,
+ * rises into a fitting of its own colour and carries a tick, dark on a light colour and white
+ * on a dark one.
  */
 export const Default: Story = { render: (args) => <Palette {...args} /> };
 
@@ -65,16 +61,21 @@ export const LightChosen: Story = {
   render: (args) => <Palette {...args} defaultValue="#ffffff" />,
 };
 
-function Cut({ look, name }: { look: ColorSwatchLook; name: string }) {
-  return (
+/**
+ * Beside a `Radio` and a `Button`: the ones that are not chosen lie in their sockets as a
+ * radio's empty socket does, and only the chosen one stands raised like the key.
+ */
+export const BesideControls: Story = {
+  parameters: {
+    visual: {
+      viewport: { width: 640, height: 110 },
+      motion: [{ name: "choose", click: '[data-slot="color-swatch"]:nth-of-type(4)', frames: 8 }],
+    },
+  },
+  render: () => (
     <div className="flex items-center gap-6">
-      <span className="w-20 text-sm text-fg-muted">{name}</span>
-      <Palette look={look} aria-label={`Farbe des Codes, ${name}`} />
-      <RadioGroup
-        defaultValue="svg"
-        aria-label={`Format, ${name}`}
-        className="flex-row items-center gap-4"
-      >
+      <Palette />
+      <RadioGroup defaultValue="svg" aria-label="Format" className="flex-row items-center gap-4">
         <label className="flex items-center gap-2 text-control text-fg-body">
           <Radio value="svg" />
           SVG
@@ -85,30 +86,6 @@ function Cut({ look, name }: { look: ColorSwatchLook; name: string }) {
         </label>
       </RadioGroup>
       <Button>Herunterladen</Button>
-    </div>
-  );
-}
-
-/**
- * The two cuts beside a `Radio` and a `Button`: a disc in a socket ring (the default), and a
- * raised fitting in the colour (`look="raised"`).
- */
-export const Looks: Story = {
-  parameters: {
-    visual: {
-      viewport: { width: 760, height: 170 },
-      motion: [
-        { name: "choose socket", click: '[data-look="socket"] [role="radio"]:nth-of-type(4)' },
-        { name: "choose raised", click: '[data-look="raised"] [role="radio"]:nth-of-type(4)' },
-        { name: "hover raised", hover: '[data-look="raised"] [role="radio"]:nth-of-type(3)' },
-        { name: "press raised", press: '[data-look="raised"] [role="radio"]:nth-of-type(3)' },
-      ],
-    },
-  },
-  render: () => (
-    <div className="flex flex-col gap-6">
-      <Cut look="socket" name="Fassung" />
-      <Cut look="raised" name="Erhaben" />
     </div>
   ),
 };

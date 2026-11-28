@@ -118,7 +118,6 @@ export {
   ColorSwatch,
   ColorSwatchGroup,
   type ColorSwatchGroupProps,
-  type ColorSwatchLook,
   type ColorSwatchProps,
   type ColorSwatchSize,
 } from "./components/color-swatch/color-swatch";

@@ -471,6 +471,9 @@
   --shadow-plug:
     0 0 0 1px var(--d-edge, var(--depth-surface-edge)),
     0 1px 2px 0 var(--d-contact, var(--depth-surface-contact)), 0 0 0 0 transparent;
+  /* A swatch's disc at rest lies flat in its socket: no shadow, but a fitting's three layers, so
+     it can ease into `raised` once chosen. */
+  --shadow-swatch: 0 0 0 0 transparent, 0 0 0 0 transparent, 0 0 0 0 transparent;
 
   --inset-shadow-raised:
     inset 0 1px 0 0 var(--d-hi, var(--depth-surface-hi)),
@@ -588,6 +591,36 @@
 @utility depth-plug {
   @apply shadow-plug inset-shadow-raised;
   background-image: var(--d-face, var(--depth-surface-face));
+  @media (forced-colors: active) {
+    outline: 1px solid ButtonBorder;
+    outline-offset: -1px;
+  }
+}
+/* A swatch's disc (`ColorSwatch`): a flat disc of its colour while it lies in its socket, and once
+   chosen a raised fitting in that colour, as `depth-raised` draws one under `depth-tone-swatch`
+   (Justin, 2026-11-28: the socket at rest, and the chosen one turns smoothly into the raised
+   cut). Both states keep a fitting's layers, so the box-shadow eases between them on the part's
+   own transition. The gloss lies on `::before` and fades there, because a gradient cannot ease;
+   it reads the face through `--swatch-face`, since the `--d-*` knobs do not inherit. */
+@utility depth-swatch {
+  @apply shadow-swatch inset-shadow-flat;
+  --swatch-face: var(--d-face, var(--depth-surface-face));
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: var(--swatch-face);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration-spring-seat) var(--ease-spring-seat);
+  }
+}
+@utility depth-swatch-chosen {
+  @apply shadow-raised inset-shadow-raised;
+  &::before {
+    opacity: 1;
+  }
   @media (forced-colors: active) {
     outline: 1px solid ButtonBorder;
     outline-offset: -1px;
