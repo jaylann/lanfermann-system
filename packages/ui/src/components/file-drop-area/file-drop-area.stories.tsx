@@ -94,3 +94,42 @@ export const Drop: Story = {
     });
   },
 };
+
+const heard = fn();
+
+/** As a test: handlers the caller puts on the area are heard beside the area's own. */
+export const OwnHandlers: Story = {
+  render: () => (
+    <FileDropArea
+      label="In building-gbar ablegen"
+      onFiles={files}
+      onDragEnter={heard}
+      onDragLeave={heard}
+      onPaste={heard}
+    >
+      <p className="p-6 text-control text-fg-body">Dateien hierher ziehen oder einfügen.</p>
+    </FileDropArea>
+  ),
+  play: async ({ canvasElement, step }) => {
+    files.mockClear();
+    heard.mockClear();
+    const area = canvasElement.querySelector('[data-slot="file-drop-area"]')!;
+    const inside = area.querySelector("p")!;
+
+    await step("a drag is heard by the caller and still taken by the area", async () => {
+      const transfer = hangFilesOver(inside);
+      await waitFor(() => expect(area).toHaveAttribute("data-dragging"));
+      await expect(heard).toHaveBeenCalledTimes(1);
+      inside.dispatchEvent(new DragEvent("dragleave", { bubbles: true, dataTransfer: transfer }));
+      await waitFor(() => expect(area).not.toHaveAttribute("data-dragging"));
+      await expect(heard).toHaveBeenCalledTimes(2);
+    });
+    await step("a paste is heard by the caller and its file still reported", async () => {
+      const transfer = new DataTransfer();
+      transfer.items.add(new File(["x"], "zwischenablage.png", { type: "image/png" }));
+      inside.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, clipboardData: transfer }));
+      await expect(heard).toHaveBeenCalledTimes(3);
+      await expect(files).toHaveBeenCalledWith([expect.any(File)], null);
+    });
+  },
+};

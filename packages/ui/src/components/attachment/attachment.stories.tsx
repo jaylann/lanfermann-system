@@ -190,3 +190,55 @@ export const Keyboard: Story = {
     });
   },
 };
+
+/**
+ * As a test: a picture has no line of facts under it, so what its mark shows (on its way,
+ * failed and why) is there in words for assistive tech.
+ */
+export const PictureStates: Story = {
+  render: () => (
+    <MessageAttachments>
+      <Attachment {...FILES[1]!} status="uploading" />
+      <Attachment {...FILES[1]!} status="error" error="Die Verbindung wurde unterbrochen." />
+    </MessageAttachments>
+  ),
+  play: async ({ canvasElement }) => {
+    const [uploading, failed] = canvasElement.querySelectorAll('[data-slot="attachment"]');
+    await expect(uploading).toHaveTextContent("Wird hochgeladen");
+    await expect(failed).toHaveTextContent("Die Verbindung wurde unterbrochen.");
+  },
+};
+
+/** Tiles that can be taken away, as in a draft of a message. */
+function RemovableTiles() {
+  const [files, setFiles] = useState(FILES);
+  return (
+    <MessageAttachments>
+      {files.map((file) => (
+        <Attachment
+          key={file.id}
+          {...file}
+          onRemove={() => setFiles((all) => all.filter(({ id }) => id !== file.id))}
+        />
+      ))}
+    </MessageAttachments>
+  );
+}
+
+/** As a test: a tile that is taken away hands the focus to the one beside it, as a chip does. */
+export const TileKeyboard: Story = {
+  render: () => <RemovableTiles />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.tab();
+    await expect(
+      canvas.getByRole("button", { name: /Angebot-Kornprobst\.pdf.*entfernen/ }),
+    ).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await expect(
+      canvas.getByRole("button", { name: /Entwurf-Startseite\.png.*entfernen/ }),
+    ).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.queryByRole("button", { name: /Angebot-Kornprobst/ })).toBeNull(),
+    );
+  },
+};

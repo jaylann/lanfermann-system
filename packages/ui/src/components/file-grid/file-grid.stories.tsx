@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { createRef, useState } from "react";
 import { expect, fn, waitFor } from "storybook/test";
 
 import { Button } from "@/components/button/button";
@@ -170,13 +170,16 @@ export const Arriving: Story = {
 };
 
 const report = fn();
+/** Refs of the caller's own, which the grid and a section fill beside theirs. */
+const ownGrid = createRef<HTMLDivElement>();
+const ownSection = createRef<HTMLDivElement>();
 
 /** The grid measures its columns and says how many it has: on load and when it is resized. */
 export const Columns: Story = {
   render: () => (
     <div className="w-[34rem]" data-testid="frame">
-      <FileGrid aria-label="Dateien" onColumnsChange={report}>
-        <FileGridSection>
+      <FileGrid ref={ownGrid} aria-label="Dateien" onColumnsChange={report}>
+        <FileGridSection ref={ownSection}>
           {FILES.slice(0, 4).map(({ id, ...file }) => (
             <FileTile key={id} {...file} />
           ))}
@@ -193,6 +196,10 @@ export const Columns: Story = {
     await step("narrowed, it says the new count", async () => {
       canvas.getByTestId("frame").style.width = "22rem";
       await waitFor(() => expect(report).toHaveBeenLastCalledWith(2));
+    });
+    await step("a ref of the caller's is filled, and the grid still measures", async () => {
+      await expect(ownGrid.current).toBe(grid);
+      await expect(ownSection.current).toBe(grid.querySelector('[data-slot="file-grid-section"]'));
     });
   },
 };

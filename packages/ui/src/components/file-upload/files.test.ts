@@ -70,6 +70,15 @@ describe("formatFileSize", () => {
   it("follows another locale's decimal sign", () => {
     expect(formatFileSize(2_400_000, "en-US")).toBe("2.4 MB");
   });
+
+  it("counts what rounds to a full thousand in the next unit", () => {
+    expect(formatFileSize(999)).toBe("999 B");
+    expect(formatFileSize(999_499)).toBe("999 KB");
+    expect(formatFileSize(999_500)).toBe("1,0 MB");
+    expect(formatFileSize(999_999)).toBe("1,0 MB");
+    expect(formatFileSize(999_949_999)).toBe("999,9 MB");
+    expect(formatFileSize(999_950_000)).toBe("1,0 GB");
+  });
 });
 
 describe("formatFileProgress", () => {
@@ -77,6 +86,10 @@ describe("formatFileProgress", () => {
     expect(formatFileProgress(1_200_000, 2_400_000)).toBe("1,2 von 2,4 MB");
     expect(formatFileProgress(40_000, 2_400_000)).toBe("0,0 von 2,4 MB");
     expect(formatFileProgress(300_000, 842_000)).toBe("300 von 842 KB");
+  });
+
+  it("keeps both numbers in the unit the whole is written in", () => {
+    expect(formatFileProgress(500_000, 999_999)).toBe("0,5 von 1,0 MB");
   });
 
   it("never says more than the whole", () => {

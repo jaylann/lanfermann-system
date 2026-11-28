@@ -13,7 +13,7 @@ import {
 } from "react";
 
 import { Icon } from "@/components/icon/icon";
-import { carriesFiles, useDragDepth } from "@/internal/drag-depth";
+import { carriesFiles, droppedFiles, useDragDepth } from "@/internal/drag-depth";
 import { cn } from "@/lib/cn";
 
 /** The type under which items dragged inside an area carry their ids: a JSON list of strings. */
@@ -73,7 +73,8 @@ const plate = [
 export type FileDropAreaProps = Omit<ComponentProps<"div">, "onDrop"> & {
   /**
    * Called with the files that were dropped or pasted, and the target they were dropped on: the
-   * id of a `useDropTarget` (a folder), or `null` for the area itself.
+   * id of a `useDropTarget` (a folder), or `null` for the area itself. A folder dropped among
+   * them is left out: it comes as a file that cannot be read.
    */
   onFiles: (files: File[], target: string | null) => void;
   /** Called with the ids of items dragged inside the area and dropped on a target. */
@@ -108,6 +109,10 @@ export function FileDropArea({
   disabled = false,
   className,
   children,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onPaste,
   ...props
 }: FileDropAreaProps) {
   const [target, setTarget] = useState<Target | null>(null);
@@ -188,13 +193,16 @@ export function FileDropArea({
         data-disabled={disabled ? "" : undefined}
         className={cn(fileDropArea, className)}
         {...props}
+        // The caller's own handlers are heard first; the area's are never replaced by them.
         onDragEnter={(event) => {
+          onDragEnter?.(event);
           handlers.onDragEnter(event);
           if (disabled || kind !== null) return;
           if (carriesFiles(event)) setKind("files");
           else if (carriesItems(event)) setKind("items");
         }}
         onDragOver={(event) => {
+          onDragOver?.(event);
           // Items let go over the area itself would go where they already are: not taken.
           if (carriesItems(event) && !targetNow.current) {
             event.dataTransfer.dropEffect = "none";
@@ -202,13 +210,17 @@ export function FileDropArea({
           }
           handlers.onDragOver(event);
         }}
-        onDragLeave={handlers.onDragLeave}
+        onDragLeave={(event) => {
+          onDragLeave?.(event);
+          handlers.onDragLeave(event);
+        }}
         onDrop={(event) => {
           if (disabled) return;
           const where = targetNow.current?.id ?? null;
           if (carriesFiles(event)) {
             event.preventDefault();
-            onFiles([...event.dataTransfer.files], where);
+            const { files: dropped } = droppedFiles(event.dataTransfer);
+            if (dropped.length > 0) onFiles(dropped, where);
           } else if (carriesItems(event)) {
             event.preventDefault();
             const ids = readItems(event.dataTransfer.getData(ITEMS_TYPE));
@@ -217,6 +229,7 @@ export function FileDropArea({
           finish();
         }}
         onPaste={(event) => {
+          onPaste?.(event);
           if (disabled) return;
           // What is pasted into a field (a name being changed) is the field's.
           if (event.target instanceof Element && event.target.closest("input, textarea")) return;

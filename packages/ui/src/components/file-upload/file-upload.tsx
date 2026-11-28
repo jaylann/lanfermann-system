@@ -18,10 +18,11 @@ import { Button } from "@/components/button/button";
 import { Icon, type IconSvgElement } from "@/components/icon/icon";
 import { Progress, ProgressTrack } from "@/components/progress/progress";
 import { Spinner } from "@/components/spinner/spinner";
-import { carriesFiles, useDragDepth } from "@/internal/drag-depth";
+import { carriesFiles, droppedFiles, useDragDepth } from "@/internal/drag-depth";
 import { CloseGlyph } from "@/internal/glyphs";
 import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 
 import {
   type FileRejection,
@@ -34,8 +35,11 @@ import {
 type FileUploadContextValue = {
   /** Opens the system's file dialog. */
   open: () => void;
-  /** Takes files from a drop or a paste, sorts them by the rules and reports them. */
-  add: (files: readonly File[]) => void;
+  /**
+   * Takes files from a drop or a paste, sorts them by the rules and reports them. Folders that
+   * were dropped with them are turned away: a folder is never one of the kinds that are taken.
+   */
+  add: (files: readonly File[], folders?: readonly File[]) => void;
   disabled: boolean;
   /**
    * Whether the upload has stood for a frame. A list that is put in later (with its first
@@ -96,9 +100,10 @@ export function FileUpload({
       disabled,
       live,
       open: () => input.current?.click(),
-      add: (files) => {
-        if (disabled || files.length === 0) return;
+      add: (files, folders = []) => {
+        if (disabled || files.length + folders.length === 0) return;
         const { accepted, rejected } = sortFiles(files, { accept, maxSize, multiple });
+        for (const file of folders) rejected.push({ file, reason: "type" });
         if (accepted.length > 0) onFilesAdded(accepted);
         if (rejected.length > 0) onReject?.(rejected);
       },
@@ -167,6 +172,11 @@ export function FileUploadZone({
   variant = "tile",
   icon = Upload04Icon,
   className,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onPaste,
   ...props
 }: FileUploadZoneProps) {
   const { open, add, disabled } = useContext(FileUploadContext);
@@ -185,20 +195,35 @@ export function FileUploadZone({
         "data-disabled:bg-disabled data-disabled:depth-flat",
         className,
       )}
-      {...handlers}
+      {...props}
+      // The caller's own handlers are heard first; they never take the place of the zone's.
+      onDragEnter={(event) => {
+        onDragEnter?.(event);
+        handlers.onDragEnter(event);
+      }}
+      onDragOver={(event) => {
+        onDragOver?.(event);
+        handlers.onDragOver(event);
+      }}
+      onDragLeave={(event) => {
+        onDragLeave?.(event);
+        handlers.onDragLeave(event);
+      }}
       onDrop={(event) => {
+        onDrop?.(event);
         if (disabled || !carriesFiles(event)) return;
         event.preventDefault();
         reset();
-        add([...event.dataTransfer.files]);
+        const { files, folders } = droppedFiles(event.dataTransfer);
+        add(files, folders);
       }}
       onPaste={(event) => {
+        onPaste?.(event);
         const files = [...event.clipboardData.files];
         if (files.length === 0) return;
         event.preventDefault();
         add(files);
       }}
-      {...props}
     >
       {variant === "tile" && (
         <span
@@ -263,7 +288,7 @@ const placeOfFile = [
  * before what it announces). Name it (`aria-label`: "Dateien") and give each `FileUploadItem` a
  * `key` that stays its own.
  */
-export function FileUploadList({ className, children, ...props }: FileUploadListProps) {
+export function FileUploadList({ className, children, ref, ...props }: FileUploadListProps) {
   const { live: uploadLive } = useContext(FileUploadContext);
   const ownLive = useLive();
   const live = ownLive || uploadLive;
@@ -274,7 +299,7 @@ export function FileUploadList({ className, children, ...props }: FileUploadList
   const empty = places.every((place) => place.leaving);
   return (
     <ul
-      ref={box}
+      ref={mergeRefs(box, ref)}
       data-slot="file-upload-list"
       data-live={live ? "" : undefined}
       data-empty={empty ? "" : undefined}
@@ -342,7 +367,11 @@ export type FileUploadItemProps = Omit<ComponentProps<"div">, "children"> & {
   locale?: string;
 };
 
-/** The key of the row beside this one, the next if there is one, that can take the focus. */
+/**
+ * The key of the row beside this one, the next if there is one, that can take the focus. Where
+ * this was the last row with a key, the zone's button takes it, so the focus is never left on
+ * nothing.
+ */
 function keyBeside(key: HTMLElement) {
   const place = key.closest('[data-slot="file-upload-place"]');
   const find = (step: "nextElementSibling" | "previousElementSibling") => {
@@ -354,7 +383,13 @@ function keyBeside(key: HTMLElement) {
     }
     return null;
   };
-  return find("nextElementSibling") ?? find("previousElementSibling");
+  return (
+    find("nextElementSibling") ??
+    find("previousElementSibling") ??
+    key
+      .closest('[data-slot="file-upload"]')
+      ?.querySelector<HTMLElement>('[data-slot="file-upload-zone"] [data-slot="button"]')
+  );
 }
 
 /**
@@ -428,7 +463,14 @@ export function FileUploadItem({
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-baseline gap-3">
-          <span data-slot="file-upload-name" className="min-w-0 truncate text-fg">
+          <span
+            data-slot="file-upload-name"
+            // The list says a file once, when it joins. How it ended (arrived, failed) is a
+            // change of these words, said here, whole: „Hochgeladen: Lageplan.pdf“.
+            aria-live="polite"
+            aria-atomic
+            className="min-w-0 truncate text-fg"
+          >
             <span className="sr-only">{statusLabels?.[status] ?? statusWords[status]}: </span>
             {name}
           </span>
@@ -454,6 +496,8 @@ export function FileUploadItem({
           <div className="min-h-0 overflow-hidden">
             <Progress
               aria-label={name}
+              // The same words for the share on the server and in the browser.
+              locale={locale}
               // Folded away, the bar rests: full once the file is there, so it fills as it
               // folds, and empty before it begins. Only an upload without a share runs through.
               value={

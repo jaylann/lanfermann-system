@@ -119,6 +119,17 @@ export function splitName(name: string): { stem: string; end: string } {
   return { stem: name.slice(0, -(extension.length + 1)), end: `.${name.slice(-extension.length)}` };
 }
 
+let segmenter: Intl.Segmenter | undefined;
+
+/**
+ * The letters of a text as they are read: an „ü“ written as a „u“ and its dots (as a Mac names
+ * its files) and an emoji of several parts are one each, so a cut never goes through them.
+ */
+function lettersOf(text: string): string[] {
+  segmenter ??= new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  return Array.from(segmenter.segment(text), (part) => part.segment);
+}
+
 /**
  * A file name shortened to fit `width`, cut with an ellipsis the way a file manager cuts it:
  * the extension always stays, and so do the last `keep` letters before it, so „Angebot-
@@ -133,20 +144,21 @@ export function fitName(
   keep = 3,
 ): string {
   if (measure(name) <= width) return name;
-  const { stem, end } = splitName(name);
+  const { stem: whole, end } = splitName(name);
+  const stem = lettersOf(whole);
   // What stays after the ellipsis: as much of the asked tail as still leaves a letter in front.
   for (let tail = Math.min(keep, Math.max(0, stem.length - 1)); tail >= 0; tail--) {
-    const after = `…${stem.slice(stem.length - tail)}${end}`;
+    const after = `…${stem.slice(stem.length - tail).join("")}${end}`;
     const room = stem.length - tail;
     // The longest head that fits in front of it.
     let low = 0;
     let high = room;
     while (low < high) {
       const mid = Math.ceil((low + high) / 2);
-      if (measure(stem.slice(0, mid) + after) <= width) low = mid;
+      if (measure(stem.slice(0, mid).join("") + after) <= width) low = mid;
       else high = mid - 1;
     }
-    if (low > 0) return stem.slice(0, low).trimEnd() + after;
+    if (low > 0) return stem.slice(0, low).join("").trimEnd() + after;
   }
   return `…${end}`;
 }

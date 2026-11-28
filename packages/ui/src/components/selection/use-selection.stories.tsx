@@ -17,6 +17,7 @@ import {
   ContextMenuContent,
   ContextMenuTrigger,
 } from "@/components/context-menu/context-menu";
+import { EditableName } from "@/components/editable-name/editable-name";
 import { FileGrid, FileGridSection } from "@/components/file-grid/file-grid";
 import { FileKindSymbol } from "@/components/file-kind-symbol/file-kind-symbol";
 import { FileTile } from "@/components/file-tile/file-tile";
@@ -221,6 +222,22 @@ export const Keyboard: Story = {
       await userEvent.keyboard("{Enter}");
       await expect(opened).toHaveBeenCalledWith("logo");
     });
+    await step(
+      "Alt and an arrow is left to the browser, which goes back a page on it",
+      async () => {
+        const back = new KeyboardEvent("keydown", {
+          key: "ArrowLeft",
+          altKey: true,
+          bubbles: true,
+          cancelable: true,
+        });
+        // The file with the id „logo“, where the step before left the focus.
+        tile(/building-gbar\.svg/).dispatchEvent(back);
+        await expect(back.defaultPrevented).toBe(false);
+        await expect(tile(/building-gbar\.svg/)).toHaveFocus();
+        await expect(chosen()).toEqual([]);
+      },
+    );
   },
 };
 
@@ -268,6 +285,53 @@ export const Pointer: Story = {
       await userEvent.dblClick(tile(/archiv/));
       await expect(opened).toHaveBeenCalledWith("archiv");
     });
+  },
+};
+
+const RENAMED = [FILES[0]!.id];
+
+/** A tile whose name is being changed: the field in it keeps its own keys and presses. */
+function Renaming() {
+  const { id, ...file } = FILES[0]!;
+  const selection = useSelection({ ids: RENAMED, layout: "grid" });
+  return (
+    <div className="w-48">
+      <FileGrid aria-label="Dateien in blogs/building-gbar" {...selection.containerProps}>
+        <FileGridSection>
+          <FileTile
+            {...file}
+            selected={selection.isSelected(id)}
+            {...selection.itemProps(id)}
+            nameSlot={
+              <EditableName
+                value={file.name}
+                editing
+                onEditingChange={() => {}}
+                onRename={() => undefined}
+              />
+            }
+          />
+        </FileGridSection>
+      </FileGrid>
+    </div>
+  );
+}
+
+/**
+ * As a test: Shift and a press on a tile is the selection's (no text is marked between two
+ * tiles), but in a field inside the tile it marks the field's text, as in any field.
+ */
+export const FieldInside: Story = {
+  render: () => <Renaming />,
+  play: async ({ canvas }) => {
+    const press = () =>
+      new MouseEvent("mousedown", { shiftKey: true, bubbles: true, cancelable: true });
+    const onTile = press();
+    canvas.getByRole("row").dispatchEvent(onTile);
+    await expect(onTile.defaultPrevented).toBe(true);
+    const inField = press();
+    canvas.getByRole("textbox", { name: "Name" }).dispatchEvent(inField);
+    await expect(inField.defaultPrevented).toBe(false);
   },
 };
 

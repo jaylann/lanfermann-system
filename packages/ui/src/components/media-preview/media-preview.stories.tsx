@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
-import { expect, waitFor } from "storybook/test";
+import { useEffect, useState } from "react";
+import { expect, fn, waitFor } from "storybook/test";
 
 import {
   BADGE,
@@ -10,6 +10,7 @@ import {
   MARK_DARK,
   PHOTO,
   STICKER,
+  THUMBNAIL,
 } from "@/components/file-tile/story-files";
 
 import { MediaPreview, type NaturalSize } from "./media-preview";
@@ -147,5 +148,45 @@ export const Size: Story = {
       expect(canvas.getByTestId("size-hero.webp")).toHaveTextContent("1600 × 900 px"),
     );
     await expect(canvas.getByRole("img", { name: "hero.webp" })).toHaveAttribute("data-loaded");
+  },
+};
+
+const sized = fn();
+
+/** A preview of a picture the page already holds, as an inspector shows what a tile shows. */
+function AlreadyLoaded() {
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    const picture = new Image();
+    picture.src = THUMBNAIL;
+    // Kept, so the page still holds the picture when the preview asks for it.
+    void picture.decode().then(() => {
+      sized.mockClear();
+      setHeld(true);
+    });
+    return () => {
+      picture.src = "";
+    };
+  }, []);
+  return held ? (
+    <MediaPreview
+      src={THUMBNAIL}
+      name="thumbnail.webp"
+      onNaturalSize={sized}
+      className="h-52 w-72"
+    />
+  ) : null;
+}
+
+/** As a test: the size of a picture the page already holds is reported once, not twice. */
+export const SizeOnce: Story = {
+  render: () => <AlreadyLoaded />,
+  play: async ({ canvas }) => {
+    const picture = await canvas.findByRole("img", { name: "thumbnail.webp" });
+    await waitFor(() => expect(picture).toHaveAttribute("data-loaded"));
+    // The load that follows a picture that was complete at once comes in a later task.
+    await new Promise((later) => setTimeout(later, 200));
+    await expect(sized).toHaveBeenCalledTimes(1);
+    await expect(sized).toHaveBeenCalledWith({ width: 800, height: 600 });
   },
 };

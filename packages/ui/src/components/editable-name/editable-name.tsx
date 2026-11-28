@@ -62,6 +62,7 @@ export function EditableName({
   ...props
 }: EditableNameProps) {
   const field = useRef<HTMLInputElement>(null);
+  const opener = useRef<Element | null>(null);
   const reasonId = useId();
   const [draft, setDraft] = useState(value);
   const [reason, setReason] = useState<ReactNode>(null);
@@ -80,11 +81,23 @@ export function EditableName({
     if (!editing) return;
     const input = field.current;
     if (!input) return;
+    // What had the focus before (the tile, the key that began it) gets it back at the end.
+    if (document.activeElement !== input) opener.current = document.activeElement;
     input.focus();
     input.setSelectionRange(0, baseNameEnd(input.value));
+    return () => {
+      // The field has gone with the focus still in it (Enter, Escape), which leaves the focus
+      // on nothing. Where it left for something else (a click elsewhere), it stays there.
+      const before = opener.current;
+      if (document.activeElement !== document.body) return;
+      if (before instanceof HTMLElement && before.isConnected) before.focus();
+    };
   }, [editing]);
 
   const commit = async () => {
+    // One answer at a time: a second Enter while the first name is still being checked would
+    // send it twice.
+    if (busy) return;
     const next = draft.trim();
     if (next === value || next === "") {
       onEditingChange(false);
@@ -133,6 +146,10 @@ export function EditableName({
           if (reason !== null) setReason(null);
         }}
         onKeyDown={(event) => {
+          // A key pressed while a word is being composed (Japanese, Chinese) picks or drops the
+          // word, not the name. Safari sends that Enter after the composition has ended, with
+          // the key code 229, so both are asked (as in `promptKey`).
+          if (event.nativeEvent.isComposing || event.keyCode === 229) return;
           if (event.key === "Enter") {
             event.preventDefault();
             void commit();

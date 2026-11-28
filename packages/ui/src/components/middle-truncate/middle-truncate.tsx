@@ -4,6 +4,7 @@ import { type ComponentProps, useLayoutEffect, useRef, useState } from "react";
 
 import { fitName } from "@/components/attachment/kinds";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 
 export type MiddleTruncateProps = Omit<ComponentProps<"span">, "children"> & {
   /** The whole text, as it is read out: „Angebot_Kowalski_Herbst.pdf“. */
@@ -23,7 +24,7 @@ export type MiddleTruncateProps = Omit<ComponentProps<"span">, "children"> & {
  * cut is measured in the text's own font and worked out again when the place changes. Assistive
  * tech hears the whole text, never the ellipsis.
  */
-export function MiddleTruncate({ text, keep = 3, className, ...props }: MiddleTruncateProps) {
+export function MiddleTruncate({ text, keep = 3, className, ref, ...props }: MiddleTruncateProps) {
   const room = useRef<HTMLSpanElement>(null);
   const probe = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(text);
@@ -64,7 +65,7 @@ export function MiddleTruncate({ text, keep = 3, className, ...props }: MiddleTr
   }, [text, keep]);
   return (
     <span
-      ref={room}
+      ref={mergeRefs(room, ref)}
       data-slot="middle-truncate"
       className={cn("grid min-w-0 grid-cols-[minmax(0,max-content)]", className)}
       {...props}

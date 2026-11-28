@@ -90,3 +90,20 @@ export const Marking: Story = {
     await waitFor(() => expect(rows[2]).not.toHaveAttribute("data-selected"));
   },
 };
+
+/** As a test: on a touch screen the mark takes a press on the finger's target around it. */
+export const MarkOnTouch: Story = {
+  render: () => (
+    <div data-pointer="coarse">
+      <List />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const mark = canvasElement.querySelector('[data-slot="file-thumb-mark"]');
+    if (!mark) throw new Error("the row has no mark");
+    const target = getComputedStyle(mark, "::after");
+    await expect(target.content).not.toBe("none");
+    await expect(target.width).toBe("44px");
+    await expect(target.height).toBe("44px");
+  },
+};

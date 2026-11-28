@@ -10,6 +10,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -26,6 +27,7 @@ import {
 } from "@/internal/glide";
 import { placeProps, useLive, usePresence } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 
 import { FileGridContext } from "./file-grid-context";
 
@@ -99,9 +101,15 @@ export function FileGrid({
   onColumnsChange,
   className,
   children,
+  ref,
   ...props
 }: FileGridProps) {
   const box = useRef<HTMLDivElement>(null);
+  // The caller's ref is filled beside the grid's own, which stays one object on the element. A
+  // merged callback would be a new one on every render: React empties and fills such a ref
+  // around each update, and the glide, which the parts inside start in between, would find no
+  // grid.
+  useImperativeHandle(ref, () => box.current!, []);
   const live = useLive();
   const [glide] = useState(() => new Glide(box));
   const [columns, setColumns] = useState<number>();
@@ -169,7 +177,13 @@ export type FileGridSectionProps = Omit<ComponentProps<"div">, "children"> & {
  * every tile a `key` that stays its own, so a tile that joins or leaves is told apart from one
  * that stays.
  */
-export function FileGridSection({ label, className, children, ...props }: FileGridSectionProps) {
+export function FileGridSection({
+  label,
+  className,
+  children,
+  ref,
+  ...props
+}: FileGridSectionProps) {
   const id = useId();
   const labelId = `${id}-label`;
   const box = useRef<HTMLDivElement>(null);
@@ -180,7 +194,7 @@ export function FileGridSection({ label, className, children, ...props }: FileGr
   const { glide } = useContext(FileGridContext);
   return (
     <div
-      ref={box}
+      ref={mergeRefs(box, ref)}
       role="rowgroup"
       aria-labelledby={label === undefined ? undefined : labelId}
       data-slot="file-grid-section"

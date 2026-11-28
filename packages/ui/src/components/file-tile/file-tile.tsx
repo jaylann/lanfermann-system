@@ -125,7 +125,8 @@ const markHides =
  * chosen. It seats on `seat`, as a checkbox does, and appears on `snap`.
  */
 const markLook = [
-  "flex size-(--check-size) shrink-0 items-center justify-center rounded-xs bg-surface text-on-accent depth-socket opacity-0",
+  // On a touch screen a press beside the mark still hits it (`touch-target`).
+  "touch-target flex size-(--check-size) shrink-0 items-center justify-center rounded-xs bg-surface text-on-accent depth-socket opacity-0",
   "[transition:opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap),box-shadow_var(--transition-duration-spring-seat)_var(--ease-spring-seat),background-color_var(--transition-duration-spring-seat)_var(--ease-spring-seat)]",
   markShown,
   "group-data-selected/tile:bg-accent group-data-selected/tile:depth-plug group-data-selected/tile:depth-tone-accent",
