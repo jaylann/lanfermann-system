@@ -99,7 +99,10 @@ export const TrailingKey: Story = {
   ),
 };
 
-/** As a test: the key in the field is out of reach while the field is empty, and there once typed. */
+/**
+ * As a test: the key in the field is out of reach while the field is empty (its room is closed
+ * and inert), and within reach once something is typed.
+ */
 export const TrailingKeyAppears: Story = {
   render: () => (
     <StoredSecretField
@@ -109,11 +112,15 @@ export const TrailingKeyAppears: Story = {
     />
   ),
   play: async ({ canvas, userEvent }) => {
-    await expect(canvas.queryByRole("button", { name: "Prüfen" })).toBeNull();
+    const room = () =>
+      canvas.getByText("Prüfen").closest('[data-slot="stored-secret-field-trailing"]');
+    await expect(room()).toHaveAttribute("inert");
+    await expect(room()).not.toHaveAttribute("data-shown");
     await userEvent.type(canvas.getByLabelText("Secret"), "lf_sig_8Hd2");
-    await waitFor(() => expect(canvas.getByRole("button", { name: "Prüfen" })).toBeVisible());
+    await waitFor(() => expect(room()).toHaveAttribute("data-shown"));
+    await expect(room()).not.toHaveAttribute("inert");
     await userEvent.clear(canvas.getByLabelText("Secret"));
-    await waitFor(() => expect(canvas.queryByRole("button", { name: "Prüfen" })).toBeNull());
+    await waitFor(() => expect(room()).toHaveAttribute("inert"));
   },
 };
 
