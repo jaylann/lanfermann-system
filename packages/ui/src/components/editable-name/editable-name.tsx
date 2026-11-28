@@ -22,6 +22,55 @@ export function baseNameEnd(name: string): number {
   return name.length - splitName(name).end.length;
 }
 
+/**
+ * A text of several lines as the one line a name is: every line break, with the spaces around
+ * it, becomes one space. What is pasted into a name that wraps goes through it, so a break never
+ * gets in; the spaces a name is typed with stay.
+ */
+export function flattenLines(text: string): string {
+  return text.replace(/\s*[\r\n\u2028\u2029]+\s*/g, " ");
+}
+
+/**
+ * The name a rename is asked for when `typed` is taken, or `undefined` where nothing changes:
+ * the name as it was, and an empty one unless the value may be empty (`allowEmpty`), which is
+ * then asked for as `""`.
+ */
+export function nameToTake(typed: string, value: string, allowEmpty: boolean): string | undefined {
+  const next = flattenLines(typed).trim();
+  if (next === value) return undefined;
+  if (next === "" && !allowEmpty) return undefined;
+  return next;
+}
+
+/** Puts the caret into `field`, with the base name of what it holds selected. */
+function selectBaseName(field: HTMLElement): void {
+  const range = document.createRange();
+  const text = field.firstChild;
+  if (text) {
+    range.setStart(text, 0);
+    range.setEnd(text, baseNameEnd(text.textContent ?? ""));
+  } else {
+    range.selectNodeContents(field);
+  }
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+}
+
+/**
+ * How a name that wraps breaks its lines, on the text at rest and on the text being changed
+ * alike. An editable element brings rules of its own for this (it breaks inside a long word, and
+ * WebKit wraps the space at a line's end), and one of them on the open text alone would move a
+ * word as changing begins. Spaces are kept as typed, so the browser never swaps one for a
+ * no-break space.
+ */
+const wrapped = "wrap-break-word whitespace-pre-wrap [line-break:auto]";
+
+/** A refused name is underlined in danger, as a word that is spelt wrong is. */
+const refusedLine =
+  "aria-invalid:underline aria-invalid:decoration-danger aria-invalid:decoration-1 aria-invalid:underline-offset-[0.25em]";
+
 export type EditableNameProps = Omit<ComponentProps<"span">, "children" | "onChange"> & {
   /** The name as it is: „hero.webp“. */
   value: string;
@@ -37,6 +86,23 @@ export type EditableNameProps = Omit<ComponentProps<"span">, "children" | "onCha
   onRename: (name: string) => string | undefined | Promise<string | undefined>;
   /** The name of the field for assistive tech. */
   label?: string;
+  /**
+   * What stands in the name's place while there is none, muted, worded as what a press does:
+   * „Titel hinzufügen“. At rest it is the key that begins the change; in the field it is the
+   * placeholder.
+   */
+  placeholder?: string;
+  /**
+   * The value may be empty (an optional title): taking an empty field calls `onRename("")`.
+   * Without it an empty field keeps the old name.
+   */
+  allowEmpty?: boolean;
+  /**
+   * The name wraps over as many lines as it takes and is changed as it stands: the text itself
+   * becomes editable and keeps its lines, its size and its place. Still one line of text: Enter
+   * takes it, and a pasted line break becomes a space. For a title; a file name stays one line.
+   */
+  multiline?: boolean;
 };
 
 /**
@@ -49,6 +115,11 @@ export type EditableNameProps = Omit<ComponentProps<"span">, "children" | "onCha
  * field with the reason under it in words, and the name is underlined in danger; nothing shakes.
  * An unchanged or empty name changes nothing.
  *
+ * A value that may be missing (a link's title) takes `allowEmpty` and a `placeholder`: clearing
+ * the field stores nothing, and „Titel hinzufügen“ then stands in the name's place, muted, as the
+ * key that begins the change. A title that wraps takes `multiline`: nothing moves as changing
+ * begins, the lines only gain a caret.
+ *
  * Changing begins where the page says (F2, a menu's „Umbenennen“, a folder just made): set
  * `editing`. Keys pressed in the field stay the field's, also inside a `useSelection` item, and
  * Escape in it closes only the field.
@@ -59,15 +130,27 @@ export function EditableName({
   onEditingChange,
   onRename,
   label,
+  placeholder,
+  allowEmpty = false,
+  multiline = false,
   className,
   ...props
 }: EditableNameProps) {
   const { messages } = useLocale();
   const field = useRef<HTMLInputElement>(null);
+  const lines = useRef<HTMLSpanElement>(null);
+  const opener = useRef<HTMLButtonElement>(null);
   const reasonId = useId();
   const [draft, setDraft] = useState(value);
   const [reason, setReason] = useState<ReactNode>(null);
   const [busy, setBusy] = useState(false);
+  // The text a name that wraps opened with. It is rendered once: while it is typed the text is
+  // the browser's, and a render that wrote it again would take the caret with it.
+  const [opened, setOpened] = useState(value);
+  // Read in the browser's own events: a rename under way is not asked for twice (Enter, then the
+  // focus leaving), and a field closed from the keyboard hands the focus back to its key.
+  const saving = useRef(false);
+  const byKey = useRef(false);
   // Opening starts from the name as it is, without an old reason. State that follows a prop,
   // compared while rendering.
   const [wasEditing, setWasEditing] = useState(editing);
@@ -75,41 +158,178 @@ export function EditableName({
     setWasEditing(editing);
     if (editing) {
       setDraft(value);
+      setOpened(value);
       setReason(null);
     }
   }
   useLayoutEffect(() => {
-    if (!editing) return;
+    if (!editing) {
+      // Closed with Enter or Escape: the focus goes back to the key that opened it, where the
+      // value is still empty and that key stands again.
+      if (byKey.current) opener.current?.focus();
+      byKey.current = false;
+      return;
+    }
     const input = field.current;
-    if (!input) return;
-    input.focus();
-    input.setSelectionRange(0, baseNameEnd(input.value));
+    if (input) {
+      input.focus();
+      input.setSelectionRange(0, baseNameEnd(input.value));
+      return;
+    }
+    const text = lines.current;
+    if (!text) return;
+    text.focus();
+    selectBaseName(text);
   }, [editing]);
 
   const commit = async () => {
-    const next = draft.trim();
-    if (next === value || next === "") {
+    if (saving.current) return;
+    const next = nameToTake(draft, value, allowEmpty);
+    if (next === undefined) {
       onEditingChange(false);
       return;
     }
+    saving.current = true;
     setBusy(true);
     try {
       const refused = await onRename(next);
       if (refused !== undefined) {
         setReason(refused);
-        field.current?.focus();
+        (field.current ?? lines.current)?.focus();
         return;
       }
       onEditingChange(false);
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   };
 
+  // Where there is no name its place is a key, in the name's type, that begins the change.
+  const addKey =
+    value === "" && placeholder !== undefined ? (
+      <button
+        ref={opener}
+        type="button"
+        data-slot="editable-name-placeholder"
+        onClick={() => onEditingChange(true)}
+        className={cn(
+          "touch-target relative inline cursor-text rounded-xs text-start text-fg-muted hover:text-fg-body",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+          multiline && wrapped,
+        )}
+      >
+        {placeholder}
+      </button>
+    ) : null;
+  const refusal = reason !== null && (
+    <span id={reasonId} role="alert" className="text-sm font-semibold text-danger">
+      {reason}
+    </span>
+  );
+
+  if (multiline) {
+    return (
+      <span
+        data-slot="editable-name"
+        data-multiline=""
+        data-editing={editing ? "" : undefined}
+        className={cn("flex min-w-0 flex-col gap-1", className)}
+        {...props}
+      >
+        {/* One box at rest and open, and the text an inline run in it both times: the same
+            lines, to the pixel. */}
+        <span data-slot="editable-name-lines" className={cn("block min-w-0", wrapped)}>
+          {editing ? (
+            <>
+              <span
+                // A node of its own, so the text typed into it goes with it when it closes.
+                key="open"
+                ref={lines}
+                role="textbox"
+                aria-label={label ?? messages.editableName.label}
+                aria-placeholder={placeholder}
+                aria-invalid={reason !== null ? true : undefined}
+                aria-describedby={reason !== null ? reasonId : undefined}
+                aria-busy={busy ? true : undefined}
+                contentEditable="plaintext-only"
+                suppressContentEditableWarning
+                spellCheck={false}
+                data-slot="editable-name-field"
+                onInput={(event) => {
+                  const text = event.currentTarget;
+                  const typed = text.textContent ?? "";
+                  const flat = flattenLines(typed);
+                  // A break that got in some other way than a paste (a drop, a dictation), or a
+                  // `<br>` the browser left in a cleared field: the text is written again as one
+                  // line, with the caret at its end.
+                  if (flat !== typed || text.childElementCount > 0) {
+                    text.textContent = flat;
+                    window.getSelection()?.selectAllChildren(text);
+                    window.getSelection()?.collapseToEnd();
+                  }
+                  setDraft(flat);
+                  if (reason !== null) setReason(null);
+                }}
+                onPaste={(event) => {
+                  event.preventDefault();
+                  const flat = flattenLines(event.clipboardData.getData("text/plain"));
+                  // The browser's own insertion, the only one that stays in its undo history.
+                  document.execCommand("insertText", false, flat);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    byKey.current = true;
+                    void commit();
+                  } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    // Escape here closes the field, not the drawer or the selection around it.
+                    event.stopPropagation();
+                    byKey.current = true;
+                    onEditingChange(false);
+                  }
+                }}
+                onBlur={() => {
+                  byKey.current = false;
+                  if (reason === null) void commit();
+                }}
+                className={cn(wrapped, "caret-accent focus:outline-hidden", refusedLine)}
+              >
+                {opened}
+              </span>
+              {draft === "" && placeholder !== undefined && (
+                // After the caret, where the key stood. A press on it types into the field.
+                <span
+                  aria-hidden
+                  data-slot="editable-name-placeholder"
+                  className="cursor-text text-fg-muted"
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    lines.current?.focus();
+                  }}
+                >
+                  {placeholder}
+                </span>
+              )}
+            </>
+          ) : (
+            (addKey ?? (
+              <span key="closed" data-slot="editable-name-text" className={wrapped}>
+                {value}
+              </span>
+            ))
+          )}
+        </span>
+        {editing && refusal}
+      </span>
+    );
+  }
+
   if (!editing) {
     return (
       <span data-slot="editable-name" className={cn("min-w-0", className)} {...props}>
-        <MiddleTruncate text={value} />
+        {addKey ?? <MiddleTruncate text={value} />}
       </span>
     );
   }
@@ -127,6 +347,7 @@ export function EditableName({
         aria-invalid={reason !== null ? true : undefined}
         aria-describedby={reason !== null ? reasonId : undefined}
         aria-busy={busy ? true : undefined}
+        placeholder={placeholder}
         spellCheck={false}
         autoComplete="off"
         data-slot="editable-name-field"
@@ -137,15 +358,18 @@ export function EditableName({
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault();
+            byKey.current = true;
             void commit();
           } else if (event.key === "Escape") {
             event.preventDefault();
             // Escape here closes the field, not the drawer or the selection around it.
             event.stopPropagation();
+            byKey.current = true;
             onEditingChange(false);
           }
         }}
         onBlur={() => {
+          byKey.current = false;
           if (!busy && reason === null) void commit();
         }}
         className={cn(
@@ -154,16 +378,12 @@ export function EditableName({
           // the selected base name are the field's only signs. `outline-hidden` keeps a real
           // outline for forced colours.
           "m-0 w-full min-w-0 bg-transparent p-0 caret-accent focus:outline-hidden",
-          // Refused: the reason under it says why, and the name is underlined in danger, as a
-          // word that is spelt wrong is.
-          "aria-invalid:underline aria-invalid:decoration-danger aria-invalid:decoration-1 aria-invalid:underline-offset-[0.25em]",
+          "placeholder:text-fg-muted",
+          // Refused: the reason under it says why, and the name is underlined in danger.
+          refusedLine,
         )}
       />
-      {reason !== null && (
-        <span id={reasonId} role="alert" className="text-sm font-semibold text-danger">
-          {reason}
-        </span>
-      )}
+      {refusal}
     </span>
   );
 }
