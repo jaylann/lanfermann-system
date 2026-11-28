@@ -10,7 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/table/table";
-import { revenueDays, visitDays } from "@/components/time-series-chart/story-data";
+import {
+  costServices,
+  revenueDays,
+  serviceCostDays,
+  visitDays,
+} from "@/components/time-series-chart/story-data";
 
 import { Sparkline } from "./sparkline";
 
@@ -100,6 +105,48 @@ export const InATable: Story = {
             <TableCell numeric>{page.aufrufe.toLocaleString("de-DE")}</TableCell>
             <TableCell>
               <Sparkline data={page.verlauf} height={20} end={false} />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  ),
+};
+
+const serviceDays = serviceCostDays(30);
+
+/**
+ * A trend in the colour of what it is about: each service's line wears the series colour its
+ * bars and parts wear on the same page, the remainder the grey. `color` wins over `tone`.
+ */
+export const NamedColours: Story = {
+  name: "Named colours",
+  parameters: { visual: { viewport: { width: 640, height: 280 } } },
+  render: () => (
+    <Table aria-label="Kosten nach Dienst" className="w-[36rem] max-w-full">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Dienst</TableHead>
+          <TableHead numeric>November</TableHead>
+          <TableHead className="w-40">Letzte 30 Tage</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {costServices.map((service) => (
+          <TableRow key={service.key}>
+            <TableCell>{service.label}</TableCell>
+            <TableCell numeric>
+              {serviceDays
+                .reduce((sum, day) => sum + day[service.key], 0)
+                .toLocaleString("de-DE", { style: "currency", currency: "USD" })}
+            </TableCell>
+            <TableCell>
+              <Sparkline
+                data={serviceDays.map((day) => day[service.key])}
+                color={service.color}
+                variant="area"
+                height={24}
+              />
             </TableCell>
           </TableRow>
         ))}

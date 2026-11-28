@@ -1,6 +1,8 @@
 import {
   Analytics01Icon,
   Calendar03Icon,
+  Folder01Icon,
+  FolderAddIcon,
   Home01Icon,
   Invoice01Icon,
   Logout01Icon,
@@ -23,6 +25,7 @@ import { Shortcut, ShortcutProvider } from "@/components/shortcut/shortcut";
 import {
   Command,
   CommandContent,
+  type CommandEntry,
   CommandFooter,
   CommandInput,
   CommandList,
@@ -238,6 +241,91 @@ export const Phone: Story = {
   render: () => <Palette defaultOpen modal={false} />,
 };
 
+/** The folders of a link collection, each after the one it is in, with what it holds. */
+const folders: { path: string[]; count: number }[] = [
+  { path: ["Bewerbung"], count: 3 },
+  { path: ["Bewerbung", "Check24"], count: 2 },
+  { path: ["Bewerbung", "Check24", "2026"], count: 0 },
+  { path: ["Bewerbung", "Check24", "2026", "Zweitgespräch"], count: 4 },
+  { path: ["Bewerbung", "Check24", "2026", "Unterlagen für das Zweitgespräch"], count: 12 },
+  { path: ["Kunden", "Bäckerei Kornprobst", "Website"], count: 18 },
+  { path: ["Kunden", "Gärtnerei Weiß", "Angebotsportal", "Entwürfe"], count: 7 },
+  { path: ["Talks"], count: 5 },
+  { path: ["Talks", "Ohne Folien"], count: 1 },
+];
+
+/**
+ * A folder picker's entries: the top level first, where the link is now, so it is shown but
+ * cannot be chosen again; then every folder, named by its own name with the folders above it
+ * as the `prefix`.
+ */
+function folderEntries(onSelect: (value: string) => void = () => {}): CommandEntry[] {
+  return [
+    { value: "top", label: "Ohne Ordner", icon: Home01Icon, detail: "Hier", disabled: true },
+    ...folders.map(({ path, count }): CommandEntry => {
+      const value = path.join("/");
+      return {
+        value,
+        label: path[path.length - 1] ?? "",
+        prefix: path.length > 1 ? `${path.slice(0, -1).join(" / ")} / ` : undefined,
+        icon: Folder01Icon,
+        detail: count > 0 ? String(count) : undefined,
+        onSelect: () => onSelect(value),
+      };
+    }),
+  ];
+}
+
+function FolderPicker({
+  onSelect,
+  items,
+  ...props
+}: Partial<CommandProps> & { onSelect?: (value: string) => void }) {
+  return (
+    <Command
+      items={items ?? folderEntries(onSelect)}
+      label="Ordner wählen"
+      locale="de-DE"
+      shortcut={false}
+      {...props}
+    >
+      <CommandContent>
+        <CommandInput placeholder="z. B. Zweitgespräch" />
+        <CommandList empty="Zu dieser Suche wurde kein Ordner gefunden." />
+        <CommandFooter />
+      </CommandContent>
+    </Command>
+  );
+}
+
+/**
+ * A folder picker: the top level stands first and cannot be chosen (the link is there), so the
+ * highlight starts on the first folder that can. Each folder is named by its own name; the
+ * folders above it lead up to it, muted.
+ */
+export const Paths: Story = {
+  parameters: {
+    visual: { target: '[data-slot="command-item"]:not([data-highlighted], [data-disabled])' },
+  },
+  render: () => <FolderPicker defaultOpen modal={false} />,
+};
+
+/**
+ * The same in a narrow window: a path gives way from its start, so the folder's own name and
+ * the nearest folders above it stay; only a name too long for the row is cut at its end.
+ */
+export const PathsNarrow: Story = {
+  name: "Paths, narrow",
+  parameters: { visual: { viewport: { width: 360, height: 560 }, clip: "viewport" } },
+  render: () => <FolderPicker defaultOpen modal={false} />,
+};
+
+/** A piece of a path typed: folders are found by the folders above them as well. */
+export const PathsFiltered: Story = {
+  name: "Paths, filtered",
+  render: () => <FolderPicker defaultOpen modal={false} defaultQuery="check24 / 2026" />,
+};
+
 /** What the palette of the test below was asked to do. */
 const chosen = fn<(value: string) => void>();
 
@@ -305,6 +393,109 @@ export const Keyboard: Story = {
       await userEvent.keyboard("{Escape}");
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
       await expect(trigger).toHaveFocus();
+    });
+  },
+};
+
+/** The picker of the test below: folders, and an entry that opens a page with a full first row. */
+function TestedFolderPicker() {
+  return (
+    <FolderPicker
+      defaultOpen
+      items={[
+        ...folderEntries(chosen),
+        {
+          value: "neu",
+          label: "Neuen Ordner anlegen …",
+          icon: FolderAddIcon,
+          pagePlaceholder: "z. B. Bewerbung",
+          page: [
+            { value: "neu:top", label: "Auf oberster Ebene", detail: "Voll", disabled: true },
+            { value: "neu:bewerbung", label: "In Bewerbung", onSelect: () => chosen("neu") },
+            { value: "neu:talks", label: "In Talks", onSelect: () => chosen("neu") },
+          ],
+        },
+      ]}
+    />
+  );
+}
+
+/**
+ * As a test, with a first row that cannot be chosen: the highlight starts on the first row that
+ * can (when the palette opens, after each letter, inside a page and back out of it), so Enter
+ * always has something to take. The arrows still stop on every row, the disabled ones too, and
+ * a folder is found by the folders above it.
+ */
+export const KeyboardWithDisabledRows: Story = {
+  name: "Keyboard, disabled rows",
+  render: () => <TestedFolderPicker />,
+  play: async ({ userEvent, step }) => {
+    chosen.mockClear();
+    const field = () => screen.getByRole("combobox", { name: "Ordner wählen" });
+    const row = (name: string | RegExp) => screen.getByRole("option", { name });
+    const highlighted = (name: string | RegExp) =>
+      waitFor(async () => {
+        await expect(row(name)).toHaveAttribute("data-highlighted");
+        await expect(
+          screen.getAllByRole("option").filter((each) => each.hasAttribute("data-highlighted")),
+        ).toHaveLength(1);
+      });
+
+    await step("it opens with the first row that can be chosen highlighted", async () => {
+      await waitFor(() => expect(field()).toHaveFocus());
+      await expect(row(/Ohne Ordner/)).toHaveAttribute("aria-disabled", "true");
+      await highlighted("Bewerbung 3");
+      await expect(row(/Ohne Ordner/)).not.toHaveAttribute("data-highlighted");
+    });
+
+    await step(
+      "the arrows still stop on a disabled row, and Enter does nothing there",
+      async () => {
+        await userEvent.keyboard("{ArrowUp}");
+        await highlighted(/Ohne Ordner/);
+        await userEvent.keyboard("{Enter}");
+        await expect(chosen).not.toHaveBeenCalled();
+        await expect(screen.getByRole("dialog")).toBeVisible();
+        await userEvent.keyboard("{ArrowDown}");
+        await highlighted("Bewerbung 3");
+      },
+    );
+
+    await step("a query whose first match is disabled highlights the next match", async () => {
+      await userEvent.keyboard("ohne");
+      await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(2));
+      await expect(screen.getAllByRole("option")[0]).toHaveAccessibleName(/Ohne Ordner/);
+      await highlighted(/Ohne Folien/);
+    });
+
+    await step(
+      "a folder is found by a folder above it, and named with its whole path",
+      async () => {
+        await userEvent.clear(field());
+        await highlighted("Bewerbung 3");
+        await userEvent.keyboard("gartnerei");
+        await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(1));
+        await highlighted("Kunden / Gärtnerei Weiß / Angebotsportal / Entwürfe 7");
+      },
+    );
+
+    await step(
+      "a page whose first row is disabled starts on its second, and back again",
+      async () => {
+        await userEvent.clear(field());
+        await userEvent.keyboard("anlegen{Enter}");
+        await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(3));
+        await highlighted("In Bewerbung");
+        await userEvent.keyboard("{Backspace}");
+        await waitFor(() => expect(screen.getAllByRole("option").length).toBeGreaterThan(3));
+        await highlighted("Bewerbung 3");
+      },
+    );
+
+    await step("Enter takes the highlighted folder and closes", async () => {
+      await userEvent.keyboard("ohne{Enter}");
+      await expect(chosen).toHaveBeenCalledWith("Talks/Ohne Folien");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     });
   },
 };

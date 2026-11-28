@@ -76,7 +76,10 @@ export function AxisLabels({
   locale?: Intl.LocalesArgument;
   format?: Intl.NumberFormatOptions;
 }) {
-  const options = axisOptions(format);
+  // The lines that stand decide the decimals together, as the column's sizer does. A line on
+  // its way out keeps the ones it was written with, so it does not round as it fades.
+  const standing = ticks.filter((tick) => !tick.leaving).map((tick) => tick.value);
+  const options = axisOptions(format, standing, locale);
   return (
     <>
       {ticks.map((tick) => (
@@ -87,7 +90,13 @@ export function AxisLabels({
           style={laneAt(undefined, tick.at)}
         >
           <span className="absolute right-0 bottom-0 translate-y-1/2 text-xs whitespace-nowrap text-fg-muted tabular-nums">
-            <RollingNumber value={tick.value} locale={locale} format={options} />
+            <RollingNumber
+              value={tick.value}
+              locale={locale}
+              format={
+                tick.leaving ? axisOptions(format, [...standing, tick.value], locale) : options
+              }
+            />
           </span>
         </div>
       ))}

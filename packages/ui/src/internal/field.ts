@@ -51,6 +51,21 @@ export const fieldShellGrowing = [
   fieldShellStates,
 ].join(" ");
 
+/**
+ * The same shell cut as a dock: a field that floats over the page it belongs to (a composer at
+ * the foot of a grid), with the raised face, light and long float of an `ActionBar` in place of
+ * a socket's edge. With the caret in it, it takes the accent's edge and the field's halo over
+ * that float. Disabled it keeps its float, since the page still runs under it, and loses its
+ * gloss.
+ */
+export const fieldShellDock = [
+  "group/field relative block w-full min-w-0 cursor-text bg-raised text-control text-fg depth-dock pointer-coarse:text-base",
+  "[--grow-also:box-shadow_var(--transition-duration-spring-snap)_var(--ease-spring-snap),background-color_var(--transition-duration-spring-snap)_var(--ease-spring-snap)]",
+  "has-[[data-field-control]:focus]:depth-dock-focus",
+  "has-[[data-field-control][data-invalid]]:depth-dock-invalid has-[[data-field-control][data-invalid]:focus]:depth-dock-invalid",
+  "has-[[data-field-control][data-disabled]]:cursor-default has-[[data-field-control][data-disabled]]:bg-disabled has-[[data-field-control][data-disabled]]:bg-none has-[[data-field-control][data-disabled]]:text-on-disabled",
+].join(" ");
+
 /** Corner and the field's variables by size, without the fixed height of `fieldShellSize`. */
 export const fieldShellGrowingSize = {
   sm: "rounded-sm [--field-height:var(--control-sm)] [--field-pad:var(--field-pad-sm)] [--field-radius:var(--radius-sm)]",

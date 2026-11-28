@@ -6,8 +6,10 @@ import { type ComponentProps, type ReactNode, useRef, useState } from "react";
 import { Button, type ButtonProps } from "@/components/button/button";
 import { RollingNumber } from "@/components/rolling-number/rolling-number";
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
+import { useToasterLift } from "@/components/toast/toaster-lift";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 
 export type ActionBarProps = Omit<ComponentProps<"div">, "children"> & {
   /** There is a selection: the bar shows. */
@@ -62,7 +64,8 @@ const places = {
  * the Tab key, and the arrow keys move between its actions. Escape, pressed inside it, takes
  * the selection back, and so does the cross.
  *
- * It does not take the focus when it appears: whoever is ticking rows keeps doing that.
+ * It does not take the focus when it appears: whoever is ticking rows keeps doing that. A toast
+ * that shows meanwhile stands above the bar, not on it.
  */
 export function ActionBar({
   open,
@@ -75,8 +78,14 @@ export function ActionBar({
   ground = "ink",
   className,
   children,
+  ref,
   ...props
 }: ActionBarProps) {
+  // A toast must not cover the bar: while it is open at the window's foot, the stack of the
+  // `Toaster` stands above it.
+  const bar = useRef<HTMLDivElement>(null);
+  useToasterLift(bar, open);
+
   // While it leaves it still says how many there were, not "0". And each time it arrives it
   // brings a count of its own (`key`): a number that is not seen yet has nothing to roll from.
   const [last, setLast] = useState(count);
@@ -108,6 +117,7 @@ export function ActionBar({
       )}
     >
       <ToolbarPrimitive.Root
+        ref={mergeRefs(bar, ref)}
         data-slot="action-bar"
         data-theme={ground}
         data-open={open ? "" : undefined}

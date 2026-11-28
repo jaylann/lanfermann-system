@@ -21,6 +21,7 @@ import { type Shape, useMorph } from "@/internal/chart/morph";
 import { areaPath, type Curve, linePath, type MaybePoint, SIZE } from "@/internal/chart/path";
 import { Readout, type ReadoutRow } from "@/internal/chart/readout";
 import { extent, nearest, share, valueAxis } from "@/internal/chart/scale";
+import { type SeriesColor, seriesPaint, seriesPaintOf } from "@/internal/chart/series-color";
 import {
   inferInterval,
   pointLabel,
@@ -43,6 +44,12 @@ export type TimeSeriesChartSeries<Row> = {
    * the de-emphasis grey, under the others and without an area.
    */
   kind?: "comparison";
+  /**
+   * The colour this series wears wherever it stands: one of the six series colours, or `muted`.
+   * Without it the place decides (the first is 1, the second 2), `tone` for a single series
+   * and the grey for a `comparison`. Name the colour of every series of a chart, or of none.
+   */
+  color?: SeriesColor;
 };
 
 export type TimeSeriesChartActive<Row> = { index: number; row: Row };
@@ -79,7 +86,7 @@ export type TimeSeriesChartProps<Row> = Omit<ComponentProps<"figure">, "children
   /**
    * The colour of a single series. `neutral`, the text colour, measures (as a `Meter` does);
    * `accent` is Indigo, for the one chart a view is about. Several series take the series
-   * colours in their fixed order.
+   * colours in their fixed order; a series that names its own `color` wears that instead.
    */
   tone?: "neutral" | "accent";
   /** How values are written, as `Intl.NumberFormat` options: `{ style: "currency", currency: "EUR" }`. */
@@ -186,9 +193,11 @@ export function TimeSeriesChart<Row>({
   // Colours follow the series, not their place among those shown: hiding one repaints nothing.
   const main = series.filter((entry) => entry.kind !== "comparison");
   const colorOf = (entry: TimeSeriesChartSeries<Row>) => {
-    if (entry.kind === "comparison") return "var(--lf-series-muted)";
-    if (main.length === 1) return tone === "accent" ? "var(--lf-series-1)" : "var(--lf-text)";
-    return `var(--lf-series-${Math.min(main.indexOf(entry), 5) + 1})`;
+    if (entry.color === undefined) {
+      if (entry.kind === "comparison") return seriesPaint("muted").fill;
+      if (main.length === 1) return tone === "accent" ? "var(--lf-series-1)" : "var(--lf-text)";
+    }
+    return seriesPaintOf(entry.color, main.indexOf(entry)).fill;
   };
   const shown = series.filter((entry) => !hidden.has(entry.key));
   // Comparison first, so the news is drawn over the context.
@@ -207,6 +216,7 @@ export function TimeSeriesChart<Row>({
   }, [rows, series, hidden, target, zero, area, height]);
   const up = (number: number) => share(number, axis.domain);
   const valueTicks = useAxisTicks(axis.ticks, axis.domain);
+  const axisLabel = numbers.axisFor(axis.ticks);
   const base = 1 - Math.min(1, Math.max(0, up(0)));
 
   const shapes = useMemo<Shape[]>(
@@ -371,7 +381,7 @@ export function TimeSeriesChart<Row>({
         >
           {axis.ticks.map((tick) => (
             <span key={tick} className="col-start-1 row-start-1">
-              {numbers.axis(tick)}
+              {axisLabel(tick)}
             </span>
           ))}
         </div>

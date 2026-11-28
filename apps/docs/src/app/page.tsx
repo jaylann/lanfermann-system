@@ -140,6 +140,7 @@ import {
   SegmentedControl,
   Select,
   SelectContent,
+  SelectField,
   SelectItem,
   SelectTrigger,
   Separator,
@@ -371,6 +372,14 @@ export default function Home() {
                           </SelectContent>
                         </Select>
                       </Field>
+                      {/* The same wiring as one part, placed from this server page as plain data. */}
+                      <SelectField
+                        name="rechtsform"
+                        label="Rechtsform"
+                        description="So steht sie im Impressum."
+                        items={{ einzel: "Einzelunternehmen", gbr: "GbR", gmbh: "GmbH" }}
+                        defaultValue="einzel"
+                      />
                       <Field>
                         <FieldLabel>Über den Betrieb</FieldLabel>
                         <Textarea placeholder="z. B. Küchen und Einbauschränke nach Maß" />

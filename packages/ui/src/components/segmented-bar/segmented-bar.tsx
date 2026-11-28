@@ -3,6 +3,7 @@
 import { type ComponentProps, useLayoutEffect, useRef, useState } from "react";
 
 import { chartFormat } from "@/internal/chart/format";
+import { type SeriesColor, seriesPaintOf } from "@/internal/chart/series-color";
 import { cn } from "@/lib/cn";
 
 export type SegmentedBarItem = {
@@ -10,6 +11,12 @@ export type SegmentedBarItem = {
   value: number;
   /** Stays the same while the parts change; the name when left out. */
   key?: string;
+  /**
+   * The colour this part wears wherever it stands: one of the six series colours, or `muted`
+   * for a remainder („Sonstige“). Without it the place decides (the first is 1, the second 2).
+   * Name the colour of every part of a bar, or of none.
+   */
+  color?: SeriesColor;
 };
 
 export type SegmentedBarProps = Omit<ComponentProps<"div">, "children"> & {
@@ -34,7 +41,8 @@ export type SegmentedBarProps = Omit<ComponentProps<"div">, "children"> & {
 
 /**
  * One whole split into its parts: invoices by state, a budget by category. Each part takes its
- * share of the width in the series colours, a 2px gap between two. For parts that are compared
+ * share of the width in the series colours (by its place, or the `color` it names), a 2px gap
+ * between two. For parts that are compared
  * with each other, or more than six, use a `BarList`; a donut is not offered (an angle is
  * harder to read than a length).
  *
@@ -75,7 +83,7 @@ export function SegmentedBar({
   const firstDrawn = drawn[0]?.key;
   const lastDrawn = drawn.at(-1)?.key;
   const radius = size === "tall" ? 5 : 4;
-  const colorOf = (index: number) => `var(--lf-series-${Math.min(index, 5) + 1})`;
+  const paintOf = (part: Part) => seriesPaintOf(part.item.color, part.index);
   const percent = (value: number) => `${Math.round(value * 100000) / 1000}%`;
 
   // A share printed in a part shows only where it fits with room on both sides; it is never
@@ -129,7 +137,7 @@ export function SegmentedBar({
                 onPointerEnter={() => setActive(part.key)}
                 className="absolute inset-0 transition-[clip-path,opacity] spring-settle data-quiet:opacity-35"
                 style={{
-                  backgroundColor: colorOf(part.index),
+                  backgroundColor: paintOf(part).fill,
                   clipPath: `inset(0 ${right} 0 ${left} round ${radius}px)`,
                 }}
               >
@@ -140,7 +148,7 @@ export function SegmentedBar({
                     style={{
                       left: `calc(${percent(part.start)} + 8px)`,
                       width: `calc(${percent(part.share)} - 16px)`,
-                      color: `var(--lf-on-series-${Math.min(part.index, 5) + 1})`,
+                      color: paintOf(part).on,
                     }}
                   >
                     {numbers.share(part.share)}
@@ -165,7 +173,7 @@ export function SegmentedBar({
             >
               <span
                 className="size-2.5 shrink-0 rounded-[3px]"
-                style={{ backgroundColor: colorOf(part.index) }}
+                style={{ backgroundColor: paintOf(part).fill }}
               />
               {part.item.name}
               <span className="text-fg-muted tabular-nums">{numbers.share(part.share)}</span>

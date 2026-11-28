@@ -27,7 +27,7 @@ import { Grow } from "@/components/grow/grow";
 import { Icon } from "@/components/icon/icon";
 import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip/tooltip";
-import { fieldShellGrowing, focusFieldControl } from "@/internal/field";
+import { fieldShellDock, fieldShellGrowing, focusFieldControl } from "@/internal/field";
 import { StopGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -87,6 +87,13 @@ export type PromptInputProps = Omit<
   /** The largest size a file may have, in bytes. */
   maxSize?: number;
   disabled?: boolean;
+  /**
+   * What the field is cut as. `field` (the default): a socket in the page, like every text
+   * field. `dock`: one raised surface that floats over the page it belongs to, like an
+   * `ActionBar`, for a composer docked at the foot of a list or a grid. The page places it
+   * (`sticky bottom-0`, a width); a toast is kept off it with `useToasterLift`.
+   */
+  surface?: "field" | "dock";
 };
 
 /**
@@ -120,6 +127,7 @@ export function PromptInput({
   accept,
   maxSize,
   disabled = false,
+  surface = "field",
   className,
   children,
   ...props
@@ -196,6 +204,7 @@ export function PromptInput({
     <PromptContext value={context}>
       <form
         data-slot="prompt-input"
+        data-surface={surface}
         data-running={running ? "" : undefined}
         data-dragging={dragging ? "" : undefined}
         className={cn("w-full min-w-0", className)}
@@ -236,9 +245,11 @@ export function PromptInput({
           // The field eases to a new height with its text held at its foot: the line being
           // typed is there from its first frame, and only the top edge moves.
           className={cn(
-            fieldShellGrowing,
+            surface === "dock" ? fieldShellDock : fieldShellGrowing,
             "flex flex-col justify-end rounded-xl [--field-pad:0.75rem] [--field-radius:var(--radius-xl)]",
-            "in-data-dragging:depth-field-focus",
+            surface === "dock"
+              ? "in-data-dragging:depth-dock-focus"
+              : "in-data-dragging:depth-field-focus",
           )}
           // A grid (its areas are in assistant.css); as a utility, so it beats Grow's own box.
           contentClassName="grid p-1"

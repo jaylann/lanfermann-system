@@ -1,0 +1,79 @@
+/*
+ * A ground in colours of its own: a brand's page behind its QR code, a customer's white and deep
+ * blue in a preview. `<Ground background="…" foreground="…">` sets the two properties below (and
+ * `--ground-accent`, if the brand has one), and everything a surface needs is mixed from them the
+ * way the kit's grounds are built: body and muted text and lines step back toward the ground,
+ * hairlines and washes are the text colour made thin, surfaces lift a little off the ground, and
+ * the focus ring is the accent, or the text colour where the brand has none, which always shows.
+ *
+ *   --ground-background   what the surface is painted in
+ *   --ground-foreground   its text; keep the two at least 7:1 apart, so muted text still reads
+ *   --ground-accent       links, the focus ring, an accent key (the foreground when left out)
+ *
+ * It rides on the kit ground it is nearest to (`ground` on the same element, Paper or Ink in
+ * most cases): depth, status, chart and code colours, the colour scheme and the sheet of a popup
+ * opened from it stay that ground's, since two colours cannot say what those should be. The
+ * colour scheme of that ground also says which way a surface lifts (`light-dark()` below).
+ *
+ * The selector repeats its attribute so that it outranks every ground block, also the dark ones
+ * and a light scope inside a dark page, whatever the order of the files: the colours named on an
+ * element are the ones it wears. (A ground nested inside it names its own again and wins there,
+ * since it is set on that element.) A test mixes a few pairs and holds the text to WCAG.
+ */
+[data-ground-custom][data-ground-custom][data-ground-custom][data-ground-custom] {
+  --ground-ink: var(--ground-foreground);
+  --ground-mark: var(--ground-accent, var(--ground-foreground));
+
+  --lf-ground: var(--ground-background);
+  --lf-text: var(--ground-ink);
+  --lf-text-body: color-mix(in oklab, var(--ground-ink) 88%, var(--ground-background));
+  --lf-text-muted: color-mix(in oklab, var(--ground-ink) 70%, var(--ground-background));
+  --lf-line: color-mix(in oklab, var(--ground-ink) 48%, var(--ground-background));
+  --lf-rule: var(--ground-ink);
+  --lf-accent: var(--ground-mark);
+  --lf-on-accent: var(--ground-background);
+  /* A surface lifts off its ground: toward white where the room is light (as Paper's white
+     sheets do, so a field never looks sunk into grey), toward the text where it is dark. */
+  --lf-surface: light-dark(
+    color-mix(in oklab, white 65%, var(--ground-background)),
+    color-mix(in oklab, var(--ground-ink) 4%, var(--ground-background))
+  );
+  --lf-surface-quiet: color-mix(in oklab, var(--ground-ink) 8%, var(--ground-background));
+
+  /* UI layer */
+  --lf-raised: light-dark(
+    color-mix(in oklab, white 65%, var(--ground-background)),
+    color-mix(in oklab, var(--ground-ink) 6%, var(--ground-background))
+  );
+  --lf-raised-pressed: light-dark(
+    color-mix(in oklab, var(--ground-ink) 6%, var(--ground-background)),
+    color-mix(in oklab, var(--ground-ink) 11%, var(--ground-background))
+  );
+  --lf-sheet: light-dark(
+    color-mix(in oklab, white 65%, var(--ground-background)),
+    color-mix(in oklab, var(--ground-ink) 4%, var(--ground-background))
+  );
+  --lf-key: var(--ground-ink);
+  --lf-key-hover: color-mix(in oklab, var(--ground-ink) 90%, var(--ground-background));
+  --lf-key-pressed: color-mix(in oklab, var(--ground-ink) 82%, var(--ground-background));
+  --lf-on-key: var(--ground-background);
+  --lf-accent-hover: color-mix(in oklab, var(--ground-mark) 88%, var(--ground-background));
+  --lf-accent-pressed: color-mix(in oklab, var(--ground-mark) 78%, var(--ground-background));
+  --lf-tint: color-mix(in oklab, var(--ground-mark) 12%, var(--ground-background));
+  --lf-hairline: color-mix(in oklab, var(--ground-ink) 14%, transparent);
+  --lf-hover: color-mix(in oklab, var(--ground-ink) 6%, transparent);
+  --lf-disabled: color-mix(in oklab, var(--ground-ink) 8%, var(--ground-background));
+  --lf-on-disabled: color-mix(in oklab, var(--ground-ink) 74%, var(--ground-background));
+  --lf-fill-disabled: color-mix(in oklab, var(--ground-ink) 74%, var(--ground-background));
+  --lf-trough: color-mix(in oklab, var(--ground-ink) 12%, var(--ground-background));
+  --lf-well: color-mix(in oklab, var(--ground-ink) 5%, var(--ground-background));
+  --lf-placeholder: color-mix(in oklab, var(--ground-ink) 12%, var(--ground-background));
+  --lf-avatar: var(--ground-ink);
+  --lf-on-avatar: var(--ground-background);
+  --lf-ask-block: var(--ground-mark);
+  --lf-on-ask-block: var(--ground-background);
+  --lf-key-block: var(--ground-ink);
+  --lf-on-key-block: var(--ground-background);
+  --lf-floor: color-mix(in oklab, var(--ground-ink) 8%, var(--ground-background));
+  --lf-selection: var(--ground-mark);
+}

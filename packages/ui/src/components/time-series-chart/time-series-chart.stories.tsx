@@ -9,7 +9,7 @@ import { Segment, SegmentedControl } from "@/components/segmented-control/segmen
 import { Stat, StatLabel, StatValue } from "@/components/stat/stat";
 import { pointLabel, toTime } from "@/internal/chart/time";
 
-import { requestHours, revenueDays, revenueMonths, visitDays } from "./story-data";
+import { costDays, requestHours, revenueDays, revenueMonths, visitDays } from "./story-data";
 import { TimeSeriesChart } from "./time-series-chart";
 
 const meta = {
@@ -318,6 +318,87 @@ export const InACard: Story = {
     },
   },
   render: () => <RevenueCard />,
+};
+
+const dollar = { style: "currency", currency: "USD" } as const;
+const costs = {
+  november: costDays(0.95),
+  oktober: costDays(38, 31, new Date(2026, 9, 31), 17),
+};
+type CostMonth = keyof typeof costs;
+
+/**
+ * A month almost without costs: the axis tops out at one dollar and counts in quarters, so its
+ * lines carry the two decimals a quarter needs („0,25 $“, not „0,3 $“). Whole lines stay whole.
+ */
+export const SmallAmounts: Story = {
+  name: "Small amounts",
+  render: () => (
+    <TimeSeriesChart
+      className="w-[42rem] max-w-full"
+      label="Kosten pro Tag"
+      variant="area"
+      data={costs.november}
+      x="tag"
+      series={[{ key: "kosten", label: "Kosten" }]}
+      format={dollar}
+    />
+  ),
+};
+
+/**
+ * Another month, another scale: the decimals of the axis leave as the amounts grow and come
+ * back with the quiet month, each label rolling to its new value while the column eases.
+ */
+export const ChangingDecimals: Story = {
+  name: "Changing decimals",
+  parameters: {
+    visual: {
+      viewport: { width: 820, height: 480 },
+      motion: [
+        { name: "decimals-leave", click: '[data-step="oktober"]' },
+        {
+          name: "decimals-return",
+          click: '[data-step="oktober"]',
+          then: { click: '[data-step="november"]', at: 5000 },
+        },
+      ],
+    },
+  },
+  render: function Render() {
+    const [month, setMonth] = useState<CostMonth>("november");
+    return (
+      <Card className="w-[46rem] max-w-full">
+        <CardBar>
+          <Heading level={2} size="label">
+            Kosten pro Tag
+          </Heading>
+          <SegmentedControl
+            aria-label="Monat"
+            value={month}
+            onValueChange={(next) => setMonth(next as CostMonth)}
+          >
+            <Segment value="oktober" data-step="oktober">
+              Oktober
+            </Segment>
+            <Segment value="november" data-step="november">
+              November
+            </Segment>
+          </SegmentedControl>
+        </CardBar>
+        <div className="px-5 pt-4 pb-5">
+          <TimeSeriesChart
+            label="Kosten pro Tag"
+            variant="area"
+            data={costs[month]}
+            x="tag"
+            series={[{ key: "kosten", label: "Kosten" }]}
+            format={dollar}
+          />
+        </div>
+      </Card>
+    );
+  },
 };
 
 /** On a phone: the axis keeps fewer marks, a finger scrubs sideways and the page still scrolls. */

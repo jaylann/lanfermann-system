@@ -18,6 +18,7 @@ import { lane, laneAt } from "@/internal/chart/lane";
 import { ChartLegend, type LegendItem } from "@/internal/chart/legend";
 import { Readout, type ReadoutRow } from "@/internal/chart/readout";
 import { bands, extent, share, valueAxis } from "@/internal/chart/scale";
+import { type SeriesColor, seriesPaintOf } from "@/internal/chart/series-color";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
 
@@ -25,6 +26,12 @@ export type BarChartSeries<Row> = {
   /** The field of a row that holds this series' value. */
   key: keyof Row & string;
   label: string;
+  /**
+   * The colour this series wears wherever it stands: one of the six series colours, or `muted`
+   * for a remainder. Without it the place decides (the first is 1, the second 2), or `tone`
+   * for a single series. Name the colour of every series of a chart, or of none.
+   */
+  color?: SeriesColor;
 };
 
 export type BarChartActive<Row> = { index: number; row: Row };
@@ -41,7 +48,10 @@ export type BarChartProps<Row> = Omit<ComponentProps<"figure">, "children"> & {
   categoryLabel?: (row: Row) => string;
   /** Several series side by side (`grouped`) or on each other as parts of a whole (`stacked`). */
   layout?: "grouped" | "stacked";
-  /** The colour of a single series: the text colour, or Indigo for the one chart a view is about. */
+  /**
+   * The colour of a single series: the text colour, or Indigo for the one chart a view is
+   * about. A series that names its own `color` wears that instead.
+   */
   tone?: "neutral" | "accent";
   /** How values are written, as `Intl.NumberFormat` options. */
   format?: Intl.NumberFormatOptions;
@@ -114,11 +124,11 @@ export function BarChart<Row>({
   const shown = series.filter((entry) => !hidden.has(entry.key));
   const stacked = layout === "stacked" && shown.length > 1;
   const colorOf = (entry: BarChartSeries<Row>) =>
-    series.length === 1
+    entry.color === undefined && series.length === 1
       ? tone === "accent"
         ? "var(--lf-series-1)"
         : "var(--lf-text)"
-      : `var(--lf-series-${Math.min(series.indexOf(entry), 5) + 1})`;
+      : seriesPaintOf(entry.color, series.indexOf(entry)).fill;
   const nameOf = (row: Row) => {
     if (categoryLabel) return categoryLabel(row);
     const raw = (row as Record<string, unknown>)[x];
@@ -137,6 +147,7 @@ export function BarChart<Row>({
   }, [data, series, hidden, stacked, height]);
   const up = (number: number) => share(number, axis.domain);
   const ticks = useAxisTicks(axis.ticks, axis.domain);
+  const axisLabel = numbers.axisFor(axis.ticks);
   const zero = up(0);
   const slots = bands(data.length, data.length > 16 ? 0.25 : 0.35);
 
@@ -315,7 +326,7 @@ export function BarChart<Row>({
         >
           {axis.ticks.map((tick) => (
             <span key={tick} className="col-start-1 row-start-1">
-              {numbers.axis(tick)}
+              {axisLabel(tick)}
             </span>
           ))}
         </div>

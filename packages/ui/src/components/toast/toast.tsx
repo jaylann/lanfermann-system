@@ -144,6 +144,9 @@ export type ToasterProps = {
  * Where toasts appear: bottom right, newest in front, older ones peeking out behind it. Hovering
  * or focusing the stack (F6 jumps to it) spreads it into a list and holds the timers. A toast can
  * be swiped away to the right or downwards.
+ *
+ * The stack stands clear of what is docked at the window's foot: an `ActionBar` lifts it by
+ * itself, and a page's own docked part (a composer) does with `useToasterLift`.
  */
 export function Toaster({
   limit = 3,
@@ -157,8 +160,14 @@ export function Toaster({
         <ToastPrimitive.Viewport
           data-slot="toast-viewport"
           aria-label={label}
-          // On a phone the stack keeps clear of the home indicator and the rounded corners.
-          className="fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 w-[calc(100vw-2rem)] sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:w-90"
+          className={cn(
+            // On a phone the stack keeps clear of the home indicator and the rounded corners.
+            "fixed right-[max(1rem,env(safe-area-inset-right))] bottom-(--toaster-foot) z-50 w-[calc(100vw-2rem)] [--toaster-foot:max(1rem,env(safe-area-inset-bottom))] sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:w-90 sm:[--toaster-foot:max(1.5rem,env(safe-area-inset-bottom))]",
+            // Above whatever is docked at the window's foot (`useToasterLift`), 12px clear of
+            // it. The stack is quicker than the bar under it: it is out of the way before the
+            // bar is seen, and it waits for a leaving bar to fade before it comes back down.
+            "translate-y-[calc(-1*max(0px,var(--toaster-lift,0px)+0.75rem-var(--toaster-foot)))] transition-[translate] delay-100 spring-settle in-data-toaster-lifted:delay-0 motion-reduce:transition-none",
+          )}
         >
           <ToastList closeLabel={closeLabel} />
         </ToastPrimitive.Viewport>

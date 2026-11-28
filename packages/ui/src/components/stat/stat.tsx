@@ -1,7 +1,9 @@
+import type { useRender } from "@base-ui/react/use-render";
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import type { ComponentProps, ReactNode } from "react";
 
 import { Icon } from "@/components/icon/icon";
+import { renderAs } from "@/internal/render-as";
 import { ruleTop } from "@/internal/rule";
 import { cn } from "@/lib/cn";
 
@@ -112,7 +114,7 @@ const defaultTrendLabels: Record<StatTrend, string> = {
   flat: "Unverändert",
 };
 
-export type StatChangeProps = ComponentProps<"p"> & {
+export type StatChangeProps = useRender.ComponentProps<"p"> & {
   trend: StatTrend;
   /**
    * Whether the change is good news, which only the caller knows: more revenue is, more
@@ -133,26 +135,23 @@ export type StatChangeProps = ComponentProps<"p"> & {
  * When the trend turns, the arrow turns with it. Where the figure changes while it is on screen,
  * give the amount as a `RollingNumber` (`{ style: "percent", signDisplay: "exceptZero" }`), as
  * the `StatValue` takes one: it rolls to the new amount and its sign turns over.
+ *
+ * It is a paragraph. Inside a control, where a paragraph may not stand (the tab of a
+ * `StatTab`, a button, a link), hand it the element to be: `render={<span />}`.
  */
 export function StatChange({
   trend,
   tone = "neutral",
   context,
   trendLabels,
+  render,
   className,
   children,
   ...props
 }: StatChangeProps) {
   const labels = { ...defaultTrendLabels, ...trendLabels };
-  return (
-    <p
-      data-slot="stat-change"
-      data-trend={trend}
-      data-tone={tone}
-      // What it is compared with goes under the amount where the column is narrow, not cut off.
-      className={cn("flex min-w-0 flex-wrap items-center gap-x-1 text-sm", className)}
-      {...props}
-    >
+  const parts = (
+    <>
       <Icon
         icon={ArrowUpRight01Icon}
         size={14}
@@ -174,6 +173,15 @@ export function StatChange({
         {children}
       </span>
       {context !== undefined && <span className="text-fg-muted">{context}</span>}
-    </p>
+    </>
   );
+  return renderAs("p", render, {
+    ...props,
+    "data-slot": "stat-change",
+    "data-trend": trend,
+    "data-tone": tone,
+    // What it is compared with goes under the amount where the column is narrow, not cut off.
+    className: cn("flex min-w-0 flex-wrap items-center gap-x-1 text-sm", className),
+    children: parts,
+  });
 }

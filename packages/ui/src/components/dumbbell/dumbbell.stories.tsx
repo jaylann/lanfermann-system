@@ -51,6 +51,29 @@ export const Default: Story = {
   ),
 };
 
+const dollar = { style: "currency", currency: "USD" } as const;
+const perThousand: DumbbellItem[] = [
+  { name: "Bilder ausliefern", from: 0.92, to: 0.71 },
+  { name: "E-Mails versenden", from: 0.55, to: 0.6 },
+  { name: "Seiten ausliefern", from: 0.28, to: 0.17 },
+  { name: "Protokolle speichern", from: 0.09, to: 0.07 },
+];
+
+/** Amounts under one dollar: the axis counts in quarters and says them in full („0,25 $“). */
+export const SmallAmounts: Story = {
+  name: "Small amounts",
+  render: () => (
+    <Dumbbell
+      className="w-[42rem] max-w-full"
+      label="Kosten je tausend Aufrufe im Oktober und November"
+      labels={["Oktober", "November"]}
+      data={perThousand}
+      format={dollar}
+      zero
+    />
+  ),
+};
+
 /** Planned against worked hours; some went down. Sorted: the largest rise first. */
 export const PlannedAndActual: Story = {
   name: "Planned and actual",

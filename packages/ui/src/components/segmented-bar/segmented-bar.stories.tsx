@@ -107,6 +107,30 @@ export const InAList: Story = {
   ),
 };
 
+const dollar = { style: "currency", currency: "USD" } as const;
+const costs: SegmentedBarItem[] = [
+  { name: "Claude", value: 148.2, color: 3 },
+  { name: "Supabase", value: 37.9, color: 5 },
+  { name: "CloudFront", value: 31.4, color: 1 },
+  { name: "Sonstige", value: 24.6, color: "muted" },
+];
+
+/**
+ * Parts with an identity of their own name their colour: a service wears the series colour
+ * nearest its brand wherever it stands, and the remainder is the grey, last. Tall, each share
+ * is printed in the text that reads on its fill.
+ */
+export const NamedColours: Story = {
+  name: "Named colours",
+  parameters: { visual: { viewport: { width: 620, height: 260 } } },
+  render: () => (
+    <div className="flex w-[34rem] max-w-full flex-col gap-8">
+      <SegmentedBar label="Kosten nach Dienst" size="tall" data={costs} format={dollar} />
+      <SegmentedBar label="Kosten nach Dienst" data={costs} format={dollar} legend={false} />
+    </div>
+  ),
+};
+
 const months: SegmentedBarItem[][] = [
   invoices,
   [

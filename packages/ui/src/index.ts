@@ -239,6 +239,8 @@ export {
   DetailPaneLayout,
   type DetailPaneLayoutProps,
   type DetailPaneProps,
+  StickyDetailPane,
+  type StickyDetailPaneProps,
 } from "./components/detail-pane/detail-pane";
 export {
   Dialog,
@@ -499,6 +501,12 @@ export {
   ReferenceEntryName,
   ReferenceEntryTitle,
 } from "./components/reference-entry/reference-entry";
+export {
+  ReflowGrid,
+  type ReflowGridProps,
+  ReflowTile,
+  type ReflowTileProps,
+} from "./components/reflow-grid/reflow-grid";
 export { RelativeTime, type RelativeTimeProps } from "./components/relative-time/relative-time";
 export { RollingNumber, type RollingNumberProps } from "./components/rolling-number/rolling-number";
 export { ScrollFade, type ScrollFadeProps } from "./components/scroll-fade/scroll-fade";
@@ -534,6 +542,11 @@ export {
   type SelectTriggerProps,
 } from "./components/select/select";
 export {
+  SelectField,
+  type SelectFieldItems,
+  type SelectFieldProps,
+} from "./components/select-field/select-field";
+export {
   type Selection,
   type SelectionContainerProps,
   type SelectionItemProps,
@@ -562,6 +575,12 @@ export {
   SideNavSubLink,
   type SideNavSubLinkProps,
 } from "./components/side-nav/side-nav";
+export {
+  SideNavTree,
+  SideNavTreeItem,
+  type SideNavTreeItemProps,
+  type SideNavTreeProps,
+} from "./components/side-nav/side-nav-tree";
 export {
   Sidebar,
   SidebarButton,
@@ -644,6 +663,12 @@ export {
   StatValue,
 } from "./components/stat/stat";
 export {
+  StatTab,
+  type StatTabProps,
+  StatTabsList,
+  type StatTabsListProps,
+} from "./components/stat/stat-tabs";
+export {
   Step,
   type StepProps,
   Steps,
@@ -723,6 +748,7 @@ export {
   type ToastOptions,
   type ToastTone,
 } from "./components/toast/toast";
+export { useToasterLift } from "./components/toast/toaster-lift";
 export { Toggle, type ToggleProps } from "./components/toggle/toggle";
 export { ToggleGroup, type ToggleGroupProps } from "./components/toggle-group/toggle-group";
 export {
@@ -764,6 +790,7 @@ export {
   type WaterfallProps,
   type WaterfallStep,
 } from "./components/waterfall/waterfall";
+export { type SeriesColor } from "./internal/chart/series-color";
 export { cn, mergeClassName } from "./lib/cn";
 export {
   type DateOptions,

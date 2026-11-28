@@ -3,9 +3,10 @@ import type { ComponentProps, ReactNode } from "react";
 import { lane, laneAt } from "@/internal/chart/lane";
 import { areaPath, type Curve, linePath, type MaybePoint, SIZE } from "@/internal/chart/path";
 import { extent, share } from "@/internal/chart/scale";
+import { type SeriesColor, seriesPaint } from "@/internal/chart/series-color";
 import { cn } from "@/lib/cn";
 
-export type SparklineProps = Omit<ComponentProps<"span">, "children"> & {
+export type SparklineProps = Omit<ComponentProps<"span">, "children" | "color"> & {
   /** The values, oldest first. `null` is a gap. */
   data: readonly (number | null)[];
   /** `area` washes the room under the line, fading to its foot. */
@@ -15,6 +16,11 @@ export type SparklineProps = Omit<ComponentProps<"span">, "children"> & {
    * the quiet grey for a trend that is only context.
    */
   tone?: "neutral" | "accent" | "muted";
+  /**
+   * The series colour of what the line is about, where that has one of its own: the trend of a
+   * service in the colour its bars and parts wear. It wins over `tone`.
+   */
+  color?: SeriesColor;
   curve?: Curve;
   /** Its height in px; it takes the width of its place. */
   height?: number;
@@ -48,6 +54,7 @@ export function Sparkline({
   data,
   variant = "line",
   tone = "neutral",
+  color: named,
   curve = "smooth",
   height = 32,
   zero = false,
@@ -79,7 +86,7 @@ export function Sparkline({
   const lastIndex = points.findLastIndex((point) => point !== null);
   const last = lastIndex === -1 ? null : points[lastIndex]!;
   const base = 1 - Math.min(1, Math.max(0, share(Math.max(domain[0], 0), domain)));
-  const color = colors[tone];
+  const color = named === undefined ? colors[tone] : seriesPaint(named).fill;
 
   const box = (children: ReactNode, mask?: string) => (
     <svg
