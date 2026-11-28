@@ -44,7 +44,7 @@ export function StatTabsList({ className, children, ...props }: StatTabsListProp
 }
 
 export type StatTabProps = Omit<TabsPrimitive.Tab.Props, "children"> & {
-  /** What the figure is: a noun („Klicks“, „Durchschnittliche Position“). */
+  /** What the figure is: a noun („Besuche“, „Durchschnittliche Position“). */
   label: ReactNode;
   /**
    * How the figure moved, under it: a `StatChange` with `render={<span />}` (a paragraph may
