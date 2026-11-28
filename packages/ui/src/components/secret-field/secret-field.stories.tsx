@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, spyOn, waitFor } from "storybook/test";
+import { expect, fn, spyOn, waitFor } from "storybook/test";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/field/field";
 
@@ -98,8 +98,9 @@ export const Phone: Story = {
  * eye is a toggle, and the copy takes the real value while it is still hidden.
  */
 export const Keyboard: Story = {
-  render: () => <Secret visibleStart={8} />,
-  play: async ({ canvas, userEvent, step }) => {
+  args: { onFocus: fn() },
+  render: (args) => <Secret visibleStart={8} onFocus={args.onFocus} />,
+  play: async ({ args, canvas, userEvent, step }) => {
     const write = spyOn(navigator.clipboard, "writeText").mockResolvedValue();
     const field = canvas.getByRole<HTMLInputElement>("textbox", { name: "Geheimer Schlüssel" });
     try {
@@ -131,6 +132,18 @@ export const Keyboard: Story = {
         await userEvent.click(eye);
         await expect(field.value).not.toContain("9fK2");
       });
+
+      await step(
+        "shown, the focus takes the whole value, beside a caller's own onFocus",
+        async () => {
+          await userEvent.click(canvas.getByRole("button", { name: "Anzeigen" }));
+          field.focus();
+          await expect(field).toHaveFocus();
+          await expect(field.selectionStart).toBe(0);
+          await expect(field.selectionEnd).toBe(key.length);
+          await expect(args.onFocus).toHaveBeenCalled();
+        },
+      );
     } finally {
       write.mockRestore();
     }

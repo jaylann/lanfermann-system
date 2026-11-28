@@ -214,7 +214,7 @@ export const Keyboard: Story = {
 
 /** The thumb is pulled to another segment and dropped on the one its middle is nearest to. */
 export const Pulled: Story = {
-  args: { onValueChange: fn() },
+  args: { onValueChange: fn(), onPointerDown: fn(), onPointerMove: fn(), onPointerUp: fn() },
   render: (args) => (
     <SegmentedControl shape="round" defaultValue="profil" aria-label="Bereich" {...args}>
       {areas}
@@ -233,6 +233,8 @@ export const Pulled: Story = {
       await fireEvent.pointerDown(segment("Profil"), { ...pointer, ...middle(segment("Profil")) });
       await expect(track).toHaveAttribute("data-grabbed");
       await expect(track).not.toHaveAttribute("data-dragging");
+      // The caller's own handler ran beside the thumb's, not in its place.
+      await expect(args.onPointerDown).toHaveBeenCalledTimes(1);
     });
 
     await step("Pulled, it follows the pointer and nothing is chosen yet", async () => {
@@ -271,6 +273,8 @@ export const Pulled: Story = {
       await waitFor(() => expect(segment("Anmeldung")).toHaveAttribute("aria-pressed", "true"));
       await expect(args.onValueChange).toHaveBeenCalledTimes(1);
       await expect(args.onValueChange).toHaveBeenLastCalledWith("anmeldung");
+      await expect(args.onPointerMove).toHaveBeenCalled();
+      await expect(args.onPointerUp).toHaveBeenCalledTimes(1);
     });
 
     await step("A short pull falls back to where it was", async () => {
@@ -287,5 +291,126 @@ export const Pulled: Story = {
       const { thumb, segment: chosen } = places(canvasElement);
       await expect(thumb).toBe(chosen);
     });
+
+    await step("A second finger does not take the thumb over", async () => {
+      const from = middle(segment("Anmeldung"));
+      await fireEvent.pointerDown(segment("Anmeldung"), { ...pointer, ...from });
+      await fireEvent.pointerMove(track, { ...pointer, ...middle(segment("Profil")) });
+      await expect(track).toHaveAttribute("data-dragging");
+      // It comes down on the chosen segment and lifts again: the pull is still the first one's.
+      const second = { ...pointer, pointerId: 2, isPrimary: false, ...from };
+      await fireEvent.pointerDown(segment("Anmeldung"), second);
+      await fireEvent.pointerUp(track, { ...second, buttons: 0 });
+      await expect(track).toHaveAttribute("data-dragging");
+      await expect(args.onValueChange).toHaveBeenCalledTimes(1);
+      await fireEvent.pointerUp(track, { ...pointer, buttons: 0, ...middle(segment("Profil")) });
+      await expect(track).not.toHaveAttribute("data-dragging");
+      await waitFor(() => expect(segment("Profil")).toHaveAttribute("aria-pressed", "true"));
+      await expect(args.onValueChange).toHaveBeenCalledTimes(2);
+      await expect(args.onValueChange).toHaveBeenLastCalledWith("profil");
+    });
+
+    await step("A pull the system breaks off chooses nothing", async () => {
+      await fireEvent.pointerDown(segment("Profil"), { ...pointer, ...middle(segment("Profil")) });
+      await fireEvent.pointerMove(track, { ...pointer, ...middle(segment("Anmeldung")) });
+      await expect(track).toHaveAttribute("data-dragging");
+      await fireEvent.pointerCancel(track, { ...pointer, buttons: 0 });
+      await expect(track).not.toHaveAttribute("data-grabbed");
+      await expect(track).not.toHaveAttribute("data-dragging");
+      await expect(segment("Profil")).toHaveAttribute("aria-pressed", "true");
+      await expect(args.onValueChange).toHaveBeenCalledTimes(2);
+      const { thumb, segment: chosen } = places(canvasElement);
+      await expect(thumb).toBe(chosen);
+    });
+  },
+};
+
+/** What the tests below press and pull with. */
+const mouse = { pointerId: 1, pointerType: "mouse", button: 0, buttons: 1, isPrimary: true };
+const middleOf = (element: HTMLElement) => {
+  const box = element.getBoundingClientRect();
+  return { clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 };
+};
+
+/**
+ * As a test: a control that cannot be used cannot be changed by pulling its thumb either, and a
+ * thumb is not dropped on a segment that cannot be chosen. (A disabled button holds back its
+ * click, not the pointer events the thumb listens to.)
+ */
+export const PulledDisabled: Story = {
+  args: { onValueChange: fn() },
+  render: (args) => (
+    <div className="flex flex-col items-start gap-4">
+      <SegmentedControl disabled defaultValue="profil" aria-label="Bereich" {...args}>
+        {areas}
+      </SegmentedControl>
+      <SegmentedControl defaultValue="monat" aria-label="Abrechnung" {...args}>
+        <Segment value="monat">Monatlich</Segment>
+        <Segment value="jahr" disabled>
+          Jährlich
+        </Segment>
+      </SegmentedControl>
+    </div>
+  ),
+  play: async ({ args, canvas, canvasElement, step }) => {
+    const tracks = canvasElement.querySelectorAll<HTMLElement>('[data-slot="segmented-control"]');
+    const whole = tracks[0]!;
+    const part = tracks[1]!;
+    const segment = (name: string) => canvas.getByRole("button", { name });
+    const thumbOf = (track: HTMLElement) => track.style.getPropertyValue("--thumb-left");
+
+    await step("The thumb of a disabled control is not held and not pulled", async () => {
+      const before = thumbOf(whole);
+      await fireEvent.pointerDown(segment("Profil"), { ...mouse, ...middleOf(segment("Profil")) });
+      await expect(whole).not.toHaveAttribute("data-grabbed");
+      await fireEvent.pointerMove(whole, { ...mouse, ...middleOf(segment("Anmeldung")) });
+      await fireEvent.pointerUp(whole, { ...mouse, buttons: 0, ...middleOf(segment("Anmeldung")) });
+      await expect(whole).not.toHaveAttribute("data-dragging");
+      await expect(thumbOf(whole)).toBe(before);
+      await expect(segment("Profil")).toHaveAttribute("aria-pressed", "true");
+      await expect(args.onValueChange).not.toHaveBeenCalled();
+    });
+
+    await step("Dropped on a disabled segment, the thumb goes back", async () => {
+      await fireEvent.pointerDown(segment("Monatlich"), {
+        ...mouse,
+        ...middleOf(segment("Monatlich")),
+      });
+      await expect(part).toHaveAttribute("data-grabbed");
+      await fireEvent.pointerMove(part, { ...mouse, ...middleOf(segment("Jährlich")) });
+      await expect(part).toHaveAttribute("data-dragging");
+      await fireEvent.pointerUp(part, { ...mouse, buttons: 0, ...middleOf(segment("Jährlich")) });
+      await expect(segment("Monatlich")).toHaveAttribute("aria-pressed", "true");
+      await expect(args.onValueChange).not.toHaveBeenCalled();
+      await expect(thumbOf(part)).toBe(String(segment("Monatlich").offsetLeft));
+    });
+  },
+};
+
+/**
+ * As a test: a controlled value that does not take the dropped choice. The thumb goes back to
+ * the segment that is still chosen instead of standing on the one that was refused.
+ */
+export const PulledRefused: Story = {
+  args: { onValueChange: fn() },
+  render: (args) => (
+    <SegmentedControl shape="round" value="profil" aria-label="Bereich" {...args}>
+      {areas}
+    </SegmentedControl>
+  ),
+  play: async ({ args, canvas, canvasElement }) => {
+    const track = canvasElement.querySelector<HTMLElement>('[data-slot="segmented-control"]')!;
+    const segment = (name: string) => canvas.getByRole("button", { name });
+    // Once the page stands: its first layout reaches the control's observer a frame after it is
+    // drawn, and a web font that arrives is one more. Either would put the thumb right by itself.
+    await document.fonts.ready;
+    await waitFor(() => expect(track).toHaveAttribute("data-placed"));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await fireEvent.pointerDown(segment("Profil"), { ...mouse, ...middleOf(segment("Profil")) });
+    await fireEvent.pointerMove(track, { ...mouse, ...middleOf(segment("Anmeldung")) });
+    await fireEvent.pointerUp(track, { ...mouse, buttons: 0, ...middleOf(segment("Anmeldung")) });
+    await expect(args.onValueChange).toHaveBeenLastCalledWith("anmeldung");
+    await expect(segment("Profil")).toHaveAttribute("aria-pressed", "true");
+    await waitFor(() => expect(places(canvasElement).thumb).toBe(places(canvasElement).segment));
   },
 };

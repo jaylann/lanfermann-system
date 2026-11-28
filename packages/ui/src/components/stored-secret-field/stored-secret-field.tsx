@@ -1,13 +1,21 @@
 "use client";
 
 import { SquareLock02Icon } from "@hugeicons/core-free-icons";
-import { type ComponentProps, useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react";
 
 import { Button } from "@/components/button/button";
 import { Icon } from "@/components/icon/icon";
 import { Input, type InputProps } from "@/components/input/input";
 import { InputGroup, InputGroupAddon } from "@/components/input-group/input-group";
 import type { FieldSize } from "@/internal/field";
+import { FieldDisabledContext } from "@/internal/field-context";
 import { RevealKey, secretSymbolSize, swapSettle, useSwap } from "@/internal/reveal-key";
 import { cn } from "@/lib/cn";
 import { mergeRefs } from "@/lib/merge-refs";
@@ -115,6 +123,8 @@ export function StoredSecretField({
   ...props
 }: StoredSecretFieldProps) {
   const stored = ending !== undefined && ending !== "";
+  // A field that cannot be used keeps what is stored: its key cannot be pressed either.
+  const off = useContext(FieldDisabledContext) || props.disabled === true;
   const [own, setOwn] = useState(defaultReplacing);
   const replacing = replacingProp ?? own;
   // Whether something is typed: the Save key stands only then.
@@ -162,7 +172,8 @@ export function StoredSecretField({
   // The hold is over: the Save key leaves and the field turns back to what is stored now. The
   // focus follows only if it was in the field or on the Save key, which can no longer hold it.
   const settle = useEffectEvent(() => {
-    const within = root.current?.contains(document.activeElement) ?? false;
+    // Without a Save key of its own there is no box around the field: the field is all of it.
+    const within = (root.current ?? group.current)?.contains(document.activeElement) ?? false;
     turn.swap(() => {
       setConfirming(false);
       setOwn(false);
@@ -225,7 +236,10 @@ export function StoredSecretField({
               onKeyDown?.(event);
               if (event.defaultPrevented || !stored || event.key !== "Escape") return;
               if (saving || confirming) return;
+              // Escape here belongs to the field, not to a dialog around it: that would close
+              // with it, and take along whatever else was filled in.
               event.preventDefault();
+              event.stopPropagation();
               setReplacing(false);
             }}
             className={cn(
@@ -285,6 +299,9 @@ export function StoredSecretField({
               data-swapping={swapping ? "" : undefined}
               className={cn(
                 "pointer-events-none absolute inset-0 flex items-center pr-2 pl-2",
+                // Forced colours paint the field's own words, which are transparent otherwise:
+                // the discs give way to them instead of standing over them.
+                "forced-colors:hidden",
                 swapSettle,
               )}
             >
@@ -306,6 +323,7 @@ export function StoredSecretField({
           size="sm"
           variant="quiet"
           data-secret-key="replace"
+          disabled={off}
           onClick={() => setReplacing(true)}
           className={cn(
             "mr-[3px] h-[calc(var(--field-height)-6px)] shrink-0 rounded-[calc(var(--field-radius)-3px)] px-2.5 text-fg-body hover:text-fg",

@@ -20,7 +20,7 @@ export function Checkbox({ className, ...props }: CheckboxProps) {
       className={mergeClassName(
         [
           "group touch-target relative inline-flex size-(--check-size) shrink-0 items-center justify-center rounded-xs bg-surface text-on-accent depth-socket",
-          "transition-[box-shadow,background-color,scale] spring-seat active:scale-[0.92] active:spring-snap",
+          "transition-[box-shadow,background-color,scale] spring-seat active:scale-[0.92] active:spring-snap motion-reduce:active:scale-100",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
           "data-checked:bg-accent data-checked:depth-plug data-checked:depth-tone-accent",
           "data-indeterminate:bg-accent data-indeterminate:depth-plug data-indeterminate:depth-tone-accent",

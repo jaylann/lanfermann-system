@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, fn, waitFor } from "storybook/test";
 
+import { Button } from "@/components/button/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
 
 import { OtpField, type OtpFieldProps } from "./otp-field";
@@ -193,5 +195,40 @@ export const Keyboard: Story = {
       await expect(completed).toHaveBeenLastCalledWith("731905", expect.anything());
       await expect(canvasElement.querySelector('input[name="code"]')).toHaveValue("731905");
     });
+  },
+};
+
+/** A code the page holds, and empties when a new one is asked for. */
+function Emptied() {
+  const [value, setValue] = useState("482913");
+  return (
+    <div className="flex flex-col items-start gap-4">
+      <Code value={value} onValueChange={setValue} />
+      <Button onClick={() => setValue("")}>Neuen Code anfordern</Button>
+    </div>
+  );
+}
+
+/**
+ * As a test: a controlled field that was emptied from outside (a wrong code, a new one asked
+ * for). A code pasted into it afterwards still counts as arriving in one go, so its digits seat
+ * one after the other.
+ */
+export const PastedAfterEmptied: Story = {
+  render: () => <Emptied />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const slots = () => canvas.getAllByRole<HTMLInputElement>("textbox");
+    await userEvent.click(canvas.getByRole("button", { name: "Neuen Code anfordern" }));
+    await waitFor(() => expect(slots()[0]).toHaveValue(""));
+    slots()[0]?.focus();
+    const data = new DataTransfer();
+    data.setData("text/plain", "731905");
+    const paste = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, "clipboardData", { value: data });
+    slots()[0]?.dispatchEvent(paste);
+    await waitFor(() => expect(slots()[5]).toHaveValue("5"));
+    await expect(canvasElement.querySelector('[data-slot="otp-field"]')).toHaveAttribute(
+      "data-burst",
+    );
   },
 };

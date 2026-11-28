@@ -131,6 +131,11 @@ export function SegmentedControl({
   inertia = true,
   className,
   children,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+  onPointerLeave,
   ...props
 }: SegmentedControlProps) {
   const [inner, setInner] = useState(defaultValue);
@@ -141,6 +146,8 @@ export function SegmentedControl({
   const lastLeft = useRef<number | undefined>(undefined);
   const release = useRef<ReturnType<typeof setTimeout>>(undefined);
   const leanFrame = useRef(0);
+  /** The frame after a drop in which a choice that was not taken is found out (`drop`). */
+  const refusedFrame = useRef(0);
   /** Until then (ms) the thumb is on its way to a choice and does not lean. */
   const busyUntil = useRef(0);
   /** The choice that follows was made by dropping the thumb: it is not stretched again. */
@@ -273,6 +280,7 @@ export function SegmentedControl({
     () => () => {
       clearTimeout(release.current);
       cancelAnimationFrame(leanFrame.current);
+      cancelAnimationFrame(refusedFrame.current);
     },
     [],
   );
@@ -307,6 +315,8 @@ export function SegmentedControl({
     const segment = track.querySelector<HTMLElement>('[data-slot="segment"][data-pressed]');
     const wall = walls(track);
     if (!segment || !wall || performance.now() < busyUntil.current || still()) return;
+    // A control that cannot be used does not reach for the pointer either.
+    if (track.hasAttribute("data-disabled")) return;
     const box = segment.getBoundingClientRect();
     const offset =
       (x < box.left ? x - box.left : x > box.right ? x - box.right : 0) / zoomOf(track);
@@ -348,9 +358,15 @@ export function SegmentedControl({
    */
   function grab(event: PointerEvent<HTMLDivElement>) {
     if (!inertia || event.button !== 0) return;
+    // One hand at a time: while the thumb is held, a second finger neither takes it over (the
+    // first one's lifting would then be ignored and the thumb left where it was) nor makes it
+    // reach.
+    if (drag.current) return;
     const track = event.currentTarget;
     const segment = (event.target as Element).closest<HTMLElement>('[data-slot="segment"]');
-    if (!segment) return;
+    // A disabled segment still hears the pointer (only its click is held back): it is not
+    // reached for, and a thumb that stands on it is not pulled.
+    if (!segment || segment.hasAttribute("data-disabled")) return;
     if (!segment.hasAttribute("data-pressed")) {
       // A press on another segment: the thumb reaches for it before it sets off. A finger has
       // no hover, so this is all the anticipation a touch screen gets.
@@ -375,7 +391,8 @@ export function SegmentedControl({
       startMiddle: left + width / 2,
       zoom: zoomOf(track),
       boxes: segments.map((each) => ({
-        value: each.getAttribute("data-value"),
+        // Nothing is dropped on a segment that cannot be chosen: it has no value to give.
+        value: each.hasAttribute("data-disabled") ? null : each.getAttribute("data-value"),
         left: each.offsetLeft,
         width: each.offsetWidth,
       })),
@@ -477,17 +494,32 @@ export function SegmentedControl({
     // gave it its speed.
     lastLeft.current = held.left;
     busyUntil.current = performance.now() + TRAVEL_BUSY_MS;
-    const next = held.boxes[held.over]?.value ?? undefined;
-    if (next && next !== value) {
-      dropped.current = true;
-      choose(next);
-    } else {
+    // Back to the segment that is chosen: nothing new was, or what was is not taken.
+    const fallBack = () => {
       const pressed = track.querySelector<HTMLElement>('[data-slot="segment"][data-pressed]');
       if (pressed) {
         track.style.setProperty("--thumb-left", String(pressed.offsetLeft));
         track.style.setProperty("--thumb-width", String(pressed.offsetWidth));
       }
       lastLeft.current = pressed?.offsetLeft;
+    };
+    // A pull the system broke off (`pointercancel`) was not let go by the hand: it chooses nothing.
+    const next =
+      event.type === "pointercancel" ? undefined : (held.boxes[held.over]?.value ?? undefined);
+    if (next && next !== value) {
+      dropped.current = true;
+      choose(next);
+      // The choice places the thumb when it renders (the layout effect above, which also takes
+      // `dropped` back). A controlled value may stay as it is, refused or decided later: a
+      // frame on, the thumb then goes back, or it would stand on a segment that is not chosen.
+      cancelAnimationFrame(refusedFrame.current);
+      refusedFrame.current = requestAnimationFrame(() => {
+        if (!dropped.current) return;
+        dropped.current = false;
+        fallBack();
+      });
+    } else {
+      fallBack();
     }
   }
 
@@ -508,11 +540,27 @@ export function SegmentedControl({
         if (picked === undefined) return;
         choose(picked);
       }}
-      onPointerDown={grab}
-      onPointerMove={pull}
-      onPointerUp={drop}
-      onPointerCancel={drop}
-      onPointerLeave={stand}
+      // The caller's own pointer handlers run beside the thumb's, not in their place.
+      onPointerDown={(event) => {
+        onPointerDown?.(event);
+        grab(event);
+      }}
+      onPointerMove={(event) => {
+        onPointerMove?.(event);
+        pull(event);
+      }}
+      onPointerUp={(event) => {
+        onPointerUp?.(event);
+        drop(event);
+      }}
+      onPointerCancel={(event) => {
+        onPointerCancel?.(event);
+        drop(event);
+      }}
+      onPointerLeave={(event) => {
+        onPointerLeave?.(event);
+        stand(event);
+      }}
       className={mergeClassName(
         [
           // `isolate`: the labels lie under the thumb (`-z-1`) without leaving the trough.

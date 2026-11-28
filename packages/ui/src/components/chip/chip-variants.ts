@@ -26,7 +26,7 @@ export const chipDisabledLook =
  * fading before the place closes: an exit does not scale back.
  */
 export const chipMotion = [
-  "transition-[opacity,scale] delay-75 spring-seat in-data-live:starting:scale-90 in-data-live:starting:opacity-0",
+  "transition-[opacity,scale] delay-75 spring-seat in-data-live:starting:scale-90 in-data-live:starting:opacity-0 motion-reduce:in-data-live:starting:scale-100",
   "in-data-leaving:opacity-0 in-data-leaving:delay-0 in-data-leaving:spring-leave",
 ].join(" ");
 

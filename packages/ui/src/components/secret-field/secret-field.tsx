@@ -87,6 +87,7 @@ export function SecretField({
   failedMessage = "Nicht kopiert. Der Wert ist markiert und kann mit ⌘C kopiert werden.",
   className,
   ref,
+  onFocus,
   ...props
 }: SecretFieldProps) {
   const [own, setOwn] = useState(defaultRevealed);
@@ -129,6 +130,7 @@ export function SecretField({
           // hidden, the caret goes to the start, so the prefix that names the key stays in view
           // (a narrow field given the focus, as in a dialog on a phone, scrolled to its end).
           onFocus={(event) => {
+            onFocus?.(event);
             const input = event.currentTarget;
             if (revealed) {
               input.select();

@@ -174,7 +174,10 @@ export function OtpField({
         className,
       )}
       onValueChange={(value, details) => {
-        if (value.length - lastLength.current > 1) {
+        // A controlled value may have been changed from outside since (emptied after a wrong
+        // code): what it holds now is what the new one is measured against.
+        const before = props.value === undefined ? lastLength.current : props.value.length;
+        if (value.length - before > 1) {
           clearTimeout(bursting.current);
           setBurst(true);
           bursting.current = setTimeout(() => setBurst(false), BURST_MS);
@@ -254,7 +257,7 @@ export function OtpField({
                           "pointer-events-none relative text-lg font-medium text-fg tabular-nums forced-colors:hidden",
                           "group-has-[input[data-disabled]]/otp:text-on-disabled",
                           // Readable from its first frame; what springs is the seating.
-                          "transition-[scale,opacity] spring-seat in-data-live:starting:scale-90 in-data-live:starting:opacity-40",
+                          "transition-[scale,opacity] spring-seat in-data-live:starting:scale-90 in-data-live:starting:opacity-40 motion-reduce:in-data-live:starting:scale-100",
                           // One after the other when they arrive together.
                           "in-data-burst:delay-[calc(var(--slot)*35ms)] in-data-burst:in-data-live:starting:opacity-0",
                           mask && "size-2 rounded-full bg-current",
