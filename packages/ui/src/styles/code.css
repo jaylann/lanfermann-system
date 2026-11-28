@@ -225,8 +225,11 @@
     content: "\200b";
   }
 
-  /* Numbers are read past, not read out, and never copied with the code. */
+  /* Numbers are read past, not read out, and never copied with the code. The plain form comes
+     first: a browser that does not know the form with a spoken text (Safari before 17.4,
+     Firefox before 128) drops that declaration, and would show no numbers and no signs. */
   [data-line-numbers] > [data-slot="code-block-line"]::before {
+    content: counter(line);
     content: counter(line) / "";
     position: absolute;
     left: var(--code-pad-x);
@@ -257,10 +260,12 @@
     user-select: none;
   }
   [data-slot="code-block-line"][data-kind="added"]::after {
+    content: "+";
     content: "+" / var(--code-added-word, "hinzugefügt");
     color: var(--lf-success);
   }
   [data-slot="code-block-line"][data-kind="removed"]::after {
+    content: "−";
     content: "−" / var(--code-removed-word, "entfernt");
     color: var(--lf-danger);
   }

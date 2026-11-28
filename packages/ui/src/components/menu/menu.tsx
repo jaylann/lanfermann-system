@@ -239,6 +239,8 @@ export function MenuSubTrigger({
 /** The submenu's sheet. It overlaps its parent by the sheet's padding, so the rows line up. */
 export function MenuSubContent({
   className,
+  side,
+  align,
   sideOffset = -4,
   alignOffset = -4,
   ...props
@@ -249,6 +251,9 @@ export function MenuSubContent({
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
         data-slot="menu-positioner"
+        // Beside its row and level with it unless said otherwise (Base UI's own defaults).
+        side={side}
+        align={align}
         sideOffset={sideOffset}
         alignOffset={alignOffset}
         className="z-50 outline-none"

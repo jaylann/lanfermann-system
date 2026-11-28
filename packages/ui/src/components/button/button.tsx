@@ -125,7 +125,7 @@ export function Button({
               className={cn(
                 "flex scale-80 opacity-0 transition-[opacity,scale] spring-leave motion-reduce:scale-100",
                 loading &&
-                  "scale-100 opacity-100 spring-settle starting:scale-80 starting:opacity-0",
+                  "scale-100 opacity-100 spring-settle starting:scale-80 starting:opacity-0 motion-reduce:starting:scale-100",
               )}
             >
               <Spinner size={spinnerSize[resolvedSize]} />

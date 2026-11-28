@@ -178,3 +178,13 @@ export const Names: Story = {
     });
   },
 };
+
+/** Tests a group with nobody in it yet: it is no image without a name. */
+export const Nobody: Story = {
+  render: () => <AvatarGroup people={[]} label="Bearbeitet von" />,
+  play: async ({ canvasElement }) => {
+    const group = canvasElement.querySelector('[data-slot="avatar-group"]');
+    await expect(group).not.toHaveAttribute("role");
+    await expect(group).not.toHaveAttribute("aria-label");
+  },
+};

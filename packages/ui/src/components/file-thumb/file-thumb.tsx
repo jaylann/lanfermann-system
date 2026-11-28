@@ -92,7 +92,8 @@ export function FileThumb({
         // A press on the mark adds the row to what is chosen, or takes it away (`useSelection`).
         data-selection-toggle=""
         className={cn(
-          "absolute flex size-(--check-size) items-center justify-center rounded-xs bg-surface text-on-accent opacity-0 depth-socket",
+          // On a touch screen a press beside the mark still hits it (`touch-target`).
+          "touch-target absolute flex size-(--check-size) items-center justify-center rounded-xs bg-surface text-on-accent opacity-0 depth-socket",
           "[transition:opacity_var(--transition-duration-spring-snap)_var(--ease-spring-snap),box-shadow_var(--transition-duration-spring-seat)_var(--ease-spring-seat),background-color_var(--transition-duration-spring-seat)_var(--ease-spring-seat)]",
           markShown,
           "in-data-selected:bg-accent in-data-selected:depth-plug in-data-selected:depth-tone-accent",

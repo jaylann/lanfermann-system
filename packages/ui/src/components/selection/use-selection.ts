@@ -200,6 +200,8 @@ export function useSelection({
   const onKeyDown = (id: string) => (event: KeyboardEvent<HTMLElement>) => {
     // A key pressed in something inside the item (a field, a key) is that one's.
     if (event.target !== event.currentTarget) return;
+    // Alt and a key is the browser's: Alt and the left arrow goes back a page.
+    if (event.altKey) return;
     const command = event.metaKey || event.ctrlKey;
     if (event.key === " ") {
       event.preventDefault();
@@ -281,7 +283,12 @@ export function useSelection({
     },
     // Shift and a click would also mark the text between the two; the focus is set by the click.
     onMouseDown: (event) => {
-      if (event.shiftKey) event.preventDefault();
+      if (!event.shiftKey) return;
+      // In a field inside the item (a name being changed) that is how its text is marked.
+      const control = event.target instanceof Element && event.target.closest(OWN_CONTROLS);
+      if (control && control !== event.currentTarget && event.currentTarget.contains(control))
+        return;
+      event.preventDefault();
     },
     onKeyDown: onKeyDown(id),
     onFocus: (event) => {

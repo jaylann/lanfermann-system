@@ -96,6 +96,16 @@ describe("fitName", () => {
   it("leaves no space before the ellipsis", () => {
     expect(fitName("Fotos Backstube.zip", 14, measure)).toBe("Fotos…ube.zip");
   });
+
+  it("never cuts through a letter written in two parts", () => {
+    // A Mac names its files with the dots apart from the letter: „ü“ is „u“ and U+0308.
+    expect(fitName("Entwu\u0308rfe-Fru\u0308hjahr.pdf", 13, measure)).toBe("Entw…ahr.pdf");
+    expect(fitName("Angebot-Gru\u0308n.pdf", 12, measure, 2)).toBe("Ange…u\u0308n.pdf");
+  });
+
+  it("never cuts through an emoji", () => {
+    expect(fitName("Urlaub-📷📷📷📷.zip", 14, measure)).toBe("Url…📷📷📷.zip");
+  });
 });
 
 describe("typeWord", () => {

@@ -76,6 +76,8 @@ export function ActionBar({
   ground = "ink",
   className,
   children,
+  onFocus,
+  onKeyDown,
   ...props
 }: ActionBarProps) {
   const { messages } = useLocale();
@@ -116,13 +118,16 @@ export function ActionBar({
         aria-label={label ?? messages.actionBar.label}
         // Unseen, it is out of reach of the keyboard and of assistive tech as well.
         inert={!open}
+        // The caller's own handlers run beside the bar's, never in their place.
         onFocus={(event) => {
+          onFocus?.(event);
           const from = event.relatedTarget;
           if (from instanceof HTMLElement && !event.currentTarget.contains(from)) {
             cameFrom.current = from;
           }
         }}
         onKeyDown={(event) => {
+          onKeyDown?.(event);
           if (event.key === "Escape") clear(event.currentTarget);
         }}
         className={cn(

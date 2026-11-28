@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { createRef } from "react";
 import { expect, waitFor } from "storybook/test";
 
 import { MiddleTruncate } from "./middle-truncate";
@@ -41,11 +42,14 @@ export const Widths: Story = {
   ),
 };
 
+/** A ref of the caller's own, which the part fills beside the one it measures with. */
+const own = createRef<HTMLSpanElement>();
+
 /** Assistive tech hears the whole name, never the ellipsis. */
 export const ReadWhole: Story = {
   render: () => (
     <div className="w-40 text-control" data-testid="box">
-      <MiddleTruncate text={NAMES[1]!} />
+      <MiddleTruncate ref={own} text={NAMES[1]!} />
     </div>
   ),
   play: async ({ canvas, step }) => {
@@ -56,6 +60,9 @@ export const ReadWhole: Story = {
     });
     await step("what is read is whole", async () => {
       await expect(box.querySelector(".sr-only")).toHaveTextContent(NAMES[1]!);
+    });
+    await step("a ref of the caller's is filled, and the name is still cut", async () => {
+      await expect(own.current).toBe(box.querySelector('[data-slot="middle-truncate"]'));
     });
   },
 };

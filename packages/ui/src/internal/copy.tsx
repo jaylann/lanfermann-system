@@ -44,6 +44,8 @@ export function useCopy({ text, selectTarget, onCopied, onRefused }: CopyOptions
       selectContents(selectTarget?.current);
       setState("failed");
     }
+    // A second press may have set a timer while this one waited for the clipboard.
+    clearTimeout(timer.current);
     timer.current = setTimeout(() => setState("idle"), COPY_SHOWN_MS);
   }
 

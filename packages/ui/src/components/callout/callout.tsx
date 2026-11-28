@@ -99,6 +99,13 @@ export function Callout({
         className={cn("flex items-center gap-2 font-semibold", spec.title)}
       >
         <Icon icon={icon ?? spec.icon} size={18} className={cn("shrink-0", spec.iconColor)} />
+        {/* With a title of its own, the kind is left to the icon and the colour: said in words
+            for assistive tech, as a `Banner` does. */}
+        {title !== undefined && (
+          <span className="sr-only">
+            <Localized ns="callout" name={tone} />:{" "}
+          </span>
+        )}
         {title ?? <Localized ns="callout" name={tone} />}
       </p>
       <div data-slot="callout-body" className="flex flex-col gap-2 text-pretty">

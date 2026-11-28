@@ -295,6 +295,8 @@ const german = {
   numberField: {
     decrement: "Verringern",
     increment: "Erhöhen",
+    /** What a screen reader says the field is (`aria-roledescription`). */
+    role: "Zahlenfeld",
   },
   avatar: {
     /** What a presence dot is called. */
@@ -675,6 +677,7 @@ export const en: Messages = {
   numberField: {
     decrement: "Decrease",
     increment: "Increase",
+    role: "Number field",
   },
   avatar: {
     presence: {

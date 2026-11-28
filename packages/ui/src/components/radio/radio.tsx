@@ -32,7 +32,7 @@ export function Radio({ className, ...props }: RadioProps) {
       className={mergeClassName(
         [
           "group touch-target relative inline-flex size-(--check-size) shrink-0 items-center justify-center rounded-full bg-surface depth-socket",
-          "transition-[box-shadow,scale] spring-seat active:scale-[0.92] active:spring-snap",
+          "transition-[box-shadow,scale] spring-seat active:scale-[0.92] active:spring-snap motion-reduce:active:scale-100",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
           "data-disabled:pointer-events-none data-disabled:bg-disabled data-disabled:depth-flat",
         ],

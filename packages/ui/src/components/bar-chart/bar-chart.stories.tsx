@@ -232,3 +232,47 @@ export const Keyboard: Story = {
     });
   },
 };
+
+function WrittenOnly() {
+  const [both, setBoth] = useState(true);
+  return (
+    <div className="flex w-[42rem] max-w-full flex-col items-start gap-4">
+      <Button onClick={() => setBoth(false)}>Nur erstellte Angebote</Button>
+      <BarChart
+        className="w-full"
+        label="Angebote pro Monat"
+        data={quotes}
+        x="monat"
+        categoryLabel={monthName}
+        series={
+          both
+            ? [
+                { key: "erstellt", label: "Erstellt" },
+                { key: "angenommen", label: "Angenommen" },
+              ]
+            : [{ key: "erstellt", label: "Erstellt" }]
+        }
+      />
+    </div>
+  );
+}
+
+/**
+ * A series hidden in the legend that then becomes the only one: it is drawn, since a single
+ * series has no legend to bring it back with.
+ */
+export const HiddenThenAlone: Story = {
+  name: "Hidden, then alone",
+  render: () => <WrittenOnly />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Erstellt" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Nur erstellte Angebote" }));
+    canvas.getByRole("group", { name: /Angebote pro Monat/ }).focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[aria-live="polite"]')).toHaveTextContent(
+        "Jun: Erstellt 18",
+      ),
+    );
+  },
+};

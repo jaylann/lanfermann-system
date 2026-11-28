@@ -364,3 +364,46 @@ export const Keyboard: Story = {
     });
   },
 };
+
+/**
+ * As a test, with `open` held by the caller: a match taken while filtering does not close the
+ * list either, so several are still taken in a row, and Escape closes it as ever.
+ */
+export const KeyboardControlledOpen: Story = {
+  render: function Render() {
+    const [open, setOpen] = useState(false);
+    return (
+      <Field className="w-80">
+        <FieldLabel>Schlagwörter</FieldLabel>
+        <Combobox multiple items={LABELS} locale="de-DE" open={open} onOpenChange={setOpen}>
+          <ComboboxChips />
+          <ComboboxContent>
+            {(label: Label) => <ComboboxItem key={label.value} value={label} />}
+          </ComboboxContent>
+        </Combobox>
+      </Field>
+    );
+  },
+  play: async ({ canvas, userEvent, step }) => {
+    const input = canvas.getByRole("combobox", { name: "Schlagwörter" });
+
+    await step("Enter takes the match, and the list stays open", async () => {
+      await userEvent.click(input);
+      await userEvent.keyboard("ford");
+      await waitFor(() => expect(screen.getByRole("listbox")).toBeVisible());
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() =>
+        expect(canvas.getByRole("toolbar", { name: "Ausgewählt" })).toHaveTextContent("Förderung"),
+      );
+      await expect(input).toHaveValue("");
+      await expect(input).toHaveAttribute("aria-expanded", "true");
+      await expect(screen.getByRole("listbox")).toBeVisible();
+    });
+
+    await step("Escape closes it", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
+      await expect(input).toHaveAttribute("aria-expanded", "false");
+    });
+  },
+};

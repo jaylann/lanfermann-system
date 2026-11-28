@@ -60,7 +60,9 @@ export function CodeTabsFrame({
     () => (group ? readChoice(group) : undefined),
     () => undefined,
   );
-  const value = shared && names.includes(shared) ? shared : own;
+  // A choice that is no tab here (another block's, a `defaultValue` no tab has) shows the first.
+  const mine = own !== undefined && names.includes(own) ? own : names[0];
+  const value = shared && names.includes(shared) ? shared : mine;
   const index = Math.max(0, names.indexOf(value ?? ""));
 
   // The highlight moves only once it stands: a choice remembered from an earlier visit is

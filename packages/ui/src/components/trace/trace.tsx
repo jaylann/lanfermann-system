@@ -163,7 +163,7 @@ const trigger = [
   line,
   // The padding is room for the focus outline; the margin takes it back, so the mark still
   // stands on the edge of the list.
-  "group -mx-1.5 max-w-[calc(100%+0.75rem)] rounded-sm px-1.5 text-left select-none",
+  "group touch-target relative -mx-1.5 max-w-[calc(100%+0.75rem)] rounded-sm px-1.5 text-left select-none",
   "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
 ].join(" ");
 
@@ -172,6 +172,9 @@ function TraceDetail({ children }: { children: ReactNode }) {
   return (
     <CollapsiblePrimitive.Panel
       data-slot="trace-detail"
+      // The list says a step that joins (`aria-live` on `Trace`). What the reader opens under a
+      // step is theirs to read, and is not said as if it had joined; a `Trace` inside says its own.
+      aria-live="off"
       // As wide as the step or the summary, not as its longest line: a line that is too long
       // then shortens its title, instead of pushing the panel past the edge of the page.
       className={cn("h-(--collapsible-panel-height) self-stretch", disclosurePanel)}

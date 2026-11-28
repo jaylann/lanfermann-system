@@ -70,8 +70,10 @@ export function signedFormat(
   const bare = numberFormat(locale, { ...options, signDisplay: "never" });
   return (value) => {
     const text = signed.format(value);
-    // A value that rounds to zero carries no sign in `exceptZero`: say it is neither way.
-    if (!/[+\-−]/.test(text)) return `±${bare.format(0)}`;
+    // A value that rounds to zero carries no sign in `exceptZero`: say it is neither way. Told
+    // by how zero is written, not by looking for a sign: an accounting format writes a loss in
+    // brackets („($3,100)“), with no minus to find.
+    if (text === signed.format(0)) return `±${bare.format(0)}`;
     return text.replace("-", "−");
   };
 }

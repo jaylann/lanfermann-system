@@ -413,3 +413,71 @@ export const Keyboard: Story = {
     });
   },
 };
+
+/**
+ * Where a submenu opens, as a test: beside its row at the end of the line unless it is told a
+ * side, and then on that side. Neither word reaches the sheet's element.
+ */
+export const SubmenuSide: Story = {
+  render: () => (
+    // In the middle of the window, so there is room for a sheet on either side.
+    <div className="flex justify-center">
+      <Menu>
+        <MenuTrigger render={<Button>Ansicht</Button>} />
+        <MenuContent>
+          <MenuSub>
+            <MenuSubTrigger>Exportieren</MenuSubTrigger>
+            <MenuSubContent>
+              <MenuItem>Als PDF</MenuItem>
+            </MenuSubContent>
+          </MenuSub>
+          <MenuSub>
+            <MenuSubTrigger>Teilen</MenuSubTrigger>
+            <MenuSubContent side="left" align="end">
+              <MenuItem>Per E-Mail</MenuItem>
+            </MenuSubContent>
+          </MenuSub>
+        </MenuContent>
+      </Menu>
+    </div>
+  ),
+  play: async ({ canvas, userEvent, step }) => {
+    const item = (name: string) => screen.getByRole("menuitem", { name });
+    /** The sheet a row stands in, and the part that places it. */
+    const sheetOf = (name: string) => {
+      const sheet = item(name).closest<HTMLElement>('[data-slot="menu-content"]');
+      return { sheet, place: sheet?.closest<HTMLElement>('[data-slot="menu-positioner"]') };
+    };
+
+    await step("left alone, it opens at the end of its row, level with it", async () => {
+      canvas.getByRole("button", { name: "Ansicht" }).focus();
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() => expect(item("Exportieren")).toHaveFocus());
+      await userEvent.keyboard("{ArrowRight}");
+      await waitFor(() => expect(item("Als PDF")).toHaveFocus());
+      await expect(sheetOf("Als PDF").place).toHaveAttribute("data-side", "inline-end");
+      await expect(sheetOf("Als PDF").place).toHaveAttribute("data-align", "start");
+      await userEvent.keyboard("{ArrowLeft}");
+      await waitFor(() => expect(item("Exportieren")).toHaveFocus());
+    });
+
+    await step("told a side and an alignment, it takes them", async () => {
+      await userEvent.keyboard("{ArrowDown}");
+      await waitFor(() => expect(item("Teilen")).toHaveFocus());
+      await userEvent.keyboard("{ArrowRight}");
+      await waitFor(() => expect(item("Per E-Mail")).toHaveFocus());
+      const { sheet, place } = sheetOf("Per E-Mail");
+      await expect(place).toHaveAttribute("data-side", "left");
+      await expect(place).toHaveAttribute("data-align", "end");
+      await expect(sheet).not.toHaveAttribute("side");
+      await expect(sheet).not.toHaveAttribute("align");
+    });
+
+    await step("ArrowLeft leaves it, and Escape closes the menu", async () => {
+      await userEvent.keyboard("{ArrowLeft}");
+      await waitFor(() => expect(item("Teilen")).toHaveFocus());
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    });
+  },
+};

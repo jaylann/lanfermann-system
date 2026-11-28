@@ -171,6 +171,10 @@ export const Keyboard: Story = {
       await expect(input).toHaveValue("100,00");
     });
 
+    await step("A screen reader hears what it is in German", async () => {
+      await expect(input).toHaveAttribute("aria-roledescription", "Zahlenfeld");
+    });
+
     await step("ArrowUp steps by one, Shift+ArrowUp by ten, ArrowDown back", async () => {
       await userEvent.keyboard("{ArrowUp}");
       await expect(input).toHaveValue("101,00");

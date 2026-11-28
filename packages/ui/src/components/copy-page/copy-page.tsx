@@ -91,13 +91,20 @@ export function CopyPage({
   useEffect(() => () => clearTimeout(timer.current), []);
 
   // One fetch per page view, started early; a failed one is forgotten so the next try refetches.
-  const markdown = useRef<Promise<string>>(undefined);
+  // It is kept with its address: under a layout that stays, `href` changes with the page.
+  const markdown = useRef<{ href: string; text: Promise<string> }>(undefined);
   const load = () => {
-    markdown.current ??= fetch(href).then((response) => {
+    const kept = markdown.current;
+    if (kept?.href === href) return kept.text;
+    const text = fetch(href).then((response) => {
       if (!response.ok) throw new Error(`${response.status}`);
       return response.text();
     });
-    return markdown.current;
+    markdown.current = { href, text };
+    text.catch(() => {
+      if (markdown.current?.text === text) markdown.current = undefined;
+    });
+    return text;
   };
 
   const settle = (next: "copied" | "failed") => {

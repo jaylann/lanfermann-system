@@ -1,3 +1,5 @@
+"use client";
+
 import { type ComponentProps, type ReactNode, useId } from "react";
 
 import { Icon, type IconSvgElement } from "@/components/icon/icon";

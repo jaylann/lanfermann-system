@@ -291,7 +291,8 @@ export function Waterfall({
           data-live={live || undefined}
           role="group"
           aria-roledescription={words.chart}
-          aria-label={`${label}. ${words.hint}`}
+          // The keys are named only where there is something to walk.
+          aria-label={bars.length > 0 ? `${label}. ${words.hint}` : label}
           tabIndex={bars.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -346,7 +347,10 @@ export function Waterfall({
             {bars.slice(0, -1).map((bar, index) => (
               <div
                 key={`join-${index}`}
-                className={cn(lane, "transition-[translate] spring-glide")}
+                className={cn(
+                  lane,
+                  "transition-[translate] spring-glide motion-reduce:transition-none",
+                )}
                 style={laneAt(undefined, up(bar.running))}
               >
                 <div

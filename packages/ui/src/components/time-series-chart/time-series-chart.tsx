@@ -208,7 +208,8 @@ export function TimeSeriesChart<Row>({
     if (main.length === 1) return tone === "accent" ? "var(--lf-series-1)" : "var(--lf-text)";
     return `var(--lf-series-${Math.min(main.indexOf(entry), 5) + 1})`;
   };
-  const shown = series.filter((entry) => !hidden.has(entry.key));
+  // A single series has no legend to bring it back with: it shows, whatever was hidden before.
+  const shown = series.filter((entry) => series.length === 1 || !hidden.has(entry.key));
   // Comparison first, so the news is drawn over the context.
   const drawn = [...shown].sort(
     (a, b) => Number(b.kind === "comparison") - Number(a.kind === "comparison"),
@@ -319,7 +320,8 @@ export function TimeSeriesChart<Row>({
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (rows.length === 0) return;
     const last = rows.length - 1;
-    const from = scrub?.shown ? scrub.index : null;
+    // The point that still exists: rows may have gone since it was shown.
+    const from = activeIndex;
     const to =
       event.key === "ArrowRight"
         ? from === null
@@ -405,7 +407,8 @@ export function TimeSeriesChart<Row>({
           data-scrubbing={active?.shown && active.touch ? "touch" : undefined}
           role="group"
           aria-roledescription={words.chart}
-          aria-label={`${label}. ${words.hint}`}
+          // The keys are named only where there is something to walk.
+          aria-label={rows.length > 0 ? `${label}. ${words.hint}` : label}
           tabIndex={rows.length > 0 ? 0 : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -474,7 +477,9 @@ export function TimeSeriesChart<Row>({
                     {area && entry.kind !== "comparison" && (
                       <>
                         <linearGradient
-                          id={`${id}-${entry.key}-wash`}
+                          // Without the series' key: a key with a space or a bracket would
+                          // break the `url(#…)` below, and the area would be filled black.
+                          id={`${id}-wash`}
                           gradientUnits="userSpaceOnUse"
                           x1={0}
                           x2={0}
@@ -500,7 +505,7 @@ export function TimeSeriesChart<Row>({
                           data-series={entry.key}
                           data-shape="area"
                           d={morphless(shape, "area")}
-                          style={{ fill: `url(#${`${id}-${entry.key}-wash`})` }}
+                          style={{ fill: `url(#${id}-wash)` }}
                         />
                       </>
                     )}
@@ -528,7 +533,10 @@ export function TimeSeriesChart<Row>({
           {target && rows.length > 0 && (
             <div
               aria-hidden
-              className={cn(lane, "transition-[translate] spring-settle")}
+              className={cn(
+                lane,
+                "transition-[translate] spring-settle motion-reduce:transition-none",
+              )}
               style={laneAt(undefined, up(target.value))}
             >
               <div className="absolute inset-x-0 bottom-0 h-px translate-y-1/2 bg-fg-muted/60" />
@@ -587,7 +595,7 @@ export function TimeSeriesChart<Row>({
                     })}
                     rows={readoutRows(active.index)}
                     className={cn(
-                      "absolute top-0 right-0 transition-[translate] spring-settle",
+                      "absolute top-0 right-0 transition-[translate] spring-settle motion-reduce:transition-none",
                       activeX > 0.5 ? "-translate-x-3" : "translate-x-[calc(100%+0.75rem)]",
                     )}
                   />

@@ -18,6 +18,7 @@ import { Icon } from "@/components/icon/icon";
 import { useScrollEdges } from "@/components/scroll-fade/use-scroll-edges";
 import { useLive } from "@/internal/presence";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 import { useLocale } from "@/locale/locale";
 import { atRest, type Moving, springForce, stepSpring } from "@/motion/spring-step";
 import { springs } from "@/motion/springs";
@@ -72,9 +73,15 @@ export function Conversation({ className, children, ...props }: ConversationProp
   const [away, setAway] = useState(false);
   const [said, setSaid] = useState("");
   const live = useLive();
+  // The same words twice in a row would leave the region as it is, and nothing would be said:
+  // the second time they end in a space, which changes the region and is not read.
+  const announce = useCallback(
+    (text: string) => setSaid((before) => (before === text ? `${text}\u00A0` : text)),
+    [],
+  );
   const api = useMemo<ConversationApi>(
-    () => ({ toLatest: () => engine.current?.toLatest(false), announce: setSaid, live }),
-    [live],
+    () => ({ toLatest: () => engine.current?.toLatest(false), announce, live }),
+    [announce, live],
   );
   const register = useCallback((next: Engine) => {
     engine.current = next;
@@ -119,6 +126,7 @@ export function ConversationContent({
   label,
   className,
   children,
+  ref,
   ...props
 }: ConversationContentProps) {
   const { messages } = useLocale();
@@ -229,13 +237,15 @@ export function ConversationContent({
       }
       setAway(true);
     };
+    // Where everything is in view there is no further up: a wheel or a key that asks for it
+    // moves nothing, and the view still follows once an answer outgrows the box.
     const onWheel = (event: WheelEvent) => {
-      if (event.deltaY < 0) leave();
+      if (event.deltaY < 0 && footOf(box) > 0) leave();
     };
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (movesUp(event)) leave();
+      if (movesUp(event) && footOf(box) > 0) leave();
     };
     const onTouchStart = () => {
       touching = true;
@@ -246,23 +256,32 @@ export function ConversationContent({
       glide();
     };
     // Opening a fold inside an answer (a step of a trace, the sources) keeps the reader with it:
-    // what opens is not pulled away from under the pointer.
+    // what opens is not pulled away from under the pointer. The key of a menu or another popup
+    // (`aria-haspopup`) opens nothing in the page, and leaves the view following.
     const onClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (target.closest('[aria-expanded="false"], summary')) leave();
+      if (target.closest('[aria-expanded="false"]:not([aria-haspopup]), summary')) leave();
     };
 
     // An observer first reports the size it starts with. What changed by then (a font that
     // arrived) is part of opening, which does not move: the view is put at the foot at once.
     let opened = false;
+    let height = 0;
     const grown = new ResizeObserver(() => {
+      const shorter = inner.offsetHeight < height;
+      height = inner.offsetHeight;
       if (!opened) {
         opened = true;
         if (following) write(footOf(box));
         return;
       }
       if (following) glide();
-      else setAway(aboveFoot(box) > AT_FOOT);
+      else if (shorter && aboveFoot(box) <= AT_FOOT) {
+        // A fold that closes again brings the reader back to the foot without a scroll: as
+        // when they scroll there, the view keeps to it again.
+        keep(true);
+        setAway(false);
+      } else setAway(aboveFoot(box) > AT_FOOT);
     });
     grown.observe(inner);
     // The box itself changed: the phone's keyboard, the prompt below growing. The foot stays
@@ -332,7 +351,7 @@ export function ConversationContent({
       className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-hidden"
     >
       <div
-        ref={content}
+        ref={mergeRefs(content, ref)}
         data-slot="conversation-content"
         data-live={live ? "" : undefined}
         className={cn("flex flex-col gap-8", className)}

@@ -23,7 +23,7 @@ export type ToastOptions = {
   description?: ReactNode;
   /** Adds the status icon. The words still carry the message. */
   tone?: ToastTone;
-  /** One action, usually the way back ("Rückgängig"). */
+  /** One action, usually the way back ("Rückgängig"). Taken, it closes the toast. */
   action?: { label: ReactNode; onClick: () => void };
   /** Milliseconds until it leaves by itself; 0 keeps it until dismissed. */
   timeout?: number;
@@ -34,7 +34,7 @@ export type ToastOptions = {
 function show(options: ToastOptions | string): string {
   const { title, description, tone, action, timeout, id } =
     typeof options === "string" ? ({ title: options } satisfies ToastOptions) : options;
-  return toastManager.add({
+  const shown: string = toastManager.add({
     id,
     title,
     description,
@@ -42,8 +42,20 @@ function show(options: ToastOptions | string): string {
     timeout,
     // A failure interrupts the screen reader; everything else waits its turn.
     priority: tone === "danger" ? "high" : "low",
-    actionProps: action ? { children: action.label, onClick: action.onClick } : undefined,
+    actionProps: action
+      ? {
+          children: action.label,
+          onClick: () => {
+            // The action answers the toast. Left standing, it would still say what is no
+            // longer so and offer the same way back a second time. It leaves first, so an
+            // action that shows a toast under the same id gets a new one.
+            toastManager.close(shown);
+            action.onClick();
+          },
+        }
+      : undefined,
   });
+  return shown;
 }
 
 /**

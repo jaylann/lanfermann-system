@@ -78,6 +78,9 @@ function Picture({
       data-slot="media-preview-picture"
       data-loaded={loaded ? "" : undefined}
       onLoad={(event) => {
+        // A picture the page already holds is complete at once (reported above) and fires
+        // its load after that: its size is said once.
+        if (loaded) return;
         setLoaded(true);
         onLoaded({
           width: event.currentTarget.naturalWidth,

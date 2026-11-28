@@ -13,11 +13,12 @@ import {
 } from "react";
 
 import { ScrollFade } from "@/components/scroll-fade/scroll-fade";
-import { calendar, dayKey, stepBounds, stepOf } from "@/internal/chart/cells";
+import { type Calendar, calendar, dayKey, stepBounds, stepOf } from "@/internal/chart/cells";
 import { chartFormat } from "@/internal/chart/format";
 import { Readout } from "@/internal/chart/readout";
 import { pointLabel, type TimeValue, toTime } from "@/internal/chart/time";
 import { cn } from "@/lib/cn";
+import { dateFormatter } from "@/lib/format";
 import { useLocale } from "@/locale/locale";
 
 export type HeatmapDay = {
@@ -76,6 +77,8 @@ const stepColor = (step: number) =>
     ? "var(--lf-placeholder)"
     : `color-mix(in oklab, var(--heat) ${STEP_MIX[step]}%, var(--lf-placeholder))`;
 
+const NO_DAYS: Calendar = { days: [], columns: 0, months: [] };
+
 type Scrub = { index: number; shown: boolean; entry: number; touch: boolean; keyboard: boolean };
 type Place = { x: number; y: number; share: number };
 
@@ -124,7 +127,8 @@ export function Heatmap({
     const map = new Map<string, number>();
     for (const day of data) {
       const time = toTime(day.date);
-      if (!Number.isFinite(time) || day.value == null) continue;
+      // A value that is no number (`NaN`) is a missing one.
+      if (!Number.isFinite(time) || day.value == null || !Number.isFinite(day.value)) continue;
       const key = dayKey(time);
       map.set(key, (map.get(key) ?? 0) + day.value);
     }
@@ -135,7 +139,9 @@ export function Heatmap({
     const times = data.map((day) => toTime(day.date)).filter(Number.isFinite);
     const first = start !== undefined ? toTime(start) : Math.min(...times);
     const last = end !== undefined ? toTime(end) : Math.max(...times);
-    return Number.isFinite(first) && Number.isFinite(last) ? calendar(first, last) : calendar(1, 0);
+    // Without a day to show there is no grid. (`calendar(1, 0)` is not that: both are moments of
+    // the same day, 1 January 1970.)
+    return Number.isFinite(first) && Number.isFinite(last) ? calendar(first, last) : NO_DAYS;
   }, [data, start, end]);
 
   const bounds = useMemo(() => stepBounds(values.values()), [values]);
@@ -222,6 +228,9 @@ export function Heatmap({
   };
   function hide() {
     setScrub((old) => (old?.shown ? { ...old, shown: false, touch: false } : old));
+    // Emptied, so a day is said again when the reader comes back to it: a line that has not
+    // changed is not announced.
+    setSaid("");
   }
 
   const indexOf = (event: PointerEvent<HTMLElement>) => {
@@ -265,8 +274,8 @@ export function Heatmap({
     show(to, { keyboard: true });
   };
 
-  const monthName = new Intl.DateTimeFormat(locale ?? tag, { month: "short" });
-  const weekdayName = new Intl.DateTimeFormat(locale ?? tag, { weekday: "short" });
+  const monthName = dateFormatter(locale ?? tag, { month: "short" });
+  const weekdayName = dateFormatter(locale ?? tag, { weekday: "short" });
   // Monday, Wednesday and Friday name their rows; the others stay quiet.
   const weekdays = [0, 2, 4].map((row) => ({
     row,

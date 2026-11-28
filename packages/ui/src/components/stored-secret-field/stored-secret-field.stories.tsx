@@ -1,8 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
-import { expect, waitFor } from "storybook/test";
+import { expect, fireEvent, waitFor, within } from "storybook/test";
 
 import { Button } from "@/components/button/button";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog/dialog";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/field/field";
 import { Form } from "@/components/form/form";
 
@@ -501,5 +508,112 @@ export const SaveKeyboard: Story = {
         canvasElement.querySelector('[data-slot="stored-secret-field-save"]'),
       ).not.toHaveAttribute("data-shown");
     });
+  },
+};
+
+/**
+ * As a test: in a dialog, Escape in the open field brings the stored secret back and leaves the
+ * dialog open. Only a second Escape, from the key, closes the dialog.
+ */
+export const EscapeInDialog: Story = {
+  render: () => (
+    <Dialog defaultOpen>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Webhook bearbeiten.</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <Stored />
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
+  ),
+  play: async ({ canvasElement, userEvent, step }) => {
+    // The dialog is portalled to the body.
+    const page = within(canvasElement.ownerDocument.body);
+    const dialog = await page.findByRole("dialog", { name: "Webhook bearbeiten." });
+
+    await step("Escape in the open field keeps the stored secret and the dialog", async () => {
+      await userEvent.click(page.getByRole("button", { name: "Ersetzen" }));
+      const entry = page.getByRole("textbox", { name: "Signatur-Secret" });
+      await waitFor(() => expect(entry).toHaveFocus());
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(page.getByRole("button", { name: "Ersetzen" })).toHaveFocus());
+      // Still open, and not on its way out.
+      await expect(dialog).toHaveAttribute("data-open");
+      await expect(page.getByRole("textbox", { name: "Signatur-Secret" })).toHaveValue(
+        "Gesetzt, endet auf 4f2a",
+      );
+    });
+
+    await step("Escape from the key closes the dialog", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(page.queryByRole("dialog")).toBeNull());
+    });
+  },
+};
+
+/** A form with its own submit button that tells the field when its save went through. */
+function SavedByTheForm() {
+  const [ending, setEnding] = useState("4f2a");
+  const [saved, setSaved] = useState(false);
+  return (
+    <Form
+      className="w-96 max-w-full"
+      onFormSubmit={(values: { secret?: string }) => {
+        if (!values.secret) return;
+        setEnding(values.secret.slice(-4));
+        setSaved(true);
+      }}
+    >
+      <Field name="secret">
+        <FieldLabel>Signatur-Secret</FieldLabel>
+        <StoredSecretField ending={ending} saved={saved} savedHold={100} />
+      </Field>
+      <Button type="submit" variant="primary" className="self-start">
+        Speichern
+      </Button>
+    </Form>
+  );
+}
+
+/**
+ * As a test: without a Save key of its own, a save sent with Enter from the field ends with the
+ * focus on „Ersetzen“, not thrown to the page as the field it was in goes.
+ */
+export const SavedFromTheField: Story = {
+  render: () => <SavedByTheForm />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Ersetzen" }));
+    const entry = canvas.getByRole("textbox", { name: "Signatur-Secret" });
+    await waitFor(() => expect(entry).toHaveFocus());
+    await userEvent.type(entry, "whsec_8Hd2kQ93b7c1{Enter}");
+    await waitFor(() =>
+      expect(canvas.getByRole("textbox", { name: "Signatur-Secret" })).toHaveValue(
+        "Gesetzt, endet auf b7c1",
+      ),
+    );
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Ersetzen" })).toHaveFocus());
+  },
+};
+
+/**
+ * As a test: in a field that cannot be used, „Ersetzen“ cannot be pressed, so the stored secret
+ * is not swapped for an empty field nobody can type into.
+ */
+export const DisabledKeepsTheStored: Story = {
+  render: () => (
+    <Field disabled className="w-96 max-w-full">
+      <FieldLabel>Signatur-Secret</FieldLabel>
+      <StoredSecretField ending="4f2a" />
+    </Field>
+  ),
+  play: async ({ canvas }) => {
+    const key = canvas.getByRole("button", { name: "Ersetzen" });
+    await expect(key).toBeDisabled();
+    await fireEvent.click(key);
+    await expect(canvas.getByRole("textbox", { name: "Signatur-Secret" })).toHaveValue(
+      "Gesetzt, endet auf 4f2a",
+    );
   },
 };

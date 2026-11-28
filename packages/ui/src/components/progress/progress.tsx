@@ -26,20 +26,27 @@ export type ProgressProps = ProgressPrimitive.Root.Props;
  * and not worked towards (storage, a quota), a `Meter`.
  *
  * Name it: a `ProgressLabel` ("Angebot wird exportiert"), or an `aria-label` when it stands
- * alone. Without children it is the bare track. Pass `locale` so the percentage reads the same on
- * the server and in the browser.
+ * alone. Without children it is the bare track. The percentage is written in German unless
+ * `locale` says otherwise, so it reads the same on the server and in the browser.
  */
-export function Progress({ className, children, ...props }: ProgressProps) {
+export function Progress({
+  className,
+  children,
+  // Base UI would write in the language of whatever runs it: the server's, then the browser's.
+  locale = "de-DE",
+  ...props
+}: ProgressProps) {
   const { value, min, max } = props;
+  // Base UI takes any value that is not a finite number for an open end; so does the fill.
+  const fill = value == null || !Number.isFinite(value) ? null : fillFraction(value, min, max);
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
+      locale={locale}
       className={mergeClassName(gaugeRoot, className)}
       {...props}
     >
-      <ProgressFill value={value == null ? null : fillFraction(value, min, max)}>
-        {children ?? <ProgressTrack />}
-      </ProgressFill>
+      <ProgressFill value={fill}>{children ?? <ProgressTrack />}</ProgressFill>
     </ProgressPrimitive.Root>
   );
 }

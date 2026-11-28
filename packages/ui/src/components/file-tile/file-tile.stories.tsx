@@ -256,3 +256,23 @@ export const Failed: Story = {
   },
   render: () => <Arriving start="error" />,
 };
+
+/**
+ * As a test: on a touch screen the mark, which is the only way there to choose several, takes a
+ * press on the finger's target around it, not only on its own 16px.
+ */
+export const MarkOnTouch: Story = {
+  render: () => (
+    <div data-pointer="coarse" className="w-44">
+      <FileTile {...FILES[0]!} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const mark = canvasElement.querySelector('[data-slot="file-tile-mark"]');
+    if (!mark) throw new Error("the tile has no mark");
+    const target = getComputedStyle(mark, "::after");
+    await expect(target.content).not.toBe("none");
+    await expect(target.width).toBe("44px");
+    await expect(target.height).toBe("44px");
+  },
+};

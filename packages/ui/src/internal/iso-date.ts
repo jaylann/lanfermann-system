@@ -219,10 +219,11 @@ export function splitIsoMoment(
   value: string | null | undefined,
 ): { date: string; time: string } | undefined {
   if (!value) return undefined;
-  const [date = "", time = ""] = value.split("T");
+  const [date = "", time, ...more] = value.split("T");
   if (!parseIsoDate(date)) return undefined;
-  if (time !== "" && !isIsoTime(time)) return undefined;
-  return { date, time };
+  // A "T" promises a time, and one only: "2026-11-14T" and "2026-11-14T09:30T…" are no moments.
+  if (more.length > 0 || (time !== undefined && !isIsoTime(time))) return undefined;
+  return { date, time: time ?? "" };
 }
 
 /**

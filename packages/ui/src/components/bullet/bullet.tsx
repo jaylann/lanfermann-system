@@ -80,13 +80,18 @@ export function Bullet({
         const written = (value: number) =>
           numbers ? numbers.value(value) : <LocalizedNumber value={value} options={options} />;
         // A tenth past the largest amount, so a goal at the end of the scale still shows whole.
+        // An amount that is no number (`NaN`) takes no part in the scale and stands at its start.
+        const amounts = [item.value, item.target ?? 0, ...(item.bands ?? [])].filter(
+          Number.isFinite,
+        );
         const end =
           item.max ??
-          valueAxis([0, Math.max(item.value, item.target ?? 0, ...(item.bands ?? [])) * 1.1], {
+          valueAxis([0, Math.max(0, ...amounts) * 1.1], {
             count: 4,
           }).domain[1];
         const domain: [number, number] = [0, end > 0 ? end : 1];
-        const at = (amount: number) => Math.min(1, Math.max(0, share(amount, domain)));
+        const at = (amount: number) =>
+          Number.isFinite(amount) ? Math.min(1, Math.max(0, share(amount, domain))) : 0;
         const reached = item.target ? item.value / item.target : null;
         return (
           <li

@@ -8,7 +8,10 @@ import { numberFormatter } from "@/lib/format";
 /** Why a file was not taken. */
 export type FileRejection = {
   file: File;
-  /** `type`: not one of the kinds asked for. `size`: over the limit. `count`: one too many. */
+  /**
+   * `type`: not one of the kinds asked for (a dropped folder never is). `size`: over the limit.
+   * `count`: one too many.
+   */
   reason: "type" | "size" | "count";
 };
 
@@ -59,14 +62,23 @@ export function sortFiles(
 
 const UNITS = ["B", "KB", "MB", "GB", "TB"] as const;
 
-/** The unit a number of bytes reads best in, as a power of 1000: 2 400 000 is counted in MB. */
+/** Bytes and kilobytes are whole numbers; from a megabyte on, one decimal says enough. */
+const digitsOf = (unit: number) => (unit < 2 ? 0 : 1);
+
+/**
+ * The unit a number of bytes reads best in, as a power of 1000: 2 400 000 is counted in MB. A
+ * size that would be written as a full thousand is counted in the next unit: 999 999 bytes are
+ * „1,0 MB“, not „1.000 KB“.
+ */
 function unitOf(bytes: number) {
-  return Math.min(UNITS.length - 1, bytes < 1 ? 0 : Math.floor(Math.log10(bytes) / 3));
+  const unit = Math.min(UNITS.length - 1, bytes < 1 ? 0 : Math.floor(Math.log10(bytes) / 3));
+  const scale = 10 ** digitsOf(unit);
+  const written = Math.round((bytes / 1000 ** unit) * scale) / scale;
+  return written >= 1000 && unit < UNITS.length - 1 ? unit + 1 : unit;
 }
 
 function inUnit(bytes: number, unit: number, locale: string) {
-  // Bytes and kilobytes are whole numbers; from a megabyte on, one decimal says enough.
-  const digits = unit < 2 ? 0 : 1;
+  const digits = digitsOf(unit);
   return numberFormatter(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,

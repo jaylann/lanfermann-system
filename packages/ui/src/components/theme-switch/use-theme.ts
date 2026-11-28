@@ -60,6 +60,15 @@ function subscribe(listener: () => void) {
       stopSystem();
       window.removeEventListener("storage", onStorage);
     };
+    // Nothing was listening until now (the one switch stood in a menu that was closed): what
+    // the system or another tab changed meanwhile is taken over as it would have been then. Only
+    // a real change turns the page; on load that stays `ThemeScript`'s.
+    const before = current;
+    if (before) {
+      refresh();
+      const now = getSnapshot();
+      if (now !== before) applyMode(now.mode);
+    }
   }
   return () => {
     listeners.delete(listener);
@@ -92,6 +101,9 @@ export type UseThemeResult = {
   /** Chooses, keeps the choice for the next visit, and turns the page. */
   setTheme: (theme: Theme) => void;
 };
+
+/** The store behind `useTheme`: one for the page. Exported for its test, not from the library. */
+export const themeStore = { subscribe, getSnapshot };
 
 /**
  * The reader's choice of light or dark, and the page's mode. Pair it with `ThemeSwitch` for the

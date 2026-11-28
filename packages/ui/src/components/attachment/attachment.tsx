@@ -216,6 +216,19 @@ type TileProps = Omit<ComponentProps<"div">, "children"> & {
   meta: ReactNode;
 };
 
+/**
+ * The remove key of the tile beside this one, the next if there is one: where the focus goes
+ * when this tile is taken away, as a chip hands it to the chip beside it.
+ */
+function keyBeside(key: HTMLElement) {
+  const tile = key.closest('[data-slot="attachment"]');
+  const keyOf = (other: Element | null | undefined) =>
+    other?.matches('[data-slot="attachment"]')
+      ? other.querySelector<HTMLElement>('[data-slot="attachment-remove"]')
+      : null;
+  return keyOf(tile?.nextElementSibling) ?? keyOf(tile?.previousElementSibling);
+}
+
 /** A file in a message: read, so flat; a picture as itself. */
 function AttachmentTile({
   name,
@@ -240,7 +253,13 @@ function AttachmentTile({
       data-slot="attachment-remove"
       aria-label={removeName ?? removeLabel}
       aria-labelledby={removeName === undefined ? `${nameId} ${removeId}` : undefined}
-      onClick={onRemove}
+      onClick={(event) => {
+        // The key is about to go: hand the focus to the tile beside this one.
+        if (event.currentTarget === document.activeElement) {
+          keyBeside(event.currentTarget)?.focus();
+        }
+        onRemove();
+      }}
       className={cn(
         chipRemoveKey,
         picture
@@ -282,6 +301,8 @@ function AttachmentTile({
           {status !== "done" && (
             <span className="absolute bottom-1.5 left-1.5 flex size-6 items-center justify-center rounded-full bg-raised depth-plug">
               {mark}
+              {/* A picture has no line of facts: the state its mark shows is said in words. */}
+              <span className="sr-only">{meta}</span>
             </span>
           )}
         </Root>

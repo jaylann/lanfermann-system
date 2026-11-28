@@ -56,10 +56,14 @@ export function NumberField({ className, size = "md", children, ...props }: Numb
  * two steppers it is centred instead.
  */
 export function NumberFieldInput({ className, ...props }: NumberFieldPrimitive.Input.Props) {
+  const { messages } = useLocale();
   return (
     <NumberFieldPrimitive.Input
       data-slot="number-field-input"
       data-field-control=""
+      // What a screen reader says the field is, in the provider's language: Base UI's own word
+      // is always English ("Number field").
+      aria-roledescription={messages.numberField.role}
       className={mergeClassName(
         [
           bareControl,

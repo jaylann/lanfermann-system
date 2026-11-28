@@ -231,3 +231,25 @@ export const Keyboard: Story = {
     });
   },
 };
+
+/**
+ * Under a finger, as a test: an entry of the row is lower than 44px, so it carries the invisible
+ * target of that height, the trigger and the plain link alike.
+ */
+export const Touch: Story = {
+  render: () => (
+    // Turns the targets on without a touch device (touch.css).
+    <div data-pointer="coarse">
+      <Example />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const target = (entry: HTMLElement) => getComputedStyle(entry, "::after");
+    const trigger = canvas.getByRole("button", { name: "Leistungen" });
+    const link = canvas.getByRole("link", { name: "Preise" });
+    await expect(trigger.offsetHeight).toBeLessThan(44);
+    await expect(target(trigger).height).toBe("44px");
+    await expect(target(link).height).toBe("44px");
+    await expect(target(link).position).toBe("absolute");
+  },
+};

@@ -1,7 +1,7 @@
 "use client";
 
 import { Search01Icon } from "@hugeicons/core-free-icons";
-import { type ReactNode, type Ref, useRef, useState } from "react";
+import { type ReactNode, type Ref, useContext, useRef, useState } from "react";
 
 import { Icon } from "@/components/icon/icon";
 import { Input, type InputProps } from "@/components/input/input";
@@ -12,8 +12,10 @@ import {
 } from "@/components/input-group/input-group";
 import { Shortcut, useShortcut } from "@/components/shortcut/shortcut";
 import type { FieldSize } from "@/internal/field";
+import { FieldDisabledContext } from "@/internal/field-context";
 import { CloseGlyph } from "@/internal/glyphs";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 import { useLocale } from "@/locale/locale";
 
 const symbolSize = { sm: 14, md: 16, lg: 18 } as const;
@@ -72,6 +74,9 @@ export function SearchField({
   const field = useRef<HTMLInputElement | null>(null);
   const [focused, setFocused] = useState(false);
   const typed = value !== "";
+  // A field that cannot be used is not cleared by its cross either, and its keys stay the
+  // page's (a swallowed ⌘F would open nothing at all).
+  const off = useContext(FieldDisabledContext) || disabled;
   useShortcut(
     shortcut ?? "",
     () => {
@@ -79,20 +84,16 @@ export function SearchField({
       field.current?.select();
     },
     // A disabled field cannot take the focus: its keys stay the browser's (⌘F finds on the page).
-    { enabled: shortcut !== undefined && !focused && !disabled },
+    { enabled: shortcut !== undefined && !focused && !off },
   );
-  const setRef = (element: HTMLInputElement | null) => {
-    field.current = element;
-    if (typeof ref === "function") ref(element);
-    else if (ref) ref.current = element;
-  };
   return (
     <InputGroup data-slot="search-field" size={size} className={className}>
       <InputGroupAddon>
         <Icon icon={Search01Icon} size={symbolSize[size]} />
       </InputGroupAddon>
       <Input
-        ref={setRef}
+        // A caller's ref that returns a cleanup gets it called, and is never handed `null`.
+        ref={mergeRefs(field, ref)}
         type="search"
         enterKeyHint="search"
         autoComplete="off"
@@ -121,10 +122,17 @@ export function SearchField({
         {...props}
         disabled={disabled}
       />
-      {typed && count !== undefined ? (
-        // Typing does not wait: the count is there in the first frame and changes in place.
-        <InputGroupAddon data-slot="search-field-count" className="text-sm tabular-nums">
-          {count}
+      {count !== undefined ? (
+        // Typing does not wait: the count is there in the first frame and changes in place. It
+        // changes while the focus is in the field, so it is a status, which assistive tech reads
+        // out. The status stands (empty) before anything is typed: one that only arrives with
+        // its first words is not read.
+        <InputGroupAddon
+          role="status"
+          data-slot="search-field-count"
+          className="text-sm tabular-nums"
+        >
+          {typed ? count : null}
         </InputGroupAddon>
       ) : null}
       {/* The keys and the cross share one place and cross-fade in it. */}
@@ -136,7 +144,7 @@ export function SearchField({
             className={cn(
               "col-start-1 row-start-1 flex pr-(--field-pad) transition-[opacity,scale] motion-reduce:scale-100",
               // The keys stay as a hint of what will reach the field, set back with the rest.
-              disabled && "[&_kbd]:bg-transparent [&_kbd]:depth-flat [&_kbd]:text-on-disabled",
+              off && "[&_kbd]:bg-transparent [&_kbd]:depth-flat [&_kbd]:text-on-disabled",
               typed ? "scale-92 opacity-0 spring-snap" : "scale-100 opacity-100 spring-seat",
             )}
           >
@@ -146,6 +154,7 @@ export function SearchField({
         <InputGroupButton
           aria-label={clearLabel ?? messages.searchField.clear}
           inert={!typed}
+          disabled={off}
           onClick={() => {
             onValueChange("");
             field.current?.focus();

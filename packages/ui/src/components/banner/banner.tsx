@@ -17,6 +17,7 @@ import { CloseGlyph } from "@/internal/glyphs";
 import { useLive } from "@/internal/presence";
 import { statusIcons, statusIconTone } from "@/internal/status-icon";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 import { useLocale } from "@/locale/locale";
 
 export type BannerTone = "info" | "success" | "warning" | "danger";
@@ -94,6 +95,8 @@ export function Banner({
   finalFocus,
   toneLabels,
   className,
+  onTransitionEnd,
+  ref,
   ...props
 }: BannerProps) {
   const { messages } = useLocale();
@@ -136,13 +139,20 @@ export function Banner({
 
   return (
     <Grow
-      ref={grow}
+      // The caller's ref as well as ours: taking its place would leave the banner without the
+      // box it hands the focus on from, and closing would drop the focus.
+      ref={mergeRefs(grow, ref)}
       // Polite, and assertive for danger: only what arrives after the page has loaded is said.
       role={tone === "danger" ? "alert" : "status"}
       data-slot="banner"
       data-tone={tone}
       data-live={live ? "" : undefined}
-      onTransitionEnd={settled}
+      // The caller's handler is called as well; it must not take the place of the one that
+      // takes the closed strip out of the page.
+      onTransitionEnd={(event) => {
+        onTransitionEnd?.(event);
+        settled(event);
+      }}
       className={className}
       {...props}
     >

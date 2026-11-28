@@ -87,7 +87,11 @@ export function CodeBlockFrame({
         data-slot="code-block"
         className={cn(codeRoot, "flex-row items-center pr-1.5", className)}
       >
-        <span aria-hidden className="pl-(--code-pad-x) text-fg-muted select-none">
+        <span
+          aria-hidden
+          data-slot="code-block-prompt"
+          className="pl-(--code-pad-x) text-fg-muted select-none"
+        >
           $
         </span>
         <CodeScroll
@@ -124,7 +128,7 @@ export function CodeBlockFrame({
         <div className="absolute top-1.5 right-1.5 z-10 rounded-md bg-(--code-face)">{keys}</div>
       )}
       <CodeFold lineCount={lineCount} fold={fold} label={foldLabel}>
-        <CodeScroll label={title ?? label} codeRef={codeRef} preClassName="py-3">
+        <CodeScroll label={title || label} codeRef={codeRef} preClassName="py-3">
           {children}
         </CodeScroll>
       </CodeFold>
@@ -206,7 +210,10 @@ function CodeFold({
           )}
         />
       </div>
-      <div className="flex justify-center border-t border-hairline px-2 py-1 font-sans">
+      <div
+        data-slot="code-block-fold"
+        className="flex justify-center border-t border-hairline px-2 py-1 font-sans"
+      >
         <Button
           variant="quiet"
           size="sm"

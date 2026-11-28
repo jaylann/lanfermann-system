@@ -19,6 +19,7 @@ import {
   QUESTION,
   useArrivingAnswer,
 } from "@/components/message/story-answer";
+import { Trace, TraceStep } from "@/components/trace/trace";
 
 import { Conversation, ConversationContent, ConversationLatest } from "./conversation";
 
@@ -271,5 +272,153 @@ export const Keyboard: Story = {
         ),
       );
     });
+  },
+};
+
+const PARAGRAPH =
+  "Das Angebot an die Bäckerei Kornprobst umfasst eine neue Website mit einem Bestellformular für Torten und einer Seite für jede der drei Filialen. Zusammen kostet es 5.180 € netto.";
+
+/**
+ * A conversation that begins shorter than its box and whose answer grows at a press. In the
+ * answer stand a fold (a step of a `Trace`) and the key of a menu, with the attributes a
+ * `MenuTrigger` carries. The caller keeps a ref on the content.
+ */
+function Growing() {
+  const [paragraphs, setParagraphs] = useState(1);
+  const content = useRef<HTMLDivElement>(null);
+  return (
+    <div className="flex flex-col gap-4">
+      <Button size="sm" className="self-start" onClick={() => setParagraphs((count) => count + 1)}>
+        Antwort wächst
+      </Button>
+      <Frame>
+        <Conversation className="flex-1">
+          <ConversationContent ref={content} className="px-1 pb-6">
+            <Message from="user">
+              <MessageContent>{QUESTION}</MessageContent>
+            </Message>
+            <Message from="assistant">
+              <MessageContent>
+                {Array.from({ length: paragraphs }, (_, index) => (
+                  <p key={index}>{PARAGRAPH}</p>
+                ))}
+              </MessageContent>
+              <Trace>
+                <TraceStep title="Angebot gelesen">
+                  <p>Angebot 2026-0421 vom 12. November, drei Seiten.</p>
+                  <p>Gültig bis zum 15. Dezember 2026.</p>
+                </TraceStep>
+              </Trace>
+              <button type="button" aria-haspopup="menu" aria-expanded="false">
+                Mehr
+              </button>
+            </Message>
+          </ConversationContent>
+          <ConversationLatest />
+        </Conversation>
+      </Frame>
+    </div>
+  );
+}
+
+/**
+ * The view leaves the foot only when the reader goes somewhere: not for a wheel or a key that
+ * asks for further up where everything is in view, and not for the key of a menu, which opens
+ * nothing in the page. A fold that is opened keeps the reader with it; closed again, they are
+ * back at the foot, and the view follows again.
+ */
+export const KeepsToFoot: Story = {
+  render: () => <Growing />,
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    const region = canvas.getByRole("region", { name: "Unterhaltung" });
+    const latest = canvasElement.querySelector<HTMLElement>('[data-slot="conversation-latest"]')!;
+    const grow = canvas.getByRole("button", { name: "Antwort wächst" });
+    /**
+     * The answer grows by a paragraph, and the view comes to rest at the foot without the key.
+     * To rest, not only near: a press while the view still glides can make the browser move it.
+     */
+    const followsGrowth = async () => {
+      const before = region.scrollHeight;
+      await userEvent.click(grow);
+      await waitFor(() => expect(region.scrollHeight).toBeGreaterThan(before));
+      await waitFor(
+        () =>
+          expect(region.scrollTop + region.clientHeight).toBeGreaterThanOrEqual(
+            region.scrollHeight - 1,
+          ),
+        { timeout: 3000 },
+      );
+      await expect(latest).not.toHaveAttribute("data-shown");
+    };
+
+    await step("with everything in view, a wheel or Home does not leave the foot", async () => {
+      await expect(region.scrollHeight).toBeLessThanOrEqual(region.clientHeight);
+      region.dispatchEvent(new WheelEvent("wheel", { deltaY: -120, bubbles: true }));
+      region.focus();
+      await userEvent.keyboard("{Home}");
+      for (let count = 0; count < 5; count += 1) await userEvent.click(grow);
+      await waitFor(() => expect(region.scrollHeight).toBeGreaterThan(region.clientHeight + 40));
+      await followsGrowth();
+    });
+
+    await step("the key of a menu is not a fold: the view still follows", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Mehr" }));
+      await followsGrowth();
+    });
+
+    await step("a fold that is opened keeps the reader with it", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Angebot gelesen/ }));
+      await waitFor(() => expect(latest).toHaveAttribute("data-shown"));
+    });
+
+    await step("closed again, the reader is back at the foot and the view follows", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Angebot gelesen/ }));
+      await waitFor(() => expect(latest).not.toHaveAttribute("data-shown"));
+      await followsGrowth();
+    });
+  },
+};
+
+/** Two answers with the same words, each finished at a press. */
+function TwiceTheSame() {
+  const [finished, setFinished] = useState(0);
+  return (
+    <div className="flex flex-col gap-4">
+      <Button size="sm" className="self-start" onClick={() => setFinished((count) => count + 1)}>
+        Antwort beenden
+      </Button>
+      <Frame>
+        <Conversation className="flex-1">
+          <ConversationContent className="px-1 pb-6">
+            {[0, 1].map((index) => (
+              <Message key={index} from="assistant" streaming={finished <= index}>
+                <MessageContent>
+                  <p>Ja, das Angebot gilt noch.</p>
+                </MessageContent>
+              </Message>
+            ))}
+          </ConversationContent>
+        </Conversation>
+      </Frame>
+    </div>
+  );
+}
+
+/**
+ * A finished answer is said once to assistive tech. A second answer with the same words is
+ * said as well: the region changes, though the words do not.
+ */
+export const SameAnswerTwice: Story = {
+  render: () => <TwiceTheSame />,
+  play: async ({ canvas, userEvent }) => {
+    const said = canvas.getByRole("status");
+    const finish = canvas.getByRole("button", { name: "Antwort beenden" });
+    await expect(said).toBeEmptyDOMElement();
+    await userEvent.click(finish);
+    await waitFor(() => expect(said).toHaveTextContent("Ja, das Angebot gilt noch."));
+    const first = said.textContent;
+    await userEvent.click(finish);
+    await waitFor(() => expect(said.textContent).not.toBe(first));
+    await expect(said).toHaveTextContent("Ja, das Angebot gilt noch.");
   },
 };

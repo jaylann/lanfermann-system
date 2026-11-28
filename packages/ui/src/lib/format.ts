@@ -17,12 +17,21 @@ export type TimeValue = Date | string | number;
 /** An ISO date without a time: `2026-11-14`. */
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-/** A moment as milliseconds. An ISO date without a time (`2026-11-14`) is local midnight. */
+/** An ISO month or year without a day: `2026-11`, `2026`. */
+const ISO_MONTH = /^(\d{4})(?:-(\d{2}))?$/;
+
+/**
+ * A moment as milliseconds. An ISO date without a time (`2026-11-14`) is local midnight, and so
+ * is the first day of a month (`2026-11`) or a year (`2026`) written without a day: `Date` would
+ * read those two in UTC, which west of it is the evening before, in the month before.
+ */
 export function toTime(value: TimeValue): number {
   if (typeof value === "number") return value;
   if (value instanceof Date) return value.getTime();
   const date = ISO_DATE.exec(value);
   if (date) return new Date(Number(date[1]), Number(date[2]) - 1, Number(date[3])).getTime();
+  const month = ISO_MONTH.exec(value);
+  if (month) return new Date(Number(month[1]), Number(month[2] ?? 1) - 1, 1).getTime();
   return new Date(value).getTime();
 }
 

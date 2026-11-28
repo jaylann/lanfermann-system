@@ -18,6 +18,7 @@ import { Icon } from "@/components/icon/icon";
 import { TickGlyph } from "@/internal/glyphs";
 import { useReducedMotion } from "@/internal/reduced-motion";
 import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
 import { restingMotion, trackMotion } from "@/motion/inertia";
 import { springs } from "@/motion/springs";
 
@@ -95,6 +96,11 @@ export function CopyPill({
   className,
   style,
   children,
+  ref,
+  onPointerEnter,
+  onPointerLeave,
+  onFocus,
+  onBlur,
   ...props
 }: CopyPillProps) {
   const id = useId();
@@ -189,7 +195,7 @@ export function CopyPill({
   return (
     <span data-slot="copy-pill" className={cn("inline-flex max-w-full", className)}>
       <button
-        ref={button}
+        ref={mergeRefs(button, ref)}
         type="button"
         data-slot="copy-pill-button"
         data-open={preview && open ? "" : undefined}
@@ -197,10 +203,22 @@ export function CopyPill({
         aria-describedby={preview ? id : undefined}
         onClick={() => void copy()}
         // Only a pointer that can hover opens it; a finger's tap copies.
-        onPointerEnter={(event) => event.pointerType !== "touch" && want(true, OPEN_MS)}
-        onPointerLeave={() => want(false, CLOSE_MS)}
-        onFocus={(event) => event.currentTarget.matches(":focus-visible") && want(true, 0)}
-        onBlur={() => want(false, 0)}
+        onPointerEnter={(event) => {
+          if (event.pointerType !== "touch") want(true, OPEN_MS);
+          onPointerEnter?.(event);
+        }}
+        onPointerLeave={(event) => {
+          want(false, CLOSE_MS);
+          onPointerLeave?.(event);
+        }}
+        onFocus={(event) => {
+          if (event.currentTarget.matches(":focus-visible")) want(true, 0);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          want(false, 0);
+          onBlur?.(event);
+        }}
         style={{ "--count": count, ...style } as CSSProperties}
         className={cn(
           "group/pill relative inline-flex max-w-full cursor-pointer items-center rounded-full bg-trough p-1 text-left select-none",
@@ -293,7 +311,7 @@ export function CopyPill({
                 icon={Copy01Icon}
                 size={16}
                 data-off={copied ? "" : undefined}
-                className="absolute inset-0 transition-[opacity,scale] spring-leave data-off:scale-75 data-off:opacity-0"
+                className="absolute inset-0 transition-[opacity,scale] spring-leave data-off:scale-75 data-off:opacity-0 motion-reduce:data-off:scale-100"
               />
               {/* The checkbox's tick, a size larger at the same weight: it draws itself in. */}
               <TickGlyph
@@ -301,7 +319,7 @@ export function CopyPill({
                 height={22}
                 strokeWidth={(1.75 * 12) / 22}
                 data-on={copied ? "" : undefined}
-                className="absolute top-1/2 left-1/2 -translate-1/2 opacity-0 transition-[stroke-dashoffset,opacity] duration-200 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] data-on:opacity-100 data-on:[stroke-dashoffset:0]"
+                className="absolute top-1/2 left-1/2 -translate-1/2 opacity-0 transition-[stroke-dashoffset,opacity] duration-200 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] data-on:opacity-100 data-on:[stroke-dashoffset:0] motion-reduce:[stroke-dashoffset:0]"
               />
             </span>
             <span className="w-[var(--words,auto)] overflow-hidden whitespace-nowrap transition-[width] spring-glide motion-reduce:transition-none sm:group-data-open/pill:w-0">

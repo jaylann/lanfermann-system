@@ -108,7 +108,7 @@ function CalendarDay({ className, modifiers, ...props }: DayButtonProps) {
       data-slot="calendar-day"
       className={cn(
         "relative inline-flex size-(--calendar-cell) items-center justify-center rounded-md text-control text-fg select-none",
-        "transition-[background-color,scale] spring-seat hover:bg-hover hover:spring-snap active:scale-[0.92] active:spring-snap",
+        "transition-[background-color,scale] spring-seat hover:bg-hover hover:spring-snap active:scale-[0.92] active:spring-snap motion-reduce:active:scale-100",
         "focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
         modifiers.outside && "text-fg-muted",
         modifiers.today &&

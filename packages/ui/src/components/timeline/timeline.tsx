@@ -108,7 +108,7 @@ export function TimelineItem({
           data-slot="timeline-lead"
           className="flex h-(--rail-line) items-center justify-center"
         >
-          {avatar ?? (
+          {avatar || (
             <RailMark
               slot="timeline-mark"
               status={tone === "danger" ? "error" : "done"}

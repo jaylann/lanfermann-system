@@ -140,6 +140,8 @@ export function EditableName({
   const field = useRef<HTMLInputElement>(null);
   const lines = useRef<HTMLSpanElement>(null);
   const opener = useRef<HTMLButtonElement>(null);
+  // What had the focus before the change began (the tile, the key that began it).
+  const before = useRef<Element | null>(null);
   const reasonId = useId();
   const [draft, setDraft] = useState(value);
   const [reason, setReason] = useState<ReactNode>(null);
@@ -171,18 +173,31 @@ export function EditableName({
       return;
     }
     const input = field.current;
+    const text = lines.current;
+    const target = input ?? text;
+    if (!target) return;
+    // What had the focus before (the tile, the key that began it) gets it back at the end.
+    if (document.activeElement !== target) before.current = document.activeElement;
     if (input) {
       input.focus();
       input.setSelectionRange(0, baseNameEnd(input.value));
-      return;
+    } else if (text) {
+      text.focus();
+      selectBaseName(text);
     }
-    const text = lines.current;
-    if (!text) return;
-    text.focus();
-    selectBaseName(text);
+    return () => {
+      // The field has gone with the focus still in it (Enter, Escape), which leaves the focus
+      // on nothing. Where it left for something else (a click elsewhere), it stays there. A
+      // value that is empty again hands it to its key instead (above).
+      const previous = before.current;
+      if (document.activeElement !== document.body) return;
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+    };
   }, [editing]);
 
   const commit = async () => {
+    // One answer at a time: a second Enter while the first name is still being checked would
+    // send it twice.
     if (saving.current) return;
     const next = nameToTake(draft, value, allowEmpty);
     if (next === undefined) {
@@ -356,6 +371,10 @@ export function EditableName({
           if (reason !== null) setReason(null);
         }}
         onKeyDown={(event) => {
+          // A key pressed while a word is being composed (Japanese, Chinese) picks or drops the
+          // word, not the name. Safari sends that Enter after the composition has ended, with
+          // the key code 229, so both are asked (as in `promptKey`).
+          if (event.nativeEvent.isComposing || event.keyCode === 229) return;
           if (event.key === "Enter") {
             event.preventDefault();
             byKey.current = true;

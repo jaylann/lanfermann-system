@@ -27,7 +27,9 @@
       grid-template-columns var(--transition-duration-spring-settle) var(--ease-spring-settle),
       opacity var(--transition-duration-spring-settle) var(--ease-spring-settle);
 
-    [data-live] & {
+    /* The number's own `data-live`, not an ancestor's: inside a list that is live already (a
+       chart's axis, a live table) a number that first shows would open every place. */
+    [data-slot="rolling-number"][data-live] & {
       @starting-style {
         grid-template-columns: 0fr;
         opacity: 0;

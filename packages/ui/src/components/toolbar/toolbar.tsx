@@ -62,6 +62,17 @@ export type ToolbarButtonProps = Without<ButtonProps, "render"> & {
   shortcut?: string;
 };
 
+/** What a control given as `render` takes over from the key: all but what only a `Button` reads. */
+function passedOn({
+  iconOnly: _iconOnly,
+  loading: _loading,
+  done: _done,
+  resize: _resize,
+  ...rest
+}: Without<ButtonProps, "render" | "variant" | "size" | "className" | "disabled">) {
+  return rest;
+}
+
 /**
  * One key of a toolbar: a quiet, small `Button` unless told otherwise. A key that cannot be
  * used right now stays in reach of the arrow keys and says that it is disabled. A key with only
@@ -82,6 +93,8 @@ export function ToolbarButton({
       data-slot="toolbar-button"
       disabled={disabled}
       focusableWhenDisabled={focusableWhenDisabled}
+      // Another control is the key: its name, its class and what it holds still reach it.
+      {...(render ? { ...passedOn(props), className } : undefined)}
       render={
         render ?? (
           <Button size={size} variant={variant} {...props} className={cn("shrink-0", className)} />

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, StrictMode, useEffect, useState } from "react";
 import { expect, screen, waitFor, within } from "storybook/test";
 
 import { Button } from "@/components/button/button";
@@ -365,6 +365,159 @@ export const Keyboard: Story = {
       await userEvent.click(await screen.findByRole("button", { name: "Alle akzeptieren" }));
       await canvas.findByText("Matomo zählt diesen Besuch.");
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+  },
+};
+
+/**
+ * Under Strict Mode (Next's default in development) every effect runs twice on mount. The first
+ * layer still gives the focus to the card, not to one of its keys, and the page's own tab stops
+ * stay reachable: the banner is no trap.
+ */
+export const StrictFocus: Story = {
+  render: (args) => {
+    const [jar] = useState(() => createMemoryJar());
+    return (
+      <StrictMode>
+        <ConsentProvider {...args} jar={jar}>
+          <SamplePage />
+        </ConsentProvider>
+      </StrictMode>
+    );
+  },
+  play: async ({ canvas, userEvent, step }) => {
+    const banner = await screen.findByRole("dialog", { name: "Cookies auf dieser Website." });
+
+    await step("the card takes the focus, not „Einstellungen“", async () => {
+      await waitFor(() => expect(banner).toHaveFocus());
+    });
+
+    await step("Shift+Tab leaves the banner for the page's last link", async () => {
+      await userEvent.tab({ shift: true });
+      await waitFor(() =>
+        expect(canvas.getByRole("button", { name: "Cookie-Einstellungen" })).toHaveFocus(),
+      );
+      await expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    await step("Tab past „Einstellungen“ leaves it as well, and it stays", async () => {
+      screen.getByRole("button", { name: "Einstellungen" }).focus();
+      await userEvent.tab();
+      await expect(banner.contains(document.activeElement)).toBe(false);
+      await expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+  },
+};
+
+/** A purpose that has no service yet, beside the sample's three. */
+const withEmptyCategory = {
+  ...config,
+  categories: [
+    ...config.categories,
+    {
+      id: "chat",
+      name: "Chat",
+      description: "Beantwortet Fragen direkt auf der Seite.",
+      services: [],
+    },
+  ],
+};
+
+/**
+ * What the settings say: every switch is named by its purpose or its service, the necessary
+ * category has no switch but its words, and a purpose without services does not stand as on.
+ */
+export const SwitchNames: Story = {
+  args: { config: withEmptyCategory },
+  render: (args) => {
+    const [jar] = useState(() => answered(["matomo", "youtube"]));
+    return (
+      <ConsentProvider {...args} jar={jar}>
+        <SamplePage />
+        <OpenSettings />
+      </ConsentProvider>
+    );
+  },
+  play: async ({ userEvent, step }) => {
+    await screen.findByRole("heading", { name: "Cookie-Einstellungen." });
+    const settings = within(screen.getByRole("dialog"));
+
+    await step("each purpose's switch carries its name and shows the stored answer", async () => {
+      await expect(settings.getByRole("switch", { name: /^Statistik/ })).toBeChecked();
+      await expect(settings.getByRole("switch", { name: /^Marketing/ })).not.toBeChecked();
+      // One of two services: not on, and the count is part of the name.
+      const media = settings.getByRole("switch", { name: /^Externe Medien/ });
+      await expect(media).not.toBeChecked();
+      await expect(media).toHaveAccessibleName(/1 von 2 aktiv/);
+      await expect(media).toHaveAccessibleDescription(
+        "Zeigt Videos und Karten von anderen Anbietern direkt auf der Seite.",
+      );
+    });
+
+    await step("the necessary category has words in place of a switch", async () => {
+      await expect(settings.queryByRole("switch", { name: /Notwendig/ })).toBeNull();
+      // Once the card has faded in.
+      await waitFor(() => expect(settings.getByText("Immer aktiv")).toBeVisible());
+    });
+
+    await step("a purpose without services is not switched on", async () => {
+      await expect(settings.getByRole("switch", { name: /^Chat/ })).not.toBeChecked();
+    });
+
+    await step("unfolded, each service has a switch of its own, by its name", async () => {
+      // „2 Dienste“ stands under Marketing and under Externe Medien: the second one.
+      await userEvent.click(settings.getAllByRole("button", { name: "2 Dienste" })[1]!);
+      await expect(await settings.findByRole("switch", { name: /^YouTube/ })).toBeChecked();
+      await expect(settings.getByRole("switch", { name: /^Google Maps/ })).not.toBeChecked();
+    });
+  },
+};
+
+/**
+ * The keys of an embed's placeholder: the content takes the focus of the key that loaded it,
+ * and „immer laden“ for one service leaves another that was loaded once as it is.
+ */
+export const EmbedKeyboard: Story = {
+  render: (args) => {
+    const [jar] = useState(() => answered([]));
+    return (
+      <ConsentProvider {...args} jar={jar}>
+        <SamplePage>
+          <ConsentEmbed service="youtube" kind="video" className="mt-4">
+            <SampleVideo />
+          </ConsentEmbed>
+          <ConsentEmbed service="google-maps" kind="map" aspect="4 / 3">
+            <div
+              role="img"
+              aria-label="Karte: Anfahrt zur Werkstatt"
+              className="size-full bg-well"
+            />
+          </ConsentEmbed>
+        </SamplePage>
+      </ConsentProvider>
+    );
+  },
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    await step("„Inhalt laden“ shows the video and hands it the focus", async () => {
+      const [load] = await canvas.findAllByRole("button", { name: "Inhalt laden" });
+      load!.focus();
+      await userEvent.keyboard("{Enter}");
+      const video = await canvas.findByRole("img", {
+        name: "Video: Eine Küche aus Eiche entsteht",
+      });
+      await expect(video.closest('[data-slot="consent-embed-content"]')).toHaveFocus();
+    });
+
+    await step("„Google Maps immer laden“ stores that service and keeps the video", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Google Maps immer laden" }));
+      const map = await canvas.findByRole("img", { name: "Karte: Anfahrt zur Werkstatt" });
+      await expect(map.closest('[data-slot="consent-embed-content"]')).toHaveFocus();
+      await expect(
+        canvas.getByRole("img", { name: "Video: Eine Küche aus Eiche entsteht" }),
+      ).toBeInTheDocument();
+      await expect(
+        canvasElement.querySelectorAll('[data-slot="consent-embed-content"]'),
+      ).toHaveLength(2);
     });
   },
 };

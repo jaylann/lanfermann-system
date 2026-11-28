@@ -32,6 +32,12 @@ describe("parseLines", () => {
   it("reads a range written backwards", () => {
     expect([...parseLines("4-2")]).toEqual([2, 3, 4]);
   });
+
+  it("stops a range at the last line of the code, so it may be open", () => {
+    expect([...parseLines([[2, Infinity]], 4)]).toEqual([2, 3, 4]);
+    expect([...parseLines([[-Infinity, 2]], 4)]).toEqual([1, 2]);
+    expect([...parseLines("3-999999999999", 4)]).toEqual([3, 4]);
+  });
 });
 
 describe("copyText", () => {
@@ -42,6 +48,10 @@ describe("copyText", () => {
   it("keeps every line when nothing was removed", () => {
     expect(copyText("a\r\nb")).toBe("a\nb");
   });
+
+  it("takes a range that is open at its end", () => {
+    expect(copyText("a\nb\nc", [[2, Infinity]])).toBe("a");
+  });
 });
 
 describe("lineKinds", () => {
@@ -51,6 +61,10 @@ describe("lineKinds", () => {
       "added",
       "removed",
     ]);
+  });
+
+  it("marks to the end of the code for a range that is open", () => {
+    expect(lineKinds(3, { marked: [[2, Infinity]] })).toEqual([undefined, "marked", "marked"]);
   });
 });
 

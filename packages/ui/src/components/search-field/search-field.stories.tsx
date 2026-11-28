@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, waitFor } from "storybook/test";
+import { expect, fireEvent, fn, waitFor } from "storybook/test";
 
 import { SearchField, type SearchFieldProps } from "./search-field";
 
@@ -69,6 +69,42 @@ export const Sizes: Story = {
 };
 
 /**
+ * As a test: a field that cannot be used keeps what stands in it. Its cross cannot be pressed,
+ * and its keys do not bring the focus to it.
+ */
+export const DisabledKeepsItsText: Story = {
+  render: () => <Customers shortcut="/" initial="ei" disabled />,
+  play: async ({ canvas, userEvent }) => {
+    const field = canvas.getByRole("searchbox", { name: "Kunden suchen" });
+    const cross = canvas.getByRole("button", { name: "Suche leeren" });
+    await expect(field).toBeDisabled();
+    await expect(cross).toBeDisabled();
+    await fireEvent.click(cross);
+    await expect(field).toHaveValue("ei");
+    // The key is left to the page: nothing here takes it, so nothing is swallowed.
+    let swallowed = false;
+    const heard = (event: KeyboardEvent) => {
+      swallowed = event.defaultPrevented;
+    };
+    window.addEventListener("keydown", heard);
+    await userEvent.keyboard("/");
+    window.removeEventListener("keydown", heard);
+    await expect(swallowed).toBe(false);
+    await expect(field).not.toHaveFocus();
+  },
+};
+
+/** A caller's ref of the kind that cleans up after itself, for the test below. */
+const attached = fn();
+const cleaned = fn();
+const watched = (input: HTMLInputElement | null) => {
+  attached(input);
+  return () => {
+    cleaned();
+  };
+};
+
+/**
  * Disabled (the list it searches is still loading): the keys stay as a hint, set back with the
  * field, and do nothing, so ⌘F is the browser's own find until the field can take it.
  */
@@ -113,7 +149,7 @@ export const DisabledShortcut: Story = {
  * typed and pressed again leaves the field, the cross clears and keeps the focus in it.
  */
 export const Keyboard: Story = {
-  render: () => <Customers shortcut="/" />,
+  render: () => <Customers shortcut="/" ref={watched} />,
   play: async ({ canvas, userEvent, step }) => {
     const field = canvas.getByRole("searchbox", { name: "Kunden suchen" });
     await step("the keys bring the focus to the field", async () => {
@@ -123,11 +159,14 @@ export const Keyboard: Story = {
     await step("what is found is counted", async () => {
       await userEvent.keyboard("ei");
       await expect(canvas.getByText("3 Treffer")).toBeVisible();
+      // And said: it changes while the focus is in the field.
+      await expect(canvas.getByRole("status")).toHaveTextContent("3 Treffer");
     });
     await step("Escape clears, and pressed again leaves the field", async () => {
       await userEvent.keyboard("{Escape}");
       await expect(field).toHaveValue("");
       await expect(field).toHaveFocus();
+      await expect(canvas.getByRole("status")).toBeEmptyDOMElement();
       await userEvent.keyboard("{Escape}");
       await expect(field).not.toHaveFocus();
     });
@@ -138,5 +177,14 @@ export const Keyboard: Story = {
       await expect(field).toHaveValue("");
       await expect(field).toHaveFocus();
     });
+    await step(
+      "a caller's ref that cleans up is never handed null, and is cleaned up",
+      async () => {
+        await expect(attached).toHaveBeenCalledWith(field);
+        await expect(attached).not.toHaveBeenCalledWith(null);
+        // Every time but the one that holds the field now.
+        await expect(cleaned).toHaveBeenCalledTimes(attached.mock.calls.length - 1);
+      },
+    );
   },
 };

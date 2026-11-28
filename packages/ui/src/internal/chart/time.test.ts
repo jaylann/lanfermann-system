@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { inferInterval, pointLabel, tickLabel, timeTicks, toTime } from "./time";
 
@@ -31,6 +31,20 @@ describe("reading moments", () => {
     );
     expect(inferInterval([day(2026, 11, 2), day(2026, 11, 9), day(2026, 11, 16)])).toBe("week");
     expect(inferInterval([day(2024, 1, 1), day(2025, 1, 1)])).toBe("year");
+  });
+
+  it("never reads two points as the same day, month or year", () => {
+    const hour = 3_600_000;
+    const sixHourly = [0, 6, 12, 18].map((hours) => day(2026, 11, 18) + hours * hour);
+    expect(inferInterval(sixHourly)).toBe("hour");
+    expect(new Set(sixHourly.map((time) => pointLabel(time, "hour"))).size).toBe(4);
+    // A fortnight apart: by their date, not two to a month.
+    expect(inferInterval([day(2026, 11, 2), day(2026, 11, 16), day(2026, 11, 30)])).toBe("week");
+    // Quarters and half-years: by their month, not several to a year.
+    expect(
+      inferInterval([day(2026, 1, 1), day(2026, 4, 1), day(2026, 7, 1), day(2026, 10, 1)]),
+    ).toBe("month");
+    expect(inferInterval([day(2026, 1, 1), day(2026, 7, 1), day(2027, 1, 1)])).toBe("month");
   });
 });
 
@@ -120,5 +134,42 @@ describe("a point written out", () => {
 
   it("names a month in full", () => {
     expect(pointLabel(day(2026, 11, 1), "month")).toBe("November 2026");
+  });
+});
+
+describe("where summer time begins at midnight", () => {
+  // Cairo's clocks went from 00:00 to 01:00 on 26 April 2024: that day has no midnight.
+  const zone = process.env.TZ;
+  beforeAll(() => {
+    process.env.TZ = "Africa/Cairo";
+  });
+  afterAll(() => {
+    if (zone === undefined) delete process.env.TZ;
+    else process.env.TZ = zone;
+  });
+
+  it("keeps marking the days after the day without a midnight", () => {
+    expect(new Date(2024, 3, 26, 0).getHours()).toBe(1);
+    const ticks = timeTicks(day(2024, 4, 10), day(2024, 5, 20), { interval: "day" });
+    expect(ticks.map((tick) => new Date(tick.time).toLocaleDateString("en-CA"))).toEqual([
+      "2024-04-15",
+      "2024-05-01",
+      "2024-05-15",
+    ]);
+  });
+
+  it("marks the months of a range that starts on that day", () => {
+    const ticks = timeTicks(day(2024, 4, 26), day(2025, 3, 1), { interval: "month" });
+    expect(ticks.map((tick) => new Date(tick.time).toLocaleDateString("en-CA"))).toEqual([
+      "2024-07-01",
+      "2024-10-01",
+      "2025-01-01",
+    ]);
+  });
+
+  it("turns to that day at its first hour", () => {
+    const ticks = timeTicks(day(2024, 4, 25, 20), day(2024, 4, 26, 4), { interval: "hour" });
+    const turns = ticks.filter((tick) => tick.turn).map((tick) => new Date(tick.time));
+    expect(turns.map((date) => [date.getDate(), date.getHours()])).toEqual([[26, 1]]);
   });
 });

@@ -48,6 +48,20 @@ describe("advancePieces", () => {
     expect(pieces(text, ends)).toEqual(["Ja, gern. Das ", "geht: morgen früh. "]);
   });
 
+  it("shows a text written without spaces as it grows, but for its last word", () => {
+    // No space ever follows: without this the sentence stood unseen until it was complete.
+    const text = "見積もりにはウェブサイトと注文フォームが含まれます";
+    const { ends } = advancePieces([], text, { complete: false });
+    const shown = ends.at(-1) ?? 0;
+    expect(shown).toBeGreaterThan(text.length / 2);
+    expect(shown).toBeLessThan(text.length);
+    const more = `${text}。価格は`;
+    const next = advancePieces(ends, more, { complete: false });
+    expect(next.ends.slice(0, ends.length)).toEqual(ends);
+    expect(next.ends.at(-1)).toBeGreaterThanOrEqual(text.length);
+    expect(advancePieces(next.ends, more, { complete: true }).ends.at(-1)).toBe(more.length);
+  });
+
   it("starts over where a text became shorter", () => {
     const before = advancePieces([], "Erster Versuch mit vielen Wörtern ", { complete: false });
     const { ends, fresh } = advancePieces(before.ends, "Zweiter ", { complete: false });

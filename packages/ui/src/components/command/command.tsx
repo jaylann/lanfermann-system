@@ -331,7 +331,7 @@ export function CommandInput({ className, placeholder, onKeyDown, ...props }: Co
         <Chip
           key={opened.value}
           data-slot="command-page"
-          className="max-w-40 shrink-0 delay-0 starting:scale-90 starting:opacity-0"
+          className="max-w-40 shrink-0 delay-0 starting:scale-90 starting:opacity-0 motion-reduce:starting:scale-100"
         >
           {/* The ellipsis said that more follows. Here it has followed. */}
           {opened.label.replace(/\s*…$/, "")}

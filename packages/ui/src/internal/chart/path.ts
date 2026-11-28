@@ -68,7 +68,9 @@ function endSlope(a: Point, b: Point, next: number) {
 function runPath(run: readonly Point[], curve: Curve): string {
   const first = run[0]!;
   let path = `M${fixed(first.x)},${fixed(first.y)}`;
-  if (run.length === 1) return path;
+  // One point by itself (one row, or a value between two gaps): a line of no length, which the
+  // round caps draw as a dot of the line's width. A move alone would draw nothing.
+  if (run.length === 1) return `${path}L${fixed(first.x)},${fixed(first.y)}`;
   if (curve === "linear" || run.length === 2) {
     for (const point of run.slice(1)) path += `L${fixed(point.x)},${fixed(point.y)}`;
     return path;

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 
 import { Code } from "@/components/code/code";
 import { Link } from "@/components/link/link";
@@ -59,4 +60,22 @@ export const WithTitle: Story = {
     ),
   },
   parameters: { visual: { viewport: { width: 640, height: 200 } } },
+};
+
+/**
+ * Tests what assistive tech hears: a note, and with a title of its own still the kind in words,
+ * which the eye takes from the icon.
+ */
+export const Kind: Story = {
+  args: {
+    tone: "caution",
+    title: "Festgeschriebene Rechnungen bleiben, wie sie sind",
+    children: <p>Sie lassen sich nicht mehr ändern, nur stornieren.</p>,
+  },
+  play: async ({ canvas }) => {
+    const title = canvas.getByRole("note").querySelector('[data-slot="callout-title"]');
+    await expect(title).toHaveTextContent(
+      "Vorsicht: Festgeschriebene Rechnungen bleiben, wie sie sind",
+    );
+  },
 };

@@ -98,4 +98,16 @@ describe("a signed figure", () => {
     expect(percent(0.001)).toMatch(/^±0\s%$/u);
     expect(percent(-0.001)).toMatch(/^±0\s%$/u);
   });
+
+  it("keeps a loss that an accounting format writes in brackets", () => {
+    const dollar = signedFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      currencySign: "accounting",
+      maximumFractionDigits: 0,
+    });
+    expect(dollar(-3_100)).toBe("($3,100)");
+    expect(dollar(3_100)).toBe("+$3,100");
+    expect(dollar(0)).toBe("±$0");
+  });
 });

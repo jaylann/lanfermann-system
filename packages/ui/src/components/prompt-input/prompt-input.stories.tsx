@@ -286,3 +286,169 @@ export const Keyboard: Story = {
     });
   },
 };
+
+const changed = fn();
+const dropped = fn();
+
+/** A prompt whose caller listens as well: a ref and handlers of its own on the parts. */
+function Wired() {
+  const [running, setRunning] = useState(false);
+  const area = useRef<HTMLTextAreaElement>(null);
+  return (
+    <PromptInput
+      running={running}
+      onSubmit={(message) => {
+        sent(message);
+        setRunning(true);
+      }}
+      onStop={() => {
+        stopped();
+        setRunning(false);
+      }}
+      onFilesAdded={(files) => {
+        added(files.map((file) => file.name));
+      }}
+      onDrop={dropped}
+    >
+      <PromptInputTextarea ref={area} onChange={changed} placeholder={PLACEHOLDER} />
+      <PromptInputActions>
+        <PromptInputAttach id="anhang" />
+        <PromptInputSubmit />
+      </PromptInputActions>
+    </PromptInput>
+  );
+}
+
+/**
+ * What the caller puts on a part is added to what the part does itself, never in its place:
+ * the field still takes what is typed and still fades where it scrolls, a drop is still taken,
+ * the paper clip carries the caller's attributes. And stop only stops: it does not also send
+ * what was typed while the answer ran.
+ */
+export const CallerHandlers: Story = {
+  render: () => <Wired />,
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    for (const heard of [sent, stopped, added, changed, dropped]) heard.mockClear();
+    const field = canvas.getByRole("textbox", { name: "Nachricht an die KI" });
+
+    await step("the field takes what is typed, and the caller hears of it", async () => {
+      await userEvent.click(field);
+      await userEvent.keyboard("Was kostet es?");
+      await expect(field).toHaveValue("Was kostet es?");
+      await expect(changed).toHaveBeenCalled();
+    });
+
+    await step("with the caller's ref on it, the field still fades where it scrolls", async () => {
+      await userEvent.keyboard(`{Shift>}${"{Enter}".repeat(12)}{/Shift}`);
+      field.scrollTo({ top: field.scrollHeight });
+      await waitFor(() => expect(field.dataset.overflow).toContain("start"));
+      await userEvent.clear(field);
+    });
+
+    await step("a drop is taken, and the caller hears of it", async () => {
+      const data = new DataTransfer();
+      data.items.add(new File(["%PDF"], "Angebot-Kornprobst.pdf", { type: "application/pdf" }));
+      const drop = new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data });
+      canvasElement.querySelector("form")!.dispatchEvent(drop);
+      await expect(dropped).toHaveBeenCalledOnce();
+      await expect(added).toHaveBeenLastCalledWith(["Angebot-Kornprobst.pdf"]);
+      // Taken: the browser does not open the file instead.
+      await expect(drop.defaultPrevented).toBe(true);
+    });
+
+    await step("the paper clip carries the caller's attributes", async () => {
+      await expect(canvas.getByRole("button", { name: "Datei anhängen" })).toHaveAttribute(
+        "id",
+        "anhang",
+      );
+    });
+
+    await step("stop only stops: what was typed meanwhile is not sent", async () => {
+      await userEvent.click(field);
+      await userEvent.keyboard("Fasse das Angebot zusammen{Enter}");
+      await expect(sent).toHaveBeenCalledOnce();
+      await userEvent.keyboard("Und netto?");
+      // `onStop` ends `running` at once, so the key is a submit key again by the time a
+      // browser acts on a real click: only a click whose default is prevented cannot send.
+      let prevented: boolean | undefined;
+      canvasElement.ownerDocument.addEventListener(
+        "click",
+        (event) => {
+          prevented = event.defaultPrevented;
+        },
+        { once: true },
+      );
+      await userEvent.click(canvas.getByRole("button", { name: "Anhalten" }));
+      await expect(stopped).toHaveBeenCalledOnce();
+      await expect(prevented).toBe(true);
+      await expect(sent).toHaveBeenCalledOnce();
+      await expect(field).toHaveValue("Und netto?");
+    });
+  },
+};
+
+/** A prompt held by its page (`value`), whose sending can be made to fail. */
+function Unsent() {
+  const [text, setText] = useState("");
+  const fail = useRef(() => {});
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <PromptInput
+        value={text}
+        onValueChange={setText}
+        onSubmit={(message) => {
+          sent(message);
+          return new Promise<void>((_, reject) => {
+            fail.current = () => reject(new Error("Keine Verbindung"));
+          });
+        }}
+      >
+        <PromptInputTextarea placeholder={PLACEHOLDER} />
+        <PromptInputActions>
+          <PromptInputSubmit />
+        </PromptInputActions>
+      </PromptInput>
+      {/* What a page does without a key being typed: a suggestion that fills the field. */}
+      <button type="button" onClick={() => setText("Und was kostet die Pflege?")}>
+        Vorschlag übernehmen
+      </button>
+      <button type="button" onClick={() => fail.current()}>
+        Senden scheitert
+      </button>
+    </div>
+  );
+}
+
+/**
+ * A prompt that could not be sent comes back into the field, unless something else stands
+ * there by then, typed or put there by the page: that is kept.
+ */
+export const NotSent: Story = {
+  render: () => <Unsent />,
+  play: async ({ canvas, userEvent, step }) => {
+    sent.mockClear();
+    const field = canvas.getByRole("textbox", { name: "Nachricht an die KI" });
+    const fail = canvas.getByRole("button", { name: "Senden scheitert" });
+
+    await step("what was sent comes back when sending fails", async () => {
+      await userEvent.click(field);
+      await userEvent.keyboard("Was kostet es?{Enter}");
+      await expect(sent).toHaveBeenCalledWith("Was kostet es?");
+      await expect(field).toHaveValue("");
+      await userEvent.click(fail);
+      await waitFor(() => expect(field).toHaveValue("Was kostet es?"));
+    });
+
+    await step("what the page has put into the field by then is kept", async () => {
+      await userEvent.click(field);
+      await userEvent.keyboard("{Enter}");
+      await expect(field).toHaveValue("");
+      await userEvent.click(canvas.getByRole("button", { name: "Vorschlag übernehmen" }));
+      await expect(field).toHaveValue("Und was kostet die Pflege?");
+      await userEvent.click(fail);
+      // The rejection has had its turn, and a render after it.
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await expect(field).toHaveValue("Und was kostet die Pflege?");
+    });
+  },
+};

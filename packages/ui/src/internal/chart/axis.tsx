@@ -60,7 +60,8 @@ export function useAxisTicks(ticks: readonly number[], domain: [number, number])
 function motionOf(tick: AxisTick) {
   return tick.leaving
     ? "opacity-0 transition-[translate,opacity] spring-leave"
-    : "transition-[translate,opacity] spring-settle in-data-live:starting:opacity-0";
+    : // Under reduced motion a line stands at its new height at once, as the marks do.
+      "transition-[translate,opacity] spring-settle motion-reduce:transition-[opacity] in-data-live:starting:opacity-0";
 }
 
 /**

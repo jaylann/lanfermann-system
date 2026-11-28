@@ -99,6 +99,20 @@ describe("the consent store", () => {
     expect(store.getSnapshot().session.has("youtube")).toBe(false);
   });
 
+  it("keeps what was loaded once when an answer only adds a service", () => {
+    const { store } = setup({ cookies: { "lf-consent": stored([]) } });
+    store.grantOnce("youtube");
+    store.markRendered(["youtube"]);
+    const { change, reload } = store.decide(["google-maps"], { keepSession: true });
+    expect(store.getSnapshot().session.has("youtube")).toBe(true);
+    expect(store.getSnapshot().record?.granted).toEqual(["google-maps"]);
+    expect(change).toEqual({ granted: ["google-maps"], revoked: [], initial: false });
+    expect(reload).toBe(false);
+    // Without it, the same answer refuses what was loaded once, as a decision in the banner does.
+    expect(store.decide(["google-maps"]).reload).toBe(true);
+    expect(store.getSnapshot().session.has("youtube")).toBe(false);
+  });
+
   it("reports what changed", () => {
     const { onChange, store } = setup({ cookies: { "lf-consent": stored(["matomo"]) } });
     store.announce();

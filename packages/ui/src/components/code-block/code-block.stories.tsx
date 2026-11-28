@@ -94,6 +94,15 @@ export const Untitled: Story = {
   parameters: { visual: { viewport: { width: 760, height: 220 } } },
 };
 
+/** An empty title is no title, as a test: no header, and the code keeps its name. */
+export const EmptyTitle: Story = {
+  args: { ...Untitled.args, title: "" },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvasElement.querySelector('[data-slot="code-block-header"]')).toBeNull();
+    await expect(canvas.getByRole("group", { name: "Code" })).toBeInTheDocument();
+  },
+};
+
 /**
  * Two more keys beside the copy, on request: one breaks long lines and puts them back, one
  * saves the file. The copy stays last, where every block has it.

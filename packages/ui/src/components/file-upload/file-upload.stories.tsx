@@ -329,5 +329,95 @@ export const Keyboard: Story = {
       await expect(canvas.getByRole("button", { name: "Lageplan.pdf entfernen" })).toHaveFocus();
       await waitFor(() => expect(rows()).toHaveLength(2));
     });
+
+    await step("removing the last row hands the focus to the zone's button", async () => {
+      await userEvent.keyboard("{Enter}");
+      await expect(canvas.getByRole("button", { name: "Film.zip entfernen" })).toHaveFocus();
+      await userEvent.keyboard("{Enter}");
+      await expect(canvas.getByRole("button", { name: "Dateien auswählen" })).toHaveFocus();
+      await waitFor(() => expect(rows()).toHaveLength(0));
+    });
+  },
+};
+
+const heard = fn();
+
+/** A zone with handlers of its caller's own, and a key that switches the upload off. */
+function OwnHandlers() {
+  const [disabled, setDisabled] = useState(false);
+  return (
+    <div className="flex w-full max-w-md flex-col gap-4">
+      <FileUpload multiple disabled={disabled} onFilesAdded={added}>
+        <FileUploadZone onDragEnter={heard} onDrop={heard} onPaste={heard} />
+        <FileUploadList aria-label="Dateien">
+          <FileUploadItem name="Lageplan.pdf" size={3.2 * MB} status="uploading" progress={0.5} />
+        </FileUploadList>
+      </FileUpload>
+      <Button size="sm" variant="quiet" onClick={() => setDisabled((now) => !now)}>
+        {disabled ? "Freigeben" : "Sperren"}
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * As a test: handlers the caller puts on the zone are heard and do not take the place of the
+ * zone's own, a zone that is switched off while a file hangs over it comes back at rest, and
+ * how a file ended is said to assistive tech.
+ */
+export const Edges: Story = {
+  render: () => <OwnHandlers />,
+  play: async ({ canvas, canvasElement, userEvent, step }) => {
+    added.mockClear();
+    heard.mockClear();
+    const zone = canvasElement.querySelector('[data-slot="file-upload-zone"]')!;
+    const carried = () => {
+      const transfer = new DataTransfer();
+      transfer.items.add(new File(["%PDF"], "Lageplan.pdf", { type: "application/pdf" }));
+      return transfer;
+    };
+    const drag = (type: string, transfer: DataTransfer) =>
+      zone.dispatchEvent(
+        new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: transfer }),
+      );
+
+    await step("the caller's handlers are heard, and the zone still takes the drop", async () => {
+      const transfer = carried();
+      drag("dragenter", transfer);
+      await waitFor(() => expect(zone).toHaveAttribute("data-dragging"));
+      await expect(heard).toHaveBeenCalledTimes(1);
+      drag("drop", transfer);
+      await expect(heard).toHaveBeenCalledTimes(2);
+      await expect(added).toHaveBeenCalledWith([expect.any(File)]);
+      await waitFor(() => expect(zone).not.toHaveAttribute("data-dragging"));
+    });
+
+    await step("a pasted file is taken, and the caller hears the paste", async () => {
+      zone.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, clipboardData: carried() }));
+      await expect(heard).toHaveBeenCalledTimes(3);
+      await expect(added).toHaveBeenCalledTimes(2);
+    });
+
+    await step("switched off under a hanging file, it is at rest when it comes back", async () => {
+      const transfer = carried();
+      drag("dragenter", transfer);
+      await waitFor(() => expect(zone).toHaveAttribute("data-dragging"));
+      await userEvent.click(canvas.getByRole("button", { name: "Sperren" }));
+      await waitFor(() => expect(zone).not.toHaveAttribute("data-dragging"));
+      drag("dragleave", transfer);
+      await userEvent.click(canvas.getByRole("button", { name: "Freigeben" }));
+      await expect(zone).not.toHaveAttribute("data-dragging");
+      // Its count of enters and leaves is right again: one of each is a drag that has left.
+      drag("dragenter", transfer);
+      await waitFor(() => expect(zone).toHaveAttribute("data-dragging"));
+      drag("dragleave", transfer);
+      await waitFor(() => expect(zone).not.toHaveAttribute("data-dragging"));
+    });
+
+    await step("how a file ended is a change that is read out, whole", async () => {
+      const name = canvasElement.querySelector('[data-slot="file-upload-name"]');
+      await expect(name).toHaveAttribute("aria-live", "polite");
+      await expect(name).toHaveAttribute("aria-atomic", "true");
+    });
   },
 };

@@ -119,5 +119,15 @@ export const Keyboard: Story = {
       await userEvent.keyboard("{Escape}");
       await waitFor(() => expect(canvasElement.querySelector("[data-shown]")).toBeNull());
     });
+
+    await step("Coming back to a day that was said before, it is said again", async () => {
+      await userEvent.keyboard("{End}");
+      await waitFor(() => expect(said()).toHaveTextContent(/^Fr\., 20\. Nov\./));
+      await userEvent.keyboard("{Escape}");
+      // Emptied: the same line set again would not be announced.
+      await waitFor(() => expect(said()).toBeEmptyDOMElement());
+      await userEvent.keyboard("{ArrowUp}");
+      await waitFor(() => expect(said()).toHaveTextContent(/^Fr\., 20\. Nov\./));
+    });
   },
 };
