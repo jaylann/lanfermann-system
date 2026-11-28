@@ -237,19 +237,13 @@ export type SidebarBrandProps = Omit<useRender.ComponentProps<"a">, "children"> 
   mark?: ReactNode;
   /** The brand's name for assistive tech: the two drawings are one thing and are named once. */
   label?: string;
-  /**
-   * How the symbol comes in on the rail. `fade` (the default): a plain crossfade, as the
-   * entries' names leave. `seat`: it also grows the last tenth into place and settles, as a
-   * small part does that arrives. It always leaves by fading.
-   */
-  motion?: "fade" | "seat";
 };
 
 /**
  * The product's mark in a `SidebarHeader`, usually as the link home. It starts where the
  * entries' symbols start. On the rail the word gives its place to the symbol, which stands in
  * the symbols' column: the word leaves as the entries' names do and the symbol comes in its
- * stead, so the header is never a word cut off at the rail's edge.
+ * stead, a plain crossfade, so the header is never a word cut off at the rail's edge.
  *
  * Without `wordmark` and `mark` it is Lanfermann's own. Give it an `href`, or `render` a
  * router's link.
@@ -258,7 +252,6 @@ export function SidebarBrand({
   wordmark = <Wordmark variant="short" size={20} aria-hidden />,
   mark = <Logomark size={20} aria-hidden />,
   label = "Lanfermann",
-  motion = "fade",
   render,
   className,
   ...props
@@ -284,10 +277,6 @@ export function SidebarBrand({
             "pointer-events-none absolute left-(--sidebar-pad) flex w-4 justify-center",
             "opacity-0 transition-opacity spring-leave",
             "in-data-rail:opacity-100 in-data-rail:delay-75 in-data-rail:spring-settle",
-            // Seating: only on the way in. Leaving, the scale is not a transition, so the
-            // symbol fades where it stands, as every exit does.
-            motion === "seat" &&
-              "scale-90 in-data-rail:scale-100 in-data-rail:transition-[opacity,scale] in-data-rail:spring-seat motion-reduce:scale-100",
           )}
         >
           {mark}
