@@ -38,12 +38,14 @@ export function FileThumbPicture({
       loading="lazy"
       draggable={false}
       onError={() => setFailed(src)}
-      // The picture fills its square, so the checker (finer here, for a square of 32px) lies
-      // behind the picture only, as everywhere.
       className={cn(
-        // Contained, the box is the picture as drawn, so the checker never shows in the bands
-        // beside it.
-        fit === "cover" ? "size-full object-cover" : "h-auto max-h-full w-auto max-w-full",
+        fit === "cover" && "size-full object-cover",
+        // A see-through picture that is contained still fills the box, and is drawn whole inside
+        // it, so the checker (finer here, for a square of 32px) covers the whole square, the
+        // bands beside the picture too (Justin, 2026-11-28). An opaque one is a box of the
+        // picture's own shape, with the well in the bands.
+        fit === "contain" &&
+          (seeThrough ? "size-full object-contain" : "h-auto max-h-full w-auto max-w-full"),
         seeThrough && "checker [--checker-cell:0.25rem]",
       )}
     />

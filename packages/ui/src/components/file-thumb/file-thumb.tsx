@@ -34,8 +34,9 @@ export type FileThumbProps = Omit<ComponentProps<"span">, "children"> & {
   name?: string;
   type?: string;
   /**
-   * `cover` (the default): the picture fills the square, cropped where it must be. `contain`:
-   * the whole picture inside the square, for a list of logos and marks whose edges matter.
+   * `contain` (the default): the whole picture inside the square, so a logo or a mark keeps its
+   * edges; a see-through one lies on the checker across the whole square. `cover`: the picture
+   * fills the square, cropped where it must be, for a list of photos.
    */
   fit?: "cover" | "contain";
 };
@@ -57,7 +58,7 @@ export function FileThumb({
   src,
   name,
   type,
-  fit = "cover",
+  fit = "contain",
   className,
   ...props
 }: FileThumbProps) {
